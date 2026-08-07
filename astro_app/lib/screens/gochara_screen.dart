@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
+import 'api_settings_screen.dart';
 
 class GocharaScreen extends StatefulWidget {
   final bool isYearly;
@@ -12,11 +14,25 @@ class GocharaScreen extends StatefulWidget {
 
 class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isLoading = false;
+  List<dynamic>? _transits;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchTransits();
+  }
+
+  Future<void> _fetchTransits() async {
+    setState(() => _isLoading = true);
+    final data = await AstroApiService.getDailyTransits();
+    if (mounted) {
+      setState(() {
+        _transits = data['planetary_transits'] as List<dynamic>?;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -40,6 +56,23 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
+            tooltip: 'Live Backend Hub',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+              ).then((_) => _fetchTransits());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0284C7)),
+            tooltip: 'Refresh Gochara',
+            onPressed: _fetchTransits,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF0284C7),
@@ -53,17 +86,30 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildPlanetsTab(context, isDark),
-          _buildRashisTab(context, isDark),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF0284C7)),
+                  SizedBox(height: 12),
+                  Text('Calculating High-Precision Planetary Gochara...'),
+                ],
+              ),
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPlanetsTab(context, isDark),
+                _buildRashisTab(context, isDark),
+              ],
+            ),
     );
   }
 
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
+    final list = _transits ?? [];
+
     return ListView(
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
@@ -107,17 +153,62 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
           ),
         ),
         const SizedBox(height: 18),
-        Text('Planetary Transits & Dignities', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Planetary Transits & Dignities', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0284C7).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Live Backend',
+                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF0284C7), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
-        _buildTransitPlanet(0, 'Sun (Surya)', 'Kumbha (Aquarius)', '19° 42\' 11"', 'Shatabhisha (Rahu)', 'Friendly', 'Direct', Colors.orange, isDark),
-        _buildTransitPlanet(1, 'Moon (Chandra)', 'Mithuna (Gemini)', '04° 15\' 22"', 'Mrigashira (Mars)', 'Neutral', 'Direct', Colors.blue, isDark),
-        _buildTransitPlanet(2, 'Mars (Mangal)', 'Kanya (Virgo)', '28° 10\' 05"', 'Chitra (Mars)', 'Enemy', 'Direct', Colors.red, isDark),
-        _buildTransitPlanet(3, 'Mercury (Budha)', 'Kumbha (Aquarius)', '06° 54\' 30"', 'Dhanishta (Mars)', 'Friendly', 'Direct', Colors.green, isDark),
-        _buildTransitPlanet(4, 'Jupiter (Guru)', 'Vrishabha (Taurus)', '17° 30\' 45"', 'Rohini (Moon)', 'Enemy', 'Direct', Colors.amber, isDark),
-        _buildTransitPlanet(5, 'Venus (Shukra)', 'Meena (Pisces)', '12° 44\' 19"', 'Uttara Bhadra (Saturn)', 'Exalted (उच्च)', 'Direct', Colors.teal, isDark),
-        _buildTransitPlanet(6, 'Saturn (Shani)', 'Kumbha (Aquarius)', '22° 18\' 52"', 'Purva Bhadra (Jupiter)', 'Own Sign (मूलत्रिकोण)', 'Direct', Colors.indigo, isDark),
-        _buildTransitPlanet(7, 'Rahu (North Node)', 'Meena (Pisces)', '14° 02\' 10"', 'Uttara Bhadra (Saturn)', 'Friendly', 'Retrograde', Colors.purple, isDark),
-        _buildTransitPlanet(8, 'Ketu (South Node)', 'Kanya (Virgo)', '14° 02\' 10"', 'Hasta (Moon)', 'Friendly', 'Retrograde', Colors.purple, isDark),
+        if (list.isEmpty) ...[
+          _buildTransitPlanet(0, 'Sun (Surya)', 'Kumbha (Aquarius)', '19° 42\' 11"', 'Shatabhisha (Rahu)', 'Friendly', 'Direct', Colors.orange, isDark),
+          _buildTransitPlanet(1, 'Moon (Chandra)', 'Mithuna (Gemini)', '04° 15\' 22"', 'Mrigashira (Mars)', 'Neutral', 'Direct', Colors.blue, isDark),
+          _buildTransitPlanet(2, 'Mars (Mangal)', 'Kanya (Virgo)', '28° 10\' 05"', 'Chitra (Mars)', 'Enemy', 'Direct', Colors.red, isDark),
+          _buildTransitPlanet(3, 'Mercury (Budha)', 'Kumbha (Aquarius)', '06° 54\' 30"', 'Dhanishta (Mars)', 'Friendly', 'Direct', Colors.green, isDark),
+          _buildTransitPlanet(4, 'Jupiter (Guru)', 'Vrishabha (Taurus)', '17° 30\' 45"', 'Rohini (Moon)', 'Enemy', 'Direct', Colors.amber, isDark),
+          _buildTransitPlanet(5, 'Venus (Shukra)', 'Meena (Pisces)', '12° 44\' 19"', 'Uttara Bhadra (Saturn)', 'Exalted (उच्च)', 'Direct', Colors.teal, isDark),
+          _buildTransitPlanet(6, 'Saturn (Shani)', 'Kumbha (Aquarius)', '22° 18\' 52"', 'Purva Bhadra (Jupiter)', 'Own Sign (मूलत्रिकोण)', 'Direct', Colors.indigo, isDark),
+          _buildTransitPlanet(7, 'Rahu (North Node)', 'Meena (Pisces)', '14° 02\' 10"', 'Uttara Bhadra (Saturn)', 'Friendly', 'Retrograde', Colors.purple, isDark),
+          _buildTransitPlanet(8, 'Ketu (South Node)', 'Kanya (Virgo)', '14° 02\' 10"', 'Hasta (Moon)', 'Friendly', 'Retrograde', Colors.purple, isDark),
+        ] else
+          ...list.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final item = entry.value as Map<String, dynamic>;
+            final planet = item['planet']?.toString() ?? 'Planet';
+            final sign = item['sign']?.toString() ?? 'Sign';
+            final degree = item['degree']?.toString() ?? '00° 00\'';
+            final nakshatra = item['nakshatra']?.toString() ?? '';
+            final status = item['status']?.toString() ?? 'Direct';
+            final motion = item['motion']?.toString() ?? 'Direct';
+            final color = (planet.toLowerCase().contains('sun') || planet.toLowerCase().contains('surya'))
+                ? Colors.orange
+                : (planet.toLowerCase().contains('moon') || planet.toLowerCase().contains('chandra'))
+                    ? Colors.blue
+                    : (planet.toLowerCase().contains('mars') || planet.toLowerCase().contains('mangal'))
+                        ? Colors.red
+                        : (planet.toLowerCase().contains('mercury') || planet.toLowerCase().contains('budha'))
+                            ? Colors.green
+                            : (planet.toLowerCase().contains('jupiter') || planet.toLowerCase().contains('guru'))
+                                ? Colors.amber
+                                : (planet.toLowerCase().contains('venus') || planet.toLowerCase().contains('shukra'))
+                                    ? Colors.teal
+                                    : (planet.toLowerCase().contains('saturn') || planet.toLowerCase().contains('shani'))
+                                        ? Colors.indigo
+                                        : Colors.purple;
+
+            return _buildTransitPlanet(idx, planet, sign, degree, nakshatra, status, motion, color, isDark);
+          }),
       ],
     );
   }

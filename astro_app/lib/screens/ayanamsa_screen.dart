@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
+import 'api_settings_screen.dart';
 
 class AyanamsaScreen extends StatefulWidget {
   const AyanamsaScreen({super.key});
@@ -13,8 +15,8 @@ class AyanamsaScreen extends StatefulWidget {
 class _AyanamsaScreenState extends State<AyanamsaScreen> {
   DateTime _calculationDate = DateTime.now();
   String _selectedSystem = 'Lahiri (Chitra Paksha)';
-
-  final Map<String, String> _ayanamsaValues = {
+  bool _isLoading = false;
+  Map<String, String> _ayanamsaValues = {
     'Lahiri (Chitra Paksha)': '24° 13\' 44.8"',
     'Krishnamurti (KP)': '24° 07\' 22.1"',
     'B.V. Raman': '22° 49\' 18.0"',
@@ -24,6 +26,26 @@ class _AyanamsaScreenState extends State<AyanamsaScreen> {
     'Hipparchus': '22° 10\' 00.0"',
     'Suryasiddhanta': '23° 46\' 12.0"',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAyanamsa();
+  }
+
+  Future<void> _fetchAyanamsa() async {
+    setState(() => _isLoading = true);
+    final dateStr = DateFormat('yyyy-MM-dd').format(_calculationDate);
+    final data = await AstroApiService.getAyanamsaList(date: dateStr);
+    if (mounted) {
+      setState(() {
+        if (data.isNotEmpty) {
+          _ayanamsaValues = data;
+        }
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,13 +62,36 @@ class _AyanamsaScreenState extends State<AyanamsaScreen> {
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
+            tooltip: 'Live Backend Hub',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+              ).then((_) => _fetchAyanamsa());
+            },
+          ),
+        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          // Active Ayanamsa Banner Card
-          Container(
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF059669)),
+                  SizedBox(height: 12),
+                  Text('Computing Sidereal Ayanamsa Shifts...'),
+                ],
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                // Active Ayanamsa Banner Card
+                Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -98,6 +143,7 @@ class _AyanamsaScreenState extends State<AyanamsaScreen> {
                 setState(() {
                   _calculationDate = picked;
                 });
+                _fetchAyanamsa();
               }
             },
             child: Container(
@@ -153,26 +199,32 @@ class _AyanamsaScreenState extends State<AyanamsaScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                            color: isSelected ? const Color(0xFF059669) : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            entry.key,
-                            style: GoogleFonts.outfit(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              fontSize: 14,
-                              color: isSelected
-                                  ? (isDark ? Colors.white : const Color(0xFF059669))
-                                  : (isDark ? Colors.white70 : const Color(0xFF0F172A)),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                              color: isSelected ? const Color(0xFF059669) : Colors.grey,
+                              size: 20,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                entry.key,
+                                style: GoogleFonts.outfit(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  fontSize: 14,
+                                  color: isSelected
+                                      ? (isDark ? Colors.white : const Color(0xFF059669))
+                                      : (isDark ? Colors.white70 : const Color(0xFF0F172A)),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         entry.value,
                         style: GoogleFonts.outfit(

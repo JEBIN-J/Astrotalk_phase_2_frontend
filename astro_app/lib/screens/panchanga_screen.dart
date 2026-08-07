@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
+import 'api_settings_screen.dart';
 
 class PanchangaScreen extends StatefulWidget {
   const PanchangaScreen({super.key});
@@ -14,10 +16,26 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
   late TabController _tabController;
   DateTime _selectedDate = DateTime.now();
 
+  bool _isLoading = false;
+  Map<String, dynamic>? _panchangData;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchPanchangData();
+  }
+
+  Future<void> _fetchPanchangData() async {
+    setState(() => _isLoading = true);
+    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final data = await AstroApiService.getDailyPanchang(date: dateStr);
+    if (mounted) {
+      setState(() {
+        _panchangData = data;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -44,6 +62,16 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         actions: [
           IconButton(
+            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
+            tooltip: 'Live Backend Hub',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+              ).then((_) => _fetchPanchangData());
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.calendar_month_rounded, color: Color(0xFFD97706)),
             tooltip: 'Pick Date',
             onPressed: () async {
@@ -57,6 +85,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
                 setState(() {
                   _selectedDate = picked;
                 });
+                _fetchPanchangData();
               }
             },
           ),
@@ -90,6 +119,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
                     setState(() {
                       _selectedDate = _selectedDate.subtract(const Duration(days: 1));
                     });
+                    _fetchPanchangData();
                   },
                 ),
                 Flexible(
@@ -111,20 +141,32 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
                     setState(() {
                       _selectedDate = _selectedDate.add(const Duration(days: 1));
                     });
+                    _fetchPanchangData();
                   },
                 ),
               ],
             ),
           ),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _build5AngasTab(context, isDark),
-                _buildMuhurtaTab(context, isDark),
-                _buildChoghadiyaTab(context, isDark),
-              ],
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFFD97706)),
+                        SizedBox(height: 12),
+                        Text('Computing Ephemeris & Five Panchanga Angas...'),
+                      ],
+                    ),
+                  )
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _build5AngasTab(context, isDark),
+                      _buildMuhurtaTab(context, isDark),
+                      _buildChoghadiyaTab(context, isDark),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -133,6 +175,19 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
 
   // --- TAB 1: 5 ANGAS OF PANCHANG ---
   Widget _build5AngasTab(BuildContext context, bool isDark) {
+    final sunrise = _panchangData?['sunrise']?.toString() ?? '06:41 AM';
+    final sunset = _panchangData?['sunset']?.toString() ?? '06:22 PM';
+    final moonrise = _panchangData?['moonrise']?.toString() ?? '08:14 PM';
+    final moonset = _panchangData?['moonset']?.toString() ?? '07:30 AM';
+    final vikram = _panchangData?['vikram_samvat']?.toString() ?? '2083 (कालयुक्त)';
+    final shaka = _panchangData?['shaka_samvat']?.toString() ?? '1948';
+
+    final tithi = _panchangData?['tithi']?.toString() ?? 'Shukla Paksha Dwitiya upto 04:18 PM';
+    final nakshatra = _panchangData?['nakshatra']?.toString() ?? 'Rohini (रोहिणी) upto 08:42 PM';
+    final yoga = _panchangData?['yoga']?.toString() ?? 'Shubha (शुभ) upto 11:30 AM';
+    final karana = _panchangData?['karana']?.toString() ?? 'Balava (बालव) upto 04:18 PM';
+    final vara = _panchangData?['vara']?.toString() ?? 'Budhavara (बुधवार - Wednesday)';
+
     return ListView(
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
@@ -160,10 +215,10 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildSunMoonTime('Sunrise', '06:41 AM', Icons.wb_sunny_rounded, true),
-                  _buildSunMoonTime('Sunset', '06:22 PM', Icons.nights_stay_rounded, false),
-                  _buildSunMoonTime('Moonrise', '08:14 PM', Icons.brightness_2_rounded, false),
-                  _buildSunMoonTime('Moonset', '07:30 AM', Icons.bedtime_rounded, false),
+                  _buildSunMoonTime('Sunrise', sunrise, Icons.wb_sunny_rounded, true),
+                  _buildSunMoonTime('Sunset', sunset, Icons.nights_stay_rounded, false),
+                  _buildSunMoonTime('Moonrise', moonrise, Icons.brightness_2_rounded, false),
+                  _buildSunMoonTime('Moonset', moonset, Icons.bedtime_rounded, false),
                 ],
               ),
               const Divider(color: Colors.white24, height: 20),
@@ -171,22 +226,41 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
-                    child: Text('Vikram Samvat: 2083 (कालयुक्त)', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                    child: Text('Vikram Samvat: $vikram', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
                   ),
                   const SizedBox(width: 8),
-                  Text('Shaka: 1948', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                  Text('Shaka: $shaka', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600)),
                 ],
               ),
             ],
           ),
         ),
         const SizedBox(height: 18),
-        Text('The 5 Essential Astrological Elements (पंचांग)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text('The 5 Essential Elements (पंचांग)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Live Backend',
+                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFFD97706), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         _buildAngaCard(
           0,
           '1. Tithi (Lunar Day)',
-          'Shukla Paksha Dwitiya upto 04:18 PM',
+          tithi,
           'Next: Tritiya (तीज) • Auspicious for all religious rituals & buying assets',
           Icons.brightness_6_rounded,
           const Color(0xFFD97706),
@@ -196,7 +270,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
         _buildAngaCard(
           1,
           '2. Nakshatra (Lunar Mansion)',
-          'Rohini (रोहिणी) upto 08:42 PM',
+          nakshatra,
           'Next: Mrigashira • Fixed (Dhruva) nature, highly auspicious for starting construction & weddings',
           Icons.star_rounded,
           const Color(0xFF6366F1),
@@ -206,7 +280,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
         _buildAngaCard(
           2,
           '3. Yoga (Solar-Lunar Angle)',
-          'Shubha (शुभ) upto 11:30 AM',
+          yoga,
           'Next: Shukla Yoga • Promotes peace, prosperity, wealth, and wellness',
           Icons.self_improvement_rounded,
           const Color(0xFF059669),
@@ -216,7 +290,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
         _buildAngaCard(
           3,
           '4. Karana (Half-Tithi)',
-          'Balava (बालव) upto 04:18 PM',
+          karana,
           'Next: Kaulava • Excellent for holy deeds, study, and learning sacred sciences',
           Icons.bubble_chart_rounded,
           const Color(0xFF0284C7),
@@ -226,7 +300,7 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
         _buildAngaCard(
           4,
           '5. Vara (Weekday)',
-          'Budhavara (बुधवार - Wednesday)',
+          vara,
           'Day of Mercury (Budha) • Auspicious for business transactions, logic, calculations, and travel',
           Icons.calendar_today_rounded,
           const Color(0xFF7C3AED),
@@ -239,44 +313,70 @@ class _PanchangaScreenState extends State<PanchangaScreen> with SingleTickerProv
 
   // --- TAB 2: MUHURTAS TAB ---
   Widget _buildMuhurtaTab(BuildContext context, bool isDark) {
+    final abhijit = _panchangData?['muhurtas']?['abhijit']?.toString() ?? '11:58 AM - 12:49 PM';
+    final brahma = _panchangData?['muhurtas']?['brahma']?.toString() ?? '05:04 AM - 05:52 AM';
+    final amrit = _panchangData?['muhurtas']?['amrit_kaal']?.toString() ?? '02:15 PM - 03:48 PM';
+    final godhuli = _panchangData?['muhurtas']?['godhuli']?.toString() ?? '06:18 PM - 06:42 PM';
+    final vijay = _panchangData?['muhurtas']?['vijay']?.toString() ?? '02:26 PM - 03:14 PM';
+
+    final rahu = _panchangData?['inauspicious']?['rahu_kaal']?.toString() ?? '12:28 PM - 02:04 PM';
+    final yamaganda = _panchangData?['inauspicious']?['yamaganda']?.toString() ?? '07:41 AM - 09:16 AM';
+    final gulika = _panchangData?['inauspicious']?['gulika']?.toString() ?? '10:52 AM - 12:28 PM';
+    final dur = _panchangData?['inauspicious']?['dur_muhurtam']?.toString() ?? '11:58 AM - 12:49 PM';
+
     return ListView(
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
       children: [
         Text('Auspicious Timings (शुभ मुहूर्त)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF059669))),
         const SizedBox(height: 10),
-        _buildMuhurtaTile(0, 'Abhijit Muhurta (सर्वश्रेष्ठ)', '11:58 AM - 12:49 PM', 'Most auspicious period of the day', Colors.green, isDark),
-        _buildMuhurtaTile(1, 'Brahma Muhurta (अमृत काल)', '05:04 AM - 05:52 AM', 'Best for meditation, prayers and studies', Colors.green, isDark),
-        _buildMuhurtaTile(2, 'Amrit Kaal', '02:15 PM - 03:48 PM', 'Favorable for important meetings and deals', Colors.green, isDark),
-        _buildMuhurtaTile(3, 'Godhuli Muhurta', '06:18 PM - 06:42 PM', 'Auspicious evening twilight period', Colors.green, isDark),
-        _buildMuhurtaTile(4, 'Vijay Muhurta', '02:26 PM - 03:14 PM', 'Victorious time for starting new ventures', Colors.green, isDark),
+        _buildMuhurtaTile(0, 'Abhijit Muhurta (सर्वश्रेष्ठ)', abhijit, 'Most auspicious period of the day', Colors.green, isDark),
+        _buildMuhurtaTile(1, 'Brahma Muhurta (अमृत काल)', brahma, 'Best for meditation, prayers and studies', Colors.green, isDark),
+        _buildMuhurtaTile(2, 'Amrit Kaal', amrit, 'Favorable for important meetings and deals', Colors.green, isDark),
+        _buildMuhurtaTile(3, 'Godhuli Muhurta', godhuli, 'Auspicious evening twilight period', Colors.green, isDark),
+        _buildMuhurtaTile(4, 'Vijay Muhurta', vijay, 'Victorious time for starting new ventures', Colors.green, isDark),
         const SizedBox(height: 20),
         Text('Inauspicious Timings (अशुभ काल - Avoid)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFFE11D48))),
         const SizedBox(height: 10),
-        _buildMuhurtaTile(5, 'Rahu Kaal (राहुकाल)', '12:28 PM - 02:04 PM', 'Do NOT start new initiatives or travel', Colors.redAccent, isDark),
-        _buildMuhurtaTile(6, 'Yamaganda Kaal', '07:41 AM - 09:16 AM', 'Avoid financial contracts and signing', Colors.redAccent, isDark),
-        _buildMuhurtaTile(7, 'Gulika Kaal', '10:52 AM - 12:28 PM', 'Actions repeat under this influence', Colors.orange, isDark),
-        _buildMuhurtaTile(8, 'Dur Muhurtam', '11:58 AM - 12:49 PM', 'Inauspicious planetary alignment', Colors.orange, isDark),
+        _buildMuhurtaTile(5, 'Rahu Kaal (राहुकाल)', rahu, 'Do NOT start new initiatives or travel', Colors.redAccent, isDark),
+        _buildMuhurtaTile(6, 'Yamaganda Kaal', yamaganda, 'Avoid financial contracts and signing', Colors.redAccent, isDark),
+        _buildMuhurtaTile(7, 'Gulika Kaal', gulika, 'Actions repeat under this influence', Colors.orange, isDark),
+        _buildMuhurtaTile(8, 'Dur Muhurtam', dur, 'Inauspicious planetary alignment', Colors.orange, isDark),
       ],
     );
   }
 
   // --- TAB 3: CHOGHADIYA TAB ---
   Widget _buildChoghadiyaTab(BuildContext context, bool isDark) {
+    final choghadiyaList = (_panchangData?['choghadiya'] as List<dynamic>?) ?? [];
+
     return ListView(
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
       children: [
         Text('Day Choghadiya (दिन का चौघड़िया)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 10),
-        _buildChoghadiyaRow(0, '06:41 AM - 08:08 AM', 'Labh (लाभ)', 'Profit & Gain', Colors.green, isDark),
-        _buildChoghadiyaRow(1, '08:08 AM - 09:35 AM', 'Amrit (अमृत)', 'Best Auspicious', Colors.teal, isDark),
-        _buildChoghadiyaRow(2, '09:35 AM - 11:02 AM', 'Kaal (काल)', 'Inauspicious (Loss)', Colors.red, isDark),
-        _buildChoghadiyaRow(3, '11:02 AM - 12:28 PM', 'Shubh (शुभ)', 'Good & Holy', Colors.green, isDark),
-        _buildChoghadiyaRow(4, '12:28 PM - 01:55 PM', 'Rog (रोग)', 'Sickness (Avoid)', Colors.red, isDark),
-        _buildChoghadiyaRow(5, '01:55 PM - 03:22 PM', 'Udveg (उद्वेग)', 'Worry & Anxiety', Colors.orange, isDark),
-        _buildChoghadiyaRow(6, '03:22 PM - 04:49 PM', 'Char (चर)', 'Neutral / Travel', Colors.blue, isDark),
-        _buildChoghadiyaRow(7, '04:49 PM - 06:22 PM', 'Labh (लाभ)', 'Profit & Gain', Colors.green, isDark),
+        if (choghadiyaList.isEmpty) ...[
+          _buildChoghadiyaRow(0, '06:41 AM - 08:08 AM', 'Labh (लाभ)', 'Profit & Gain', Colors.green, isDark),
+          _buildChoghadiyaRow(1, '08:08 AM - 09:35 AM', 'Amrit (अमृत)', 'Best Auspicious', Colors.teal, isDark),
+          _buildChoghadiyaRow(2, '09:35 AM - 11:02 AM', 'Kaal (काल)', 'Inauspicious (Loss)', Colors.red, isDark),
+          _buildChoghadiyaRow(3, '11:02 AM - 12:28 PM', 'Shubh (शुभ)', 'Good & Holy', Colors.green, isDark),
+          _buildChoghadiyaRow(4, '12:28 PM - 01:55 PM', 'Rog (रोग)', 'Sickness (Avoid)', Colors.red, isDark),
+          _buildChoghadiyaRow(5, '01:55 PM - 03:22 PM', 'Udveg (उद्वेग)', 'Worry & Anxiety', Colors.orange, isDark),
+          _buildChoghadiyaRow(6, '03:22 PM - 04:49 PM', 'Char (चर)', 'Neutral / Travel', Colors.blue, isDark),
+          _buildChoghadiyaRow(7, '04:49 PM - 06:22 PM', 'Labh (लाभ)', 'Profit & Gain', Colors.green, isDark),
+        ] else
+          ...choghadiyaList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final c = entry.value as Map<String, dynamic>;
+            final time = c['time']?.toString() ?? '';
+            final name = c['name']?.toString() ?? '';
+            final meaning = c['meaning']?.toString() ?? '';
+            final isGood = c['is_good'] == true;
+            final color = isGood ? Colors.green : Colors.red;
+
+            return _buildChoghadiyaRow(idx, time, name, meaning, color, isDark);
+          }),
       ],
     );
   }

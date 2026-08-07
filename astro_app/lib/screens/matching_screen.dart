@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
+import 'api_settings_screen.dart';
 
 class MatchingScreen extends StatefulWidget {
   const MatchingScreen({super.key});
@@ -12,20 +14,38 @@ class MatchingScreen extends StatefulWidget {
 class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final String _boyName = 'Aarav Sharma';
-  final String _boyDob = '12 Jan 1994';
-  final String _boyTob = '07:15 AM';
-  final String _boyRashi = 'Vrishabha (Rohini)';
+  String _boyName = 'Aarav Sharma';
+  String _boyDob = '12 Jan 1994';
+  String _boyTob = '07:15 AM';
+  String _boyRashi = 'Vrishabha (Rohini)';
 
-  final String _girlName = 'Ananya Patel';
-  final String _girlDob = '24 Jun 1996';
-  final String _girlTob = '02:45 PM';
-  final String _girlRashi = 'Kanya (Hasta)';
+  String _girlName = 'Ananya Patel';
+  String _girlDob = '24 Jun 1996';
+  String _girlTob = '02:45 PM';
+  String _girlRashi = 'Kanya (Hasta)';
+
+  bool _isLoading = false;
+  Map<String, dynamic>? _matchData;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _calculateMatch();
+  }
+
+  Future<void> _calculateMatch() async {
+    setState(() => _isLoading = true);
+    final res = await AstroApiService.matchAshtakoota(
+      boy: {'name': _boyName, 'dob': _boyDob, 'tob': _boyTob, 'rashi': _boyRashi},
+      girl: {'name': _girlName, 'dob': _girlDob, 'tob': _girlTob, 'rashi': _girlRashi},
+    );
+    if (mounted) {
+      setState(() {
+        _matchData = res;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -39,6 +59,11 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final totalScore = _matchData?['total_score']?.toString() ?? '29.5';
+    final maxScore = _matchData?['max_score']?.toString() ?? '36.0';
+    final percentage = _matchData?['percentage']?.toString() ?? '81.9';
+    final status = _matchData?['status']?.toString() ?? 'Excellent Match (उत्तम मिलान)';
+
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0F1D) : const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -49,6 +74,28 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
+            tooltip: 'Live Backend Hub',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+              ).then((_) => _calculateMatch());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_calendar_rounded, color: Color(0xFFE11D48)),
+            tooltip: 'Edit Bride & Groom Details',
+            onPressed: _showEditProfilesSheet,
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE11D48)),
+            tooltip: 'Recalculate Milan',
+            onPressed: _calculateMatch,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFFE11D48),
@@ -63,14 +110,25 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildScoreTab(context, isDark),
-          _buildManglikTab(context, isDark),
-          _buildRemediesTab(context, isDark),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFFE11D48)),
+                  SizedBox(height: 12),
+                  Text('Matching 36 Ashtakoota Gunas & Manglik Compatibility...'),
+                ],
+              ),
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildScoreTab(context, isDark, totalScore, maxScore, percentage, status),
+                _buildManglikTab(context, isDark),
+                _buildRemediesTab(context, isDark),
+              ],
+            ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -118,7 +176,9 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
   }
 
   // --- TAB 1: ASHTAKOOTA SCORE TAB ---
-  Widget _buildScoreTab(BuildContext context, bool isDark) {
+  Widget _buildScoreTab(BuildContext context, bool isDark, String totalScore, String maxScore, String percentage, String status) {
+    final kootasList = (_matchData?['kootas'] as List<dynamic>?) ?? [];
+
     return ListView(
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
@@ -212,22 +272,25 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Ashtakoota Milan Score', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  Text('28.5 / 36', style: GoogleFonts.outfit(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800)),
-                  Text('Status: Highly Auspicious Match (उत्तम मिलान)', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.95), fontSize: 12, fontWeight: FontWeight.w600)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Ashtakoota Milan Score', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    Text('$totalScore / $maxScore', style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800)),
+                    Text('Status: $status', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.95), fontSize: 12, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis, maxLines: 1),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Text('79.2%', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                child: Text('$percentage%', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -235,16 +298,48 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
         const SizedBox(height: 20),
 
         // Ashtakoota 8 Kootas Detailed Breakdown with Animated Progress
-        Text('Detailed 8 Kootas Breakdown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Detailed 8 Kootas Breakdown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE11D48).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Live Backend Calculation',
+                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFFE11D48), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
-        _buildAnimatedKootaRow(0, '1. Varna Koota (Work temperament)', '1.0 / 1.0', 1.0, 'Both possess mutually respectful intellectual alignments', Colors.green, isDark),
-        _buildAnimatedKootaRow(1, '2. Vashya Koota (Dominance & control)', '2.0 / 2.0', 1.0, 'Equal authority and healthy mutual respect in marriage', Colors.green, isDark),
-        _buildAnimatedKootaRow(2, '3. Tara Koota (Destiny & longevity)', '3.0 / 3.0', 1.0, 'Sampat Tara - brings wealth, joy, and good fortunes', Colors.green, isDark),
-        _buildAnimatedKootaRow(3, '4. Yoni Koota (Physical compatibility)', '3.5 / 4.0', 0.87, 'Cow (Gau) and Elephant (Gaja) - Friendly intimacy', Colors.green, isDark),
-        _buildAnimatedKootaRow(4, '5. Graha Maitri (Mental harmony)', '4.0 / 5.0', 0.80, 'Venus and Mercury are natural friendly planetary lords', Colors.green, isDark),
-        _buildAnimatedKootaRow(5, '6. Gana Koota (Behavioral nature)', '5.0 / 6.0', 0.83, 'Deva Gana and Manushya Gana - Harmonious coexistence', Colors.green, isDark),
-        _buildAnimatedKootaRow(6, '7. Bhakoot Koota (Family & finance)', '7.0 / 7.0', 1.0, '9/5 Navapancham angle - Auspicious prosperity and progeny', Colors.green, isDark),
-        _buildAnimatedKootaRow(7, '8. Nadi Koota (Genetic health)', '3.0 / 8.0', 0.37, 'Antya vs Madhya Nadi - Minor dosha with cancellation present', Colors.orange, isDark),
+        if (kootasList.isEmpty)
+          const Center(child: Text('No koota breakdown available'))
+        else
+          ...kootasList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final k = entry.value as Map<String, dynamic>;
+            final name = k['koota_name']?.toString() ?? 'Koota';
+            final obtained = (k['obtained_points'] ?? 0).toDouble();
+            final max = (k['max_points'] ?? 1).toDouble();
+            final progress = max > 0 ? (obtained / max).clamp(0.0, 1.0) : 1.0;
+            final remarks = k['remarks']?.toString() ?? '';
+            final isCompatible = k['is_compatible'] == true;
+            final color = isCompatible ? const Color(0xFF059669) : Colors.orange;
+
+            return _buildAnimatedKootaRow(
+              idx,
+              '${idx + 1}. $name',
+              '$obtained / $max',
+              progress,
+              remarks,
+              color,
+              isDark,
+            );
+          }),
       ],
     );
   }
@@ -425,5 +520,193 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
         ],
       ),
     );
+  }
+
+  void _showEditProfilesSheet() {
+    final boyNameCtrl = TextEditingController(text: _boyName);
+    final girlNameCtrl = TextEditingController(text: _girlName);
+    String bDob = _boyDob;
+    String bTob = _boyTob;
+    String bRashi = _boyRashi;
+    String gDob = _girlDob;
+    String gTob = _girlTob;
+    String gRashi = _girlRashi;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(
+                top: 20,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(color: Colors.grey.shade400, borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text('Edit Partner Profiles', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+                    const SizedBox(height: 14),
+
+                    // Boy Section
+                    Text('Groom Details (वर)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6))),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: boyNameCtrl,
+                      decoration: const InputDecoration(labelText: 'Groom Full Name', prefixIcon: Icon(Icons.person)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 16),
+                            label: Text(bDob, style: GoogleFonts.outfit(fontSize: 12)),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime(1994, 1, 12),
+                                firstDate: DateTime(1950),
+                                lastDate: DateTime.now(),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  bDob = '${picked.day} ${_getMonth(picked.month)} ${picked.year}';
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.access_time, size: 16),
+                            label: Text(bTob, style: GoogleFonts.outfit(fontSize: 12)),
+                            onPressed: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: const TimeOfDay(hour: 7, minute: 15),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  bTob = picked.format(context);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Girl Section
+                    Text('Bride Details (वधू)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFFEC4899))),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: girlNameCtrl,
+                      decoration: const InputDecoration(labelText: 'Bride Full Name', prefixIcon: Icon(Icons.person_3)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.calendar_today, size: 16),
+                            label: Text(gDob, style: GoogleFonts.outfit(fontSize: 12)),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime(1996, 6, 24),
+                                firstDate: DateTime(1950),
+                                lastDate: DateTime.now(),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  gDob = '${picked.day} ${_getMonth(picked.month)} ${picked.year}';
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.access_time, size: 16),
+                            label: Text(gTob, style: GoogleFonts.outfit(fontSize: 12)),
+                            onPressed: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: const TimeOfDay(hour: 14, minute: 45),
+                              );
+                              if (picked != null) {
+                                setSheetState(() {
+                                  gTob = picked.format(context);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE11D48),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _boyName = boyNameCtrl.text.trim().isNotEmpty ? boyNameCtrl.text.trim() : _boyName;
+                            _girlName = girlNameCtrl.text.trim().isNotEmpty ? girlNameCtrl.text.trim() : _girlName;
+                            _boyDob = bDob;
+                            _boyTob = bTob;
+                            _boyRashi = bRashi;
+                            _girlDob = gDob;
+                            _girlTob = gTob;
+                            _girlRashi = gRashi;
+                          });
+                          Navigator.pop(ctx);
+                          _calculateMatch();
+                        },
+                        child: Text('Calculate Live Match Gunas', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static String _getMonth(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return (month >= 1 && month <= 12) ? months[month - 1] : 'Jan';
   }
 }

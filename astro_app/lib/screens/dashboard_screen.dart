@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/astro_item.dart';
 import '../models/astro_models.dart';
+import '../services/astro_api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/astro_cards.dart';
 import '../widgets/celestial_animations.dart';
+import 'api_settings_screen.dart';
 import 'feature_sheets.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -34,6 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   final TextEditingController _searchController = TextEditingController();
 
   late AnimationController _mandalaController;
+  Map<String, dynamic>? _livePanchang;
+  List<dynamic>? _liveTransits;
 
   @override
   void initState() {
@@ -42,6 +46,18 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       vsync: this,
       duration: const Duration(seconds: 45),
     )..repeat();
+    _loadLiveDashboardData();
+  }
+
+  Future<void> _loadLiveDashboardData() async {
+    final panchang = await AstroApiService.getTodayPanchang();
+    final transits = await AstroApiService.getDailyTransits();
+    if (mounted) {
+      setState(() {
+        _livePanchang = panchang;
+        _liveTransits = transits['planetary_transits'] as List<dynamic>?;
+      });
+    }
   }
 
   @override
@@ -217,6 +233,18 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                     Row(
                                       children: [
                                         _buildHeaderIconButton(
+                                          icon: const IconData(0xe09b, fontFamily: 'MaterialIcons'), // API icon
+                                          color: const Color(0xFF10B981),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+                                            ).then((_) => _loadLiveDashboardData());
+                                          },
+                                          tooltip: 'Live Backend Hub',
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _buildHeaderIconButton(
                                           icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
                                           color: isDark ? const Color(0xFFFFD54F) : Colors.white,
                                           onTap: widget.onToggleTheme,
@@ -236,7 +264,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                           onTap: () {
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('Abhijit Muhurta is currently active (11:58 AM - 12:49 PM)', style: GoogleFonts.outfit()),
+                                                content: Text('Abhijit Muhurta is active: ${_livePanchang?['muhurtas']?['abhijit'] ?? '11:58 AM - 12:49 PM'}', style: GoogleFonts.outfit()),
                                                 backgroundColor: const Color(0xFF4338CA),
                                                 behavior: SnackBarBehavior.floating,
                                               ),
@@ -310,15 +338,25 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   scrollDirection: Axis.horizontal,
                                   physics: const BouncingScrollPhysics(),
                                   child: Row(
-                                    children: [
-                                      _buildHeaderPill('☀️ Sun in Aquarius (Kumbha)', const Color(0xFFD97706)),
-                                      const SizedBox(width: 8),
-                                      _buildHeaderPill('🌙 Moon in Rohini (Exalted)', const Color(0xFF3B82F6)),
-                                      const SizedBox(width: 8),
-                                      _buildHeaderPill('🪐 Saturn in Shasha Yoga', const Color(0xFF6366F1)),
-                                      const SizedBox(width: 8),
-                                      _buildHeaderPill('✨ Abhijit Active 11:58 AM', const Color(0xFF059669)),
-                                    ],
+                                    children: (_liveTransits != null && _liveTransits!.isNotEmpty)
+                                        ? _liveTransits!.map((t) {
+                                            final planet = t['planet'] ?? '';
+                                            final sign = t['sign'] ?? '';
+                                            final status = t['status'] ?? '';
+                                            return Padding(
+                                              padding: const EdgeInsets.only(right: 8),
+                                              child: _buildHeaderPill('$planet in $sign ($status)', const Color(0xFFD97706)),
+                                            );
+                                          }).toList()
+                                        : [
+                                            _buildHeaderPill('☀️ Sun in Aquarius (Kumbha)', const Color(0xFFD97706)),
+                                            const SizedBox(width: 8),
+                                            _buildHeaderPill('🌙 Moon in Rohini (Exalted)', const Color(0xFF3B82F6)),
+                                            const SizedBox(width: 8),
+                                            _buildHeaderPill('🪐 Saturn in Shasha Yoga', const Color(0xFF6366F1)),
+                                            const SizedBox(width: 8),
+                                            _buildHeaderPill('✨ Abhijit Active 11:58 AM', const Color(0xFF059669)),
+                                          ],
                                   ),
                                 ),
                               ],
@@ -516,6 +554,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   // --- Live Panchang Summary Banner with Pulsing Aura ---
   Widget _buildLivePanchangCard(BuildContext context, String dateStr, bool isDark) {
+    final tithi = _livePanchang?['tithi']?.toString().split(' ').take(2).join(' ') ?? 'Dwitiya';
+    final nakshatra = _livePanchang?['nakshatra']?.toString().split(' ').first ?? 'Rohini';
+    final rahuKaal = _livePanchang?['inauspicious']?['rahu_kaal']?.toString().split(' ').first ?? '12:28 PM';
+    final paksha = _livePanchang?['paksha']?.toString() ?? 'Shukla Paksha';
+
     return BouncyTouchCard(
       onTap: () => _openItem(
         AstroItem.items.firstWhere((i) => i.id == 'panchanga_muhurta'),
@@ -565,12 +608,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
                 Row(
                   children: [
-                    const PulsingAuraWidget(
-                      glowColor: Color(0xFFD97706),
+                    PulsingAuraWidget(
+                      glowColor: const Color(0xFFD97706),
                       maxBlur: 6,
                       child: ShimmerBadge(
-                        text: 'Shukla Paksha',
-                        baseGradient: LinearGradient(
+                        text: paksha,
+                        baseGradient: const LinearGradient(
                           colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
                         ),
                         textColor: Colors.white,
@@ -589,11 +632,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 final isNarrow = constraints.maxWidth < 320;
                 return Row(
                   children: [
-                    _buildPanchangPill('Tithi', 'Dwitiya', Icons.brightness_3_rounded, const Color(0xFF6366F1), isDark, isNarrow),
+                    _buildPanchangPill('Tithi', tithi, Icons.brightness_3_rounded, const Color(0xFF6366F1), isDark, isNarrow),
                     const SizedBox(width: 8),
-                    _buildPanchangPill('Nakshatra', 'Rohini', Icons.star_rounded, const Color(0xFF0D9488), isDark, isNarrow),
+                    _buildPanchangPill('Nakshatra', nakshatra, Icons.star_rounded, const Color(0xFF0D9488), isDark, isNarrow),
                     const SizedBox(width: 8),
-                    _buildPanchangPill('Rahu Kaal', '12:28 PM', Icons.warning_amber_rounded, const Color(0xFFE11D48), isDark, isNarrow),
+                    _buildPanchangPill('Rahu Kaal', rahuKaal, Icons.warning_amber_rounded, const Color(0xFFE11D48), isDark, isNarrow),
                   ],
                 );
               },
@@ -616,9 +659,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           ),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: 13, color: color),
                 const SizedBox(width: 4),
@@ -632,6 +678,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -639,9 +686,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: Text(
                 val,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: isNarrow ? 12 : 13.5,
                   fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'api_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onToggleTheme;
@@ -41,6 +42,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _buildSectionHeader('Backend & API Connectivity'),
+          _buildActionTile(
+            'Live Flask Backend Hub',
+            'Configure Base URL (10.0.2.2 / localhost:5000), test ping & endpoints',
+            Icons.api_rounded,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
+              );
+            },
+            isDark,
+            iconColor: const Color(0xFF059669),
+          ),
+          const SizedBox(height: 16),
+
           _buildSectionHeader('Astrological Calculations'),
           _buildSelectTile('Default Kundli Format', _chartStyle, ['North Indian (उत्तर)', 'South Indian (दक्षिण)', 'East Indian (सूर्य)'], (v) => setState(() => _chartStyle = v), isDark),
           _buildSelectTile('Default Ayanamsa', _ayanamsa, ['Lahiri (Chitra Paksha)', 'Krishnamurti (KP)', 'B.V. Raman', 'Fagan / Bradley'], (v) => setState(() => _ayanamsa = v), isDark),
@@ -82,7 +99,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600)),
+          Expanded(
+            child: Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 8),
           DropdownButton<String>(
             value: currentVal,
             underline: const SizedBox(),
@@ -121,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildActionTile(String title, String subtitle, IconData icon, VoidCallback? onTap, bool isDark) {
+  Widget _buildActionTile(String title, String subtitle, IconData icon, VoidCallback? onTap, bool isDark, {Color? iconColor}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -130,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFF4338CA)),
+        leading: Icon(icon, color: iconColor ?? const Color(0xFF4338CA)),
         title: Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle, style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey)),
         trailing: const Icon(Icons.chevron_right_rounded),

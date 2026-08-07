@@ -199,7 +199,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Day $_selectedDay March 2026 Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Expanded(
+                      child: Text('Day $_selectedDay Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
