@@ -166,8 +166,8 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
           _buildTransitPlanet(2, 'Mars (Mangal)', 'Kanya (Virgo)', '28° 10\' 05"', 'Chitra (Mars)', 'Enemy', 'Direct', Colors.red, isDark),
           _buildTransitPlanet(3, 'Mercury (Budha)', 'Kumbha (Aquarius)', '06° 54\' 30"', 'Dhanishta (Mars)', 'Friendly', 'Direct', Colors.green, isDark),
           _buildTransitPlanet(4, 'Jupiter (Guru)', 'Vrishabha (Taurus)', '17° 30\' 45"', 'Rohini (Moon)', 'Enemy', 'Direct', Colors.amber, isDark),
-          _buildTransitPlanet(5, 'Venus (Shukra)', 'Meena (Pisces)', '12° 44\' 19"', 'Uttara Bhadra (Saturn)', 'Exalted (उच्च)', 'Direct', Colors.teal, isDark),
-          _buildTransitPlanet(6, 'Saturn (Shani)', 'Kumbha (Aquarius)', '22° 18\' 52"', 'Purva Bhadra (Jupiter)', 'Own Sign (मूलत्रिकोण)', 'Direct', Colors.indigo, isDark),
+          _buildTransitPlanet(5, 'Venus (Shukra)', 'Meena (Pisces)', '12° 44\' 19"', 'Uttara Bhadra (Saturn)', 'Exalted', 'Direct', Colors.teal, isDark),
+          _buildTransitPlanet(6, 'Saturn (Shani)', 'Kumbha (Aquarius)', '22° 18\' 52"', 'Purva Bhadra (Jupiter)', 'Own Sign (Moolatrikona)', 'Direct', Colors.indigo, isDark),
           _buildTransitPlanet(7, 'Rahu (North Node)', 'Meena (Pisces)', '14° 02\' 10"', 'Uttara Bhadra (Saturn)', 'Friendly', 'Retrograde', Colors.purple, isDark),
           _buildTransitPlanet(8, 'Ketu (South Node)', 'Kanya (Virgo)', '14° 02\' 10"', 'Hasta (Moon)', 'Friendly', 'Retrograde', Colors.purple, isDark),
         ] else

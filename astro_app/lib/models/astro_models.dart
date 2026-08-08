@@ -67,11 +67,11 @@ extension KundliChartStyleExtension on KundliChartStyle {
   String get title {
     switch (this) {
       case KundliChartStyle.northIndian:
-        return 'North Indian (उत्तर भारतीय)';
+        return 'North Indian';
       case KundliChartStyle.southIndian:
-        return 'South Indian (दक्षिण भारतीय)';
+        return 'South Indian';
       case KundliChartStyle.eastIndian:
-        return 'East Indian (सूर्य चक्र)';
+        return 'East Indian';
     }
   }
 }

@@ -61,7 +61,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
     final totalScore = _matchData?['total_score']?.toString() ?? '29.5';
     final maxScore = _matchData?['max_score']?.toString() ?? '36.0';
     final percentage = _matchData?['percentage']?.toString() ?? '81.9';
-    final status = _matchData?['status']?.toString() ?? 'Excellent Match (उत्तम मिलान)';
+    final status = _matchData?['status']?.toString() ?? 'Excellent Match';
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0F1D) : const Color(0xFFF8FAFC),
@@ -341,7 +341,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
       children: [
         _buildManglikCard(
           _boyName,
-          'Non-Manglik (मंगल दोष रहित)',
+          'Non-Manglik',
           'Mars is placed in 10th House (Exalted in Capricorn), producing Digbala and canceling any blemish.',
           Icons.verified_user_rounded,
           Colors.green,
@@ -350,7 +350,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
         const SizedBox(height: 12),
         _buildManglikCard(
           _girlName,
-          'Anshik Manglik (आंशिक मंगल)',
+          'Anshik Manglik',
           'Mars is situated in 12th House, but Jupiter aspect mitigates the intensity after age 28.',
           Icons.info_outline_rounded,
           Colors.orange,
@@ -392,7 +392,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
       padding: const EdgeInsets.all(16),
       physics: const BouncingScrollPhysics(),
       children: [
-        Text('Recommended Astrological Remedies (उपाय)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+        Text('Recommended Astrological Remedies', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         _buildRemedyCard('1. Shiva-Parvati Puja', 'Perform Rudrabhishek on Mondays for marital bliss, mutual love and long life.', Icons.temple_hindu_rounded, Colors.purple, isDark),
         _buildRemedyCard('2. Yellow Sapphire or Opal', 'Strengthen benefic Jupiter and Venus for prosperity and peaceful domestic life.', Icons.diamond_rounded, Colors.amber, isDark),
@@ -557,7 +557,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
                     const SizedBox(height: 14),
 
                     // Boy Section
-                    Text('Groom Details (वर)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6))),
+                    Text('Groom Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6))),
                     const SizedBox(height: 8),
                     TextField(
                       controller: boyNameCtrl,
@@ -608,7 +608,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
                     const SizedBox(height: 16),
 
                     // Girl Section
-                    Text('Bride Details (वधू)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFFEC4899))),
+                    Text('Bride Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFFEC4899))),
                     const SizedBox(height: 8),
                     TextField(
                       controller: girlNameCtrl,

@@ -90,6 +90,12 @@ class _MultiKundliPainter extends CustomPainter {
       code = 'Ra';
     } else if (lower.contains('ketu')) {
       code = 'Ke';
+    } else if (lower.contains('uranus') || lower.contains('harshal')) {
+      code = 'Ur';
+    } else if (lower.contains('neptune') || lower.contains('varun')) {
+      code = 'Ne';
+    } else if (lower.contains('pluto') || lower.contains('yama')) {
+      code = 'Pl';
     } else if (lower.contains('ascendant') || lower.contains('lagna')) {
       code = 'As';
     }
@@ -305,7 +311,7 @@ class _MultiKundliPainter extends CustomPainter {
   }
 
   // =========================================================================
-  // 1. SOUTH INDIAN SQUARE MODEL CHART (12 Fixed Sign Grid)
+  // 1. SOUTH INDIAN CHART (12 Fixed Sign Grid)
   // =========================================================================
   void _drawSouthIndianChart(
     Canvas canvas,
@@ -387,18 +393,18 @@ class _MultiKundliPainter extends CustomPainter {
 
     // Fixed 12 Signs in South Indian System Layout (Clockwise from Pisces):
     final gridPositions = [
-      (0, 0, 12), // Pisces (मीन) - Top Left
-      (1, 0, 1),  // Aries (मेष) - Top Mid-Left
-      (2, 0, 2),  // Taurus (वृषभ) - Top Mid-Right
-      (3, 0, 3),  // Gemini (मिथुन) - Top Right
-      (3, 1, 4),  // Cancer (कर्क) - Right Top-Mid
-      (3, 2, 5),  // Leo (सिंह) - Right Bottom-Mid
-      (3, 3, 6),  // Virgo (कन्या) - Bottom Right
-      (2, 3, 7),  // Libra (तुला) - Bottom Mid-Right
-      (1, 3, 8),  // Scorpio (वृश्चिक) - Bottom Mid-Left
-      (0, 3, 9),  // Sagittarius (धनु) - Bottom Left
-      (0, 2, 10), // Capricorn (मकर) - Left Bottom-Mid
-      (0, 1, 11), // Aquarius (कुम्भ) - Left Top-Mid
+      (0, 0, 12), // Pisces - Top Left
+      (1, 0, 1),  // Aries - Top Mid-Left
+      (2, 0, 2),  // Taurus - Top Mid-Right
+      (3, 0, 3),  // Gemini - Top Right
+      (3, 1, 4),  // Cancer - Right Top-Mid
+      (3, 2, 5),  // Leo - Right Bottom-Mid
+      (3, 3, 6),  // Virgo - Bottom Right
+      (2, 3, 7),  // Libra - Bottom Mid-Right
+      (1, 3, 8),  // Scorpio - Bottom Mid-Left
+      (0, 3, 9),  // Sagittarius - Bottom Left
+      (0, 2, 10), // Capricorn - Left Bottom-Mid
+      (0, 1, 11), // Aquarius - Left Top-Mid
     ];
 
     for (final item in gridPositions) {

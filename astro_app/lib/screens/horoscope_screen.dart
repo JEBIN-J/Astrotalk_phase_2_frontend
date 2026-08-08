@@ -67,7 +67,7 @@ class HoroscopeScreen extends StatefulWidget {
 
   const HoroscopeScreen({
     super.key,
-    this.initialChartStyle = KundliChartStyle.southIndian, // Default Square Model Chart
+    this.initialChartStyle = KundliChartStyle.southIndian, // Default South Indian Chart
   });
 
   @override
@@ -347,10 +347,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       children: KundliChartStyle.values.map((style) {
                         final isSel = style == _currentChartStyle;
                         String label = style == KundliChartStyle.southIndian
-                            ? 'Square (दक्षिण)'
+                            ? 'Square (South)'
                             : style == KundliChartStyle.northIndian
-                                ? 'Diamond (उत्तर)'
-                                : 'Sun (सूर्य)';
+                                ? 'Diamond (North)'
+                                : 'Sun (East)';
                         return Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -975,7 +975,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           child: Row(
             children: [
               _buildChartStyleToggleItem(
-                '🔲 Square Model (South)',
+                '🔲 South Indian',
                 _currentChartStyle == KundliChartStyle.southIndian,
                 () => setState(() => _currentChartStyle = KundliChartStyle.southIndian),
                 isDark,
@@ -1188,6 +1188,43 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
+  // --- HELPER: KP LORD SHORT CODE ---
+  String _getLordShortCode(String? lord) {
+    if (lord == null || lord.isEmpty) return '-';
+    final lower = lord.toLowerCase().trim();
+    if (lower.startsWith('su')) return 'Su';
+    if (lower.startsWith('mo') || lower.startsWith('ch')) return 'Mo';
+    if (lower.startsWith('ma') || lower.startsWith('ku')) return 'Ma';
+    if (lower.startsWith('me') || lower.startsWith('bu')) return 'Me';
+    if (lower.startsWith('ju') || lower.startsWith('gu') || lower.startsWith('br')) return 'Ju';
+    if (lower.startsWith('ve') || lower.startsWith('shuk')) return 'Ve';
+    if (lower.startsWith('sa') || lower.startsWith('shan')) return 'Sa';
+    if (lower.startsWith('ra')) return 'Ra';
+    if (lower.startsWith('ke')) return 'Ke';
+    if (lower.startsWith('ur')) return 'Ur';
+    if (lower.startsWith('ne')) return 'Ne';
+    if (lower.startsWith('pl')) return 'Pl';
+    return lord.length >= 2 ? lord.substring(0, 2) : lord;
+  }
+
+  Widget _buildKpTableHeader(bool isDark) {
+    return Container(
+      color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(flex: 7, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 6, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 3, child: Center(child: Text('Paada', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+          Expanded(flex: 2, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+          Expanded(flex: 2, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+          Expanded(flex: 2, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+        ],
+      ),
+    );
+  }
+
   // --- BOTTOM TAB 1: PLANETS TABLE ---
   Widget _buildBottomPlanetsTable(bool isDark) {
     final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
@@ -1224,7 +1261,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      _isCardViewMode ? 'Table View' : 'Card View',
+                      _isCardViewMode ? 'KP View' : 'Degree View',
                       style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
                     ),
                   ),
@@ -1232,7 +1269,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ],
             ),
           ),
-          _buildTableHeader(['Planet', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
+          if (_isCardViewMode)
+            _buildTableHeader(['Planet', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark)
+          else
+            _buildKpTableHeader(isDark),
           const Divider(height: 1),
           Expanded(
             child: ListView.separated(
@@ -1240,19 +1280,82 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
               itemBuilder: (ctx, idx) {
                 final p = rawPlanets[idx] as Map<String, dynamic>;
-                final name = p['name']?.toString() ?? 'Planet';
+                final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                    (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                    (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+
+                String displayName = p['table_display_name']?.toString() ?? '';
+                if (displayName.isEmpty) {
+                  if (isLagna) {
+                    displayName = 'Lagna';
+                  } else {
+                    final rawName = p['name']?.toString();
+                    final simpleName = p['planet_name_simple']?.toString() ??
+                        (rawName != null && rawName.isNotEmpty ? rawName.split(' ').first : 'Planet');
+                    final isRetro = p['is_retrograde'] == true;
+                    final karakaCode = p['chara_karaka_code']?.toString() ?? '';
+                    final retroTag = isRetro ? ' (R)' : '';
+                    final karakaTag = karakaCode.isNotEmpty ? (isRetro ? '($karakaCode)' : ' ($karakaCode)') : '';
+                    displayName = '$simpleName$retroTag$karakaTag';
+                  }
+                }
+
                 final deg = p['degree_formatted']?.toString() ?? "00:00:00";
                 final sign = p['sign']?.toString() ?? 'Aries';
                 final signSanskrit = p['sign_sanskrit']?.toString() ?? '';
                 final signDisplay = signSanskrit.isNotEmpty ? '$sign ($signSanskrit)' : sign;
                 final nak = p['nakshatra']?.toString() ?? 'Ashwini';
                 final pada = (p['pada'] ?? p['nakshatra_pada'] ?? 1).toString();
-                final isRetro = p['is_retrograde'] == true;
 
-                final isLagna = name.toLowerCase().contains('ascendant') || name.toLowerCase().contains('lagna');
+                final kp = p['kp_lords'] as Map<String, dynamic>?;
+                final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
+                final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
+                final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
+                final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
+
                 final rowBg = isLagna
                     ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
                     : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
+
+                if (_isCardViewMode) {
+                  return Container(
+                    color: rowBg,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            displayName,
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.5,
+                              fontWeight: isLagna ? FontWeight.bold : FontWeight.w600,
+                              color: isLagna ? const Color(0xFFE11D48) : null,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500))),
+                        Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                        Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                        Expanded(
+                          flex: 1,
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: Text(
+                              pada,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: isLagna ? const Color(0xFFE11D48) : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
                 return Container(
                   color: rowBg,
@@ -1260,34 +1363,28 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   child: Row(
                     children: [
                       Expanded(
-                        flex: 3,
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                name,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11.5,
-                                  fontWeight: isLagna ? FontWeight.bold : FontWeight.w600,
-                                  color: isLagna ? const Color(0xFFE11D48) : null,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isRetro) ...[
-                              const SizedBox(width: 3),
-                              Text('(R)', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red)),
-                            ],
-                          ],
+                        flex: 7,
+                        child: Text(
+                          displayName,
+                          style: GoogleFonts.outfit(
+                            fontSize: 11.5,
+                            fontWeight: isLagna ? FontWeight.bold : FontWeight.w600,
+                            color: isLagna ? const Color(0xFFE11D48) : null,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500))),
-                      Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
                       Expanded(
-                        flex: 1,
-                        child: Container(
-                          alignment: Alignment.center,
+                        flex: 6,
+                        child: Text(
+                          nak,
+                          style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Center(
                           child: Text(
                             pada,
                             style: GoogleFonts.outfit(
@@ -1295,6 +1392,42 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               fontWeight: FontWeight.bold,
                               color: isLagna ? const Color(0xFFE11D48) : null,
                             ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Center(
+                          child: Text(
+                            rl,
+                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Center(
+                          child: Text(
+                            nl,
+                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF059669)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Center(
+                          child: Text(
+                            sl,
+                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Center(
+                          child: Text(
+                            ssl,
+                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)),
                           ),
                         ),
                       ),
@@ -1495,7 +1628,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Special Lagnas (विशेष लग्न)',
+                    'Special Lagnas',
                     style: GoogleFonts.outfit(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                   ),
                   Container(
@@ -1563,7 +1696,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Jaimini 7 Chara Karakas (चर कारक)',
+                    'Jaimini 7 Chara Karakas',
                     style: GoogleFonts.outfit(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6)),
                   ),
                   Container(
@@ -1850,7 +1983,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isStrong ? 'Strong (बलवान) ${percent.toStringAsFixed(0)}%' : 'Average (मध्यम) ${percent.toStringAsFixed(0)}%',
+                          isStrong ? 'Strong ${percent.toStringAsFixed(0)}%' : 'Average ${percent.toStringAsFixed(0)}%',
                           style: GoogleFonts.outfit(
                             fontSize: 10.5,
                             fontWeight: FontWeight.bold,

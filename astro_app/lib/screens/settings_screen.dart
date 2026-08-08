@@ -15,9 +15,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _chartStyle = 'North Indian (उत्तर)';
+  String _chartStyle = 'North Indian';
   String _ayanamsa = 'Lahiri (Chitra Paksha)';
-  String _language = 'English (English)';
+  String _language = 'English';
   bool _notifyRahuKaal = true;
   bool _notifyTithi = false;
   bool _highPrecisionEphemeris = true;
@@ -41,13 +41,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           _buildSectionHeader('Astrological Calculations'),
-          _buildSelectTile('Default Kundli Format', _chartStyle, ['North Indian (उत्तर)', 'South Indian (दक्षिण)', 'East Indian (सूर्य)'], (v) => setState(() => _chartStyle = v), isDark),
+          _buildSelectTile('Default Kundli Format', _chartStyle, ['North Indian', 'South Indian', 'East Indian'], (v) => setState(() => _chartStyle = v), isDark),
           _buildSelectTile('Default Ayanamsa', _ayanamsa, ['Lahiri (Chitra Paksha)', 'Krishnamurti (KP)', 'B.V. Raman', 'Fagan / Bradley'], (v) => setState(() => _ayanamsa = v), isDark),
           _buildSwitchTile('High Precision Swiss Ephemeris (0.01")', _highPrecisionEphemeris, (v) => setState(() => _highPrecisionEphemeris = v), isDark),
           const SizedBox(height: 16),
 
           _buildSectionHeader('Localization & Appearance'),
-          _buildSelectTile('Language', _language, ['English (English)', 'Hindi (हिन्दी)', 'Tamil (தமிழ்)', 'Telugu (తెలుగు)', 'Marathi (मराठी)'], (v) => setState(() => _language = v), isDark),
+          _buildSelectTile('Language', _language, ['English', 'Hindi', 'Tamil', 'Telugu', 'Marathi'], (v) => setState(() => _language = v), isDark),
           _buildActionTile('Dark Mode Theme', isDark ? 'Active (Cosmic Midnight)' : 'Active (Celestial Light)', Icons.dark_mode_rounded, widget.onToggleTheme, isDark),
           const SizedBox(height: 16),
 
