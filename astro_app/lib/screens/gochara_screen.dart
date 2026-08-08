@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
-import 'api_settings_screen.dart';
 
 class GocharaScreen extends StatefulWidget {
   final bool isYearly;
@@ -57,16 +56,6 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
-            tooltip: 'Live Backend Hub',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
-              ).then((_) => _fetchTransits());
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0284C7)),
             tooltip: 'Refresh Gochara',
@@ -164,7 +153,7 @@ class _GocharaScreenState extends State<GocharaScreen> with SingleTickerProvider
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'Live Backend',
+                'Sidereal Transit',
                 style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF0284C7), fontWeight: FontWeight.bold),
               ),
             ),

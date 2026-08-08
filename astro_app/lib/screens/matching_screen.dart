@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
-import 'api_settings_screen.dart';
 
 class MatchingScreen extends StatefulWidget {
   const MatchingScreen({super.key});
@@ -75,16 +74,6 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
-            tooltip: 'Live Backend Hub',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
-              ).then((_) => _calculateMatch());
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.edit_calendar_rounded, color: Color(0xFFE11D48)),
             tooltip: 'Edit Bride & Groom Details',
@@ -309,7 +298,7 @@ class _MatchingScreenState extends State<MatchingScreen> with SingleTickerProvid
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'Live Backend Calculation',
+                'Ashtakoota Analysis',
                 style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFFE11D48), fontWeight: FontWeight.bold),
               ),
             ),

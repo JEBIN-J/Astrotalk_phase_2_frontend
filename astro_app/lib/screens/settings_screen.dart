@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'api_settings_screen.dart';
-
 class SettingsScreen extends StatefulWidget {
   final VoidCallback? onToggleTheme;
   final bool isDark;
@@ -42,22 +40,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionHeader('Backend & API Connectivity'),
-          _buildActionTile(
-            'Live Flask Backend Hub',
-            'Configure Base URL (10.0.2.2 / localhost:5000), test ping & endpoints',
-            Icons.api_rounded,
-            () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
-              );
-            },
-            isDark,
-            iconColor: const Color(0xFF059669),
-          ),
-          const SizedBox(height: 16),
-
           _buildSectionHeader('Astrological Calculations'),
           _buildSelectTile('Default Kundli Format', _chartStyle, ['North Indian (उत्तर)', 'South Indian (दक्षिण)', 'East Indian (सूर्य)'], (v) => setState(() => _chartStyle = v), isDark),
           _buildSelectTile('Default Ayanamsa', _ayanamsa, ['Lahiri (Chitra Paksha)', 'Krishnamurti (KP)', 'B.V. Raman', 'Fagan / Bradley'], (v) => setState(() => _ayanamsa = v), isDark),

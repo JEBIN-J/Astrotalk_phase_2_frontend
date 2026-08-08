@@ -7,7 +7,6 @@ import '../services/astro_api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/astro_cards.dart';
 import '../widgets/celestial_animations.dart';
-import 'api_settings_screen.dart';
 import 'feature_sheets.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -232,18 +231,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                     // Action buttons in sleek pill containers
                                     Row(
                                       children: [
-                                        _buildHeaderIconButton(
-                                          icon: const IconData(0xe09b, fontFamily: 'MaterialIcons'), // API icon
-                                          color: const Color(0xFF10B981),
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
-                                            ).then((_) => _loadLiveDashboardData());
-                                          },
-                                          tooltip: 'Live Backend Hub',
-                                        ),
-                                        const SizedBox(width: 6),
                                         _buildHeaderIconButton(
                                           icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
                                           color: isDark ? const Color(0xFFFFD54F) : Colors.white,

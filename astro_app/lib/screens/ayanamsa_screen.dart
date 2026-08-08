@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
-import 'api_settings_screen.dart';
 
 class AyanamsaScreen extends StatefulWidget {
   const AyanamsaScreen({super.key});
@@ -62,18 +61,6 @@ class _AyanamsaScreenState extends State<AyanamsaScreen> {
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.api_rounded, color: Color(0xFF059669)),
-            tooltip: 'Live Backend Hub',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ApiSettingsScreen()),
-              ).then((_) => _fetchAyanamsa());
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(
