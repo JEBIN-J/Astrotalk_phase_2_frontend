@@ -134,6 +134,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     super.dispose();
   }
 
+  String _getNakshatraLordFromNakshatra(String nakshatra) {
+    final nak = nakshatra.toLowerCase();
+    if (nak.contains('ashwini') || nak.contains('magha') || nak.contains('mula')) return 'Ketu';
+    if (nak.contains('bharani') || nak.contains('purva phalguni') || nak.contains('purva ashadha')) return 'Venus';
+    if (nak.contains('krittika') || nak.contains('uttara phalguni') || nak.contains('uttara ashadha')) return 'Sun';
+    if (nak.contains('rohini') || nak.contains('hasta') || nak.contains('shravana')) return 'Moon';
+    if (nak.contains('mrigashira') || nak.contains('chitra') || nak.contains('dhanishta')) return 'Mars';
+    if (nak.contains('ardra') || nak.contains('swati') || nak.contains('shatabhisha')) return 'Rahu';
+    if (nak.contains('punarvasu') || nak.contains('vishakha') || nak.contains('purva bhadrapada')) return 'Jupiter';
+    if (nak.contains('pushya') || nak.contains('anuradha') || nak.contains('uttara bhadrapada')) return 'Saturn';
+    if (nak.contains('ashlesha') || nak.contains('jyeshtha') || nak.contains('revati')) return 'Mercury';
+    return '-';
+  }
+
   void _syncDateTimeFromStrings() {
     try {
       DateTime? d;
@@ -1213,13 +1227,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
         children: [
-          Expanded(flex: 7, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 6, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 3, child: Center(child: Text('Paada', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-          Expanded(flex: 2, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-          Expanded(flex: 2, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-          Expanded(flex: 2, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
+          Expanded(flex: 1, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
         ],
       ),
     );
@@ -1227,7 +1244,56 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 1: PLANETS TABLE ---
   Widget _buildBottomPlanetsTable(bool isDark) {
-    final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
+    final basePlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
+    List<Map<String, dynamic>> dynamicPlanets = [];
+
+    for (var bp in basePlanets) {
+      Map<String, dynamic> dp = Map<String, dynamic>.from(bp);
+      final rawName = dp['name']?.toString() ?? '';
+      final simpleName = dp['planet_name_simple']?.toString() ?? (rawName.isNotEmpty ? rawName.split(' ').first : '');
+      
+      final isLagna = simpleName.toLowerCase().contains('ascendant') || 
+                      rawName.toLowerCase().contains('ascendant') || 
+                      rawName.toLowerCase().contains('lagna');
+
+      if (_activeChartKey == 'Bhava') {
+        if (isLagna) {
+          dp['house'] = 1;
+        } else {
+          final bhavaPlanets = _kundliData?['bhava_chalit']?['planets'] as List<dynamic>?;
+          if (bhavaPlanets != null) {
+            final match = bhavaPlanets.firstWhere(
+              (p) => p['planet']?.toString() == simpleName,
+              orElse: () => null,
+            );
+            if (match != null) {
+              dp['house'] = match['bhava_house'];
+            }
+          }
+        }
+      } else if (_activeChartKey != 'D-1') {
+        final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
+        if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
+          if (isLagna) {
+            dp['sign'] = divCharts[_activeChartKey]['ascendant_sign'];
+            dp['house'] = 1;
+          } else {
+            final divPlanets = divCharts[_activeChartKey]['planets'] as List<dynamic>?;
+            if (divPlanets != null) {
+              final match = divPlanets.firstWhere(
+                (p) => p['planet']?.toString() == simpleName,
+                orElse: () => null,
+              );
+              if (match != null) {
+                dp['sign'] = match['sign'];
+                dp['house'] = match['house'];
+              }
+            }
+          }
+        }
+      }
+      dynamicPlanets.add(dp);
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -1269,172 +1335,104 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ],
             ),
           ),
-          if (_isCardViewMode)
-            _buildTableHeader(['Planet', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark)
-          else
-            _buildKpTableHeader(isDark),
-          const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              itemCount: rawPlanets.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
-              itemBuilder: (ctx, idx) {
-                final p = rawPlanets[idx] as Map<String, dynamic>;
-                final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                    (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                    (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                width: _isCardViewMode ? 500 : 800,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_isCardViewMode)
+                      _buildTableHeader(['Planet', 'House', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark)
+                    else
+                      _buildKpTableHeader(isDark),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: dynamicPlanets.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        itemBuilder: (ctx, idx) {
+                          final p = dynamicPlanets[idx];
+                          final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                              (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                              (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
 
-                String displayName = p['table_display_name']?.toString() ?? '';
-                if (displayName.isEmpty) {
-                  if (isLagna) {
-                    displayName = 'Lagna';
-                  } else {
-                    final rawName = p['name']?.toString();
-                    final simpleName = p['planet_name_simple']?.toString() ??
-                        (rawName != null && rawName.isNotEmpty ? rawName.split(' ').first : 'Planet');
-                    final isRetro = p['is_retrograde'] == true;
-                    final karakaCode = p['chara_karaka_code']?.toString() ?? '';
-                    final retroTag = isRetro ? ' (R)' : '';
-                    final karakaTag = karakaCode.isNotEmpty ? (isRetro ? '($karakaCode)' : ' ($karakaCode)') : '';
-                    displayName = '$simpleName$retroTag$karakaTag';
-                  }
-                }
+                          String displayName = p['table_display_name']?.toString() ?? '';
+                          if (displayName.isEmpty) {
+                            if (isLagna) {
+                              displayName = 'Lagna';
+                            } else {
+                              final rawName = p['name']?.toString();
+                              final simpleName = p['planet_name_simple']?.toString() ??
+                                  (rawName != null && rawName.isNotEmpty ? rawName.split(' ').first : 'Planet');
+                              final isRetro = p['is_retrograde'] == true;
+                              final karakaCode = p['chara_karaka_code']?.toString() ?? '';
+                              final retroTag = isRetro ? ' (R)' : '';
+                              final karakaTag = karakaCode.isNotEmpty ? (isRetro ? '($karakaCode)' : ' ($karakaCode)') : '';
+                              displayName = '$simpleName$retroTag$karakaTag';
+                            }
+                          }
 
-                final deg = p['degree_formatted']?.toString() ?? "00:00:00";
-                final sign = p['sign']?.toString() ?? 'Aries';
-                final signSanskrit = p['sign_sanskrit']?.toString() ?? '';
-                final signDisplay = signSanskrit.isNotEmpty ? '$sign ($signSanskrit)' : sign;
-                final nak = p['nakshatra']?.toString() ?? 'Ashwini';
-                final pada = (p['pada'] ?? p['nakshatra_pada'] ?? 1).toString();
+                          final houseStr = p['house']?.toString() ?? '-';
+                          final deg = p['degree_formatted']?.toString() ?? "00:00:00";
+                          final rawSign = p['sign']?.toString() ?? 'Aries';
+                          final signDisplay = rawSign.split('(')[0].trim();
+                          final nak = p['nakshatra']?.toString() ?? '-';
+                          final pada = p['pada']?.toString() ?? '-';
 
-                final kp = p['kp_lords'] as Map<String, dynamic>?;
-                final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
-                final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
-                final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
-                final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
+                          final kp = p['kp_lords'] as Map<String, dynamic>?;
+                          final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
+                          final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
+                          final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
+                          final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
 
-                final rowBg = isLagna
-                    ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
-                    : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
+                          final rowBg = isLagna
+                              ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
+                              : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
 
-                if (_isCardViewMode) {
-                  return Container(
-                    color: rowBg,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            displayName,
-                            style: GoogleFonts.outfit(
-                              fontSize: 11.5,
-                              fontWeight: isLagna ? FontWeight.bold : FontWeight.w600,
-                              color: isLagna ? const Color(0xFFE11D48) : null,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500))),
-                        Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                        Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            alignment: Alignment.center,
-                            child: Text(
-                              pada,
-                              style: GoogleFonts.outfit(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: isLagna ? const Color(0xFFE11D48) : null,
+                          if (_isCardViewMode) {
+                            return Container(
+                              color: rowBg,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
+                                  Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                                  Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
+                                ],
                               ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                            );
+                          }
 
-                return Container(
-                  color: rowBg,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 7,
-                        child: Text(
-                          displayName,
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            fontWeight: isLagna ? FontWeight.bold : FontWeight.w600,
-                            color: isLagna ? const Color(0xFFE11D48) : null,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Expanded(
-                        flex: 6,
-                        child: Text(
-                          nak,
-                          style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Center(
-                          child: Text(
-                            pada,
-                            style: GoogleFonts.outfit(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: isLagna ? const Color(0xFFE11D48) : null,
+                          return Container(
+                            color: rowBg,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)))),
+                                Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
+                                Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
+                                Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
+                                Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
+                              ],
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Text(
-                            rl,
-                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Text(
-                            nl,
-                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF059669)),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Text(
-                            sl,
-                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Text(
-                            ssl,
-                            style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -1476,55 +1474,50 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ],
             ),
           ),
-          _buildTableHeader(['Upagraha', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
-          const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              itemCount: upagrahas.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
-              itemBuilder: (ctx, idx) {
-                final u = upagrahas[idx] as Map<String, dynamic>;
-                final name = u['name']?.toString() ?? 'Upagraha';
-                final code = u['short_code']?.toString() ?? '';
-                final deg = u['degree_formatted']?.toString() ?? '00:00:00';
-                final sign = u['sign']?.toString() ?? 'Aries';
-                final signSanskrit = u['sign_sanskrit']?.toString() ?? '';
-                final signDisplay = signSanskrit.isNotEmpty ? '$sign ($signSanskrit)' : sign;
-                final nak = u['nakshatra']?.toString() ?? 'Ashwini';
-                final pada = (u['pada'] ?? 1).toString();
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                width: 450,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTableHeader(['Upagraha', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: upagrahas.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        itemBuilder: (ctx, idx) {
+                          final u = upagrahas[idx] as Map<String, dynamic>;
+                          final rawName = u['name']?.toString() ?? 'Upagraha';
+                          final name = rawName.split('(')[0].trim();
+                          final code = u['short_code']?.toString() ?? '';
+                          final deg = u['degree_formatted']?.toString() ?? '00:00:00';
+                          final rawSign = u['sign']?.toString() ?? 'Aries';
+                          final signDisplay = rawSign.split('(')[0].trim();
+                          final nak = u['nakshatra']?.toString() ?? 'Ashwini';
+                          final pada = (u['pada'] ?? 1).toString();
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(name, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(flex: 1, child: Text(name, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)))),
+                              ],
                             ),
-                            if (code.isNotEmpty) ...[
-                              const SizedBox(width: 4),
-                              Text('($code)', style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
-                            ],
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                      Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500))),
-                      Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Text(pada, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -1552,53 +1545,70 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
             ),
           ),
-          _buildTableHeader(['Arudha Pada', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
-          const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              itemCount: arudhas.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
-              itemBuilder: (ctx, idx) {
-                final a = arudhas[idx] as Map<String, dynamic>;
-                final code = a['code']?.toString() ?? 'A1';
-                final name = a['name']?.toString() ?? '';
-                final deg = a['degree_formatted']?.toString() ?? '00:00:00';
-                final sign = a['sign']?.toString() ?? 'Aries';
-                final nak = a['nakshatra']?.toString() ?? 'Ashwini';
-                final pada = (a['pada'] ?? 1).toString();
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                width: 500,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTableHeader(['Arudha Pada', 'Degree', 'Rashi', 'Nakshatra', 'Pada', 'Nakshatra Lord'], isDark),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: arudhas.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        itemBuilder: (ctx, idx) {
+                          final a = arudhas[idx] as Map<String, dynamic>;
+                          final code = a['code']?.toString() ?? 'A1';
+                          final rawName = a['name']?.toString() ?? '';
+                          final name = rawName.split('(')[0].trim();
+                          final deg = a['degree_formatted']?.toString() ?? '00:00:00';
+                          final rawSign = a['sign']?.toString() ?? 'Aries';
+                          final sign = rawSign.split('(')[0].trim();
+                          final nak = a['nakshatra']?.toString() ?? 'Ashwini';
+                          final pada = (a['pada'] ?? 1).toString();
+                          
+                          // Bulletproof fallback to calculate from name if backend was not restarted or returns null/empty
+                          final rawNl = a['nakshatra_lord']?.toString() ?? '';
+                          final nl = (rawNl.isEmpty || rawNl == 'null' || rawNl == '-') 
+                              ? _getNakshatraLordFromNakshatra(nak) 
+                              : rawNl;
 
-                final isArudhaLagna = code.startsWith('AL') || code.startsWith('UL');
+                          final isArudhaLagna = code.startsWith('AL') || code.startsWith('UL');
 
-                return Container(
-                  color: isArudhaLagna ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.15) : const Color(0xFFEEF2FF)) : Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(code, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                            if (name.isNotEmpty)
-                              Text(name, style: GoogleFonts.outfit(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.black54), overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
+                          return Container(
+                            color: isArudhaLagna ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.15) : const Color(0xFFEEF2FF)) : Colors.transparent,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(code, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                      if (name.isNotEmpty)
+                                        Text(name, style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white54 : Colors.black54)),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 1, child: Text(nl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500))),
-                      Expanded(flex: 3, child: Text(sign, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: Text(pada, style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -1643,7 +1653,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
               const SizedBox(height: 8),
               ...specialLagnas.map((s) {
-                final name = s['name']?.toString() ?? '';
+                final rawName = s['name']?.toString() ?? '';
+                final name = rawName.split('(')[0].trim();
                 final sign = s['sign']?.toString() ?? '';
                 final deg = s['degree_formatted']?.toString() ?? '';
                 final nak = s['nakshatra']?.toString() ?? '';
@@ -1763,19 +1774,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
-        children: [
-          Expanded(flex: 3, child: Text(headers[0], style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 2, child: Text(headers[1], style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 3, child: Text(headers[2], style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 3, child: Text(headers[3], style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(
+        children: headers.map((header) {
+          return Expanded(
             flex: 1,
-            child: Container(
-              alignment: Alignment.center,
-              child: Text(headers[4], style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))),
-            ),
-          ),
-        ],
+            child: Text(header, style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))),
+          );
+        }).toList(),
       ),
     );
   }
@@ -1814,7 +1818,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ...rawPlanets.asMap().entries.map((entry) {
             final idx = entry.key;
             final p = entry.value as Map<String, dynamic>;
-            final name = p['name']?.toString() ?? 'Planet';
+            final rawName = p['name']?.toString() ?? 'Planet';
+            final name = rawName.split('(')[0].trim();
             final sanskrit = p['sanskrit_name']?.toString() ?? '';
             final sign = p['sign']?.toString() ?? 'Aries';
             final degree = p['degree_formatted']?.toString() ?? "15° 00'";
@@ -2055,7 +2060,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ...yogas.asMap().entries.map((entry) {
             final idx = entry.key;
             final y = entry.value as Map<String, dynamic>;
-            final name = y['name']?.toString() ?? 'Yoga';
+            final rawName = y['name']?.toString() ?? 'Yoga';
+            final name = rawName.split('(')[0].trim();
             final category = y['category']?.toString() ?? 'Raja Yoga';
             final desc = y['description']?.toString() ?? '';
             final planetsInvolved = (y['planets_involved'] as List<dynamic>?)?.join(', ') ?? '';
