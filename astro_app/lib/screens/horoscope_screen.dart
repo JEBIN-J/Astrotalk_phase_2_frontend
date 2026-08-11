@@ -1922,111 +1922,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         const SizedBox(height: 6),
         Text('Measures 6 planetary forces: Positional (Sthana), Directional (Dig), Temporal (Kala), Motional (Chesta), Natural (Naisargika) & Aspectual (Drik)', style: GoogleFonts.outfit(fontSize: 11.5, color: isDark ? Colors.white60 : Colors.black54)),
         const SizedBox(height: 14),
-
         if (shadbalaItems.isEmpty)
           const Center(child: Text('No Shadbala calculations available'))
-        else
-          ...shadbalaItems.map((sData) {
-            final pName = sData['planet']?.toString() ?? 'Planet';
-            final sanskrit = sData['sanskrit']?.toString() ?? '';
-            final totalRupas = (sData['total_rupas'] ?? sData['total_shadbala_rupas'] as num?)?.toDouble() ?? 5.5;
-            final reqRupas = (sData['required_rupas'] as num?)?.toDouble() ?? 5.5;
-            final percent = (sData['strength_percentage'] as num?)?.toDouble() ?? 100.0;
-            final isStrong = sData['is_strong'] == true;
-            final virupas = (sData['total_virupas'] ?? sData['total_shadbala_virupas'] as num?)?.toDouble() ?? 330.0;
-
-            final breakdown = (sData['breakdown_virupas'] as Map<String, dynamic>?) ?? {};
-            final sthana = sData['sthana_bala'] ?? breakdown['sthana_bala'] ?? 0;
-            final dig = sData['dig_bala'] ?? breakdown['dig_bala'] ?? 0;
-            final kala = sData['kala_bala'] ?? breakdown['kala_bala'] ?? 0;
-            final chesta = sData['chesta_bala'] ?? breakdown['chesta_bala'] ?? 0;
-            final naisargika = sData['naisargika_bala'] ?? breakdown['naisargika_bala'] ?? 0;
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isStrong
-                      ? const Color(0xFF059669).withValues(alpha: 0.5)
-                      : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                _formatPlanetDisplayName(pName, sanskrit),
-                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${totalRupas.toStringAsFixed(2)} / $reqRupas Req.',
-                              style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isStrong
-                              ? const Color(0xFF059669).withValues(alpha: 0.15)
-                              : Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isStrong ? 'Strong ${percent.toStringAsFixed(0)}%' : 'Average ${percent.toStringAsFixed(0)}%',
-                          style: GoogleFonts.outfit(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: isStrong ? const Color(0xFF059669) : Colors.amber.shade700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: (percent / 150.0).clamp(0.0, 1.0),
-                      minHeight: 6,
-                      backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        isStrong ? const Color(0xFF059669) : const Color(0xFFF59E0B),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _buildBalaChip('Sthana: $sthana', isDark),
-                      _buildBalaChip('Dig: $dig', isDark),
-                      _buildBalaChip('Kala: $kala', isDark),
-                      _buildBalaChip('Chesta: $chesta', isDark),
-                      _buildBalaChip('Naisargika: $naisargika', isDark),
-                      _buildBalaChip('Total: $virupas Virupas', isDark),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }),
+        else ...[
+          _buildConsolidatedShadbalaChart(shadbalaItems, isDark),
+          const SizedBox(height: 16),
+          _buildShadbalaTable(shadbalaItems, isDark),
+        ],
 
         const SizedBox(height: 18),
         Row(
@@ -2445,6 +2347,163 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
+  Widget _buildConsolidatedShadbalaChart(List<dynamic> items, bool isDark) {
+    double maxRupas = 0;
+    for (var item in items) {
+      double r = (item['total_rupas'] ?? item['total_shadbala_rupas'] as num?)?.toDouble() ?? 0;
+      if (r > maxRupas) maxRupas = r;
+    }
+    maxRupas = maxRupas > 0 ? maxRupas * 1.2 : 10.0;
+
+    final planetOrder = {"Sun": 1, "Moon": 2, "Mars": 3, "Mercury": 4, "Jupiter": 5, "Venus": 6, "Saturn": 7};
+    final sortedItems = List<dynamic>.from(items)..sort((a, b) {
+      int orderA = planetOrder[a['planet']?.toString()] ?? 99;
+      int orderB = planetOrder[b['planet']?.toString()] ?? 99;
+      return orderA.compareTo(orderB);
+    });
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Shadbala Strength (Total Rupas)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: sortedItems.map((sData) {
+                final pName = sData['planet']?.toString() ?? 'P';
+                final shortName = pName.length > 2 ? pName.substring(0, 2) : pName;
+                final rupas = (sData['total_rupas'] ?? sData['total_shadbala_rupas'] as num?)?.toDouble() ?? 0;
+                double percent = (rupas / maxRupas).clamp(0.0, 1.0).toDouble();
+                
+                return Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(rupas.toStringAsFixed(2), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      Stack(
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          Container(
+                            height: 120.0,
+                            width: 24,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white12 : Colors.grey.shade200,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ),
+                          Container(
+                            height: 120.0 * percent,
+                            width: 24,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF009688),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(shortName, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShadbalaTable(List<dynamic> items, bool isDark) {
+    final planetOrder = {"Sun": 1, "Moon": 2, "Mars": 3, "Mercury": 4, "Jupiter": 5, "Venus": 6, "Saturn": 7};
+    final sortedItems = List<dynamic>.from(items)..sort((a, b) {
+      int orderA = planetOrder[a['planet']?.toString()] ?? 99;
+      int orderB = planetOrder[b['planet']?.toString()] ?? 99;
+      return orderA.compareTo(orderB);
+    });
+
+    Widget buildRow(String title, String key, {bool isHeader = false, bool isTotal = false}) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        color: isHeader ? (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9)) : Colors.transparent,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 11,
+                  fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.w500,
+                  color: isHeader ? (isDark ? Colors.white70 : const Color(0xFF334155)) : (isTotal ? const Color(0xFF009688) : null),
+                ),
+              ),
+            ),
+            ...sortedItems.map((sData) {
+              final breakdown = (sData['breakdown_virupas'] as Map<String, dynamic>?) ?? {};
+              String valStr = '';
+              if (isHeader) {
+                final pName = sData['planet']?.toString() ?? '';
+                valStr = pName.length > 2 ? pName.substring(0, 3) : pName;
+              } else if (key == 'total_rupas') {
+                final val = (sData['total_rupas'] ?? sData['total_shadbala_rupas'] as num?)?.toDouble() ?? 0;
+                valStr = val.toStringAsFixed(2);
+              } else {
+                final val = sData[key] ?? breakdown[key] ?? 0;
+                double numVal = (val is num) ? val.toDouble() : double.tryParse(val.toString()) ?? 0.0;
+                valStr = numVal.toStringAsFixed(1);
+              }
+              return Expanded(
+                flex: 2,
+                child: Text(
+                  valStr,
+                  style: GoogleFonts.outfit(
+                    fontSize: 10.5,
+                    fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.w500,
+                    color: isHeader ? (isDark ? Colors.white : Colors.black) : (isTotal ? const Color(0xFF009688) : null),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          buildRow('Bala', '', isHeader: true),
+          buildRow('Sthana Bala', 'sthana_bala'),
+          buildRow('Dig Bala', 'dig_bala'),
+          buildRow('Kala Bala', 'kala_bala'),
+          buildRow('Chesta Bala', 'chesta_bala'),
+          buildRow('Naisargika', 'naisargika_bala'),
+          buildRow('Drik Bala', 'drik_bala'),
+          const Divider(height: 1),
+          buildRow('Total Rupas', 'total_rupas', isTotal: true),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBalaChip(String text, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2457,8 +2516,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   String _formatPlanetDisplayName(String name, String sanskrit) {
-    if (sanskrit.isNotEmpty && !name.contains(sanskrit)) {
-      return '$name ($sanskrit)';
+    String cleanSanskrit = sanskrit.replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+    if (cleanSanskrit.isNotEmpty && !name.contains(cleanSanskrit)) {
+      return '$name ($cleanSanskrit)';
     }
     return name;
   }
