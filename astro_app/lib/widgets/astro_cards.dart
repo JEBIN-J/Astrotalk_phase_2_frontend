@@ -7,13 +7,13 @@ import 'custom_icons.dart';
 /// 1. Bento Grid Hero Card (Used in Astrotalk Bento style)
 class BentoHeroCard extends StatelessWidget {
   final VoidCallback onTapKundli;
-  final VoidCallback onTapMatching;
+  final VoidCallback onTapAiCalling;
   final bool isDark;
 
   const BentoHeroCard({
     super.key,
     required this.onTapKundli,
-    required this.onTapMatching,
+    required this.onTapAiCalling,
     required this.isDark,
   });
 
@@ -69,7 +69,7 @@ class BentoHeroCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const ShimmerBadge(
-                        text: '★ FEATURED KUNDLI & MILAN',
+                        text: '★ FEATURED KUNDLI & AI',
                         baseGradient: LinearGradient(
                           colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                         ),
@@ -99,7 +99,7 @@ class BentoHeroCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'North, South & East Indian Charts, 120-Yr Vimshottari Dasha, Manglik & 36 Guna Milan.',
+                    'North, South & East Indian Charts, 120-Yr Vimshottari Dasha & Live AI Consultations.',
                     style: GoogleFonts.outfit(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.85),
@@ -146,7 +146,7 @@ class BentoHeroCard extends StatelessWidget {
                         ),
                       ),
                       BouncyTouchCard(
-                        onTap: onTapMatching,
+                        onTap: onTapAiCalling,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
@@ -157,10 +157,10 @@ class BentoHeroCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.favorite_rounded, size: 15, color: Color(0xFFFB7185)),
+                              const Icon(Icons.mic, size: 15, color: Color(0xFFFB7185)),
                               const SizedBox(width: 6),
                               Text(
-                                '36 Guna Milan',
+                                'AI Astrologer',
                                 style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,

@@ -609,16 +609,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               tabAlignment: TabAlignment.start,
               labelColor: const Color(0xFF4338CA),
               unselectedLabelColor: isDark ? Colors.white60 : const Color(0xFF64748B),
-              indicatorColor: const Color(0xFF4338CA),
+              indicatorColor: const Color(0xFF009688),
               indicatorWeight: 3,
-              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5),
-              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13.5),
+              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14),
               tabs: const [
-                Tab(text: 'Chart'),
-                Tab(text: 'Planets & KP'),
-                Tab(text: 'Strength (Shadbala)'),
-                Tab(text: 'Dasha Timeline'),
-                Tab(text: 'Ashtakavarga'),
+                Tab(text: 'Vedic (D1)'),
+                Tab(text: 'KP System'),
+                Tab(text: 'Lal Kitab'),
+                Tab(text: 'BNN'),
+                Tab(text: 'Jamini'),
               ],
             ),
           ),
@@ -643,9 +643,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               children: [
                 _buildLagnaAndDivisionalChartTab(context, isDark),
                 _buildPlanetsTab(context, isDark),
-                _buildShadbalaAndYogasTab(context, isDark),
-                _buildDashaTab(context, isDark),
-                _buildAshtakvargaTab(context, isDark),
+                _buildPlaceholderTab('Lal Kitab Analysis coming soon...', isDark),
+                _buildPlaceholderTab('BNN (Nandi Nadi) coming soon...', isDark),
+                _buildPlaceholderTab('Jamini Astrology coming soon...', isDark),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -689,6 +689,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderTab(String message, bool isDark) {
+    return Center(
+      child: Text(
+        message,
+        style: GoogleFonts.outfit(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white70 : Colors.black54,
         ),
       ),
     );
@@ -2195,7 +2208,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final defaultPoints = [28, 31, 29, 34, 36, 27, 30, 26, 33, 25, 32, 26];
     final displayPoints = pointValues.isNotEmpty ? pointValues : defaultPoints;
 
-    final bav = ashtakvarga?['bhinnashtakavarga'] as Map<String, dynamic>?;
+    final bav = (ashtakvarga?['bav_matrix'] ?? ashtakvarga?['bhinnashtakavarga']) as Map<String, dynamic>?;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -2280,32 +2293,144 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           },
         ),
         if (bav != null && bav.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          Text('Bhinnashtakavarga (BAV) 7 Planets', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 24),
+          Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: (isDark ? Colors.black : const Color(0xFF94A3B8)).withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
               border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
-            child: Column(
-              children: bav.entries.map((e) {
-                final pName = e.key;
-                final pts = (e.value as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? [];
-                final total = pts.fold(0, (sum, val) => sum + val);
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(pName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5)),
-                      Text('$total Points', style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                );
-              }).toList(),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Row
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 45,
+                          child: Text('Signs', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                        ),
+                        ...List.generate(12, (index) => Container(
+                          width: 28,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          alignment: Alignment.center,
+                          child: Text('${index + 1}', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                        )),
+                        Container(
+                          width: 40,
+                          margin: const EdgeInsets.only(left: 8),
+                          alignment: Alignment.centerRight,
+                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Planet Rows
+                    ...['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'].map((pName) {
+                      final pts = (bav[pName] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
+                      final total = pts.fold(0, (sum, val) => sum + val);
+                      final shortName = pName.length > 2 ? pName.substring(0, 2) : pName;
+                      
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 45,
+                              child: Text(shortName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                            ),
+                            ...pts.map((val) {
+                              bool isHigh = val >= 5;
+                              bool isLow = val <= 3;
+                              
+                              Color bgColor = isHigh ? const Color(0xFF10B981).withValues(alpha: 0.15) 
+                                          : (isLow ? const Color(0xFFEF4444).withValues(alpha: 0.1) 
+                                          : (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9)));
+                                          
+                              Color textColor = isHigh ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                                            : (isLow ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
+                                            : (isDark ? Colors.white70 : Colors.black87));
+                                            
+                              return Container(
+                                width: 28,
+                                height: 28,
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                decoration: BoxDecoration(
+                                  color: bgColor,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text('$val', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: textColor)),
+                              );
+                            }),
+                            Container(
+                              width: 40,
+                              margin: const EdgeInsets.only(left: 8),
+                              alignment: Alignment.centerRight,
+                              child: Text('$total', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 12),
+                    // Total SAV Row
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 45,
+                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                        ),
+                        ...List.generate(12, (index) {
+                          final val = index < displayPoints.length ? displayPoints[index] : 0;
+                          bool isHigh = val >= 30;
+                          bool isLow = val < 25;
+                          
+                          Color bgColor = isHigh ? const Color(0xFF10B981).withValues(alpha: 0.2) 
+                                      : (isLow ? const Color(0xFFEF4444).withValues(alpha: 0.15) 
+                                      : const Color(0xFF4338CA).withValues(alpha: 0.1));
+                                      
+                          Color textColor = isHigh ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                                        : (isLow ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
+                                        : (isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA)));
+                                        
+                          return Container(
+                            width: 28,
+                            height: 28,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: bgColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text('$val', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
+                          );
+                        }),
+                        Container(
+                          width: 40,
+                          margin: const EdgeInsets.only(left: 8),
+                          alignment: Alignment.centerRight,
+                          child: Text('$totalSav', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -2433,7 +2558,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return orderA.compareTo(orderB);
     });
 
-    Widget buildRow(String title, String key, {bool isHeader = false, bool isTotal = false}) {
+    Widget buildRow(String title, String key, {bool isHeader = false, bool isTotal = false, bool isCategory = false}) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         color: isHeader ? (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9)) : Colors.transparent,
@@ -2445,8 +2570,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 title,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
-                  fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.w500,
-                  color: isHeader ? (isDark ? Colors.white70 : const Color(0xFF334155)) : (isTotal ? const Color(0xFF009688) : null),
+                  fontWeight: isHeader || isTotal || isCategory ? FontWeight.bold : FontWeight.w500,
+                  color: isHeader 
+                      ? (isDark ? Colors.white70 : const Color(0xFF334155)) 
+                      : (isTotal || isCategory ? const Color(0xFF009688) : (isDark ? Colors.white : Colors.black87)),
                 ),
               ),
             ),
@@ -2456,13 +2583,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               if (isHeader) {
                 final pName = sData['planet']?.toString() ?? '';
                 valStr = pName.length > 2 ? pName.substring(0, 3) : pName;
-              } else if (key == 'total_rupas') {
-                final val = (sData['total_rupas'] ?? sData['total_shadbala_rupas'] as num?)?.toDouble() ?? 0;
-                valStr = val.toStringAsFixed(2);
+              } else if (key == 'rank') {
+                final val = sData[key] ?? breakdown[key] ?? 0;
+                valStr = val.toString();
               } else {
                 final val = sData[key] ?? breakdown[key] ?? 0;
                 double numVal = (val is num) ? val.toDouble() : double.tryParse(val.toString()) ?? 0.0;
-                valStr = numVal.toStringAsFixed(1);
+                valStr = numVal.toStringAsFixed(2);
               }
               return Expanded(
                 flex: 2,
@@ -2470,8 +2597,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   valStr,
                   style: GoogleFonts.outfit(
                     fontSize: 10.5,
-                    fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.w500,
-                    color: isHeader ? (isDark ? Colors.white : Colors.black) : (isTotal ? const Color(0xFF009688) : null),
+                    fontWeight: isHeader || isTotal || isCategory ? FontWeight.bold : FontWeight.w500,
+                    color: isHeader 
+                        ? (isDark ? Colors.white : Colors.black) 
+                        : (isTotal || isCategory ? const Color(0xFF009688) : (isDark ? Colors.white70 : Colors.black87)),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -2491,14 +2620,43 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       child: Column(
         children: [
           buildRow('Bala', '', isHeader: true),
-          buildRow('Sthana Bala', 'sthana_bala'),
-          buildRow('Dig Bala', 'dig_bala'),
-          buildRow('Kala Bala', 'kala_bala'),
-          buildRow('Chesta Bala', 'chesta_bala'),
-          buildRow('Naisargika', 'naisargika_bala'),
-          buildRow('Drik Bala', 'drik_bala'),
+          buildRow('Uchcha', 'uchcha'),
+          buildRow('Saptavargaja', 'saptavargaja'),
+          buildRow('Oja-Yugma', 'oja_yugma'),
+          buildRow('Kendradi', 'kendradi'),
+          buildRow('Drekkana', 'drekkana'),
           const Divider(height: 1),
-          buildRow('Total Rupas', 'total_rupas', isTotal: true),
+          buildRow('Sthana Bala', 'sthana_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Dig Bala', 'dig_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Natonnata', 'natonnata'),
+          buildRow('Paksha', 'paksha'),
+          buildRow('Tribhaga', 'tribhaga'),
+          buildRow('Abda', 'abda'),
+          buildRow('Maasa', 'maasa'),
+          buildRow('Vaara', 'vaara'),
+          buildRow('Hora', 'hora'),
+          buildRow('Ayana', 'ayana'),
+          buildRow('Yuddha', 'yuddha'),
+          const Divider(height: 1),
+          buildRow('Kaala Bala', 'kala_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Cheshta', 'chesta_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Naisargika', 'naisargika_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Drig Bala', 'drik_bala', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Shadbala', 'total_virupas', isCategory: true),
+          buildRow('In Rupas', 'total_rupas', isCategory: true),
+          buildRow('Minimum', 'minimum'),
+          const Divider(height: 1),
+          buildRow('Strength', 'strength', isCategory: true),
+          buildRow('Rank', 'rank', isCategory: true),
+          const Divider(height: 1),
+          buildRow('Ishta Phala', 'ishta_phala'),
+          buildRow('Kashta Phala', 'kashta_phala'),
         ],
       ),
     );
@@ -2673,6 +2831,353 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ],
         ),
       ),
+    );
+  }
+  // TAB 6: PANCHANGA
+  // =========================================================================
+  Widget _buildPanchangaTab(BuildContext context, bool isDark) {
+    final panchanga = _kundliData?['panchanga'] as Map<String, dynamic>?;
+    if (panchanga == null) {
+      return const Center(child: Text('Panchanga data not available.'));
+    }
+
+    Widget _buildSectionHeader(String title, {String? trailing}) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 24, bottom: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF334155),
+              ),
+            ),
+            if (trailing != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE68A).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  trailing,
+                  style: GoogleFonts.outfit(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFD97706),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildTopGradientCard() {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTimeColumn(Icons.wb_sunny_rounded, 'Sunrise', panchanga['sunrise']?.toString() ?? ''),
+                _buildTimeColumn(Icons.wb_twilight_rounded, 'Sunset', panchanga['sunset']?.toString() ?? ''),
+                _buildTimeColumn(Icons.nights_stay_rounded, 'Moonrise', panchanga['moonrise']?.toString() ?? ''),
+                _buildTimeColumn(Icons.bedtime_rounded, 'Moonset', panchanga['moonset']?.toString() ?? ''),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(height: 1, color: Colors.white.withValues(alpha: 0.2)),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Vikram Samvat: ${panchanga['samvatsara_vikram']}',
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  'Shaka: ${panchanga['samvatsara_shaka']}',
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ],
+            )
+          ],
+        ),
+      );
+    }
+
+    Widget _buildDetailCard(IconData icon, Color iconColor, String title, String badgeText, String details, String timing) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? Colors.black : const Color(0xFF94A3B8)).withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: iconColor,
+                          ),
+                        ),
+                      ),
+                      if (badgeText.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            badgeText,
+                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    details,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    timing,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildListRow(String label, String value, {bool isHighlight = false, bool isDanger = false}) {
+      Color valColor = isDark ? Colors.white : Colors.black87;
+      if (isHighlight) valColor = const Color(0xFF10B981);
+      if (isDanger) valColor = const Color(0xFFEF4444);
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 5,
+              child: Text(
+                label,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white70 : const Color(0xFF475569),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 7,
+              child: Text(
+                value,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: valColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildSimpleCard(List<Widget> rows) {
+      return Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          children: [
+            for (int i = 0; i < rows.length; i++) ...[
+              rows[i],
+              if (i < rows.length - 1)
+                Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+            ]
+          ],
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // Location & Date Context
+        Center(
+          child: Text(
+            'Date: ${panchanga['formatted_date'] ?? ''} | Place: ${panchanga['place'] ?? ''}',
+            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white60 : Colors.black54),
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        _buildTopGradientCard(),
+
+        _buildSectionHeader('The 5 Essential Elements', trailing: 'Vedic Panchanga'),
+        
+        _buildDetailCard(
+          Icons.calendar_today_rounded,
+          const Color(0xFFF59E0B),
+          '1. Vaara (Vedic Day)',
+          '',
+          panchanga['vaara']?.toString() ?? '',
+          'Governed by ${panchanga['vaara']?.toString().split(' ').last.replaceAll(RegExp(r'[()]'), '') ?? ''}',
+        ),
+        
+        _buildDetailCard(
+          Icons.brightness_4_rounded,
+          const Color(0xFFF97316),
+          '2. Tithi (Lunar Day)',
+          panchanga['tithi']?['deity_or_nature']?.toString().split('/').first.trim() ?? '',
+          panchanga['tithi']?['name']?.toString() ?? '',
+          panchanga['tithi']?['timing']?.toString() ?? '',
+        ),
+        
+        _buildDetailCard(
+          Icons.star_rounded,
+          const Color(0xFF8B5CF6),
+          '3. Nakshatra (Lunar Mansion)',
+          'Star',
+          panchanga['nakshatra']?['name']?.toString() ?? '',
+          panchanga['nakshatra']?['timing']?.toString() ?? '',
+        ),
+        
+        _buildDetailCard(
+          Icons.self_improvement_rounded,
+          const Color(0xFF10B981),
+          '4. Yoga (Solar-Lunar Angle)',
+          'Benefic',
+          panchanga['yoga']?['name']?.toString() ?? '',
+          panchanga['yoga']?['timing']?.toString() ?? '',
+        ),
+        
+        _buildDetailCard(
+          Icons.bubble_chart_rounded,
+          const Color(0xFF06B6D4),
+          '5. Karana (Half-Tithi)',
+          'Action',
+          panchanga['karana']?['name']?.toString() ?? '',
+          panchanga['karana']?['timing']?.toString() ?? '',
+        ),
+
+        _buildSectionHeader('Luminaries & Timings'),
+        _buildSimpleCard([
+          _buildListRow('Sun Sign', panchanga['sun_sign']?.toString() ?? ''),
+          _buildListRow('Moon Sign', panchanga['moon_sign']?.toString() ?? ''),
+          _buildListRow('Vedic Sunrise', panchanga['vedic_sunrise']?.toString() ?? ''),
+          _buildListRow('Vedic Sunset', panchanga['vedic_sunset']?.toString() ?? ''),
+          _buildListRow('Sidereal Time', panchanga['sidereal_time']?.toString() ?? ''),
+          _buildListRow('Day Duration', panchanga['day_duration']?.toString() ?? ''),
+          _buildListRow('Night Duration', panchanga['night_duration']?.toString() ?? ''),
+        ]),
+
+        _buildSectionHeader('Auspicious Muhurtas'),
+        _buildSimpleCard([
+          _buildListRow('Abhijit Muhurta', '${panchanga['abhijit_muhurta']?['start_time'] ?? ''} - ${panchanga['abhijit_muhurta']?['end_time'] ?? ''}', isHighlight: true),
+          _buildListRow('Amrita Kala', '${panchanga['amrita_kala']?['start_time'] ?? ''} - ${panchanga['amrita_kala']?['end_time'] ?? ''}', isHighlight: true),
+        ]),
+
+        _buildSectionHeader('Inauspicious Timings'),
+        _buildSimpleCard([
+          _buildListRow('Rahu Kala', '${panchanga['rahu_kaal']?['start_time'] ?? ''} - ${panchanga['rahu_kaal']?['end_time'] ?? ''}', isDanger: true),
+          _buildListRow('Yamaganda Kala', '${panchanga['yamaganda']?['start_time'] ?? ''} - ${panchanga['yamaganda']?['end_time'] ?? ''}', isDanger: true),
+          _buildListRow('Gulika Kala', '${panchanga['gulika_kaal']?['start_time'] ?? ''} - ${panchanga['gulika_kaal']?['end_time'] ?? ''}', isDanger: true),
+          _buildListRow('Dur Muhurta', '${panchanga['dur_muhurta']?['start_time'] ?? ''} - ${panchanga['dur_muhurta']?['end_time'] ?? ''}', isDanger: true),
+          _buildListRow('Varjyam', '${panchanga['varjyam']?['start_time'] ?? ''} - ${panchanga['varjyam']?['end_time'] ?? ''}', isDanger: true),
+        ]),
+
+        _buildSectionHeader('Ritu, Ayana & Maasa'),
+        _buildSimpleCard([
+          _buildListRow('Chandra Maasa (Amanta)', panchanga['chandra_maasa_amanta']?.toString() ?? ''),
+          _buildListRow('Chandra Maasa (Purnimanta)', panchanga['chandra_maasa_purnimanta']?.toString() ?? ''),
+          _buildListRow('Drika Ritu', panchanga['drika_ritu']?.toString() ?? ''),
+          _buildListRow('Vedic Ritu', panchanga['vedic_ritu']?.toString() ?? ''),
+          _buildListRow('Drika Ayana', panchanga['drika_ayana']?.toString() ?? ''),
+          _buildListRow('Vedic Ayana', panchanga['vedic_ayana']?.toString() ?? ''),
+        ]),
+        
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildTimeColumn(IconData icon, String label, String time) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 20),
+        const SizedBox(height: 6),
+        Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 2),
+        Text(time, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }
@@ -2969,4 +3474,5 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
       ),
     );
   }
+
 }

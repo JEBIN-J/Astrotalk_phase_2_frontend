@@ -49,12 +49,12 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   Future<void> _loadLiveDashboardData() async {
-    final panchang = await AstroApiService.getTodayPanchang();
-    final transits = await AstroApiService.getDailyTransits();
+    final muhurat = await AstroApiService.getMuhurat();
+    final notifications = await AstroApiService.getNotifications();
     if (mounted) {
       setState(() {
-        _livePanchang = panchang;
-        _liveTransits = transits['planetary_transits'] as List<dynamic>?;
+        _livePanchang = muhurat;
+        _liveTransits = notifications;
       });
     }
   }
@@ -251,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                           onTap: () {
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text('Abhijit Muhurta is active: ${_livePanchang?['muhurtas']?['abhijit'] ?? '11:58 AM - 12:49 PM'}', style: GoogleFonts.outfit()),
+                                                content: Text('Abhijit Muhurta is active: ${_livePanchang?['abhijit_muhurta'] ?? '11:58 AM - 12:49 PM'}', style: GoogleFonts.outfit()),
                                                 backgroundColor: const Color(0xFF4338CA),
                                                 behavior: SnackBarBehavior.floating,
                                               ),
@@ -327,22 +327,18 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                   child: Row(
                                     children: (_liveTransits != null && _liveTransits!.isNotEmpty)
                                         ? _liveTransits!.map((t) {
-                                            final planet = t['planet'] ?? '';
-                                            final sign = t['sign'] ?? '';
-                                            final status = t['status'] ?? '';
+                                            final title = t['title'] ?? '';
                                             return Padding(
                                               padding: const EdgeInsets.only(right: 8),
-                                              child: _buildHeaderPill('$planet in $sign ($status)', const Color(0xFFD97706)),
+                                              child: _buildHeaderPill('✨ $title', const Color(0xFFD97706)),
                                             );
                                           }).toList()
                                         : [
-                                            _buildHeaderPill('☀️ Sun in Aquarius (Kumbha)', const Color(0xFFD97706)),
+                                            _buildHeaderPill('☀️ Sun in Aquarius', const Color(0xFFD97706)),
                                             const SizedBox(width: 8),
-                                            _buildHeaderPill('🌙 Moon in Rohini (Exalted)', const Color(0xFF3B82F6)),
+                                            _buildHeaderPill('🌙 Moon in Rohini', const Color(0xFF3B82F6)),
                                             const SizedBox(width: 8),
-                                            _buildHeaderPill('🪐 Saturn in Shasha Yoga', const Color(0xFF6366F1)),
-                                            const SizedBox(width: 8),
-                                            _buildHeaderPill('✨ Abhijit Active 11:58 AM', const Color(0xFF059669)),
+                                            _buildHeaderPill('✨ Abhijit Active', const Color(0xFF059669)),
                                           ],
                                   ),
                                 ),
@@ -448,9 +444,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       AstroItem.items.firstWhere((i) => i.id == 'horoscope'),
                       defaultChartStyle: _defaultChartStyle,
                     ),
-                    onTapMatching: () => AstroFeatureDialogs.openFeature(
+                    onTapAiCalling: () => AstroFeatureDialogs.openFeature(
                       context,
-                      AstroItem.items.firstWhere((i) => i.id == 'matching'),
+                      AstroItem.items.firstWhere((i) => i.id == 'ai_calling'),
                       defaultChartStyle: _defaultChartStyle,
                     ),
                   ),
@@ -541,14 +537,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   // --- Live Panchang Summary Banner with Pulsing Aura ---
   Widget _buildLivePanchangCard(BuildContext context, String dateStr, bool isDark) {
-    final tithi = _livePanchang?['tithi']?.toString().split(' ').take(2).join(' ') ?? 'Dwitiya';
-    final nakshatra = _livePanchang?['nakshatra']?.toString().split(' ').first ?? 'Rohini';
-    final rahuKaal = _livePanchang?['inauspicious']?['rahu_kaal']?.toString().split(' ').first ?? '12:28 PM';
-    final paksha = _livePanchang?['paksha']?.toString() ?? 'Shukla Paksha';
+    final sunrise = _livePanchang?['sunrise']?.toString() ?? '05:48 AM';
+    final sunset = _livePanchang?['sunset']?.toString() ?? '07:08 PM';
+    final rahuKaal = _livePanchang?['rahu_kaal']?.toString().split('(').first.trim() ?? '12:28 PM';
+    final paksha = 'Shubh Muhurat';
 
     return BouncyTouchCard(
       onTap: () => _openItem(
-        AstroItem.items.firstWhere((i) => i.id == 'panchanga_muhurta'),
+        AstroItem.items.firstWhere((i) => i.id == 'muhurat'),
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -619,9 +615,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 final isNarrow = constraints.maxWidth < 320;
                 return Row(
                   children: [
-                    _buildPanchangPill('Tithi', tithi, Icons.brightness_3_rounded, const Color(0xFF6366F1), isDark, isNarrow),
+                    _buildPanchangPill('Sunrise', sunrise, Icons.brightness_high_rounded, const Color(0xFF6366F1), isDark, isNarrow),
                     const SizedBox(width: 8),
-                    _buildPanchangPill('Nakshatra', nakshatra, Icons.star_rounded, const Color(0xFF0D9488), isDark, isNarrow),
+                    _buildPanchangPill('Sunset', sunset, Icons.brightness_4_rounded, const Color(0xFF0D9488), isDark, isNarrow),
                     const SizedBox(width: 8),
                     _buildPanchangPill('Rahu Kaal', rahuKaal, Icons.warning_amber_rounded, const Color(0xFFE11D48), isDark, isNarrow),
                   ],

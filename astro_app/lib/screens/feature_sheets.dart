@@ -2,19 +2,14 @@ import 'package:flutter/material.dart';
 import '../models/astro_item.dart';
 import '../models/astro_models.dart';
 import 'horoscope_screen.dart';
-import 'panchanga_screen.dart';
-import 'matching_screen.dart';
-import 'gochara_screen.dart';
-import 'calendar_screen.dart';
-import 'ephemeris_screen.dart';
-import 'ayanamsa_screen.dart';
-import 'widget_settings_screen.dart';
-import 'settings_screen.dart';
-import 'places_screen.dart';
+import 'ai_calling_screen.dart';
+import 'ai_chat_screen.dart';
+import 'vision_reading_screen.dart';
+import 'admin_panel_screen.dart';
+import 'notifications_screen.dart';
+import 'muhurat_screen.dart';
 import 'subscribe_screen.dart';
-import 'about_screen.dart';
-import 'rate_screen.dart';
-import 'share_screen.dart';
+import 'daily_horoscope_screen.dart';
 
 class AstroFeatureDialogs {
   /// Navigates to the dedicated full-screen Page with specialized functionality
@@ -31,47 +26,38 @@ class AstroFeatureDialogs {
       case 'horoscope':
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);
         break;
-      case 'panchanga_muhurta':
-        targetScreen = const PanchangaScreen();
+      case 'muhurat':
+        targetScreen = const MuhuratScreen();
         break;
-      case 'matching':
-        targetScreen = const MatchingScreen();
+      case 'daily_horoscope':
+        targetScreen = const DailyHoroscopeScreen();
         break;
-      case 'gochara':
-        targetScreen = const GocharaScreen(isYearly: false);
+      case 'ai_calling':
+        targetScreen = const AiCallingScreen();
         break;
-      case 'gochara_year':
-        targetScreen = const GocharaScreen(isYearly: true);
+      case 'chat_bot':
+        targetScreen = const AiChatScreen();
         break;
-      case 'calendar_panchanga':
-        targetScreen = const CalendarScreen();
+      case 'palm_reading':
+        targetScreen = const VisionReadingScreen(isFace: false);
         break;
-      case 'ephemeris':
-        targetScreen = const EphemerisScreen();
+      case 'face_reading':
+        targetScreen = const VisionReadingScreen(isFace: true);
         break;
-      case 'ayanamsa':
-        targetScreen = const AyanamsaScreen();
+      case 'daily_quotes':
+        // Show as a snackbar or popup for now since it's simple
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loading daily quotes...')),
+        );
+        return;
+      case 'notifications':
+        targetScreen = const NotificationsScreen();
         break;
-      case 'widget':
-        targetScreen = const WidgetSettingsScreen();
-        break;
-      case 'settings':
-        targetScreen = SettingsScreen(onToggleTheme: onToggleTheme, isDark: isDark);
-        break;
-      case 'places':
-        targetScreen = const PlacesScreen();
+      case 'admin_panel':
+        targetScreen = const AdminPanelScreen();
         break;
       case 'subscribe':
         targetScreen = const SubscribeScreen();
-        break;
-      case 'about':
-        targetScreen = const AboutScreen();
-        break;
-      case 'rate':
-        targetScreen = const RateScreen();
-        break;
-      case 'share':
-        targetScreen = const ShareScreen();
         break;
       default:
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);

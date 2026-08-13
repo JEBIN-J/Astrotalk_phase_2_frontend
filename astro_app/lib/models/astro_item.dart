@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 enum AstroCategory {
   all,
   vedicKundli,
-  panchangaTransits,
-  calculators,
+  aiTools,
   utilities,
 }
 
@@ -15,10 +14,8 @@ extension AstroCategoryExtension on AstroCategory {
         return 'All Modules';
       case AstroCategory.vedicKundli:
         return 'Kundli & Vedic';
-      case AstroCategory.panchangaTransits:
-        return 'Panchang & Gochara';
-      case AstroCategory.calculators:
-        return 'Calculators';
+      case AstroCategory.aiTools:
+        return 'AI Astrologer';
       case AstroCategory.utilities:
         return 'Tools & Info';
     }
@@ -30,10 +27,8 @@ extension AstroCategoryExtension on AstroCategory {
         return Icons.auto_awesome;
       case AstroCategory.vedicKundli:
         return Icons.grid_view_rounded;
-      case AstroCategory.panchangaTransits:
-        return Icons.wb_sunny_rounded;
-      case AstroCategory.calculators:
-        return Icons.calculate_rounded;
+      case AstroCategory.aiTools:
+        return Icons.psychology_rounded;
       case AstroCategory.utilities:
         return Icons.settings_suggest_rounded;
     }
@@ -66,8 +61,8 @@ class AstroItem {
   static List<AstroItem> get items => [
     const AstroItem(
       id: 'horoscope',
-      title: 'Horoscope',
-      subtitle: 'Birth Chart (Kundli) & Planetary Positions',
+      title: 'Kundli',
+      subtitle: 'Vedic, KP, Lal Kitab & BNN Charts',
       iconKey: 'horoscope',
       category: AstroCategory.vedicKundli,
       primaryColor: Color(0xFF4338CA),
@@ -75,128 +70,94 @@ class AstroItem {
       badge: 'Popular',
     ),
     const AstroItem(
-      id: 'panchanga_muhurta',
-      title: 'Panchanga &\nMuhurta',
-      subtitle: 'Tithi, Nakshatra, Yoga, Karana & Shubh Muhurta',
+      id: 'daily_horoscope',
+      title: 'Horoscope',
+      subtitle: 'Daily Sun Sign Predictions',
+      iconKey: 'horoscope_daily', // Doesn't matter if there's no exact asset, we use icons anyway in the dashboard but wait, dashboard uses svg assets!
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFF0EA5E9),
+      secondaryColor: Color(0xFF38BDF8),
+    ),
+    const AstroItem(
+      id: 'muhurat',
+      title: 'Muhurat',
+      subtitle: 'Auspicious Timings & Daily Panchang',
       iconKey: 'panchanga',
-      category: AstroCategory.panchangaTransits,
+      category: AstroCategory.vedicKundli,
       primaryColor: Color(0xFFD97706),
       secondaryColor: Color(0xFFF59E0B),
       badge: 'Today',
     ),
     const AstroItem(
-      id: 'gochara',
-      title: 'Gochara',
-      subtitle: 'Real-time Daily Planetary Transits',
-      iconKey: 'gochara',
-      category: AstroCategory.panchangaTransits,
-      primaryColor: Color(0xFF0284C7),
-      secondaryColor: Color(0xFF38BDF8),
-    ),
-    const AstroItem(
-      id: 'matching',
-      title: 'Horoscope\nMatching',
-      subtitle: '36 Guna Ashtakoota Milan & Manglik Dosh',
-      iconKey: 'matching',
-      category: AstroCategory.vedicKundli,
+      id: 'ai_calling',
+      title: 'AI Calling',
+      subtitle: 'Voice Call with Vedic AI Astrologer',
+      iconKey: 'ai_calling',
+      category: AstroCategory.aiTools,
       primaryColor: Color(0xFFE11D48),
       secondaryColor: Color(0xFFFB7185),
-      badge: '36 Guna',
+      badge: 'New',
     ),
     const AstroItem(
-      id: 'calendar_panchanga',
-      title: 'Panchanga\n(Month)',
-      subtitle: 'Monthly Hindu Lunar Calendar & Vrats',
-      iconKey: 'calendar_panchanga',
-      category: AstroCategory.panchangaTransits,
+      id: 'chat_bot',
+      title: 'Chat Bot',
+      subtitle: 'Instant AI Astrology Consultation',
+      iconKey: 'chat_bot',
+      category: AstroCategory.aiTools,
       primaryColor: Color(0xFF0D9488),
       secondaryColor: Color(0xFF2DD4BF),
     ),
     const AstroItem(
-      id: 'ephemeris',
-      title: 'Ephemeris',
-      subtitle: 'Precise Astronomical Planetary Longitudes',
-      iconKey: 'ephemeris',
-      category: AstroCategory.calculators,
+      id: 'palm_reading',
+      title: 'Palm Reading',
+      subtitle: 'AI Vision Palmistry Analysis',
+      iconKey: 'palm_reading',
+      category: AstroCategory.aiTools,
       primaryColor: Color(0xFF7C3AED),
       secondaryColor: Color(0xFFA78BFA),
+      badge: 'AI',
     ),
     const AstroItem(
-      id: 'gochara_year',
-      title: 'Gochara\n(Year)',
-      subtitle: 'Yearly Planetary Transits & Retrogrades',
-      iconKey: 'gochara_year',
-      category: AstroCategory.panchangaTransits,
+      id: 'face_reading',
+      title: 'Face Reading',
+      subtitle: 'AI Vision Facial Feature Astrology',
+      iconKey: 'face_reading',
+      category: AstroCategory.aiTools,
       primaryColor: Color(0xFF2563EB),
       secondaryColor: Color(0xFF60A5FA),
+      badge: 'AI',
     ),
     const AstroItem(
-      id: 'ayanamsa',
-      title: 'Ayanamsa\nCalculator',
-      subtitle: 'Lahiri, KP, Raman, Krishnamurti offsets',
-      iconKey: 'ayanamsa',
-      category: AstroCategory.calculators,
+      id: 'daily_quotes',
+      title: 'Daily Quotes',
+      subtitle: 'Motivation & Cosmic Wisdom',
+      iconKey: 'quotes',
+      category: AstroCategory.utilities,
       primaryColor: Color(0xFF059669),
       secondaryColor: Color(0xFF34D399),
     ),
     const AstroItem(
-      id: 'widget',
-      title: 'Widget',
-      subtitle: 'Android Home Screen Astrology Widgets',
-      iconKey: 'widget',
-      category: AstroCategory.utilities,
-      primaryColor: Color(0xFF4F46E5),
-      secondaryColor: Color(0xFF818CF8),
-    ),
-    const AstroItem(
-      id: 'settings',
-      title: 'Settings',
-      subtitle: 'North/South Chart, Language, Dark Mode',
-      iconKey: 'settings',
-      category: AstroCategory.utilities,
-      primaryColor: Color(0xFF475569),
-      secondaryColor: Color(0xFF94A3B8),
-    ),
-    const AstroItem(
-      id: 'places',
-      title: 'Add Places',
-      subtitle: 'Manage custom cities & coordinates database',
-      iconKey: 'places',
+      id: 'notifications',
+      title: 'Notifications',
+      subtitle: 'Alerts & Planetary Transits',
+      iconKey: 'notifications',
       category: AstroCategory.utilities,
       primaryColor: Color(0xFFEA580C),
       secondaryColor: Color(0xFFFB923C),
     ),
     const AstroItem(
-      id: 'about',
-      title: 'About',
-      subtitle: 'Vedic Algorithm, Calculations & Version Info',
-      iconKey: 'about',
+      id: 'admin_panel',
+      title: 'Admin Panel',
+      subtitle: 'Manage Users & Subscriptions',
+      iconKey: 'admin',
       category: AstroCategory.utilities,
-      primaryColor: Color(0xFF0284C7),
-      secondaryColor: Color(0xFF38BDF8),
-    ),
-    const AstroItem(
-      id: 'rate',
-      title: 'Rate App',
-      subtitle: 'Leave a 5-star rating on Google Play Store',
-      iconKey: 'rate',
-      category: AstroCategory.utilities,
-      primaryColor: Color(0xFFCA8A04),
-      secondaryColor: Color(0xFFFACC15),
-    ),
-    const AstroItem(
-      id: 'share',
-      title: 'Share App',
-      subtitle: 'Share ABC App with friends & family',
-      iconKey: 'share',
-      category: AstroCategory.utilities,
-      primaryColor: Color(0xFF0D9488),
-      secondaryColor: Color(0xFF2DD4BF),
+      primaryColor: Color(0xFF475569),
+      secondaryColor: Color(0xFF94A3B8),
     ),
     const AstroItem(
       id: 'subscribe',
       title: 'Subscribe',
-      subtitle: 'Unlock Unlimited Kundli PDFs & Premium Charts',
+      subtitle: 'Unlock Unlimited AI & Premium Charts',
       iconKey: 'subscribe',
       category: AstroCategory.utilities,
       primaryColor: Color(0xFF7C3AED),
