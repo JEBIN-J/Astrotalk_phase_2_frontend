@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.120.4.225:5000/api/v1'; // Android emulator localhost
+        return 'http://192.168.29.223:5000/api/v1'; // Android emulator localhost
       }
     } catch (_) {}
     return 'http://127.0.0.1:8000/api/v1';
@@ -288,8 +288,12 @@ class AstroApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getMuhurat({double lat = 28.6139, double lon = 77.209}) async {
-    final uri = Uri.parse('$baseUrl/content/muhurat?latitude=$lat&longitude=$lon');
+  static Future<Map<String, dynamic>> getMuhurat({double lat = 28.6139, double lon = 77.209, String? dateStr}) async {
+    String url = '$baseUrl/content/muhurat?latitude=$lat&longitude=$lon';
+    if (dateStr != null && dateStr.isNotEmpty) {
+      url += '&date=$dateStr';
+    }
+    final uri = Uri.parse(url);
     try {
       final res = await http.get(uri, headers: _headers).timeout(_timeout);
       if (res.statusCode == 200) {
@@ -301,6 +305,23 @@ class AstroApiService {
       debugPrint('API Error getMuhurat: $e');
       rethrow;
     }
+  }
+
+  static Future<List<String>> getMuhuratMonth(int year, int month) async {
+    final uri = Uri.parse('$baseUrl/content/muhurat/month?year=$year&month=$month');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final list = data['auspicious_dates'] as List<dynamic>?;
+        if (list != null) {
+          return list.map((e) => e.toString()).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('API Error getMuhuratMonth: $e');
+    }
+    return [];
   }
 
   // =========================================================================
