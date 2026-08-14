@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PlacesScreen extends StatefulWidget {
   const PlacesScreen({super.key});
@@ -53,14 +54,14 @@ class _PlacesScreenState extends State<PlacesScreen> {
       appBar: AppBar(
         title: Text(
           'Manage Astrological Places',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp),
         ),
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         children: [
           TextField(
             onChanged: (v) {
@@ -69,13 +70,13 @@ class _PlacesScreenState extends State<PlacesScreen> {
             },
             decoration: InputDecoration(
               hintText: 'Search city, state or country...',
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: Icon(Icons.search_rounded),
               suffixIcon: _isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(12),
+                  ? Padding(
+                      padding: EdgeInsets.all(12.w),
                       child: SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 18.w,
+                        height: 18.h,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFEA580C)),
                       ),
                     )
@@ -83,36 +84,36 @@ class _PlacesScreenState extends State<PlacesScreen> {
               filled: true,
               fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Saved Places Database (${filtered.length})', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+              Text('Saved Places Database (${filtered.length})', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
               TextButton.icon(
                 onPressed: _showAddPlaceDialog,
-                icon: const Icon(Icons.add_location_alt_rounded, size: 18, color: Color(0xFFEA580C)),
+                icon: Icon(Icons.add_location_alt_rounded, size: 18, color: Color(0xFFEA580C)),
                 label: Text('Add Custom Place', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFFEA580C))),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           ...filtered.map((place) {
             final isDef = place['isDefault'] == 'true';
             return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
+              margin: EdgeInsets.only(bottom: 10.h),
+              padding: EdgeInsets.all(14.w),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
                   color: isDef ? const Color(0xFFEA580C) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 ),
@@ -120,14 +121,14 @@ class _PlacesScreenState extends State<PlacesScreen> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(10.w),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEA580C).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.location_on_rounded, color: Color(0xFFEA580C), size: 20),
+                    child: Icon(Icons.location_on_rounded, color: Color(0xFFEA580C), size: 20),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,25 +136,25 @@ class _PlacesScreenState extends State<PlacesScreen> {
                         Row(
                           children: [
                             Flexible(
-                              child: Text(place['city']!, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14), overflow: TextOverflow.ellipsis),
+                              child: Text(place['city']!, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp), overflow: TextOverflow.ellipsis),
                             ),
                             if (isDef) ...[
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6.w),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: const Color(0xFFEA580C), borderRadius: BorderRadius.circular(6)),
-                                child: Text('DEFAULT', style: GoogleFonts.outfit(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(color: const Color(0xFFEA580C), borderRadius: BorderRadius.circular(6.r)),
+                                child: Text('DEFAULT', style: GoogleFonts.outfit(fontSize: 9.sp, color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 3),
-                        Text('${place['coords']} • ${place['tz']}', style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54)),
+                        SizedBox(height: 3.h),
+                        Text('${place['coords']} • ${place['tz']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54)),
                       ],
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, size: 20),
+                    icon: Icon(Icons.more_vert_rounded, size: 20),
                     onSelected: (val) {
                       if (val == 'default') {
                         setState(() {
@@ -194,15 +195,15 @@ class _PlacesScreenState extends State<PlacesScreen> {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 460),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF0F172A) : Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(28.r),
               border: Border.all(
                 color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                width: 1.5,
+                width: 1.5.w,
               ),
               boxShadow: [
                 BoxShadow(
@@ -218,7 +219,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 14, 18),
+                  padding: EdgeInsets.fromLTRB(20, 18, 14, 18),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isDark
@@ -227,12 +228,12 @@ class _PlacesScreenState extends State<PlacesScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: EdgeInsets.all(10.w),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFFEA580C), Color(0xFFF97316)],
@@ -246,9 +247,9 @@ class _PlacesScreenState extends State<PlacesScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 20),
+                        child: Icon(Icons.add_location_alt_rounded, color: Colors.white, size: 20),
                       ),
-                      const SizedBox(width: 14),
+                      SizedBox(width: 14.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +257,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                             Text(
                               'Add Custom Place',
                               style: GoogleFonts.outfit(
-                                fontSize: 18,
+                                fontSize: 18.sp,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? Colors.white : const Color(0xFF7C2D12),
                               ),
@@ -264,7 +265,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                             Text(
                               'Store coordinates for astrological ephemeris',
                               style: GoogleFonts.outfit(
-                                fontSize: 12,
+                                fontSize: 12.sp,
                                 color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFEA580C),
                               ),
                             ),
@@ -285,7 +286,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                 // Form Body
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -296,7 +297,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                           controller: cityCtrl,
                           isDark: isDark,
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12.h),
                         Row(
                           children: [
                             Expanded(
@@ -308,7 +309,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                 isDark: isDark,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10.w),
                             Expanded(
                               child: _buildPlaceField(
                                 label: 'Longitude',
@@ -320,7 +321,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12.h),
                         _buildPlaceField(
                           label: 'Timezone Offset',
                           hint: 'GMT +05:30',
@@ -335,10 +336,10 @@ class _PlacesScreenState extends State<PlacesScreen> {
 
                 // Actions Footer
                 Container(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 18),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(26)),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(26)),
                     border: Border(
                       top: BorderSide(
                         color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
@@ -352,20 +353,20 @@ class _PlacesScreenState extends State<PlacesScreen> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
                           ),
                           child: Text(
                             'Cancel',
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                               color: isDark ? Colors.white60 : Colors.black54,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12.w),
                       Expanded(
                         flex: 3,
                         child: ElevatedButton(
@@ -385,18 +386,18 @@ class _PlacesScreenState extends State<PlacesScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEA580C),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: EdgeInsets.symmetric(vertical: 14.h),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
                             elevation: 4,
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.add_location_rounded, size: 18),
-                              const SizedBox(width: 6),
+                              Icon(Icons.add_location_rounded, size: 18),
+                              SizedBox(width: 6.w),
                               Text(
                                 'Add Place',
-                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
                               ),
                             ],
                           ),
@@ -426,36 +427,36 @@ class _PlacesScreenState extends State<PlacesScreen> {
         Text(
           label,
           style: GoogleFonts.outfit(
-            fontSize: 12.5,
+            fontSize: 12.5.sp,
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.white70 : const Color(0xFF475569),
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6.h),
         TextField(
           controller: controller,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: Icon(icon, color: const Color(0xFFEA580C), size: 20),
             filled: true,
             fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.r),
               borderSide: BorderSide(
                 color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.r),
               borderSide: BorderSide(
                 color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFEA580C), width: 1.8),
+              borderRadius: BorderRadius.circular(14.r),
+              borderSide: BorderSide(color: Color(0xFFEA580C), width: 1.8.w),
             ),
           ),
         ),

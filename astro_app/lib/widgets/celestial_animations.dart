@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// 1. High Performance Animated Cosmic Starfield Background
 class CosmicStarfieldBackground extends StatefulWidget {
@@ -35,7 +36,7 @@ class _CosmicStarfieldBackgroundState extends State<CosmicStarfieldBackground> w
       return _StarParticle(
         x: rand.nextDouble(),
         y: rand.nextDouble(),
-        radius: 0.8 + rand.nextDouble() * 1.8,
+        radius: 0.8.r + rand.nextDouble() * 1.8,
         twinkleSpeed: 1.0 + rand.nextDouble() * 3.0,
         phase: rand.nextDouble() * math.pi * 2,
         color: rand.nextDouble() > 0.35
@@ -184,7 +185,7 @@ class _PulsingAuraWidgetState extends State<PulsingAuraWidget> with SingleTicker
       builder: (context, child) {
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: widget.glowColor.withValues(alpha: _animation.value * 0.4),
@@ -244,10 +245,10 @@ class _ShimmerBadgeState extends State<ShimmerBadge> with SingleTickerProviderSt
       animation: _controller,
       builder: (context, _) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.5.h),
           decoration: BoxDecoration(
             gradient: widget.baseGradient,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -463,4 +464,387 @@ class _SmoothRotatingWidgetState extends State<SmoothRotatingWidget> with Single
       ),
     );
   }
+}
+
+
+/// Breathing Aura Widget (Pulsing Glow)
+class BreathingAuraWidget extends StatefulWidget {
+  final Widget child;
+  final Color auraColor;
+  final double beginScale;
+  final double endScale;
+  final Duration duration;
+
+  const BreathingAuraWidget({
+    super.key,
+    required this.child,
+    required this.auraColor,
+    this.beginScale = 0.95,
+    this.endScale = 1.05,
+    this.duration = const Duration(seconds: 3),
+  });
+
+  @override
+  State<BreathingAuraWidget> createState() => _BreathingAuraWidgetState();
+}
+
+class _BreathingAuraWidgetState extends State<BreathingAuraWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: widget.beginScale, end: widget.endScale).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _animation.value,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.auraColor.withValues(alpha: 0.5 * (1 - (_animation.value - widget.beginScale) / (widget.endScale - widget.beginScale))),
+                  blurRadius: 40 * _animation.value,
+                  spreadRadius: 10 * _animation.value,
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Floating Widget (Smooth Up and Down)
+class FloatingWidget extends StatefulWidget {
+  final Widget child;
+  final double floatDistance;
+  final Duration duration;
+
+  const FloatingWidget({
+    super.key,
+    required this.child,
+    this.floatDistance = 6.0,
+    this.duration = const Duration(seconds: 2),
+  });
+
+  @override
+  State<FloatingWidget> createState() => _FloatingWidgetState();
+}
+
+class _FloatingWidgetState extends State<FloatingWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: -widget.floatDistance, end: widget.floatDistance).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _animation.value),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Shimmering Border Container
+class ShimmeringBorder extends StatefulWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+  final List<Color> colors;
+  final double borderWidth;
+  final Duration duration;
+
+  const ShimmeringBorder({
+    super.key,
+    required this.child,
+    this.borderRadius = BorderRadius.zero,
+    required this.colors,
+    this.borderWidth = 2.0,
+    this.duration = const Duration(seconds: 4),
+  });
+
+  @override
+  State<ShimmeringBorder> createState() => _ShimmeringBorderState();
+}
+
+class _ShimmeringBorderState extends State<ShimmeringBorder> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          padding: EdgeInsets.all(widget.borderWidth),
+          decoration: BoxDecoration(
+            borderRadius: widget.borderRadius,
+            gradient: SweepGradient(
+              colors: widget.colors,
+              stops: _generateStops(widget.colors.length),
+              transform: GradientRotation(_controller.value * 2 * math.pi),
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: widget.borderRadius.subtract(BorderRadius.circular(widget.borderWidth / 2)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: widget.child,
+          ),
+        );
+      },
+    );
+  }
+
+  List<double> _generateStops(int length) {
+    if (length <= 1) return [1.0];
+    return List.generate(length, (index) => index / (length - 1));
+  }
+}
+
+
+
+/// ─────────────────────────────────────────────────────────────
+/// Cosmic Dust Particle Background
+/// Tiny glowing particles drift slowly across the background
+/// like cosmic dust suspended in deep space.
+/// ─────────────────────────────────────────────────────────────
+class CosmicDustBackground extends StatefulWidget {
+  final int particleCount;
+  final Color primaryColor;
+  final Color accentColor;
+
+  const CosmicDustBackground({
+    super.key,
+    this.particleCount = 60,
+    this.primaryColor = Colors.white,
+    this.accentColor = const Color(0xFFB0C4DE),
+  });
+
+  @override
+  State<CosmicDustBackground> createState() => _CosmicDustBackgroundState();
+}
+
+class _CosmicDustBackgroundState extends State<CosmicDustBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late List<_DustParticle> _particles;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 25),
+    )..repeat();
+
+    final rng = math.Random(42); // fixed seed for consistent placement
+    _particles = List.generate(widget.particleCount, (i) {
+      // Purposely vary size a LOT: tiny dust, medium orbs, a few large soft glows
+      final sizeClass = rng.nextDouble();
+      final double size;
+      final double opacity;
+      if (sizeClass < 0.55) {
+        // 55% are tiny specks  2–6px
+        size = rng.nextDouble() * 4 + 2;
+        opacity = rng.nextDouble() * 0.45 + 0.25;
+      } else if (sizeClass < 0.85) {
+        // 30% are medium dots  8–20px
+        size = rng.nextDouble() * 12 + 8;
+        opacity = rng.nextDouble() * 0.25 + 0.10;
+      } else {
+        // 15% are large soft glow orbs  28–55px
+        size = rng.nextDouble() * 27 + 28;
+        opacity = rng.nextDouble() * 0.08 + 0.04;
+      }
+
+      return _DustParticle(
+        x: rng.nextDouble(),
+        y: rng.nextDouble(),
+        size: size,
+        speed: rng.nextDouble() * 0.18 + 0.06,
+        driftX: (rng.nextDouble() - 0.5) * 0.06,
+        opacity: opacity,
+        colorIndex: rng.nextInt(2),
+        twinkleOffset: rng.nextDouble(),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, __) => RepaintBoundary(
+        child: CustomPaint(
+          painter: _DustPainter(
+            particles: _particles,
+            t: _controller.value,
+            primaryColor: widget.primaryColor,
+            accentColor: widget.accentColor,
+          ),
+          size: Size.infinite,
+        ),
+      ),
+    );
+  }
+}
+
+class _DustParticle {
+  final double x;
+  final double y;
+  final double size;
+  final double speed;
+  final double driftX;
+  final double opacity;
+  final int colorIndex;
+  final double twinkleOffset;
+
+  const _DustParticle({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.speed,
+    required this.driftX,
+    required this.opacity,
+    required this.colorIndex,
+    required this.twinkleOffset,
+  });
+}
+
+class _DustPainter extends CustomPainter {
+  final List<_DustParticle> particles;
+  final double t;
+  final Color primaryColor;
+  final Color accentColor;
+
+  _DustPainter({
+    required this.particles,
+    required this.t,
+    required this.primaryColor,
+    required this.accentColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final p in particles) {
+      // Vertical float upward, wrapping
+      double cy = ((p.y - t * p.speed) % 1.0 + 1.0) % 1.0;
+      // Gentle horizontal drift using sine wave
+      double cx = p.x + math.sin(t * math.pi * 2 * 0.5 + p.y * 8) * p.driftX;
+      cx = cx % 1.0;
+
+      final px = cx * size.width;
+      final py = cy * size.height;
+
+      // Twinkle: subtle opacity oscillation
+      final twinkle = math.sin(t * math.pi * 2 * 2 + p.twinkleOffset * math.pi * 2);
+      final alpha = (p.opacity + twinkle * p.opacity * 0.3).clamp(0.0, 1.0);
+
+      final color = p.colorIndex == 0
+          ? primaryColor.withValues(alpha: alpha)
+          : accentColor.withValues(alpha: alpha);
+
+      if (p.size <= 6) {
+        // Tiny dot — crisp point
+        final paint = Paint()..color = color;
+        canvas.drawCircle(Offset(px, py), p.size / 2, paint);
+      } else if (p.size <= 22) {
+        // Medium — soft filled circle with radial fade
+        final paint = Paint()
+          ..shader = RadialGradient(colors: [
+            color,
+            color.withValues(alpha: 0.0),
+          ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: p.size));
+        canvas.drawCircle(Offset(px, py), p.size, paint);
+      } else {
+        // Large — very soft glow orb (double layer)
+        final outerPaint = Paint()
+          ..shader = RadialGradient(colors: [
+            color.withValues(alpha: alpha * 0.6),
+            color.withValues(alpha: 0.0),
+          ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: p.size));
+        canvas.drawCircle(Offset(px, py), p.size, outerPaint);
+
+        final innerPaint = Paint()
+          ..shader = RadialGradient(colors: [
+            color,
+            color.withValues(alpha: 0.0),
+          ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: p.size * 0.35));
+        canvas.drawCircle(Offset(px, py), p.size * 0.35, innerPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DustPainter old) =>
+      old.t != t;
 }

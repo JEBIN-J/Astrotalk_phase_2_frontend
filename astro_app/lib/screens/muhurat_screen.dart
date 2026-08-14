@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MuhuratScreen extends StatefulWidget {
   const MuhuratScreen({super.key});
@@ -17,7 +18,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
   
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  Set<String> _auspiciousDates = {};
+  final Set<String> _auspiciousDates = {};
 
   @override
   void initState() {
@@ -70,7 +71,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text('Muhurat Explorer', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 22, color: textColor)),
+        title: Text('Muhurat Explorer', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 22.sp, color: textColor)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -83,14 +84,14 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
           await _fetchMuhuratForDate(_selectedDay);
         },
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             // Calendar Section - PREMIUM ELEGANT
             Container(
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20.r),
                 boxShadow: [
                   BoxShadow(
                     color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF000000).withValues(alpha: 0.04),
@@ -141,7 +142,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   todayDecoration: BoxDecoration(
                     color: Colors.transparent,
                     shape: BoxShape.circle,
-                    border: Border.all(color: goldColor.withValues(alpha: 0.5), width: 1.5),
+                    border: Border.all(color: goldColor.withValues(alpha: 0.5), width: 1.5.w),
                   ),
                   todayTextStyle: TextStyle(color: isDark ? goldColor : const Color(0xFFB8860B), fontWeight: FontWeight.bold),
                   defaultTextStyle: TextStyle(color: textColor, fontWeight: FontWeight.w500),
@@ -152,7 +153,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   formatButtonVisible: false,
                   titleCentered: true,
                   titleTextStyle: GoogleFonts.outfit(
-                    fontSize: 18,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
                     color: textColor,
                   ),
@@ -162,24 +163,24 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
               ),
             ),
             
-            const SizedBox(height: 28),
+            SizedBox(height: 28.h),
             
             if (_isLoading)
               Center(child: Padding(
-                padding: const EdgeInsets.all(32.0),
+                padding: EdgeInsets.all(32.0.w),
                 child: CircularProgressIndicator(color: goldColor, strokeWidth: 3),
               ))
             else ...[
               // Date and Sun Info - COSMIC GRADIENT
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF2C3E50), Color(0xFF000000)], // Deep space gradient
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(20.r),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF2C3E50).withValues(alpha: 0.4),
@@ -193,18 +194,18 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                     Text(
                       _muhurat?['date'] ?? DateFormat('yyyy-MM-dd').format(_selectedDay),
                       style: GoogleFonts.outfit(
-                        fontSize: 22,
+                        fontSize: 22.sp,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                         letterSpacing: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildSunItem(Icons.wb_sunny_outlined, 'Sunrise', _muhurat?['sunrise'] ?? '--:--', const Color(0xFFFFD54F)),
-                        Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+                        Container(width: 1.w, height: 40.h, color: Colors.white.withValues(alpha: 0.2)),
                         _buildSunItem(Icons.nightlight_round, 'Sunset', _muhurat?['sunset'] ?? '--:--', const Color(0xFF9FA8DA)),
                       ],
                     ),
@@ -212,20 +213,20 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                 ),
               ),
               
-              const SizedBox(height: 28),
+              SizedBox(height: 28.h),
               
               // Specific Muhurats Categories
               if (_muhurat?['categories'] != null) ...[
                 Text(
                   'Specific Categories',
                   style: GoogleFonts.outfit(
-                    fontSize: 18,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
                     color: textColor,
                     letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 ...(_muhurat!['categories'] as Map<String, dynamic>).entries.map((entry) {
                   final catName = entry.key;
                   final catData = entry.value;
@@ -249,7 +250,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   }
                   
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: EdgeInsets.only(bottom: 12.h),
                     child: _buildElegantTimingCard(
                       title: catName,
                       time: catData['time'] ?? '',
@@ -264,20 +265,20 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   );
                 }),
                 
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
               ],
               
               // General Timings
               Text(
                 'General Timings (Daily)',
                 style: GoogleFonts.outfit(
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
                   color: textColor,
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               
               if (_muhurat?['general'] != null) ...[
                 _buildElegantTimingCard(
@@ -291,7 +292,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   subtitleColor: subtitleColor,
                   isDark: isDark,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 _buildElegantTimingCard(
                   title: 'Rahu Kaal',
                   time: _muhurat!['general']['rahu_kaal'] ?? '--:--',
@@ -303,7 +304,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   subtitleColor: subtitleColor,
                   isDark: isDark,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 _buildElegantTimingCard(
                   title: 'Yamaganda Kaal',
                   time: _muhurat!['general']['yamaganda'] ?? '--:--',
@@ -315,7 +316,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   subtitleColor: subtitleColor,
                   isDark: isDark,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 _buildElegantTimingCard(
                   title: 'Gulika Kaal',
                   time: _muhurat!['general']['gulika_kaal'] ?? '--:--',
@@ -327,7 +328,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                   subtitleColor: subtitleColor,
                   isDark: isDark,
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
               ],
             ],
           ],
@@ -340,15 +341,15 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
     return Column(
       children: [
         Icon(icon, color: iconColor, size: 32),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           label.toUpperCase(),
-          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, letterSpacing: 1.0, fontWeight: FontWeight.w500),
+          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp, letterSpacing: 1.0, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
           time,
-          style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -368,10 +369,10 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
             color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.03),
@@ -383,14 +384,14 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(icon, color: statusColor, size: 24),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +403,7 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                       child: Text(
                         title,
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                           color: textColor,
                         ),
@@ -411,18 +412,18 @@ class _MuhuratScreenState extends State<MuhuratScreen> {
                     Text(
                       subtitle,
                       style: GoogleFonts.outfit(
-                        fontSize: 12,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w600,
                         color: statusColor,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 Text(
                   time,
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
                     color: subtitleColor,
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -50,7 +51,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded),
             onPressed: () {
               setState(() => _isLoading = true);
               _fetchStats();
@@ -59,11 +60,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         ],
       ),
       body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _fetchStats,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   _buildStatCard(
@@ -73,7 +74,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     color: const Color(0xFF4338CA),
                     isDark: isDark,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   _buildStatCard(
                     title: 'Active Subscriptions',
                     value: _stats?['active_subscriptions']?.toString() ?? '0',
@@ -81,7 +82,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     color: const Color(0xFFD97706),
                     isDark: isDark,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   _buildStatCard(
                     title: 'AI Queries Today',
                     value: _stats?['ai_queries_today']?.toString() ?? '0',
@@ -89,38 +90,38 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     color: const Color(0xFF0D9488),
                     isDark: isDark,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   Text(
                     'System Status',
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20.w),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                     ),
                     child: Row(
                       children: [
                         Container(
-                          width: 12,
-                          height: 12,
+                          width: 12.w,
+                          height: 12.h,
                           decoration: const BoxDecoration(
                             color: Color(0xFF10B981),
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12.w),
                         Text(
                           'All systems operational',
                           style: GoogleFonts.outfit(
-                            fontSize: 16,
+                            fontSize: 16.sp,
                             fontWeight: FontWeight.w500,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
@@ -142,10 +143,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -158,14 +159,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: 20.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,16 +174,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 Text(
                   title,
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     color: isDark ? Colors.white70 : Colors.black54,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   value,
                   style: GoogleFonts.outfit(
-                    fontSize: 28,
+                    fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : Colors.black87,
                   ),

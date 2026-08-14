@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/astro_models.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class KundliInteractiveChart extends StatelessWidget {
   final KundliChartStyle chartStyle;
@@ -688,7 +689,7 @@ class _MultiKundliPainter extends CustomPainter {
           color: color ?? (isDark ? Colors.white : const Color(0xFF1E293B)),
           fontSize: fontSize,
           fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-          height: 1.15,
+          height: 1.15.h,
         ),
       ),
       textAlign: TextAlign.center,

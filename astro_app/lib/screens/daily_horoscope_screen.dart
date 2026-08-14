@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class DailyHoroscopeScreen extends StatefulWidget {
   const DailyHoroscopeScreen({super.key});
@@ -81,19 +82,19 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0.w),
           child: Text(
             'Select your Sun Sign to read your personalized daily cosmic prediction.',
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
         ),
         Expanded(
           child: GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               childAspectRatio: 0.8,
@@ -108,7 +109,7 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                     boxShadow: [
                       BoxShadow(
@@ -122,27 +123,27 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0EA5E9).withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(sign['icon'], color: const Color(0xFF0EA5E9), size: 28),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       Text(
                         sign['name'],
                         style: GoogleFonts.outfit(
-                          fontSize: 14,
+                          fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4.h),
                       Text(
                         sign['date'],
                         style: GoogleFonts.outfit(
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           color: isDark ? Colors.white54 : Colors.black54,
                         ),
                       ),
@@ -161,12 +162,12 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
     final signData = _signs.firstWhere((s) => s['name'] == _selectedSign);
 
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(20.0.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
@@ -184,33 +185,33 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
             ),
             child: Icon(signData['icon'], size: 64, color: Colors.white),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Text(
             '$_selectedSign Horoscope',
             style: GoogleFonts.outfit(
-              fontSize: 28,
+              fontSize: 28.sp,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'Today',
             style: GoogleFonts.outfit(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: const Color(0xFF0EA5E9),
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
           if (_isLoading)
             const CircularProgressIndicator(color: Color(0xFF0EA5E9))
           else
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(24.r),
                 border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 boxShadow: [
                   BoxShadow(
@@ -224,23 +225,23 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
                 _prediction,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  height: 1.6,
+                  fontSize: 16.sp,
+                  height: 1.6.h,
                   color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
             ),
-          const Spacer(),
+          Spacer(),
           TextButton.icon(
             onPressed: () => setState(() => _selectedSign = null),
-            icon: const Icon(Icons.arrow_back_rounded),
-            label: const Text('Choose Another Sign'),
+            icon: Icon(Icons.arrow_back_rounded),
+            label: Text('Choose Another Sign'),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF0EA5E9),
-              textStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+              textStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
         ],
       ),
     );

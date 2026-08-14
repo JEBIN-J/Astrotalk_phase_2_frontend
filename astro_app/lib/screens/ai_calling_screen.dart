@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AiCallingScreen extends StatefulWidget {
   const AiCallingScreen({super.key});
@@ -77,42 +77,42 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
           SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
                 // Top Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 32),
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 32),
                         onPressed: () => Navigator.pop(context),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(20.r),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.lock_rounded, size: 12, color: Color(0xFF34D399)),
-                            const SizedBox(width: 6),
+                            Icon(Icons.lock_rounded, size: 12, color: Color(0xFF34D399)),
+                            SizedBox(width: 6.w),
                             Text(
                               'End-to-End Encrypted',
-                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 32), // Balance spacing
+                      SizedBox(width: 32.w), // Balance spacing
                     ],
                   ),
                 ),
                 
-                const Spacer(),
+                Spacer(),
                 
                 // AI Avatar with Ripples
                 Stack(
@@ -132,7 +132,7 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: const Color(0xFFFB7185).withValues(alpha: opacity * 0.5),
-                                width: 2,
+                                width: 2.w,
                               ),
                             ),
                           );
@@ -147,8 +147,8 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                         return Transform.scale(
                           scale: 1.0 + (_pulseController.value * 0.05),
                           child: Container(
-                            width: 160,
-                            height: 160,
+                            width: 160.w,
+                            height: 160.h,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
@@ -164,7 +164,7 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.auto_awesome, size: 64, color: Colors.white),
+                            child: Icon(Icons.auto_awesome, size: 64, color: Colors.white),
                           ),
                         );
                       }
@@ -172,35 +172,35 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                   ],
                 ),
                 
-                const SizedBox(height: 50),
+                SizedBox(height: 50.h),
                 
                 Text(
                   'Vedic AI Astrologer',
                   style: GoogleFonts.outfit(
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   _formattedTime,
                   style: GoogleFonts.firaCode(
                     color: Colors.white70,
-                    fontSize: 18,
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 
-                const Spacer(),
+                Spacer(),
                 
                 // Controls Glass Panel
                 Container(
-                  margin: const EdgeInsets.all(24),
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+                  margin: EdgeInsets.all(24.w),
+                  padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 32.w),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E293B).withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(40),
+                    borderRadius: BorderRadius.circular(40.r),
                     border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: Row(
@@ -222,7 +222,7 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
               ],
             ),
           ),
@@ -244,7 +244,7 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -256,12 +256,12 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Text(
           label,
           style: GoogleFonts.outfit(
             color: Colors.white70,
-            fontSize: 13,
+            fontSize: 13.sp,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -276,7 +276,7 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
         GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
-            padding: const EdgeInsets.all(22),
+            padding: EdgeInsets.all(22.w),
             decoration: BoxDecoration(
               color: const Color(0xFFEF4444),
               shape: BoxShape.circle,
@@ -288,19 +288,19 @@ class _AiCallingScreenState extends State<AiCallingScreen> with TickerProviderSt
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.call_end_rounded,
               color: Colors.white,
               size: 32,
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Text(
           'End',
           style: GoogleFonts.outfit(
             color: Colors.white70,
-            fontSize: 13,
+            fontSize: 13.sp,
             fontWeight: FontWeight.w500,
           ),
         ),

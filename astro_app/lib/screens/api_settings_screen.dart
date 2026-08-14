@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Interactive API Settings & Live Backend Testing Console
 class ApiSettingsScreen extends StatefulWidget {
@@ -75,24 +76,24 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
       appBar: AppBar(
         title: Text(
           'Flask API & Backend Hub',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded),
             tooltip: 'Recheck Server Health',
             onPressed: _runHealthCheck,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Backend Status Banner Card
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(18.w),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isOnline
@@ -101,7 +102,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(22.r),
                 boxShadow: [
                   BoxShadow(
                     color: (isOnline ? const Color(0xFF059669) : const Color(0xFFEA580C))
@@ -114,7 +115,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
@@ -125,7 +126,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                       size: 28,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,16 +136,16 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                             Text(
                               isOnline ? 'Flask Backend Online' : 'Local Dynamic Engine',
                               style: GoogleFonts.outfit(
-                                fontSize: 16,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8.w),
                             if (_isChecking)
-                              const SizedBox(
-                                width: 14,
-                                height: 14,
+                              SizedBox(
+                                width: 14.w,
+                                height: 14.h,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
@@ -152,13 +153,13 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           isOnline
                               ? 'Live connected to ${_healthStatus['url']} (v${_healthStatus['version']})'
                               : 'Flask server is offline. Serving local ephemeris calculations without crashes.',
                           style: GoogleFonts.outfit(
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             color: Colors.white.withValues(alpha: 0.88),
                           ),
                         ),
@@ -169,14 +170,14 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
 
             // Base URL Configuration Card
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(18.w),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(22.r),
                 border: Border.all(
                   color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                 ),
@@ -186,20 +187,20 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.link_rounded, color: Color(0xFF4338CA), size: 22),
-                      const SizedBox(width: 8),
+                      Icon(Icons.link_rounded, color: Color(0xFF4338CA), size: 22),
+                      SizedBox(width: 8.w),
                       Text(
                         'Flask API Base URL',
                         style: GoogleFonts.outfit(
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text('Quick Presets:', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey)),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 10.h),
+                  Text('Quick Presets:', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.grey)),
+                  SizedBox(height: 6.h),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -209,25 +210,25 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                       _buildPresetChip('Localhost :8000', 'http://127.0.0.1:8000/api/v1', isDark),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   TextField(
                     controller: _urlController,
-                    style: GoogleFonts.firaCode(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.firaCode(fontSize: 13.sp, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
                       hintText: 'http://127.0.0.1:5000/api/v1',
-                      prefixIcon: const Icon(Icons.lan_rounded, size: 18),
+                      prefixIcon: Icon(Icons.lan_rounded, size: 18),
                       filled: true,
                       fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(14.r),
                         borderSide: BorderSide(
                           color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -241,15 +242,15 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.save_rounded, size: 16),
+                        icon: Icon(Icons.save_rounded, size: 16),
                         label: Text('Save & Reconnect', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4338CA),
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       OutlinedButton(
                         onPressed: () {
                           _urlController.text = AstroApiService.defaultBaseUrl;
@@ -257,7 +258,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                           _runHealthCheck();
                         },
                         style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                         ),
                         child: Text('Reset Default', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                       ),
@@ -267,18 +268,18 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
 
             // Live API Test Triggers
             Text(
               '1-Click Live Endpoint Testers',
               style: GoogleFonts.outfit(
-                fontSize: 16,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
 
             Wrap(
               spacing: 8,
@@ -294,14 +295,14 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
               ],
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
 
             // Response Inspector Box
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0B1120) : const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(18.r),
                 border: Border.all(color: const Color(0xFF334155)),
               ),
               child: Column(
@@ -313,27 +314,27 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                       Row(
                         children: [
                           Container(
-                            width: 10,
-                            height: 10,
+                            width: 10.w,
+                            height: 10.h,
                             decoration: BoxDecoration(
                               color: _isTesting ? Colors.amber : const Color(0xFF10B981),
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8.w),
                           Text(
                             _activeTest.isEmpty ? 'Live Response Inspector' : 'Testing: $_activeTest',
                             style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                             ),
                           ),
                         ],
                       ),
                       if (_testResult.isNotEmpty)
                         IconButton(
-                          icon: const Icon(Icons.clear_all_rounded, color: Colors.white70, size: 20),
+                          icon: Icon(Icons.clear_all_rounded, color: Colors.white70, size: 20),
                           onPressed: () {
                             setState(() {
                               _testResult = '';
@@ -344,15 +345,15 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                     ],
                   ),
                   const Divider(color: Color(0xFF1E293B)),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   SelectableText(
                     _testResult.isEmpty
                         ? 'Tap any test button above to fire live requests against your Flask backend.\nResults and execution latency will be displayed here in JSON format.'
                         : _testResult,
                     style: GoogleFonts.firaCode(
                       color: _testResult.startsWith('❌') ? const Color(0xFFF87171) : const Color(0xFF34D399),
-                      fontSize: 12,
-                      height: 1.45,
+                      fontSize: 12.sp,
+                      height: 1.45.h,
                     ),
                   ),
                 ],
@@ -379,14 +380,14 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(8.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF4338CA).withValues(alpha: 0.2)
               : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           border: Border.all(
             color: isSelected ? const Color(0xFF6366F1) : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
           ),
@@ -394,7 +395,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
         child: Text(
           label,
           style: GoogleFonts.outfit(
-            fontSize: 11,
+            fontSize: 11.sp,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             color: isSelected ? const Color(0xFF818CF8) : (isDark ? Colors.white70 : Colors.black87),
           ),
@@ -405,13 +406,13 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
 
   Widget _buildTestChip(String title, Future<dynamic> Function() caller) {
     return ActionChip(
-      avatar: const Icon(Icons.play_arrow_rounded, size: 16, color: Color(0xFF4338CA)),
-      label: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13)),
+      avatar: Icon(Icons.play_arrow_rounded, size: 16, color: Color(0xFF4338CA)),
+      label: Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.sp)),
       backgroundColor: Theme.of(context).brightness == Brightness.dark
           ? const Color(0xFF1E293B)
           : const Color(0xFFEEF2FF),
-      side: const BorderSide(color: Color(0xFF6366F1), width: 1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      side: BorderSide(color: Color(0xFF6366F1), width: 1.w),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
       onPressed: () => _testEndpoint(title, caller),
     );
   }

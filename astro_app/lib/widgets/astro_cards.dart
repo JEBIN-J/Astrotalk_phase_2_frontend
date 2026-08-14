@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/astro_item.dart';
 import 'celestial_animations.dart';
 import 'custom_icons.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// 1. Bento Grid Hero Card (Used in Astrotalk Bento style)
 class BentoHeroCard extends StatelessWidget {
@@ -20,36 +22,41 @@ class BentoHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: EdgeInsets.only(bottom: 14.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor,
+            Theme.of(context).primaryColor.withValues(alpha: 0.75),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28.r),
         border: Border.all(
-          color: const Color(0xFF818CF8).withValues(alpha: 0.35),
-          width: 1.2,
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+          width: 1.2.w,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4338CA).withValues(alpha: 0.38),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+            spreadRadius: -2,
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28.r),
         child: Stack(
           children: [
+            
             // Rotating celestial decorative watermark
             Positioned(
               right: -30,
               bottom: -30,
               child: Opacity(
-                opacity: 0.16,
+                opacity: 0.12,
                 child: SmoothRotatingWidget(
                   duration: const Duration(seconds: 45),
                   child: const VedicIcon(
@@ -61,83 +68,85 @@ class BentoHeroCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(22.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const ShimmerBadge(
+                      ShimmerBadge(
                         text: '★ FEATURED KUNDLI & AI',
-                        baseGradient: LinearGradient(
-                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                        baseGradient: const LinearGradient(
+                          colors: [Color(0xFFFFD54F), Color(0xFFF59E0B)],
                         ),
-                        textColor: Color(0xFF451A03),
-                        fontSize: 10,
+                        textColor: const Color(0xFF451A03),
+                        fontSize: 10.sp,
                       ),
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: Colors.white.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
                         ),
-                        child: const Icon(Icons.auto_awesome, color: Color(0xFFFFD54F), size: 16),
+                        child: const Icon(Icons.auto_awesome, color: Color(0xFFFFD54F), size: 18),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 16.h),
                   Text(
                     'Detailed Janam Kundli\n& Life Horoscope',
                     style: GoogleFonts.outfit(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      height: 1.18,
-                      letterSpacing: -0.2,
+                      height: 1.15.h,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 8.h),
                   Text(
                     'North, South & East Indian Charts, 120-Yr Vimshottari Dasha & Live AI Consultations.',
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.85),
-                      height: 1.35,
+                      fontSize: 12.5.sp,
+                      color: Colors.white.withValues(alpha: 0.9),
+                      height: 1.35.h,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 20.h),
                   Wrap(
-                    spacing: 10,
-                    runSpacing: 8,
+                    spacing: 12,
+                    runSpacing: 10,
                     children: [
                       BouncyTouchCard(
                         onTap: onTapKundli,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFFFFD54F), Color(0xFFF59E0B)],
                             ),
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(16.r),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                                color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.flash_on_rounded, size: 16, color: Color(0xFF0F172A)),
-                              const SizedBox(width: 6),
+                              const Icon(Icons.flash_on_rounded, size: 18, color: Color(0xFF0F172A)),
+                              SizedBox(width: 8.w),
                               Text(
                                 'View Kundli',
                                 style: GoogleFonts.outfit(
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 13,
+                                  fontSize: 14.sp,
                                   color: const Color(0xFF0F172A),
                                 ),
                               ),
@@ -147,27 +156,33 @@ class BentoHeroCard extends StatelessWidget {
                       ),
                       BouncyTouchCard(
                         onTap: onTapAiCalling,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.mic, size: 15, color: Color(0xFFFB7185)),
-                              const SizedBox(width: 6),
-                              Text(
-                                'AI Astrologer',
-                                style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16.r),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(16.r),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.mic, size: 18, color: Color(0xFFFDA4AF)),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    'AI Astrologer',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14.sp,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -204,12 +219,12 @@ class AstroClassicTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF131D36) : Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(22.r),
           border: Border.all(
             color: isDark
                 ? const Color(0xFF1E2E56)
                 : item.primaryColor.withValues(alpha: 0.14),
-            width: 1.2,
+            width: 1.2.w,
           ),
           boxShadow: [
             BoxShadow(
@@ -232,7 +247,7 @@ class AstroClassicTile extends StatelessWidget {
 
                   return Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 8.h),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -246,7 +261,7 @@ class AstroClassicTile extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: item.primaryColor.withValues(alpha: isDark ? 0.35 : 0.15),
-                                width: 1,
+                                width: 1.w,
                               ),
                             ),
                             child: Center(
@@ -257,7 +272,7 @@ class AstroClassicTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6.h),
                           Flexible(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -266,9 +281,9 @@ class AstroClassicTile extends StatelessWidget {
                                 item.title,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.outfit(
-                                  fontSize: 12.5,
+                                  fontSize: 12.5.sp,
                                   fontWeight: FontWeight.w600,
-                                  height: 1.15,
+                                  height: 1.15.h,
                                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                                 ),
                                 maxLines: 2,
@@ -284,28 +299,28 @@ class AstroClassicTile extends StatelessWidget {
             ),
             if (item.badge != null)
               Positioned(
-                top: 6,
-                right: 6,
+                top: 6.h,
+                right: 6.w,
                 child: item.isPro
-                    ? const ShimmerBadge(
+                    ? ShimmerBadge(
                         text: 'PRO',
                         baseGradient: LinearGradient(
                           colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
                         ),
-                        fontSize: 8.5,
+                        fontSize: 8.5.sp,
                       )
                     : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [item.primaryColor, item.secondaryColor],
                           ),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           item.badge!,
                           style: GoogleFonts.outfit(
-                            fontSize: 8.5,
+                            fontSize: 8.5.sp,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -351,10 +366,10 @@ class AstroGlassmorphicCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(22.r),
           border: Border.all(
             color: item.secondaryColor.withValues(alpha: isDark ? 0.45 : 0.32),
-            width: 1.4,
+            width: 1.4.w,
           ),
           boxShadow: [
             BoxShadow(
@@ -375,7 +390,7 @@ class AstroGlassmorphicCard extends StatelessWidget {
 
                   return Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -406,7 +421,7 @@ class AstroGlassmorphicCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6.h),
                           Flexible(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -415,7 +430,7 @@ class AstroGlassmorphicCard extends StatelessWidget {
                                 item.title,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.outfit(
-                                  fontSize: 12.5,
+                                  fontSize: 12.5.sp,
                                   fontWeight: FontWeight.w700,
                                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                                 ),
@@ -432,28 +447,28 @@ class AstroGlassmorphicCard extends StatelessWidget {
             ),
             if (item.badge != null)
               Positioned(
-                top: 6,
-                right: 6,
+                top: 6.h,
+                right: 6.w,
                 child: item.isPro
-                    ? const ShimmerBadge(
+                    ? ShimmerBadge(
                         text: 'PRO',
                         baseGradient: LinearGradient(
                           colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
                         ),
-                        fontSize: 8.5,
+                        fontSize: 8.5.sp,
                       )
                     : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [item.primaryColor, item.secondaryColor],
                           ),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           item.badge!,
                           style: GoogleFonts.outfit(
-                            fontSize: 8.5,
+                            fontSize: 8.5.sp,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -487,10 +502,10 @@ class AstroTempleCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF26180B) : const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
             color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.55 : 0.4),
-            width: 1.5,
+            width: 1.5.w,
           ),
           boxShadow: [
             BoxShadow(
@@ -511,7 +526,7 @@ class AstroTempleCard extends StatelessWidget {
 
                   return Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 8.h),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -526,7 +541,7 @@ class AstroTempleCard extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14.r),
                               boxShadow: [
                                 BoxShadow(
                                   color: const Color(0xFFD97706).withValues(alpha: 0.35),
@@ -543,7 +558,7 @@ class AstroTempleCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6.h),
                           Flexible(
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -552,7 +567,7 @@ class AstroTempleCard extends StatelessWidget {
                                 item.title,
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.outfit(
-                                  fontSize: 12,
+                                  fontSize: 12.sp,
                                   fontWeight: FontWeight.w700,
                                   color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF78350F),
                                 ),
@@ -569,28 +584,28 @@ class AstroTempleCard extends StatelessWidget {
             ),
             if (item.badge != null)
               Positioned(
-                top: 6,
-                right: 6,
+                top: 6.h,
+                right: 6.w,
                 child: item.isPro
-                    ? const ShimmerBadge(
+                    ? ShimmerBadge(
                         text: 'PRO',
                         baseGradient: LinearGradient(
                           colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
                         ),
-                        fontSize: 8.5,
+                        fontSize: 8.5.sp,
                       )
                     : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                           ),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           item.badge!,
                           style: GoogleFonts.outfit(
-                            fontSize: 8.5,
+                            fontSize: 8.5.sp,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -623,10 +638,10 @@ class AstroDetailedListTile extends StatelessWidget {
       onTap: onTap,
       scaleDown: 0.98,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: EdgeInsets.only(bottom: 10.h),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF131D36) : Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(18.r),
           border: Border.all(
             color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0),
           ),
@@ -639,17 +654,17 @@ class AstroDetailedListTile extends StatelessWidget {
           ],
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
           leading: Container(
-            width: 46,
-            height: 46,
+            width: 46.w,
+            height: 46.h,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [item.primaryColor, item.secondaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.r),
             ),
             child: Center(
               child: VedicIcon(
@@ -666,30 +681,30 @@ class AstroDetailedListTile extends StatelessWidget {
                   item.title.replaceAll('\n', ' '),
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w700,
-                    fontSize: 14.5,
+                    fontSize: 14.5.sp,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
               ),
               if (item.badge != null)
                 item.isPro
-                    ? const ShimmerBadge(
+                    ? ShimmerBadge(
                         text: 'PRO',
                         baseGradient: LinearGradient(
                           colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
                         ),
-                        fontSize: 9,
+                        fontSize: 9.sp,
                       )
                     : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           color: item.primaryColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           item.badge!,
                           style: GoogleFonts.outfit(
-                            fontSize: 9.5,
+                            fontSize: 9.5.sp,
                             fontWeight: FontWeight.bold,
                             color: item.primaryColor,
                           ),
@@ -700,7 +715,7 @@ class AstroDetailedListTile extends StatelessWidget {
           subtitle: Text(
             item.subtitle,
             style: GoogleFonts.outfit(
-              fontSize: 11.5,
+              fontSize: 11.5.sp,
               color: isDark ? Colors.white60 : const Color(0xFF64748B),
             ),
             maxLines: 2,

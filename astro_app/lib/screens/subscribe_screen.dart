@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SubscribeScreen extends StatefulWidget {
   const SubscribeScreen({super.key});
@@ -27,25 +28,25 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
       appBar: AppBar(
         title: Text(
           'ABC App PRO',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp),
         ),
         elevation: 0,
         backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         children: [
           // Hero Banner
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(24.r),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
@@ -61,42 +62,42 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: EdgeInsets.all(10.w),
                       decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                      child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 28),
+                      child: Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 28),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10)),
-                      child: Text('PRO VIP', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 11, color: Colors.black87)),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(10.r)),
+                      child: Text('PRO VIP', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 11.sp, color: Colors.black87)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text('Unlock Full Vedic Astrology Power', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text('Unlimited Kundli PDFs, advanced Dasha & Sade Sati analysis, and 100% ad-free.', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
+                SizedBox(height: 12.h),
+                Text('Unlock Full Vedic Astrology Power', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                SizedBox(height: 4.h),
+                Text('Unlimited Kundli PDFs, advanced Dasha & Sade Sati analysis, and 100% ad-free.', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 13.sp)),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           // Plan Selector
-          Text('Select Your Plan', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          Text('Select Your Plan', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+          SizedBox(height: 12.h),
           ...List.generate(_plans.length, (index) {
             final plan = _plans[index];
             final isSelected = index == _selectedPlanIndex;
             return GestureDetector(
               onTap: () => setState(() => _selectedPlanIndex = index),
               child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.2 : 0.08)
                       : (isDark ? const Color(0xFF1E293B) : Colors.white),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(18.r),
                   border: Border.all(
                     color: isSelected ? const Color(0xFF7C3AED) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                     width: isSelected ? 2 : 1,
@@ -112,53 +113,53 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
                             isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                             color: isSelected ? const Color(0xFF7C3AED) : Colors.grey,
                           ),
-                          const SizedBox(width: 14),
+                          SizedBox(width: 14.w),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Flexible(child: Text(plan['title']!, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15), overflow: TextOverflow.ellipsis)),
+                                    Flexible(child: Text(plan['title']!, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp), overflow: TextOverflow.ellipsis)),
                                     if (plan['badge']!.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
+                                      SizedBox(width: 8.w),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(color: const Color(0xFF7C3AED), borderRadius: BorderRadius.circular(6)),
-                                        child: Text(plan['badge']!, style: GoogleFonts.outfit(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                        decoration: BoxDecoration(color: const Color(0xFF7C3AED), borderRadius: BorderRadius.circular(6.r)),
+                                        child: Text(plan['badge']!, style: GoogleFonts.outfit(color: Colors.white, fontSize: 9.sp, fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(plan['sub']!, style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis),
+                                SizedBox(height: 2.h),
+                                Text(plan['sub']!, style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey), overflow: TextOverflow.ellipsis),
                               ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     Text(
                       plan['price']!,
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF7C3AED)),
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: const Color(0xFF7C3AED)),
                     ),
                   ],
                 ),
               ),
             );
           }),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
 
           // Features List
-          Text('Everything Included in PRO', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          Text('Everything Included in PRO', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+          SizedBox(height: 12.h),
           _buildProFeature('Unlimited High-Res PDF Horoscope Downloads', isDark),
           _buildProFeature('Complete 120-Year Vimshottari Dasha & Antardasha', isDark),
           _buildProFeature('36 Guna Detailed Ashtakoota Milan Compatibility', isDark),
           _buildProFeature('Swiss Ephemeris 0.001" High Precision Astronomical Engines', isDark),
           _buildProFeature('100% Ad-Free Pure Vedic Experience', isDark),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
 
           ElevatedButton(
             onPressed: () {
@@ -174,17 +175,17 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
               backgroundColor: const Color(0xFF7C3AED),
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 54),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
               elevation: 4,
             ),
             child: Text(
               'Upgrade to PRO (${_plans[_selectedPlanIndex]['price']})',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Center(
-            child: Text('Cancel anytime. 7-day money back guarantee.', style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey)),
+            child: Text('Cancel anytime. 7-day money back guarantee.', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey)),
           ),
         ],
       ),
@@ -193,13 +194,13 @@ class _SubscribeScreenState extends State<SubscribeScreen> {
 
   Widget _buildProFeature(String text, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 10.h),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
-          const SizedBox(width: 10),
+          Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
+          SizedBox(width: 10.w),
           Expanded(
-            child: Text(text, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500)),
+            child: Text(text, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500)),
           ),
         ],
       ),

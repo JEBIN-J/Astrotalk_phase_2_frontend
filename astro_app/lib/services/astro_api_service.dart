@@ -225,9 +225,17 @@ class AstroApiService {
   }
 
   static Future<Map<String, dynamic>> readPalm(String filePath) async {
-    final uri = Uri.parse('$baseUrl/vision/palm-reading');
+    final uri = Uri.parse('$baseUrl/ai-vision/palm-reading');
     try {
-      final res = await http.post(uri, headers: _headers).timeout(_timeout); // Typically multipart, but simplified here
+      final request = http.MultipartRequest('POST', uri);
+      if (authToken.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $authToken';
+      }
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 20));
+      final res = await http.Response.fromStream(streamedResponse);
+      
       if (res.statusCode == 200) {
         return jsonDecode(res.body) as Map<String, dynamic>;
       } else {
@@ -240,9 +248,17 @@ class AstroApiService {
   }
 
   static Future<Map<String, dynamic>> readFace(String filePath) async {
-    final uri = Uri.parse('$baseUrl/vision/face-reading');
+    final uri = Uri.parse('$baseUrl/ai-vision/face-reading');
     try {
-      final res = await http.post(uri, headers: _headers).timeout(_timeout); // Typically multipart
+      final request = http.MultipartRequest('POST', uri);
+      if (authToken.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $authToken';
+      }
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 20));
+      final res = await http.Response.fromStream(streamedResponse);
+      
       if (res.statusCode == 200) {
         return jsonDecode(res.body) as Map<String, dynamic>;
       } else {

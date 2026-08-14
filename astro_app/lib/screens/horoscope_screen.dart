@@ -6,6 +6,7 @@ import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
 import '../widgets/kundli_chart_painter.dart';
 import 'api_settings_screen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 enum StepperInterval {
   oneSecond,
@@ -262,10 +263,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.3),
@@ -281,47 +282,47 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   children: [
                     Center(
                       child: Container(
-                        width: 44,
-                        height: 5,
+                        width: 44.w,
+                        height: 5.h,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade400,
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(3.r),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.tune_rounded, color: Color(0xFF4338CA), size: 22),
-                            const SizedBox(width: 8),
+                            Icon(Icons.tune_rounded, color: Color(0xFF4338CA), size: 22),
+                            SizedBox(width: 8.w),
                             Text(
                               'Kundli Settings & Stepper',
                               style: GoogleFonts.outfit(
-                                fontSize: 17,
+                                fontSize: 17.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded),
+                          icon: Icon(Icons.close_rounded),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
                     ),
-                    const Divider(height: 16),
+                    Divider(height: 16.h),
                     Text(
                       'Time Stepping Interval',
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
-                        fontSize: 13.5,
+                        fontSize: 13.5.sp,
                         color: const Color(0xFF4338CA),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -335,9 +336,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           labelStyle: GoogleFonts.outfit(
                             color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                             fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
-                            fontSize: 12,
+                            fontSize: 12.sp,
                           ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                           onSelected: (selected) {
                             if (selected) {
                               setModalState(() => _stepperInterval = interval);
@@ -347,16 +348,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16.h),
                     Text(
                       'Chart System Model',
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
-                        fontSize: 13.5,
+                        fontSize: 13.5.sp,
                         color: const Color(0xFF4338CA),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     Row(
                       children: KundliChartStyle.values.map((style) {
                         final isSel = style == _currentChartStyle;
@@ -367,29 +368,29 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                 : 'Sun (East)';
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 4.w),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isSel ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF334155) : Colors.grey.shade200),
                                 foregroundColor: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                                 elevation: isSel ? 2 : 0,
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                padding: EdgeInsets.symmetric(vertical: 10.h),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                               ),
                               onPressed: () {
                                 setModalState(() => _currentChartStyle = style);
                                 setState(() => _currentChartStyle = style);
                               },
-                              child: Text(label, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold)),
+                              child: Text(label, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14.h),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Display Upagrahas in Chart (Md, Gk, etc.)', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600)),
+                      title: Text('Display Upagrahas in Chart (Md, Gk, etc.)', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600)),
                       value: _showUpagrahasOnChart,
                       activeThumbColor: const Color(0xFF4338CA),
                       onChanged: (val) {
@@ -399,7 +400,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Display Planetary Degrees (e.g. 20:22)', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600)),
+                      title: Text('Display Planetary Degrees (e.g. 20:22)', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600)),
                       value: _showDegreesOnChart,
                       activeThumbColor: const Color(0xFF4338CA),
                       onChanged: (val) {
@@ -426,45 +427,45 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return Container(
           height: MediaQuery.of(ctx).size.height * 0.65,
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Container(
-                  width: 44,
-                  height: 5,
+                  width: 44.w,
+                  height: 5.h,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(3.r),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4338CA), size: 22),
-                      const SizedBox(width: 8),
+                      Icon(Icons.auto_awesome_rounded, color: Color(0xFF4338CA), size: 22),
+                      SizedBox(width: 8.w),
                       Text(
                         'Divisional Charts (Vargas)',
-                        style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(fontSize: 17.sp, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
               ),
-              const Divider(height: 16),
+              Divider(height: 16.h),
               Expanded(
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
@@ -474,12 +475,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     final isSel = key == _activeChartKey;
 
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 6),
+                      margin: EdgeInsets.only(bottom: 6.h),
                       decoration: BoxDecoration(
                         color: isSel
                             ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.25) : const Color(0xFFEEF2FF))
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
                           color: isSel ? const Color(0xFF4338CA) : Colors.transparent,
                         ),
@@ -487,16 +488,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       child: ListTile(
                         dense: true,
                         leading: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                           decoration: BoxDecoration(
                             color: isSel ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
                             key,
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                             ),
                           ),
@@ -504,12 +505,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         title: Text(
                           desc,
                           style: GoogleFonts.outfit(
-                            fontSize: 13,
+                            fontSize: 13.sp,
                             fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
                             color: isSel ? const Color(0xFF4338CA) : (isDark ? Colors.white : Colors.black87),
                           ),
                         ),
-                        trailing: isSel ? const Icon(Icons.check_circle_rounded, color: Color(0xFF4338CA), size: 20) : null,
+                        trailing: isSel ? Icon(Icons.check_circle_rounded, color: Color(0xFF4338CA), size: 20) : null,
                         onTap: () {
                           setState(() {
                             _activeChartKey = key;
@@ -572,16 +573,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         centerTitle: false,
         title: Text(
           'Horoscope',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20.sp),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_note_rounded, size: 24),
+            icon: Icon(Icons.edit_note_rounded, size: 24),
             tooltip: 'Edit Birth Profile',
             onPressed: _showEditProfileDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.tune_rounded, size: 21),
+            icon: Icon(Icons.tune_rounded, size: 21),
             tooltip: 'API Backend Server Config',
             onPressed: () {
               Navigator.push(
@@ -591,7 +592,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined, size: 21),
+            icon: Icon(Icons.settings_outlined, size: 21),
             tooltip: 'Display Settings & Stepper',
             onPressed: _showSettingsModal,
           ),
@@ -611,9 +612,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               unselectedLabelColor: isDark ? Colors.white60 : const Color(0xFF64748B),
               indicatorColor: const Color(0xFF009688),
               indicatorWeight: 3,
-              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14),
-              tabs: const [
+              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14.sp),
+              tabs: [
                 Tab(text: 'Vedic (D1)'),
                 Tab(text: 'KP System'),
                 Tab(text: 'Lal Kitab'),
@@ -630,10 +631,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const CircularProgressIndicator(color: Color(0xFF4338CA)),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   Text(
                     'Calculating Swiss Ephemeris Placements...',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
                   ),
                 ],
               ),
@@ -650,7 +651,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: BouncyTouchCard(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -662,12 +663,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               );
             },
             child: Container(
-              height: 50,
+              height: 50.h,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF4338CA).withValues(alpha: 0.35),
@@ -679,11 +680,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
+                  SizedBox(width: 8.w),
                   Text(
                     'Download Complete Janam Kundli PDF',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp, color: Colors.white),
                   ),
                 ],
               ),
@@ -699,7 +700,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       child: Text(
         message,
         style: GoogleFonts.outfit(
-          fontSize: 16,
+          fontSize: 16.sp,
           fontWeight: FontWeight.w500,
           color: isDark ? Colors.white70 : Colors.black54,
         ),
@@ -721,19 +722,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final ayanamsa = _kundliData?['ayanamsa_formatted']?.toString() ?? "Lahiri 23° 50' 32\"";
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       physics: const BouncingScrollPhysics(),
       children: [
         // 1. Profile Signature Gradient Card
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(22.r),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF312E81).withValues(alpha: 0.35),
@@ -751,41 +752,41 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(7),
+                        padding: EdgeInsets.all(7.w),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(10.r),
                         ),
-                        child: const Icon(Icons.person_outline_rounded, color: Colors.white, size: 18),
+                        child: Icon(Icons.person_outline_rounded, color: Colors.white, size: 18),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10.w),
                       Text(
                         _personName,
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 17.5, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 17.5.sp, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   InkWell(
                     onTap: _showEditProfileDialog,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.edit_rounded, color: Colors.white, size: 13),
-                          const SizedBox(width: 4),
-                          Text('Edit', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                          Icon(Icons.edit_rounded, color: Colors.white, size: 13),
+                          SizedBox(width: 4.w),
+                          Text('Edit', style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5.sp, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               Wrap(
                 spacing: 12,
                 runSpacing: 6,
@@ -795,7 +796,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   _buildProfileChip(Icons.location_on_rounded, _pob),
                 ],
               ),
-              const Divider(color: Colors.white24, height: 20),
+              Divider(color: Colors.white24, height: 20.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -808,14 +809,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // 2. Live Time Stepper Responsive Card (Zero-Overflow Layout)
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.18)),
             boxShadow: [
               BoxShadow(
@@ -836,14 +837,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(5),
+                          padding: EdgeInsets.all(5.w),
                           decoration: BoxDecoration(
                             color: const Color(0xFF4338CA).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
-                          child: const Icon(Icons.schedule_rounded, size: 15, color: Color(0xFF4338CA)),
+                          child: Icon(Icons.schedule_rounded, size: 15, color: Color(0xFF4338CA)),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Flexible(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
@@ -852,7 +853,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               _headerDisplayDateTime,
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
+                                fontSize: 13.5.sp,
                                 color: isDark ? Colors.white : const Color(0xFF0F172A),
                               ),
                             ),
@@ -861,7 +862,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6.w),
                   // Compact Right Side Stepper Buttons
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -869,98 +870,98 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       // Interval Settings
                       InkWell(
                         onTap: _showSettingsModal,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 5.h),
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF334155) : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.tune_rounded, size: 13, color: Color(0xFF4338CA)),
-                              const SizedBox(width: 3),
+                              Icon(Icons.tune_rounded, size: 13, color: Color(0xFF4338CA)),
+                              SizedBox(width: 3.w),
                               Text(
                                 _stepperInterval.displayName,
-                                style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                                style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4.w),
                       // Step Backward
                       InkWell(
                         onTap: () => _stepTime(false),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                         child: Container(
-                          padding: const EdgeInsets.all(5),
+                          padding: EdgeInsets.all(5.w),
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF334155) : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
                           ),
-                          child: const Icon(Icons.arrow_back_rounded, size: 15, color: Color(0xFF4338CA)),
+                          child: Icon(Icons.arrow_back_rounded, size: 15, color: Color(0xFF4338CA)),
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4.w),
                       // Step Forward
                       InkWell(
                         onTap: () => _stepTime(true),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8.r),
                         child: Container(
-                          padding: const EdgeInsets.all(5),
+                          padding: EdgeInsets.all(5.w),
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF334155) : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
                           ),
-                          child: const Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF4338CA)),
+                          child: Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF4338CA)),
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6.h),
               Row(
                 children: [
-                  const Icon(Icons.location_pin, size: 13, color: Color(0xFF64748B)),
-                  const SizedBox(width: 4),
+                  Icon(Icons.location_pin, size: 13, color: Color(0xFF64748B)),
+                  SizedBox(width: 4.w),
                   Expanded(
                     child: Text(
                       '$_pob ($_formattedTzPlace)',
-                      style: GoogleFonts.outfit(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF475569)),
+                      style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white70 : const Color(0xFF475569)),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2.h),
               Row(
                 children: [
-                  const Icon(Icons.explore_outlined, size: 13, color: Color(0xFF64748B)),
-                  const SizedBox(width: 4),
+                  Icon(Icons.explore_outlined, size: 13, color: Color(0xFF64748B)),
+                  SizedBox(width: 4.w),
                   Text(
                     _formattedLatLong,
-                    style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                    style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
                   ),
                 ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // 3. Sub-Vargas Segmented Control (Rashi, Navamsha, Bhava, Others)
         Container(
-          height: 44,
-          padding: const EdgeInsets.all(3),
+          height: 44.h,
+          padding: EdgeInsets.all(3.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           child: Row(
             children: [
@@ -976,7 +977,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
 
         // 4. Active Chart Title Banner
         Center(
@@ -984,20 +985,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             'Chart Type: ${_divisionalChartsInfo[_activeChartKey] ?? _activeChartKey}',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
-              fontSize: 13.5,
+              fontSize: 13.5.sp,
               color: const Color(0xFF4338CA),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
 
         // 5. Chart Model Quick 1-Tap Toggle (Square vs Diamond vs Sun)
         Container(
-          height: 38,
-          padding: const EdgeInsets.all(3),
+          height: 38.h,
+          padding: EdgeInsets.all(3.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
           ),
           child: Row(
             children: [
@@ -1022,14 +1023,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
 
         // 6. Kundli Interactive Chart Card (Square / Diamond)
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
@@ -1049,43 +1050,43 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 showDegrees: _showDegreesOnChart,
                 kundliData: _kundliData,
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4338CA).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
                           _currentChartStyle.title,
-                          style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                          style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                         ),
                       ),
                     ],
                   ),
                   Text(
                     'Swiss Ephemeris Precision',
-                    style: GoogleFonts.outfit(fontSize: 10.5, color: isDark ? Colors.white54 : Colors.black45, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white54 : Colors.black45, fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14.h),
 
         // 7. Bottom 4 Sub-Tabs Bar (Planets, Upagraha, Arudha, Others)
         Container(
-          height: 44,
-          padding: const EdgeInsets.all(3),
+          height: 44.h,
+          padding: EdgeInsets.all(3.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           child: TabBar(
             controller: _bottomSubTabController,
@@ -1096,7 +1097,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               gradient: const LinearGradient(
                 colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
               ),
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(9.r),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF4338CA).withValues(alpha: 0.3),
@@ -1105,9 +1106,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ),
               ],
             ),
-            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5),
-            unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.5),
-            tabs: const [
+            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5.sp),
+            unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.5.sp),
+            tabs: [
               Tab(text: 'Planets'),
               Tab(text: 'Upagraha'),
               Tab(text: 'Arudha'),
@@ -1115,11 +1116,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         // 8. Bottom Content Area (Internal scrolling list)
         SizedBox(
-          height: 380,
+          height: 380.h,
           child: TabBarView(
             controller: _bottomSubTabController,
             children: [
@@ -1130,7 +1131,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
       ],
     );
   }
@@ -1149,7 +1150,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   )
                 : null,
             color: isSelected ? null : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8.r),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
@@ -1164,7 +1165,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             title,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              fontSize: 11,
+              fontSize: 11.sp,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
             ),
@@ -1188,7 +1189,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   )
                 : null,
             color: isSelected ? null : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(9.r),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
@@ -1203,7 +1204,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             title,
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
-              fontSize: 12,
+              fontSize: 12.sp,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
               color: isSelected
                   ? Colors.white
@@ -1237,19 +1238,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Widget _buildKpTableHeader(bool isDark) {
     return Container(
       color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       child: Row(
         children: [
-          Expanded(flex: 1, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-          Expanded(flex: 1, child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
         ],
       ),
     );
@@ -1311,37 +1312,37 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     'Planetary Positions for ${_divisionalChartsInfo[_activeChartKey] ?? "Rashi (D-1)"}',
-                    style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                    style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 InkWell(
                   onTap: () => setState(() => _isCardViewMode = !_isCardViewMode),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                     decoration: BoxDecoration(
                       color: const Color(0xFF059669).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6.r),
                     ),
                     child: Text(
                       _isCardViewMode ? 'KP View' : 'Degree View',
-                      style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+                      style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
                     ),
                   ),
                 ),
@@ -1361,11 +1362,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       _buildTableHeader(['Planet', 'House', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark)
                     else
                       _buildKpTableHeader(isDark),
-                    const Divider(height: 1),
+                    Divider(height: 1.h),
                     Expanded(
                       child: ListView.separated(
                         itemCount: dynamicPlanets.length,
-                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         itemBuilder: (ctx, idx) {
                           final p = dynamicPlanets[idx];
                           final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
@@ -1408,15 +1409,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           if (_isCardViewMode) {
                             return Container(
                               color: rowBg,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                               child: Row(
                                 children: [
-                                  Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
-                                  Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
-                                  Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
+                                  Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                                  Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                                  Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                  Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
                                 ],
                               ),
                             );
@@ -1424,19 +1425,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
                           return Container(
                             color: rowBg,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             child: Row(
                               children: [
-                                Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
-                                Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
-                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)))),
-                                Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
-                                Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
-                                Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
-                                Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
+                                Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
+                                Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
+                                Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
+                                Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
+                                Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
                               ],
                             ),
                           );
@@ -1460,29 +1461,29 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     'Upagraha Positions for Rashi (D-1)',
-                    style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                    style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Text(
                   '${upagrahas.length} Secondary Planets',
-                  style: GoogleFonts.outfit(fontSize: 10.5, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                  style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -1492,16 +1493,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: 450,
+                width: 450.w,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildTableHeader(['Upagraha', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
-                    const Divider(height: 1),
+                    Divider(height: 1.h),
                     Expanded(
                       child: ListView.separated(
                         itemCount: upagrahas.length,
-                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         itemBuilder: (ctx, idx) {
                           final u = upagrahas[idx] as Map<String, dynamic>;
                           final rawName = u['name']?.toString() ?? 'Upagraha';
@@ -1514,14 +1515,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           final pada = (u['pada'] ?? 1).toString();
 
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             child: Row(
                               children: [
-                                Expanded(flex: 1, child: Text(name, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600))),
-                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold)))),
+                                Expanded(flex: 1, child: Text(name, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
                               ],
                             ),
                           );
@@ -1545,17 +1546,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Text(
               'Arudha Pada Positions (Jaimini Classical System)',
-              style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+              style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
             ),
           ),
           Expanded(
@@ -1563,16 +1564,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: 500,
+                width: 500.w,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildTableHeader(['Arudha Pada', 'Degree', 'Rashi', 'Nakshatra', 'Pada', 'Nakshatra Lord'], isDark),
-                    const Divider(height: 1),
+                    Divider(height: 1.h),
                     Expanded(
                       child: ListView.separated(
                         itemCount: arudhas.length,
-                        separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         itemBuilder: (ctx, idx) {
                           final a = arudhas[idx] as Map<String, dynamic>;
                           final code = a['code']?.toString() ?? 'A1';
@@ -1594,7 +1595,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
                           return Container(
                             color: isArudhaLagna ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.15) : const Color(0xFFEEF2FF)) : Colors.transparent,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             child: Row(
                               children: [
                                 Expanded(
@@ -1602,17 +1603,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(code, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                      Text(code, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
                                       if (name.isNotEmpty)
-                                        Text(name, style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white54 : Colors.black54)),
+                                        Text(name, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54)),
                                     ],
                                   ),
                                 ),
-                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold))),
-                                Expanded(flex: 1, child: Text(nl, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 1, child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
                               ],
                             ),
                           );
@@ -1638,10 +1639,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       physics: const BouncingScrollPhysics(),
       children: [
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: Column(
@@ -1652,19 +1653,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 children: [
                   Text(
                     'Special Lagnas',
-                    style: GoogleFonts.outfit(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                    style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: const Color(0xFF4338CA).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6.r),
                     ),
-                    child: Text('Parashara', style: GoogleFonts.outfit(fontSize: 9.5, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                    child: Text('Parashara', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               ...specialLagnas.map((s) {
                 final rawName = s['name']?.toString() ?? '';
                 final name = rawName.split('(')[0].trim();
@@ -1674,26 +1675,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 final sig = s['significance']?.toString() ?? '';
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4338CA).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
-                        child: Text(name, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                        child: Text(name, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('$sign • $deg • $nak', style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                            Text('$sign • $deg • $nak', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600)),
                             if (sig.isNotEmpty)
-                              Text(sig, style: GoogleFonts.outfit(fontSize: 10, color: isDark ? Colors.white60 : Colors.black54)),
+                              Text(sig, style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
                           ],
                         ),
                       ),
@@ -1704,13 +1705,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
 
         Container(
-          padding: const EdgeInsets.all(14),
+          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: Column(
@@ -1721,19 +1722,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 children: [
                   Text(
                     'Jaimini 7 Chara Karakas',
-                    style: GoogleFonts.outfit(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6)),
+                    style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6)),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
                       color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6.r),
                     ),
-                    child: Text('Longitudes', style: GoogleFonts.outfit(fontSize: 9.5, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
+                    child: Text('Longitudes', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               ...charaKarakas.map((k) {
                 final p = k['planet']?.toString() ?? '';
                 final code = k['karaka_code']?.toString() ?? '';
@@ -1742,20 +1743,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 final deg = k['degree_in_sign']?.toString() ?? '';
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
                   child: Row(
                     children: [
                       Container(
-                        width: 44,
-                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        width: 44.w,
+                        padding: EdgeInsets.symmetric(vertical: 3.h),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
-                        child: Text(code, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
+                        child: Text(code, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1763,11 +1764,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('$p ($name)', style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                                Text(deg, style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54)),
+                                Text('$p ($name)', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600)),
+                                Text(deg, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54)),
                               ],
                             ),
-                            Text(sig, style: GoogleFonts.outfit(fontSize: 10, color: isDark ? Colors.white60 : Colors.black54)),
+                            Text(sig, style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
                           ],
                         ),
                       ),
@@ -1785,12 +1786,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Widget _buildTableHeader(List<String> headers, bool isDark) {
     return Container(
       color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       child: Row(
         children: headers.map((header) {
           return Expanded(
             flex: 1,
-            child: Text(header, style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))),
+            child: Text(header, style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))),
           );
         }).toList(),
       ),
@@ -1804,29 +1805,29 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Planetary Coordinates & KP Lords', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Planetary Coordinates & KP Lords', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: const Color(0xFF059669).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
                 'Swiss Ephemeris Live',
-                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         if (rawPlanets.isEmpty)
-          const Center(child: Text('No planetary data available'))
+          Center(child: Text('No planetary data available'))
         else
           ...rawPlanets.asMap().entries.map((entry) {
             final idx = entry.key;
@@ -1912,64 +1913,64 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final yogas = (rawYogas as List<dynamic>?) ?? [];
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('6-Fold Shadbala Planetary Strengths', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('6-Fold Shadbala Planetary Strengths', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: const Color(0xFF4338CA).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
                 'Parashara System',
-                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF4338CA), fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF4338CA), fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text('Measures 6 planetary forces: Positional (Sthana), Directional (Dig), Temporal (Kala), Motional (Chesta), Natural (Naisargika) & Aspectual (Drik)', style: GoogleFonts.outfit(fontSize: 11.5, color: isDark ? Colors.white60 : Colors.black54)),
-        const SizedBox(height: 14),
+        SizedBox(height: 6.h),
+        Text('Measures 6 planetary forces: Positional (Sthana), Directional (Dig), Temporal (Kala), Motional (Chesta), Natural (Naisargika) & Aspectual (Drik)', style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54)),
+        SizedBox(height: 14.h),
         if (shadbalaItems.isEmpty)
-          const Center(child: Text('No Shadbala calculations available'))
+          Center(child: Text('No Shadbala calculations available'))
         else ...[
           _buildConsolidatedShadbalaChart(shadbalaItems, isDark),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildShadbalaTable(shadbalaItems, isDark),
         ],
 
-        const SizedBox(height: 18),
+        SizedBox(height: 18.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Classical Vedic Yogas Detected', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('Classical Vedic Yogas Detected', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 color: const Color(0xFF059669).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
                 '${yogas.length} Active Yogas',
-                style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
+                style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         if (yogas.isEmpty)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
             ),
-            child: const Text('No major classical yogas detected in current placement.'),
+            child: Text('No major classical yogas detected in current placement.'),
           )
         else
           ...yogas.asMap().entries.map((entry) {
@@ -1984,8 +1985,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             return StaggeredAnimatedItem(
               index: idx,
               child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isDark
@@ -1994,7 +1995,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.35)),
                 ),
                 child: Column(
@@ -2003,35 +2004,35 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.military_tech_rounded, color: Color(0xFF059669), size: 20),
-                        const SizedBox(width: 8),
+                        Icon(Icons.military_tech_rounded, color: Color(0xFF059669), size: 20),
+                        SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
                             name,
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.5),
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.5.sp),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(
                             color: const Color(0xFF059669).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
                             category,
-                            style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
+                            style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
                     if (desc.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(desc, style: GoogleFonts.outfit(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87)),
+                      SizedBox(height: 6.h),
+                      Text(desc, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
                     ],
                     if (planetsInvolved.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text('Planets: $planetsInvolved', style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white54 : Colors.black54, fontStyle: FontStyle.italic)),
+                      SizedBox(height: 6.h),
+                      Text('Planets: $planetsInvolved', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54, fontStyle: FontStyle.italic)),
                     ],
                   ],
                 ),
@@ -2050,19 +2051,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final currentRunning = _kundliData?['current_running_dasha'] as Map<String, dynamic>?;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
         if (currentRunning != null) ...[
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF312E81).withValues(alpha: 0.35),
@@ -2077,32 +2078,32 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Active Mahadasha', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500)),
+                    Text('Active Mahadasha', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp, fontWeight: FontWeight.w500)),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                      child: Text('Live Planetary Period', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8.r)),
+                      child: Text('Live Planetary Period', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6.h),
                 Text(
                   currentRunning['active_mahadasha']?.toString() ?? 'Jupiter (Guru)',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   'Antardasha: ${currentRunning['active_antardasha'] ?? "--"}  •  Pratyantar: ${currentRunning['active_pratyantar'] ?? "--"}',
-                  style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 12.5),
+                  style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 12.5.sp),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
         ],
 
-        Text('120-Year Vimshottari Mahadasha Sequence', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
-        const SizedBox(height: 12),
+        Text('120-Year Vimshottari Mahadasha Sequence', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+        SizedBox(height: 12.h),
         ...dashaTimeline.map((item) {
           final planet = item['planet']?.toString() ?? 'Planet';
           final duration = item['duration_years']?.toString() ?? '7';
@@ -2113,12 +2114,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           final antardashas = (item['antardashas'] as List<dynamic>?) ?? [];
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: EdgeInsets.only(bottom: 8.h),
             decoration: BoxDecoration(
               color: isActive
                   ? (isDark ? const Color(0xFF312E81).withValues(alpha: 0.3) : const Color(0xFFEEF2FF))
                   : (isDark ? const Color(0xFF1E293B) : Colors.white),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.r),
               border: Border.all(
                 color: isActive
                     ? const Color(0xFF4338CA)
@@ -2135,19 +2136,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     : (isActive ? const Color(0xFF4338CA) : Colors.grey),
                 size: 22,
               ),
-              title: Text(planet, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: Text('$start to $end ($duration Years)', style: GoogleFonts.outfit(fontSize: 11.5, color: isDark ? Colors.white60 : Colors.black54)),
+              title: Text(planet, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+              subtitle: Text('$start to $end ($duration Years)', style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54)),
               trailing: isActive
                   ? Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFF4338CA), borderRadius: BorderRadius.circular(8)),
-                      child: Text('Current', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold)),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(color: const Color(0xFF4338CA), borderRadius: BorderRadius.circular(8.r)),
+                      child: Text('Current', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.5.sp, fontWeight: FontWeight.bold)),
                     )
                   : null,
               children: antardashas.isNotEmpty
                   ? [
                       Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: EdgeInsets.all(12.w),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: antardashas.map((ad) {
@@ -2156,18 +2157,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             final adEnd = ad['end']?.toString() ?? '';
                             final adActive = ad['is_active'] == true;
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              padding: EdgeInsets.symmetric(vertical: 3.h),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
                                       Icon(Icons.circle, size: 6, color: adActive ? const Color(0xFF059669) : Colors.grey),
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: 6.w),
                                       Text(
                                         '$adPlanet Antardasha',
                                         style: GoogleFonts.outfit(
-                                          fontSize: 12,
+                                          fontSize: 12.sp,
                                           fontWeight: adActive ? FontWeight.bold : FontWeight.w500,
                                           color: adActive ? const Color(0xFF059669) : null,
                                         ),
@@ -2177,7 +2178,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                   Text(
                                     '$adStart - $adEnd',
                                     style: GoogleFonts.outfit(
-                                      fontSize: 11,
+                                      fontSize: 11.sp,
                                       color: adActive ? const Color(0xFF059669) : (isDark ? Colors.white60 : Colors.black54),
                                       fontWeight: adActive ? FontWeight.bold : FontWeight.normal,
                                     ),
@@ -2211,16 +2212,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final bav = (ashtakvarga?['bav_matrix'] ?? ashtakvarga?['bhinnashtakavarga']) as Map<String, dynamic>?;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF065F46), Color(0xFF059669), Color(0xFF10B981)],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF059669).withValues(alpha: 0.35),
@@ -2235,15 +2236,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Sarvashtakvarga (SAV)', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12)),
-                  Text('$totalSav Points', style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text('Sarvashtakvarga (SAV)', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp)),
+                  Text('$totalSav Points', style: GoogleFonts.outfit(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
                 ],
               ),
-              const Icon(Icons.grid_view_rounded, color: Colors.white, size: 36),
+              Icon(Icons.grid_view_rounded, color: Colors.white, size: 36),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14.h),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -2265,7 +2266,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 color: isHigh
                     ? const Color(0xFF059669).withValues(alpha: isDark ? 0.2 : 0.1)
                     : (isAvg ? const Color(0xFF4338CA).withValues(alpha: isDark ? 0.2 : 0.08) : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100)),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14.r),
                 border: Border.all(
                   color: isHigh
                       ? const Color(0xFF059669)
@@ -2275,31 +2276,31 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('H$houseNum', style: GoogleFonts.outfit(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54)),
+                  Text('H$houseNum', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54)),
                   Text(
                     '$points',
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: isHigh
                           ? const Color(0xFF059669)
                           : (isAvg ? const Color(0xFF4338CA) : (isDark ? Colors.white : const Color(0xFF0F172A))),
                     ),
                   ),
-                  Text(isHigh ? 'Strong' : (isAvg ? 'Moderate' : 'Low'), style: GoogleFonts.outfit(fontSize: 9, color: Colors.grey)),
+                  Text(isHigh ? 'Strong' : (isAvg ? 'Moderate' : 'Low'), style: GoogleFonts.outfit(fontSize: 9.sp, color: Colors.grey)),
                 ],
               ),
             );
           },
         ),
         if (bav != null && bav.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          SizedBox(height: 24.h),
+          Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+          SizedBox(height: 12.h),
           Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               boxShadow: [
                 BoxShadow(
                   color: (isDark ? Colors.black : const Color(0xFF94A3B8)).withValues(alpha: 0.1),
@@ -2313,7 +2314,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2321,24 +2322,24 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     Row(
                       children: [
                         SizedBox(
-                          width: 45,
-                          child: Text('Signs', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                          width: 45.w,
+                          child: Text('Signs', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
                         ),
                         ...List.generate(12, (index) => Container(
-                          width: 28,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          width: 28.w,
+                          margin: EdgeInsets.symmetric(horizontal: 2.w),
                           alignment: Alignment.center,
-                          child: Text('${index + 1}', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                          child: Text('${index + 1}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
                         )),
                         Container(
-                          width: 40,
-                          margin: const EdgeInsets.only(left: 8),
+                          width: 40.w,
+                          margin: EdgeInsets.only(left: 8.w),
                           alignment: Alignment.centerRight,
-                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
                     // Planet Rows
                     ...['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'].map((pName) {
                       final pts = (bav[pName] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
@@ -2346,12 +2347,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       final shortName = pName.length > 2 ? pName.substring(0, 2) : pName;
                       
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        padding: EdgeInsets.symmetric(vertical: 3.h),
                         child: Row(
                           children: [
                             SizedBox(
-                              width: 45,
-                              child: Text(shortName, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                              width: 45.w,
+                              child: Text(shortName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
                             ),
                             ...pts.map((val) {
                               bool isHigh = val >= 5;
@@ -2366,34 +2367,34 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                             : (isDark ? Colors.white70 : Colors.black87));
                                             
                               return Container(
-                                width: 28,
-                                height: 28,
-                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                width: 28.w,
+                                height: 28.h,
+                                margin: EdgeInsets.symmetric(horizontal: 2.w),
                                 decoration: BoxDecoration(
                                   color: bgColor,
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(6.r),
                                 ),
                                 alignment: Alignment.center,
-                                child: Text('$val', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: textColor)),
+                                child: Text('$val', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: textColor)),
                               );
                             }),
                             Container(
-                              width: 40,
-                              margin: const EdgeInsets.only(left: 8),
+                              width: 40.w,
+                              margin: EdgeInsets.only(left: 8.w),
                               alignment: Alignment.centerRight,
-                              child: Text('$total', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                              child: Text('$total', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                             ),
                           ],
                         ),
                       );
-                    }).toList(),
-                    const SizedBox(height: 12),
+                    }),
+                    SizedBox(height: 12.h),
                     // Total SAV Row
                     Row(
                       children: [
                         SizedBox(
-                          width: 45,
-                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                          width: 45.w,
+                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                         ),
                         ...List.generate(12, (index) {
                           final val = index < displayPoints.length ? displayPoints[index] : 0;
@@ -2409,22 +2410,22 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                         : (isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA)));
                                         
                           return Container(
-                            width: 28,
-                            height: 28,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            width: 28.w,
+                            height: 28.h,
+                            margin: EdgeInsets.symmetric(horizontal: 2.w),
                             decoration: BoxDecoration(
                               color: bgColor,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(6.r),
                             ),
                             alignment: Alignment.center,
-                            child: Text('$val', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: textColor)),
+                            child: Text('$val', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: textColor)),
                           );
                         }),
                         Container(
-                          width: 40,
-                          margin: const EdgeInsets.only(left: 8),
+                          width: 40.w,
+                          margin: EdgeInsets.only(left: 8.w),
                           alignment: Alignment.centerRight,
-                          child: Text('$totalSav', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                          child: Text('$totalSav', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                         ),
                       ],
                     ),
@@ -2446,8 +2447,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: Colors.white70, size: 13),
-        const SizedBox(width: 4),
-        Text(text, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w500)),
+        SizedBox(width: 4.w),
+        Text(text, style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5.sp, fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -2456,13 +2457,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Expanded(
       child: Column(
         children: [
-          Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 2),
+          Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10.sp), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+          SizedBox(height: 2.h),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               value,
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.5.sp, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               maxLines: 2,
             ),
@@ -2488,19 +2489,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     });
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Shadbala Strength (Total Rupas)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 20),
+          Text('Shadbala Strength (Total Rupas)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+          SizedBox(height: 20.h),
           SizedBox(
-            height: 180,
+            height: 180.h,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -2514,22 +2515,22 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(rupas.toStringAsFixed(2), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 6),
+                      Text(rupas.toStringAsFixed(2), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 6.h),
                       Stack(
                         alignment: Alignment.bottomCenter,
                         children: [
                           Container(
-                            height: 120.0,
-                            width: 24,
+                            height: 120.0.h,
+                            width: 24.w,
                             decoration: BoxDecoration(
                               color: isDark ? Colors.white12 : Colors.grey.shade200,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
                             ),
                           ),
                           Container(
-                            height: 120.0 * percent,
-                            width: 24,
+                            height: 120.0.h * percent,
+                            width: 24.w,
                             decoration: const BoxDecoration(
                               color: Color(0xFF009688),
                               borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
@@ -2537,8 +2538,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(shortName, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                      SizedBox(height: 8.h),
+                      Text(shortName, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
                     ],
                   ),
                 );
@@ -2560,7 +2561,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
     Widget buildRow(String title, String key, {bool isHeader = false, bool isTotal = false, bool isCategory = false}) {
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
         color: isHeader ? (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9)) : Colors.transparent,
         child: Row(
           children: [
@@ -2569,7 +2570,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               child: Text(
                 title,
                 style: GoogleFonts.outfit(
-                  fontSize: 11,
+                  fontSize: 11.sp,
                   fontWeight: isHeader || isTotal || isCategory ? FontWeight.bold : FontWeight.w500,
                   color: isHeader 
                       ? (isDark ? Colors.white70 : const Color(0xFF334155)) 
@@ -2596,7 +2597,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 child: Text(
                   valStr,
                   style: GoogleFonts.outfit(
-                    fontSize: 10.5,
+                    fontSize: 10.5.sp,
                     fontWeight: isHeader || isTotal || isCategory ? FontWeight.bold : FontWeight.w500,
                     color: isHeader 
                         ? (isDark ? Colors.white : Colors.black) 
@@ -2614,7 +2615,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
       ),
       child: Column(
@@ -2625,11 +2626,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           buildRow('Oja-Yugma', 'oja_yugma'),
           buildRow('Kendradi', 'kendradi'),
           buildRow('Drekkana', 'drekkana'),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Sthana Bala', 'sthana_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Dig Bala', 'dig_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Natonnata', 'natonnata'),
           buildRow('Paksha', 'paksha'),
           buildRow('Tribhaga', 'tribhaga'),
@@ -2639,22 +2640,22 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           buildRow('Hora', 'hora'),
           buildRow('Ayana', 'ayana'),
           buildRow('Yuddha', 'yuddha'),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Kaala Bala', 'kala_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Cheshta', 'chesta_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Naisargika', 'naisargika_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Drig Bala', 'drik_bala', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Shadbala', 'total_virupas', isCategory: true),
           buildRow('In Rupas', 'total_rupas', isCategory: true),
           buildRow('Minimum', 'minimum'),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Strength', 'strength', isCategory: true),
           buildRow('Rank', 'rank', isCategory: true),
-          const Divider(height: 1),
+          Divider(height: 1.h),
           buildRow('Ishta Phala', 'ishta_phala'),
           buildRow('Kashta Phala', 'kashta_phala'),
         ],
@@ -2664,12 +2665,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   Widget _buildBalaChip(String text, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Text(text, style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.w500)),
+      child: Text(text, style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -2707,11 +2708,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return StaggeredAnimatedItem(
       index: index,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
+        margin: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
             color: isVargottama
                 ? const Color(0xFF059669).withValues(alpha: 0.6)
@@ -2724,11 +2725,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 4,
-                  height: 48,
-                  decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(2)),
+                  width: 4.w,
+                  height: 48.h,
+                  decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(2.r)),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2738,62 +2739,62 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           Flexible(
                             child: Text(
                               displayName,
-                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.5),
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.5.sp),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                             ),
                           ),
                           if (isRetro) ...[
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4.w),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
                               decoration: BoxDecoration(
                                 color: Colors.red.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(4.r),
                               ),
-                              child: Text('R', style: GoogleFonts.outfit(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.red)),
+                              child: Text('R', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: Colors.red)),
                             ),
                           ],
                           if (isVargottama) ...[
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4.w),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF059669).withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(4.r),
                               ),
-                              child: Text('Vargottama 🌟', style: GoogleFonts.outfit(fontSize: 9.0, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                              child: Text('Vargottama 🌟', style: GoogleFonts.outfit(fontSize: 9.0.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                             ),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2.h),
                       Text(
                         '$sign • House $house • $degree (${speed >= 0 ? '+' : ''}${speed.toStringAsFixed(3)}°/d)',
-                        style: GoogleFonts.outfit(fontSize: 11.5, color: accentColor, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.outfit(fontSize: 11.5.sp, color: accentColor, fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                       Text(
                         '$nakshatra Pada $pada (Lord: $nakshatraLord)',
-                        style: GoogleFonts.outfit(fontSize: 10.5, color: isDark ? Colors.white60 : Colors.black54),
+                        style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white60 : Colors.black54),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6.w),
                 Container(
                   constraints: const BoxConstraints(maxWidth: 130),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Text(
                     dignity,
-                    style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.bold, color: accentColor),
+                    style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: accentColor),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     textAlign: TextAlign.center,
@@ -2801,28 +2802,28 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'KP Lords: Star: $starLord • Sub: $subLord${subSubLord.isNotEmpty ? ' • SS: $subSubLord' : ''}',
-                      style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
+                      style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
                   ),
                   if (navSign.isNotEmpty) ...[
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6.w),
                     Text(
                       'D9: $navSign',
-                      style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
+                      style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
                     ),
                   ],
                 ],
@@ -2838,34 +2839,34 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Widget _buildPanchangaTab(BuildContext context, bool isDark) {
     final panchanga = _kundliData?['panchanga'] as Map<String, dynamic>?;
     if (panchanga == null) {
-      return const Center(child: Text('Panchanga data not available.'));
+      return Center(child: Text('Panchanga data not available.'));
     }
 
-    Widget _buildSectionHeader(String title, {String? trailing}) {
+    Widget buildSectionHeader(String title, {String? trailing}) {
       return Padding(
-        padding: const EdgeInsets.only(top: 24, bottom: 12),
+        padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
               style: GoogleFonts.outfit(
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : const Color(0xFF334155),
               ),
             ),
             if (trailing != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDE68A).withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   trailing,
                   style: GoogleFonts.outfit(
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFFD97706),
                   ),
@@ -2876,16 +2877,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    Widget _buildTopGradientCard() {
+    Widget buildTopGradientCard() {
       return Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
@@ -2905,19 +2906,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 _buildTimeColumn(Icons.bedtime_rounded, 'Moonset', panchanga['moonset']?.toString() ?? ''),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(height: 1, color: Colors.white.withValues(alpha: 0.2)),
-            const SizedBox(height: 12),
+            SizedBox(height: 16.h),
+            Container(height: 1.h, color: Colors.white.withValues(alpha: 0.2)),
+            SizedBox(height: 12.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Vikram Samvat: ${panchanga['samvatsara_vikram']}',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600),
                 ),
                 Text(
                   'Shaka: ${panchanga['samvatsara_shaka']}',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.w600),
                 ),
               ],
             )
@@ -2926,13 +2927,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    Widget _buildDetailCard(IconData icon, Color iconColor, String title, String badgeText, String details, String timing) {
+    Widget buildDetailCard(IconData icon, Color iconColor, String title, String badgeText, String details, String timing) {
       return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
@@ -2946,14 +2947,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 24),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2965,7 +2966,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         child: Text(
                           title,
                           style: GoogleFonts.outfit(
-                            fontSize: 15,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.bold,
                             color: iconColor,
                           ),
@@ -2973,32 +2974,32 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ),
                       if (badgeText.isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
                             badgeText,
-                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                            style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   Text(
                     details,
                     style: GoogleFonts.outfit(
-                      fontSize: 13.5,
+                      fontSize: 13.5.sp,
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white70 : const Color(0xFF475569),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   Text(
                     timing,
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       color: isDark ? Colors.white54 : const Color(0xFF64748B),
                     ),
                   ),
@@ -3010,13 +3011,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    Widget _buildListRow(String label, String value, {bool isHighlight = false, bool isDanger = false}) {
+    Widget buildListRow(String label, String value, {bool isHighlight = false, bool isDanger = false}) {
       Color valColor = isDark ? Colors.white : Colors.black87;
       if (isHighlight) valColor = const Color(0xFF10B981);
       if (isDanger) valColor = const Color(0xFFEF4444);
 
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3025,7 +3026,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               child: Text(
                 label,
                 style: GoogleFonts.outfit(
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white70 : const Color(0xFF475569),
                 ),
@@ -3036,7 +3037,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               child: Text(
                 value,
                 style: GoogleFonts.outfit(
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   color: valColor,
                 ),
@@ -3047,11 +3048,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    Widget _buildSimpleCard(List<Widget> rows) {
+    Widget buildSimpleCard(List<Widget> rows) {
       return Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         ),
         child: Column(
@@ -3059,7 +3060,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             for (int i = 0; i < rows.length; i++) ...[
               rows[i],
               if (i < rows.length - 1)
-                Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                Divider(height: 1.h, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
             ]
           ],
         ),
@@ -3067,23 +3068,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
         // Location & Date Context
         Center(
           child: Text(
             'Date: ${panchanga['formatted_date'] ?? ''} | Place: ${panchanga['place'] ?? ''}',
-            style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white60 : Colors.black54),
+            style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white60 : Colors.black54),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         
-        _buildTopGradientCard(),
+        buildTopGradientCard(),
 
-        _buildSectionHeader('The 5 Essential Elements', trailing: 'Vedic Panchanga'),
+        buildSectionHeader('The 5 Essential Elements', trailing: 'Vedic Panchanga'),
         
-        _buildDetailCard(
+        buildDetailCard(
           Icons.calendar_today_rounded,
           const Color(0xFFF59E0B),
           '1. Vaara (Vedic Day)',
@@ -3092,7 +3093,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           'Governed by ${panchanga['vaara']?.toString().split(' ').last.replaceAll(RegExp(r'[()]'), '') ?? ''}',
         ),
         
-        _buildDetailCard(
+        buildDetailCard(
           Icons.brightness_4_rounded,
           const Color(0xFFF97316),
           '2. Tithi (Lunar Day)',
@@ -3101,7 +3102,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           panchanga['tithi']?['timing']?.toString() ?? '',
         ),
         
-        _buildDetailCard(
+        buildDetailCard(
           Icons.star_rounded,
           const Color(0xFF8B5CF6),
           '3. Nakshatra (Lunar Mansion)',
@@ -3110,7 +3111,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           panchanga['nakshatra']?['timing']?.toString() ?? '',
         ),
         
-        _buildDetailCard(
+        buildDetailCard(
           Icons.self_improvement_rounded,
           const Color(0xFF10B981),
           '4. Yoga (Solar-Lunar Angle)',
@@ -3119,7 +3120,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           panchanga['yoga']?['timing']?.toString() ?? '',
         ),
         
-        _buildDetailCard(
+        buildDetailCard(
           Icons.bubble_chart_rounded,
           const Color(0xFF06B6D4),
           '5. Karana (Half-Tithi)',
@@ -3128,43 +3129,43 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           panchanga['karana']?['timing']?.toString() ?? '',
         ),
 
-        _buildSectionHeader('Luminaries & Timings'),
-        _buildSimpleCard([
-          _buildListRow('Sun Sign', panchanga['sun_sign']?.toString() ?? ''),
-          _buildListRow('Moon Sign', panchanga['moon_sign']?.toString() ?? ''),
-          _buildListRow('Vedic Sunrise', panchanga['vedic_sunrise']?.toString() ?? ''),
-          _buildListRow('Vedic Sunset', panchanga['vedic_sunset']?.toString() ?? ''),
-          _buildListRow('Sidereal Time', panchanga['sidereal_time']?.toString() ?? ''),
-          _buildListRow('Day Duration', panchanga['day_duration']?.toString() ?? ''),
-          _buildListRow('Night Duration', panchanga['night_duration']?.toString() ?? ''),
+        buildSectionHeader('Luminaries & Timings'),
+        buildSimpleCard([
+          buildListRow('Sun Sign', panchanga['sun_sign']?.toString() ?? ''),
+          buildListRow('Moon Sign', panchanga['moon_sign']?.toString() ?? ''),
+          buildListRow('Vedic Sunrise', panchanga['vedic_sunrise']?.toString() ?? ''),
+          buildListRow('Vedic Sunset', panchanga['vedic_sunset']?.toString() ?? ''),
+          buildListRow('Sidereal Time', panchanga['sidereal_time']?.toString() ?? ''),
+          buildListRow('Day Duration', panchanga['day_duration']?.toString() ?? ''),
+          buildListRow('Night Duration', panchanga['night_duration']?.toString() ?? ''),
         ]),
 
-        _buildSectionHeader('Auspicious Muhurtas'),
-        _buildSimpleCard([
-          _buildListRow('Abhijit Muhurta', '${panchanga['abhijit_muhurta']?['start_time'] ?? ''} - ${panchanga['abhijit_muhurta']?['end_time'] ?? ''}', isHighlight: true),
-          _buildListRow('Amrita Kala', '${panchanga['amrita_kala']?['start_time'] ?? ''} - ${panchanga['amrita_kala']?['end_time'] ?? ''}', isHighlight: true),
+        buildSectionHeader('Auspicious Muhurtas'),
+        buildSimpleCard([
+          buildListRow('Abhijit Muhurta', '${panchanga['abhijit_muhurta']?['start_time'] ?? ''} - ${panchanga['abhijit_muhurta']?['end_time'] ?? ''}', isHighlight: true),
+          buildListRow('Amrita Kala', '${panchanga['amrita_kala']?['start_time'] ?? ''} - ${panchanga['amrita_kala']?['end_time'] ?? ''}', isHighlight: true),
         ]),
 
-        _buildSectionHeader('Inauspicious Timings'),
-        _buildSimpleCard([
-          _buildListRow('Rahu Kala', '${panchanga['rahu_kaal']?['start_time'] ?? ''} - ${panchanga['rahu_kaal']?['end_time'] ?? ''}', isDanger: true),
-          _buildListRow('Yamaganda Kala', '${panchanga['yamaganda']?['start_time'] ?? ''} - ${panchanga['yamaganda']?['end_time'] ?? ''}', isDanger: true),
-          _buildListRow('Gulika Kala', '${panchanga['gulika_kaal']?['start_time'] ?? ''} - ${panchanga['gulika_kaal']?['end_time'] ?? ''}', isDanger: true),
-          _buildListRow('Dur Muhurta', '${panchanga['dur_muhurta']?['start_time'] ?? ''} - ${panchanga['dur_muhurta']?['end_time'] ?? ''}', isDanger: true),
-          _buildListRow('Varjyam', '${panchanga['varjyam']?['start_time'] ?? ''} - ${panchanga['varjyam']?['end_time'] ?? ''}', isDanger: true),
+        buildSectionHeader('Inauspicious Timings'),
+        buildSimpleCard([
+          buildListRow('Rahu Kala', '${panchanga['rahu_kaal']?['start_time'] ?? ''} - ${panchanga['rahu_kaal']?['end_time'] ?? ''}', isDanger: true),
+          buildListRow('Yamaganda Kala', '${panchanga['yamaganda']?['start_time'] ?? ''} - ${panchanga['yamaganda']?['end_time'] ?? ''}', isDanger: true),
+          buildListRow('Gulika Kala', '${panchanga['gulika_kaal']?['start_time'] ?? ''} - ${panchanga['gulika_kaal']?['end_time'] ?? ''}', isDanger: true),
+          buildListRow('Dur Muhurta', '${panchanga['dur_muhurta']?['start_time'] ?? ''} - ${panchanga['dur_muhurta']?['end_time'] ?? ''}', isDanger: true),
+          buildListRow('Varjyam', '${panchanga['varjyam']?['start_time'] ?? ''} - ${panchanga['varjyam']?['end_time'] ?? ''}', isDanger: true),
         ]),
 
-        _buildSectionHeader('Ritu, Ayana & Maasa'),
-        _buildSimpleCard([
-          _buildListRow('Chandra Maasa (Amanta)', panchanga['chandra_maasa_amanta']?.toString() ?? ''),
-          _buildListRow('Chandra Maasa (Purnimanta)', panchanga['chandra_maasa_purnimanta']?.toString() ?? ''),
-          _buildListRow('Drika Ritu', panchanga['drika_ritu']?.toString() ?? ''),
-          _buildListRow('Vedic Ritu', panchanga['vedic_ritu']?.toString() ?? ''),
-          _buildListRow('Drika Ayana', panchanga['drika_ayana']?.toString() ?? ''),
-          _buildListRow('Vedic Ayana', panchanga['vedic_ayana']?.toString() ?? ''),
+        buildSectionHeader('Ritu, Ayana & Maasa'),
+        buildSimpleCard([
+          buildListRow('Chandra Maasa (Amanta)', panchanga['chandra_maasa_amanta']?.toString() ?? ''),
+          buildListRow('Chandra Maasa (Purnimanta)', panchanga['chandra_maasa_purnimanta']?.toString() ?? ''),
+          buildListRow('Drika Ritu', panchanga['drika_ritu']?.toString() ?? ''),
+          buildListRow('Vedic Ritu', panchanga['vedic_ritu']?.toString() ?? ''),
+          buildListRow('Drika Ayana', panchanga['drika_ayana']?.toString() ?? ''),
+          buildListRow('Vedic Ayana', panchanga['vedic_ayana']?.toString() ?? ''),
         ]),
         
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
       ],
     );
   }
@@ -3173,10 +3174,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return Column(
       children: [
         Icon(icon, color: Colors.white, size: 20),
-        const SizedBox(height: 6),
-        Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 2),
-        Text(time, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+        SizedBox(height: 6.h),
+        Text(label, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11.sp, fontWeight: FontWeight.w500)),
+        SizedBox(height: 2.h),
+        Text(time, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -3262,11 +3263,11 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F172A) : Colors.white,
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(26.r),
           border: Border.all(
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
           ),
@@ -3282,7 +3283,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
@@ -3293,8 +3294,8 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
-                  const SizedBox(width: 12),
+                  Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3303,14 +3304,14 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                           'Edit Birth Profile',
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             color: Colors.white,
                           ),
                         ),
                         Text(
                           'Recalculate Swiss Ephemeris Placements',
                           style: GoogleFonts.outfit(
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             color: Colors.white70,
                           ),
                         ),
@@ -3321,18 +3322,18 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               child: Column(
                 children: [
                   TextField(
                     controller: _nameCtrl,
                     decoration: InputDecoration(
                       labelText: 'Full Name',
-                      prefixIcon: const Icon(Icons.person_rounded, color: Color(0xFF4338CA)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      prefixIcon: Icon(Icons.person_rounded, color: Color(0xFF4338CA)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   Row(
                     children: [
                       Expanded(
@@ -3348,24 +3349,24 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                               setState(() => _selectedDate = dt);
                             }
                           },
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14.r),
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12.w),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14.r),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF4338CA)),
-                                const SizedBox(width: 8),
-                                Text(formattedDob, style: GoogleFonts.outfit(fontSize: 12.5)),
+                                Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF4338CA)),
+                                SizedBox(width: 8.w),
+                                Text(formattedDob, style: GoogleFonts.outfit(fontSize: 12.5.sp)),
                               ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10.w),
                       Expanded(
                         child: InkWell(
                           onTap: () async {
@@ -3377,18 +3378,18 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                               setState(() => _selectedTime = tm);
                             }
                           },
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14.r),
                           child: Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12.w),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14.r),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF4338CA)),
-                                const SizedBox(width: 8),
-                                Text(formattedTob, style: GoogleFonts.outfit(fontSize: 12.5)),
+                                Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF4338CA)),
+                                SizedBox(width: 8.w),
+                                Text(formattedTob, style: GoogleFonts.outfit(fontSize: 12.5.sp)),
                               ],
                             ),
                           ),
@@ -3396,23 +3397,23 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: 14.h),
                   TextField(
                     controller: _pobCtrl,
                     decoration: InputDecoration(
                       labelText: 'Place of Birth',
-                      prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFF4338CA)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      prefixIcon: Icon(Icons.location_on_rounded, color: Color(0xFF4338CA)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                     ),
                   ),
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 18),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(26)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(26)),
               ),
               child: Row(
                 children: [
@@ -3423,7 +3424,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       child: Text('Cancel', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : Colors.black54)),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     flex: 3,
                     child: BouncyTouchCard(
@@ -3434,12 +3435,12 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                         Navigator.pop(context);
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFF4338CA), Color(0xFF6366F1)],
                           ),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14.r),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF4338CA).withValues(alpha: 0.38),
@@ -3451,13 +3452,13 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
+                            Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                            SizedBox(width: 8.w),
                             Text(
                               'Save & Calculate',
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 14.sp,
                                 color: Colors.white,
                               ),
                             ),
