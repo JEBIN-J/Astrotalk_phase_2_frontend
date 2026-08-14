@@ -581,16 +581,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             tooltip: 'Edit Birth Profile',
             onPressed: _showEditProfileDialog,
           ),
-          IconButton(
-            icon: Icon(Icons.tune_rounded, size: 21),
-            tooltip: 'API Backend Server Config',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ApiSettingsScreen()),
-              );
-            },
-          ),
+
           IconButton(
             icon: Icon(Icons.settings_outlined, size: 21),
             tooltip: 'Display Settings & Stepper',
@@ -1811,7 +1802,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Planetary Coordinates & KP Lords', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+            Expanded(
+              child: Text(
+                'Planetary Coordinates & KP Lords',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp),
+              ),
+            ),
+            SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(

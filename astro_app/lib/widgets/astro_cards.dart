@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/astro_item.dart';
+import '../theme/app_theme.dart';
 import 'celestial_animations.dart';
 import 'custom_icons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,12 +12,14 @@ class BentoHeroCard extends StatelessWidget {
   final VoidCallback onTapKundli;
   final VoidCallback onTapAiCalling;
   final bool isDark;
+  final AppColorPalette currentPalette;
 
   const BentoHeroCard({
     super.key,
     required this.onTapKundli,
     required this.onTapAiCalling,
     required this.isDark,
+    required this.currentPalette,
   });
 
   @override
@@ -24,14 +27,7 @@ class BentoHeroCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 14.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withValues(alpha: 0.75),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppTheme.getHeaderGradient(currentPalette, isDark),
         borderRadius: BorderRadius.circular(28.r),
         border: Border.all(
           color: Theme.of(context).primaryColor.withValues(alpha: 0.35),

@@ -424,6 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   index: 0,
                   child: BentoHeroCard(
                     isDark: isDark,
+                    currentPalette: widget.currentPalette,
                     onTapKundli: () => AstroFeatureDialogs.openFeature(
                       context,
                       AstroItem.items.firstWhere((i) => i.id == 'horoscope'),
@@ -444,10 +445,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             child: _buildDailyHoroscopeBanner(context, isDark),
           ),
           
-          // 6.6. Live Astrologers Quick Connect Row
-          SliverToBoxAdapter(
-            child: _buildLiveAstrologersRow(context, isDark),
-          ),
+
 
           // 7. Responsive Dynamic Grid of Modules (with safe bottom padding)
           SliverPadding(
@@ -965,119 +963,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   // --- Live Astrologers Row ---
-  Widget _buildLiveAstrologersRow(BuildContext context, bool isDark) {
-    if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
 
-    final List<Map<String, dynamic>> liveAstrologers = [
-      {'name': 'Astro Rahul', 'specialty': 'Vedic', 'image': 'https://i.pravatar.cc/150?u=a042581f4e29026704d'},
-      {'name': 'Tarot Pooja', 'specialty': 'Tarot', 'image': 'https://i.pravatar.cc/150?u=a042581f4e29026703d'},
-      {'name': 'Vastu Amit', 'specialty': 'Vastu', 'image': 'https://i.pravatar.cc/150?u=a042581f4e29026702d'},
-      {'name': 'Seer Anjali', 'specialty': 'Psychic', 'image': 'https://i.pravatar.cc/150?u=a042581f4e29026701d'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Live Astrologers',
-                style: GoogleFonts.outfit(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
-              ),
-              Text(
-                'View All',
-                style: GoogleFonts.outfit(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6366F1),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 100.h,
-          child: ListView.separated(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: liveAstrologers.length,
-            separatorBuilder: (_, __) => SizedBox(width: 16.w),
-            itemBuilder: (context, index) {
-              final astro = liveAstrologers[index];
-              return Column(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(2.w),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFEC4899), Color(0xFF6366F1)],
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 28.r,
-                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                          backgroundImage: NetworkImage(astro['image']),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: BreathingAuraWidget(
-                          auraColor: const Color(0xFF10B981),
-                          beginScale: 0.8,
-                          endScale: 1.4,
-                          duration: const Duration(milliseconds: 1000),
-                          child: Container(
-                            width: 14.w,
-                            height: 14.h,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: isDark ? const Color(0xFF0F172A) : Colors.white, width: 2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    astro['name'],
-                    style: GoogleFonts.outfit(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    ),
-                  ),
-                  Text(
-                    astro['specialty'],
-                    style: GoogleFonts.outfit(
-                      fontSize: 9.sp,
-                      color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-        SizedBox(height: 8.h),
-      ],
-    );
-  }
 
   // --- Dynamic Responsive Grid/List of Modules ---
   Widget _buildResponsiveModulesGrid(BuildContext context) {

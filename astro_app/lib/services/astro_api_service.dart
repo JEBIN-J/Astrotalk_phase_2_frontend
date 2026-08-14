@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.223:5000/api/v1'; // Android emulator localhost
+        return 'http://10.120.4.225:5000/api/v1'; // Android emulator localhost
       }
     } catch (_) {}
     return 'http://127.0.0.1:8000/api/v1';

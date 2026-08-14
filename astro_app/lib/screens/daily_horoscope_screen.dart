@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
 
 class DailyHoroscopeScreen extends StatefulWidget {
   const DailyHoroscopeScreen({super.key});
@@ -27,7 +28,8 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
   ];
 
   String? _selectedSign;
-  String _prediction = '';
+  String _analysis = '';
+  List<String> _predictions = [];
   bool _isLoading = false;
 
   void _getPrediction(String sign) async {
@@ -40,13 +42,11 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
       final res = await AstroApiService.chatAiAstrologer(question: "What is the daily horoscope for $sign?", category: "general");
       if (mounted) {
         setState(() {
-          final analysis = res['analysis'] ?? res['answer'] ?? "The cosmos are aligning for $sign. Maintain positivity.";
-          final predictions = res['predictions'] != null ? (res['predictions'] as List).join('\n• ') : '';
-          
-          if (predictions.isNotEmpty) {
-            _prediction = "$analysis\n\nPredictions:\n• $predictions";
+          _analysis = res['analysis'] ?? res['answer'] ?? "The cosmos are aligning for $sign. Maintain positivity.";
+          if (res['predictions'] != null && res['predictions'] is List) {
+            _predictions = (res['predictions'] as List).map((e) => e.toString()).toList();
           } else {
-            _prediction = analysis;
+            _predictions = [];
           }
           _isLoading = false;
         });
@@ -54,7 +54,8 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _prediction = "Error connecting to the cosmic energies for $sign. Please try again.";
+          _analysis = "Error connecting to the cosmic energies for $sign. Please try again.";
+          _predictions = [];
           _isLoading = false;
         });
       }
@@ -72,9 +73,11 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _selectedSign == null
-          ? _buildSignSelector(isDark)
-          : _buildPredictionView(isDark),
+      body: SafeArea(
+        child: _selectedSign == null
+            ? _buildSignSelector(isDark)
+            : _buildPredictionView(isDark),
+      ),
     );
   }
 
@@ -107,17 +110,10 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
               return GestureDetector(
                 onTap: () => _getPrediction(sign['name']),
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
+                  decoration: AppTheme.getGlassCardDecoration(
+                    isDark: isDark,
+                    accentColor: Theme.of(context).primaryColor,
+                    borderRadius: 16.r,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -125,10 +121,10 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
                       Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0EA5E9).withValues(alpha: 0.15),
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(sign['icon'], color: const Color(0xFF0EA5E9), size: 28),
+                        child: Icon(sign['icon'], color: Theme.of(context).primaryColor, size: 28),
                       ),
                       SizedBox(height: 12.h),
                       Text(
@@ -160,24 +156,26 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
 
   Widget _buildPredictionView(bool isDark) {
     final signData = _signs.firstWhere((s) => s['name'] == _selectedSign);
+    final theme = Theme.of(context);
 
-    return Padding(
-      padding: EdgeInsets.all(20.0.w),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(20.w, 20.w, 20.w, 60.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
+              gradient: LinearGradient(
+                colors: [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.7)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.4),
+                  color: theme.primaryColor.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 5,
                 )
@@ -199,49 +197,109 @@ class _DailyHoroscopeScreenState extends State<DailyHoroscopeScreen> {
             'Today',
             style: GoogleFonts.outfit(
               fontSize: 16.sp,
-              color: const Color(0xFF0EA5E9),
+              color: theme.primaryColor,
               fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: 32.h),
           if (_isLoading)
-            const CircularProgressIndicator(color: Color(0xFF0EA5E9))
+            CircularProgressIndicator(color: theme.primaryColor)
           else
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(24.r),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  )
-                ],
-              ),
-              child: Text(
-                _prediction,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.outfit(
-                  fontSize: 16.sp,
-                  height: 1.6.h,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-            ),
-          Spacer(),
+            _buildPredictionCard(isDark, theme),
+          SizedBox(height: 40.h),
           TextButton.icon(
             onPressed: () => setState(() => _selectedSign = null),
             icon: Icon(Icons.arrow_back_rounded),
             label: Text('Choose Another Sign'),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0EA5E9),
+              foregroundColor: theme.primaryColor,
               textStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp),
             ),
           ),
           SizedBox(height: 20.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPredictionCard(bool isDark, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24.w),
+      decoration: AppTheme.getGlassCardDecoration(
+        isDark: isDark,
+        accentColor: theme.primaryColor,
+        borderRadius: 24.r,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: theme.primaryColor, size: 20),
+              SizedBox(width: 8.w),
+              Text(
+                'Cosmic Analysis',
+                style: GoogleFonts.outfit(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            _analysis,
+            style: GoogleFonts.outfit(
+              fontSize: 15.sp,
+              height: 1.6,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          if (_predictions.isNotEmpty) ...[
+            SizedBox(height: 24.h),
+            Divider(color: theme.primaryColor.withValues(alpha: 0.2)),
+            SizedBox(height: 24.h),
+            Row(
+              children: [
+                Icon(Icons.insights_rounded, color: theme.primaryColor, size: 20),
+                SizedBox(width: 8.w),
+                Text(
+                  'Key Predictions',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            ..._predictions.map((pred) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 6.h),
+                        child: Icon(Icons.circle, size: 8, color: theme.primaryColor),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          pred,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15.sp,
+                            height: 1.5,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+          ],
         ],
       ),
     );

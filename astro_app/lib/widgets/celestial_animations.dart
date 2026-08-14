@@ -697,7 +697,7 @@ class _CosmicDustBackgroundState extends State<CosmicDustBackground>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 25),
+      duration: const Duration(seconds: 4),
     )..repeat();
 
     final rng = math.Random(42); // fixed seed for consistent placement
