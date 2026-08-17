@@ -184,6 +184,124 @@ class AstroApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getLalKitab({
+    String name = 'User',
+    String dateOfBirth = '1998-12-13',
+    String timeOfBirth = '09:30',
+    String placeOfBirth = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/lal-kitab');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Lal Kitab: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getLalKitab: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getBnn({
+    String name = 'User',
+    String dateOfBirth = '1998-12-13',
+    String timeOfBirth = '09:30',
+    String placeOfBirth = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/bnn');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load BNN: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getBnn: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getDailyHoroscope(String rashi) async {
+    try {
+      final uri = Uri.parse('$baseUrl/horoscope/daily').replace(queryParameters: {'rashi': rashi});
+      final response = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> && data['status'] == 'success') {
+          return data['data'] as Map<String, dynamic>;
+        }
+        throw Exception(data['message'] ?? 'Failed to fetch daily horoscope');
+      } else {
+        throw Exception('Failed to fetch daily horoscope: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getDailyHoroscope: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getJaimini({
+    String name = 'User',
+    String dateOfBirth = '1998-12-13',
+    String timeOfBirth = '09:30',
+    String placeOfBirth = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/jaimini');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Jaimini: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getJaimini: $e');
+      rethrow;
+    }
+  }
+
   // =========================================================================
   // 4. AI CHAT & CALLING
   // =========================================================================
@@ -305,8 +423,8 @@ class AstroApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getMuhurat({double lat = 28.6139, double lon = 77.209, String? dateStr}) async {
-    String url = '$baseUrl/content/muhurat?latitude=$lat&longitude=$lon';
+  static Future<Map<String, dynamic>> getMuhurat({double lat = 28.6139, double lon = 77.209, double tz = 5.5, String? dateStr}) async {
+    String url = '$baseUrl/content/muhurat?latitude=$lat&longitude=$lon&timezone=$tz';
     if (dateStr != null && dateStr.isNotEmpty) {
       url += '&date=$dateStr';
     }
@@ -324,8 +442,8 @@ class AstroApiService {
     }
   }
 
-  static Future<List<String>> getMuhuratMonth(int year, int month) async {
-    final uri = Uri.parse('$baseUrl/content/muhurat/month?year=$year&month=$month');
+  static Future<List<String>> getMuhuratMonth(int year, int month, {double lat = 28.6139, double lon = 77.209, double tz = 5.5}) async {
+    final uri = Uri.parse('$baseUrl/content/muhurat/month?year=$year&month=$month&latitude=$lat&longitude=$lon&timezone=$tz');
     try {
       final res = await http.get(uri, headers: _headers).timeout(_timeout);
       if (res.statusCode == 200) {
@@ -389,6 +507,9 @@ class AstroApiService {
         'city': city,
         'coords': '$lat° N, $lon° E',
         'tz': tzStr,
+        'lat_val': lat,
+        'lon_val': lon,
+        'tz_val': tz.toString(),
         'isDefault': 'false',
       };
     }).toList();

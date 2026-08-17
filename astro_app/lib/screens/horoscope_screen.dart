@@ -99,6 +99,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
+  Map<String, dynamic>? _lalKitabData;
+  Map<String, dynamic>? _bnnData;
+  Map<String, dynamic>? _jaiminiData;
 
   static const Map<String, String> _divisionalChartsInfo = {
     'D-1': 'Rashi (Natal Physical Plane)',
@@ -223,20 +226,59 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   Future<void> _fetchKundliData() async {
     setState(() => _isLoadingKundli = true);
-    final data = await AstroApiService.getKundli(
-      name: _personName,
-      dateOfBirth: _dobFormattedForApi,
-      timeOfBirth: _tobFormattedForApi,
-      placeOfBirth: _pob,
-      latitude: _latitude,
-      longitude: _longitude,
-      timezone: _timezone,
-    );
-    if (mounted) {
-      setState(() {
-        _kundliData = data;
-        _isLoadingKundli = false;
-      });
+    try {
+      final futures = await Future.wait([
+        AstroApiService.getKundli(
+          name: _personName,
+          dateOfBirth: _dobFormattedForApi,
+          timeOfBirth: _tobFormattedForApi,
+          placeOfBirth: _pob,
+          latitude: _latitude,
+          longitude: _longitude,
+          timezone: _timezone,
+        ),
+        AstroApiService.getLalKitab(
+          name: _personName,
+          dateOfBirth: _dobFormattedForApi,
+          timeOfBirth: _tobFormattedForApi,
+          placeOfBirth: _pob,
+          latitude: _latitude,
+          longitude: _longitude,
+          timezone: _timezone,
+        ),
+        AstroApiService.getBnn(
+          name: _personName,
+          dateOfBirth: _dobFormattedForApi,
+          timeOfBirth: _tobFormattedForApi,
+          placeOfBirth: _pob,
+          latitude: _latitude,
+          longitude: _longitude,
+          timezone: _timezone,
+        ),
+        AstroApiService.getJaimini(
+          name: _personName,
+          dateOfBirth: _dobFormattedForApi,
+          timeOfBirth: _tobFormattedForApi,
+          placeOfBirth: _pob,
+          latitude: _latitude,
+          longitude: _longitude,
+          timezone: _timezone,
+        ),
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          _kundliData = futures[0];
+          _lalKitabData = futures[1];
+          _bnnData = futures[2];
+          _jaiminiData = futures[3];
+          _isLoadingKundli = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingKundli = false);
+      }
     }
   }
 
@@ -641,9 +683,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               children: [
                 _buildLagnaAndDivisionalChartTab(context, isDark),
                 _buildPlanetsTab(context, isDark),
-                _buildPlaceholderTab('Lal Kitab Analysis coming soon...', isDark),
-                _buildPlaceholderTab('BNN (Nandi Nadi) coming soon...', isDark),
-                _buildPlaceholderTab('Jamini Astrology coming soon...', isDark),
+                _buildLalKitabTab(context, isDark),
+                _buildBnnTab(context, isDark),
+                _buildJaiminiTab(context, isDark),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -1942,6 +1984,641 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   // =========================================================================
   // TAB 2: PLANETS & KP LORDS TAB
   // =========================================================================
+  Widget _buildLalKitabTab(BuildContext context, bool isDark) {
+    if (_lalKitabData == null) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
+    }
+
+    final planets = _lalKitabData!['planets'] as List<dynamic>? ?? [];
+
+    return ListView(
+      padding: EdgeInsets.all(16.w),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'Lal Kitab Houses & Remedies',
+                style: GoogleFonts.outfit(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDE68A).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Text(
+                'Calculated Logically',
+                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706)),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        ...planets.map((p) {
+          final planet = p['planet']?.toString() ?? '';
+          final house = p['house']?.toString() ?? '';
+          final sign = p['sign']?.toString() ?? '';
+          final lkSign = p['lk_sign']?.toString() ?? '';
+          final degree = p['longitude_formatted']?.toString() ?? '';
+          final dignity = p['dignity']?.toString() ?? '';
+          final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+
+          final pos = (interp['pos'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+          final neg = (interp['neg'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+          final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+          Color accentColor = const Color(0xFF4338CA);
+          if (planet == 'Sun' || planet == 'Mars') accentColor = const Color(0xFFDC2626);
+          if (planet == 'Moon' || planet == 'Venus') accentColor = const Color(0xFF0284C7);
+          if (planet == 'Jupiter') accentColor = const Color(0xFFD97706);
+          if (planet == 'Mercury') accentColor = const Color(0xFF059669);
+          if (planet == 'Saturn' || planet == 'Rahu' || planet == 'Ketu') accentColor = const Color(0xFF475569);
+
+          return Container(
+            margin: EdgeInsets.only(bottom: 16.h),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                title: Row(
+                  children: [
+                    Container(
+                      width: 4.w,
+                      height: 24.h,
+                      decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(2.r)),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            planet,
+                            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            'House $house ($lkSign) • $degree',
+                            style: GoogleFonts.outfit(fontSize: 12.sp, color: accentColor, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (dignity != 'Neutral')
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: dignity == 'Exalted' ? const Color(0xFF10B981).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Text(
+                          dignity,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.bold,
+                            color: dignity == 'Exalted' ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(16.r), bottomRight: Radius.circular(16.r)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (pos.isNotEmpty) ...[
+                          _buildLkSectionTitle('Positive Effects', const Color(0xFF059669)),
+                          ...pos.map((e) => _buildLkBulletPoint(e, isDark)),
+                          SizedBox(height: 12.h),
+                        ],
+                        if (neg.isNotEmpty) ...[
+                          _buildLkSectionTitle('Possible Challenges', const Color(0xFFDC2626)),
+                          ...neg.map((e) => _buildLkBulletPoint(e, isDark)),
+                          SizedBox(height: 12.h),
+                        ],
+                        _buildLkSectionTitle('General Insights', accentColor),
+                        if (interp['career'] != null) _buildLkBulletPoint('Career: ${interp['career']}', isDark),
+                        if (interp['family'] != null) _buildLkBulletPoint('Family: ${interp['family']}', isDark),
+                        if (interp['finance'] != null) _buildLkBulletPoint('Finance: ${interp['finance']}', isDark),
+                        SizedBox(height: 16.h),
+                        if (rem.isNotEmpty) ...[
+                          Container(
+                            padding: EdgeInsets.all(12.w),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD97706).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.healing, size: 16.sp, color: const Color(0xFFD97706)),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'Traditional Lal Kitab Remedies',
+                                      style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706)),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 8.h),
+                                ...rem.map((e) => Padding(
+                                      padding: EdgeInsets.only(bottom: 4.h),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('• ', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFFB45309), fontWeight: FontWeight.bold)),
+                                          Expanded(child: Text(e, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
+                                        ],
+                                      ),
+                                    )),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  'Note: These are traditional astrological practices.',
+                                  style: GoogleFonts.outfit(fontSize: 10.sp, fontStyle: FontStyle.italic, color: isDark ? Colors.white54 : Colors.black54),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildLkSectionTitle(String title, Color color) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Text(
+        title,
+        style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: color),
+      ),
+    );
+  }
+
+  Widget _buildLkBulletPoint(String text, bool isDark) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('• ', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white54 : Colors.black54)),
+          Expanded(child: Text(text, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBnnTab(BuildContext context, bool isDark) {
+    if (_bnnData == null) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
+    }
+
+    final planets = _bnnData!['planets'] as List<dynamic>? ?? [];
+    final analysis = _bnnData!['event_analysis'] as List<dynamic>? ?? [];
+
+    return ListView(
+      padding: EdgeInsets.all(16.w),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'Bhrigu Nandi Nadi (BNN)',
+                style: GoogleFonts.outfit(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: const Color(0xFF10B981)),
+              ),
+              child: Text(
+                'Sign-based Linkages',
+                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          'BNN evaluates true planetary interactions via Conjunctions (Same Sign), Trines (1-5-9), and Adjacent Signs (2-12).',
+          style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black54),
+        ),
+        SizedBox(height: 24.h),
+
+        // 1. Predictive Event Analysis based on Karakas
+        Text(
+          'Predictive Observations',
+          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        ),
+        SizedBox(height: 12.h),
+        ...analysis.map((item) {
+          final category = item['category']?.toString() ?? '';
+          final observation = item['observation']?.toString() ?? '';
+          final details = (item['details'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+          final karaka = item['karaka_planet']?.toString() ?? '';
+
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      category,
+                      style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(
+                        'Karaka: $karaka',
+                        style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF475569)),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  observation,
+                  style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
+                ),
+                if (details.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: details.map((d) => Padding(
+                        padding: EdgeInsets.only(bottom: 4.h),
+                        child: Text('• $d', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white54 : Colors.black54)),
+                      )).toList(),
+                    ),
+                  )
+                ]
+              ],
+            ),
+          );
+        }),
+
+        SizedBox(height: 24.h),
+
+        // 2. Exact Planetary Combinations
+        Text(
+          'Planetary Linkages & Yoga',
+          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        ),
+        SizedBox(height: 12.h),
+        ...planets.map((p) {
+          final planet = p['planet']?.toString() ?? '';
+          final sign = p['sign']?.toString() ?? '';
+          final degree = p['degree']?.toString() ?? '';
+          final karakaMeaning = p['karaka']?.toString() ?? '';
+          final linkages = p['linkages'] as List<dynamic>? ?? [];
+
+          // Only show planets that actually form combinations to reduce clutter
+          if (linkages.isEmpty) return const SizedBox.shrink();
+
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      '$planet in $sign',
+                      style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                    ),
+                    const Spacer(),
+                    Text(
+                      degree,
+                      style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF94A3B8)),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Represents: $karakaMeaning',
+                  style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF059669), fontStyle: FontStyle.italic),
+                ),
+                SizedBox(height: 12.h),
+                ...linkages.map((lk) {
+                  final lkPlanet = lk['planet']?.toString() ?? '';
+                  final type = lk['type']?.toString() ?? '';
+                  final meaning = lk['meaning']?.toString() ?? '';
+                  
+                  Color badgeColor = const Color(0xFF64748B);
+                  if (type.contains('Conjunction')) badgeColor = const Color(0xFFDC2626);
+                  if (type.contains('Trine')) badgeColor = const Color(0xFFD97706);
+
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 8.h),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 80.w,
+                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                          margin: EdgeInsets.only(right: 8.w, top: 2.h),
+                          decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
+                          child: Text(
+                            '+ $lkPlanet',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: badgeColor),
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                type,
+                                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54),
+                              ),
+                              Text(
+                                meaning,
+                                style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white : Colors.black87),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildJaiminiTab(BuildContext context, bool isDark) {
+    if (_jaiminiData == null) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
+    }
+
+    final charaKarakas = _jaiminiData!['chara_karakas'] as List<dynamic>? ?? [];
+    final specialPoints = _jaiminiData!['special_points'] as List<dynamic>? ?? [];
+
+    return ListView(
+      padding: EdgeInsets.all(16.w),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'Jaimini Astrology',
+                style: GoogleFonts.outfit(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: const Color(0xFF6366F1)),
+              ),
+              child: Text(
+                '7-Karaka Scheme',
+                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5)),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          'Jaimini ranks planets based on their exact degree within a sign to determine your Soul Path and life trajectory.',
+          style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black54),
+        ),
+        SizedBox(height: 24.h),
+
+        // 1. Special Points (AL, UL, Karakamsha)
+        Text(
+          'Jaimini Arudhas & Special Padas',
+          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: specialPoints.map((sp) {
+            final name = sp['name']?.toString() ?? '';
+            final sign = sp['sign']?.toString() ?? '';
+            
+            return Expanded(
+              child: Container(
+                margin: EdgeInsets.only(right: 8.w),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.2)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      name,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF64748B)),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      sign,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 8.h),
+        ...specialPoints.map((sp) => Padding(
+          padding: EdgeInsets.only(bottom: 4.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('• ', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
+              Expanded(child: Text('${sp['name']}: ${sp['meaning']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
+            ],
+          ),
+        )),
+
+        SizedBox(height: 24.h),
+
+        // 2. Chara Karakas (AK to DK)
+        Text(
+          'Jaimini Chara Karakas (Degree Sorted)',
+          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        ),
+        SizedBox(height: 12.h),
+        ...charaKarakas.map((ck) {
+          final code = ck['karaka_code']?.toString() ?? '';
+          final name = ck['karaka_name']?.toString() ?? '';
+          final planet = ck['planet']?.toString() ?? '';
+          final degree = ck['degree']?.toString() ?? '';
+          final meaning = ck['meaning']?.toString() ?? '';
+          final interp = ck['interpretation']?.toString() ?? '';
+
+          Color badgeColor = const Color(0xFF64748B);
+          if (code == 'AK') badgeColor = const Color(0xFFD97706);
+          if (code == 'AmK') badgeColor = const Color(0xFF059669);
+          if (code == 'DK') badgeColor = const Color(0xFFDC2626);
+
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        code,
+                        style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: badgeColor),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                          ),
+                          Text(
+                            meaning,
+                            style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          planet,
+                          style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                        ),
+                        Text(
+                          degree,
+                          style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                if (interp.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      interp,
+                      style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4),
+                    ),
+                  ),
+                ]
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
     final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
 
