@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api/v1'; // Standard FastAPI port
+      return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1'; // ngrok tunnel
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.120.4.225:5000/api/v1'; // Android emulator localhost
+        return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1'; // ngrok tunnel
       }
     } catch (_) {}
-    return 'http://127.0.0.1:8000/api/v1';
+    return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1';
   }
 
   static String get baseUrl {
@@ -43,6 +43,7 @@ class AstroApiService {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true', // Bypass ngrok HTML warning page
     };
     if (authToken.isNotEmpty) {
       headers['Authorization'] = 'Bearer $authToken';

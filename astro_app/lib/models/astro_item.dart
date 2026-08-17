@@ -61,7 +61,7 @@ class AstroItem {
   static List<AstroItem> get items => [
     const AstroItem(
       id: 'horoscope',
-      title: 'Kundli',
+      title: 'Horoscope',
       subtitle: 'Vedic, KP, Lal Kitab & BNN Charts',
       iconKey: 'horoscope',
       category: AstroCategory.vedicKundli,
@@ -71,7 +71,7 @@ class AstroItem {
     ),
     const AstroItem(
       id: 'daily_horoscope',
-      title: 'Horoscope',
+      title: 'Daily Horoscope',
       subtitle: 'Daily Sun Sign Predictions',
       iconKey: 'horoscope_daily', // Doesn't matter if there's no exact asset, we use icons anyway in the dashboard but wait, dashboard uses svg assets!
       category: AstroCategory.vedicKundli,

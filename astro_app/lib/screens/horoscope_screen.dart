@@ -87,9 +87,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _pob = 'Kanyakumari, Tamil Nadu, India';
 
   DateTime _currentDateTime = DateTime(1998, 12, 13, 19, 18, 00);
-  final double _latitude = 8.0883;
-  final double _longitude = 77.5385;
-  final double _timezone = 5.5;
+  double _latitude = 8.0883;
+  double _longitude = 77.5385;
+  double _timezone = 5.5;
 
   String _activeChartKey = 'D-1';
   StepperInterval _stepperInterval = StepperInterval.oneMinute;
@@ -538,12 +538,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         initialDob: _dob,
         initialTob: _tob,
         initialPob: _pob,
-        onSave: (name, dob, tob, pob) {
+        initialLat: _latitude,
+        initialLon: _longitude,
+        initialTz: _timezone,
+        onSave: (name, dob, tob, pob, lat, lon, tz) {
           setState(() {
             _personName = name;
             _dob = dob;
             _tob = tob;
             _pob = pob;
+            _latitude = lat;
+            _longitude = lon;
+            _timezone = tz;
             _syncDateTimeFromStrings();
           });
           _fetchKundliData();
@@ -1398,19 +1404,34 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
 
                           if (_isCardViewMode) {
-                            return Container(
-                              color: rowBg,
-                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                              child: Row(
-                                children: [
-                                  Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
-                                  Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
-                                  Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                  Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
-                                ],
-                              ),
+                            final ownedHouses = (p['kp_owned_houses'] as List<dynamic>?)?.join(', ') ?? 'None';
+                            final occupiedHouse = p['kp_occupied_house']?.toString() ?? '-';
+                            final significators = (p['kp_significators'] as List<dynamic>?)?.join(', ') ?? '-';
+                            final navSign = p['navamsha']?['navamsha_sign']?.toString() ?? '';
+                            final dignity = p['dignity']?.toString() ?? 'Direct';
+                            final planetCode = p['chara_karaka_code']?.toString() ?? '';
+                            final colorHex = p['color']?.toString() ?? '#4338CA';
+                            final color = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+
+                            if (displayName == 'Lagna' || displayName == 'Ascendant') {
+                              return _buildPlanetCard(
+                                displayName, houseStr, deg, signDisplay, nak, pada, nl,
+                                isDark, isLagna: true,
+                                kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
+                                dignity: dignity,
+                                planetCode: planetCode,
+                                color: color,
+                              );
+                            }
+
+                            return _buildPlanetCard(
+                              displayName, houseStr, deg, signDisplay, nak, pada, nl,
+                              isDark,
+                              kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
+                              kpSignificators: 'Occupied: $occupiedHouse | Owned: $ownedHouses | Significators: $significators',
+                              dignity: dignity,
+                              planetCode: planetCode,
+                              color: color,
                             );
                           }
 
@@ -1789,6 +1810,135 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
+  Widget _buildPlanetCard(String title, String house, String deg, String sign,
+      String nak, String pada, String nakLord, bool isDark,
+      {bool isLagna = false, required String kpLords, String? kpSignificators, required String dignity, String? planetCode, required Color color}) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 4.w,
+                height: 40.h,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15.sp,
+                            color: isDark ? Colors.white : const Color(0xFF334155),
+                          ),
+                        ),
+                        if (planetCode != null && planetCode.isNotEmpty) ...[
+                          SizedBox(width: 6.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(
+                              planetCode,
+                              style: GoogleFonts.outfit(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ]
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      '$sign • House $house • $deg',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.sp,
+                        color: color,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '$nak Pada $pada (Lord: $nakLord)',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12.sp,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  dignity.split(' ')[0],
+                  style: GoogleFonts.outfit(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11.5.sp,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            kpLords,
+            style: GoogleFonts.outfit(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF4338CA),
+            ),
+          ),
+          if (kpSignificators != null) ...[
+            SizedBox(height: 4.h),
+            Text(
+              kpSignificators,
+              style: GoogleFonts.outfit(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF059669),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // =========================================================================
   // TAB 2: PLANETS & KP LORDS TAB
   // =========================================================================
@@ -1859,6 +2009,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               color = const Color(0xFF4338CA);
             }
 
+            final kpOwnedHouses = (p['kp_owned_houses'] as List<dynamic>?)?.join(', ') ?? 'None';
+            final kpOccupiedHouse = p['kp_occupied_house']?.toString() ?? '-';
+            final kpSignificators = (p['kp_significators'] as List<dynamic>?)?.join(', ') ?? '-';
+            final kpSigString = 'Occupied: $kpOccupiedHouse | Owned: $kpOwnedHouses | Significators: $kpSignificators';
+
             return _buildDetailedPlanetCard(
               idx,
               name,
@@ -1879,6 +2034,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               dignity,
               color,
               isDark,
+              kpSignificators: kpSigString,
             );
           }),
       ],
@@ -2698,8 +2854,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     bool isVargottama,
     String dignity,
     Color accentColor,
-    bool isDark,
-  ) {
+    bool isDark, {
+    String? kpSignificators,
+  }) {
     final displayName = _formatPlanetDisplayName(name, sanskrit);
 
     return StaggeredAnimatedItem(
@@ -2769,14 +2926,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       Text(
                         '$sign • House $house • $degree (${speed >= 0 ? '+' : ''}${speed.toStringAsFixed(3)}°/d)',
                         style: GoogleFonts.outfit(fontSize: 11.5.sp, color: accentColor, fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
                       ),
                       Text(
                         '$nakshatra Pada $pada (Lord: $nakshatraLord)',
                         style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white60 : Colors.black54),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
                       ),
                     ],
                   ),
@@ -2792,8 +2945,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   child: Text(
                     dignity,
                     style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: accentColor),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -2812,8 +2963,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     child: Text(
                       'KP Lords: Star: $starLord • Sub: $subLord${subSubLord.isNotEmpty ? ' • SS: $subSubLord' : ''}',
                       style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
                   ),
                   if (navSign.isNotEmpty) ...[
@@ -2826,6 +2975,30 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ],
               ),
             ),
+            if (kpSignificators != null) ...[
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF059669).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        kpSignificators,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF059669),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -3185,13 +3358,19 @@ class _EditBirthDetailsDialog extends StatefulWidget {
   final String initialDob;
   final String initialTob;
   final String initialPob;
-  final Function(String name, String dob, String tob, String pob) onSave;
+  final double initialLat;
+  final double initialLon;
+  final double initialTz;
+  final Function(String name, String dob, String tob, String pob, double lat, double lon, double tz) onSave;
 
   const _EditBirthDetailsDialog({
     required this.initialName,
     required this.initialDob,
     required this.initialTob,
     required this.initialPob,
+    required this.initialLat,
+    required this.initialLon,
+    required this.initialTz,
     required this.onSave,
   });
 
@@ -3202,6 +3381,9 @@ class _EditBirthDetailsDialog extends StatefulWidget {
 class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   late TextEditingController _nameCtrl;
   late TextEditingController _pobCtrl;
+  late TextEditingController _latCtrl;
+  late TextEditingController _lonCtrl;
+  late TextEditingController _tzCtrl;
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
 
@@ -3210,6 +3392,9 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialName);
     _pobCtrl = TextEditingController(text: widget.initialPob);
+    _latCtrl = TextEditingController(text: widget.initialLat.toString());
+    _lonCtrl = TextEditingController(text: widget.initialLon.toString());
+    _tzCtrl = TextEditingController(text: widget.initialTz.toString());
 
     _selectedDate = DateTime(1998, 12, 13);
     try {
@@ -3249,6 +3434,9 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   void dispose() {
     _nameCtrl.dispose();
     _pobCtrl.dispose();
+    _latCtrl.dispose();
+    _lonCtrl.dispose();
+    _tzCtrl.dispose();
     super.dispose();
   }
 
@@ -3403,6 +3591,44 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                     ),
                   ),
+                  SizedBox(height: 14.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _latCtrl,
+                          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
+                          decoration: InputDecoration(
+                            labelText: 'Latitude',
+                            prefixIcon: Icon(Icons.explore_rounded, color: Color(0xFF059669)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: TextField(
+                          controller: _lonCtrl,
+                          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
+                          decoration: InputDecoration(
+                            labelText: 'Longitude',
+                            prefixIcon: Icon(Icons.explore_rounded, color: Color(0xFF059669)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 14.h),
+                  TextField(
+                    controller: _tzCtrl,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
+                    decoration: InputDecoration(
+                      labelText: 'Time Zone Offset (e.g. 5.5 for IST)',
+                      prefixIcon: Icon(Icons.schedule_rounded, color: Color(0xFFD97706)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -3428,7 +3654,10 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       onTap: () {
                         final name = _nameCtrl.text.trim().isEmpty ? widget.initialName : _nameCtrl.text.trim();
                         final pob = _pobCtrl.text.trim().isEmpty ? widget.initialPob : _pobCtrl.text.trim();
-                        widget.onSave(name, formattedDob, formattedTob, pob);
+                        final lat = double.tryParse(_latCtrl.text.trim()) ?? widget.initialLat;
+                        final lon = double.tryParse(_lonCtrl.text.trim()) ?? widget.initialLon;
+                        final tz = double.tryParse(_tzCtrl.text.trim()) ?? widget.initialTz;
+                        widget.onSave(name, formattedDob, formattedTob, pob, lat, lon, tz);
                         Navigator.pop(context);
                       },
                       child: Container(
