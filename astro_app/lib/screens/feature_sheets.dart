@@ -6,6 +6,7 @@ import 'ai_calling_screen.dart';
 import 'ai_chat_screen.dart';
 import 'vision_reading_screen.dart';
 import 'admin_panel_screen.dart';
+import 'admin_login_screen.dart';
 import 'notifications_screen.dart';
 import 'muhurat_screen.dart';
 import 'subscribe_screen.dart';
@@ -24,7 +25,19 @@ class AstroFeatureDialogs {
 
     switch (item.id) {
       case 'horoscope':
-        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 0);
+        break;
+      case 'kp_system':
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 1, isSingleTabMode: true, appBarTitle: 'KP System');
+        break;
+      case 'lal_kitab':
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 2, isSingleTabMode: true, appBarTitle: 'Lal Kitab');
+        break;
+      case 'bnn_nadi':
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 3, isSingleTabMode: true, appBarTitle: 'BNN System');
+        break;
+      case 'jaimini':
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 4, isSingleTabMode: true, appBarTitle: 'Jaimini System');
         break;
       case 'muhurat':
         targetScreen = const MuhuratScreen();
@@ -54,7 +67,7 @@ class AstroFeatureDialogs {
         targetScreen = const NotificationsScreen();
         break;
       case 'admin_panel':
-        targetScreen = const AdminPanelScreen();
+        targetScreen = const AdminLoginScreen();
         break;
       case 'subscribe':
         targetScreen = const SubscribeScreen();

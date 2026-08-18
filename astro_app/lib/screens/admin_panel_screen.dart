@@ -12,12 +12,23 @@ class AdminPanelScreen extends StatefulWidget {
 
 class _AdminPanelScreenState extends State<AdminPanelScreen> {
   bool _isLoading = true;
+  bool _isSending = false;
   Map<String, dynamic>? _stats;
+
+  final _titleController = TextEditingController();
+  final _messageController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchStats();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _messageController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchStats() async {
@@ -35,6 +46,29 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load stats: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _handleSendNotification() async {
+    final title = _titleController.text.trim();
+    final message = _messageController.text.trim();
+
+    if (title.isEmpty || message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a title and message.')));
+      return;
+    }
+
+    setState(() => _isSending = true);
+    final res = await AstroApiService.sendNotification(title, message);
+    if (mounted) {
+      setState(() => _isSending = false);
+      if (res['status'] == 'success') {
+        _titleController.clear();
+        _messageController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Notification sent successfully!'), backgroundColor: Colors.green));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Failed to send notification.'), backgroundColor: Colors.redAccent));
       }
     }
   }
@@ -129,6 +163,96 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       ],
                     ),
                   ),
+                  SizedBox(height: 32.h),
+                  
+                  // Notification Section
+                  Text(
+                    'Push Notifications',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(24.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        )
+                      ],
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _titleController,
+                          style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
+                          decoration: InputDecoration(
+                            labelText: 'Notification Title',
+                            labelStyle: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54),
+                            prefixIcon: const Icon(Icons.title_rounded, color: Color(0xFFD4AF37)),
+                            filled: true,
+                            fillColor: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFFF8FAFC),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 1.5)),
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        TextField(
+                          controller: _messageController,
+                          style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelText: 'Notification Message',
+                            labelStyle: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54),
+                            prefixIcon: Padding(
+                              padding: EdgeInsets.only(bottom: 64.h),
+                              child: const Icon(Icons.message_rounded, color: Color(0xFFD4AF37)),
+                            ),
+                            filled: true,
+                            fillColor: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFFF8FAFC),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 1.5)),
+                          ),
+                        ),
+                        SizedBox(height: 24.h),
+                        Container(
+                          width: double.infinity,
+                          height: 54.h,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFFD4AF37), Color(0xFFF3E5AB)]),
+                            borderRadius: BorderRadius.circular(16.r),
+                            boxShadow: [
+                              BoxShadow(color: const Color(0xFFD4AF37).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _isSending ? null : _handleSendNotification,
+                            icon: _isSending ? const SizedBox.shrink() : const Icon(Icons.send_rounded, color: Colors.black87),
+                            label: _isSending 
+                                ? SizedBox(width: 24.w, height: 24.w, child: const CircularProgressIndicator(color: Colors.black87, strokeWidth: 2))
+                                : Text('Broadcast Notification', style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 40.h),
                 ],
               ),
             ),

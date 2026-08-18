@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1'; // ngrok tunnel
+      return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1'; // ngrok tunnel
     }
     try {
       if (Platform.isAndroid) {
-        return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1'; // ngrok tunnel
+        return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1'; // ngrok tunnel
       }
     } catch (_) {}
-    return 'https://e6f9-2405-201-f00c-55-b55d-2198-f328-c1b6.ngrok-free.app/api/v1';
+    return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1';
   }
 
   static String get baseUrl {
@@ -462,6 +462,46 @@ class AstroApiService {
   // =========================================================================
   // 7. ADMIN PANEL
   // =========================================================================
+
+  static Future<Map<String, dynamic>> adminLogin(String username, String password) async {
+    final uri = Uri.parse('$baseUrl/admin/login');
+    final body = jsonEncode({
+      'username': username,
+      'password': password,
+    });
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: body).timeout(_timeout);
+      if (res.statusCode == 200 || res.statusCode == 401) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to authenticate admin: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error adminLogin: $e');
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendNotification(String title, String message) async {
+    final uri = Uri.parse('$baseUrl/admin/notifications/send');
+    final body = jsonEncode({
+      'title': title,
+      'message': message,
+    });
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: body).timeout(_timeout);
+      if (res.statusCode == 200 || res.statusCode == 400) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to send notification: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error sendNotification: $e');
+      return {'status': 'error', 'message': e.toString()};
+    }
+  }
 
   static Future<Map<String, dynamic>> getAdminStats() async {
     final uri = Uri.parse('$baseUrl/admin/stats');

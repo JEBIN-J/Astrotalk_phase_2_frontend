@@ -65,10 +65,16 @@ extension StepperIntervalExt on StepperInterval {
 
 class HoroscopeScreen extends StatefulWidget {
   final KundliChartStyle initialChartStyle;
+  final int initialTabIndex;
+  final bool isSingleTabMode;
+  final String? appBarTitle;
 
   const HoroscopeScreen({
     super.key,
     this.initialChartStyle = KundliChartStyle.southIndian, // Default South Indian Chart
+    this.initialTabIndex = 0,
+    this.isSingleTabMode = false,
+    this.appBarTitle,
   });
 
   @override
@@ -125,7 +131,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void initState() {
     super.initState();
     _currentChartStyle = widget.initialChartStyle;
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 5, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
     _syncDateTimeFromStrings();
     _fetchKundliData();
@@ -620,7 +626,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         centerTitle: false,
         title: Text(
-          'Horoscope',
+          widget.appBarTitle ?? 'Horoscope',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20.sp),
         ),
         actions: [
@@ -636,7 +642,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             onPressed: _showSettingsModal,
           ),
         ],
-        bottom: PreferredSize(
+        bottom: widget.isSingleTabMode ? null : PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
             decoration: BoxDecoration(
@@ -680,6 +686,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             )
           : TabBarView(
               controller: _tabController,
+              physics: widget.isSingleTabMode ? const NeverScrollableScrollPhysics() : null,
               children: [
                 _buildLagnaAndDivisionalChartTab(context, isDark),
                 _buildPlanetsTab(context, isDark),
@@ -1995,6 +2002,41 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // 1. Lal Kitab Chart Box
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Lal Kitab Chart',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
+              ),
+              SizedBox(height: 16.h),
+              KundliInteractiveChart(
+                chartStyle: KundliChartStyle.southIndian,
+                isDark: isDark,
+                chartTypeKey: 'LalKitab',
+                showUpagrahas: false, // Upagrahas generally not used in Lal Kitab
+                showDegrees: _showDegreesOnChart,
+                kundliData: _lalKitabData,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2216,6 +2258,41 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // 1. BNN Chart Box
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Progressive Chart (BNN)',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
+              ),
+              SizedBox(height: 16.h),
+              KundliInteractiveChart(
+                chartStyle: _currentChartStyle,
+                isDark: isDark,
+                chartTypeKey: 'BNN',
+                showUpagrahas: false,
+                showDegrees: _showDegreesOnChart,
+                kundliData: _bnnData,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2432,12 +2509,46 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // 1. Jaimini Chart Box
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Jaimini Rasi Chart',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
+              ),
+              SizedBox(height: 16.h),
+              KundliInteractiveChart(
+                chartStyle: _currentChartStyle,
+                isDark: isDark,
+                chartTypeKey: 'Jaimini',
+                showUpagrahas: false,
+                showDegrees: _showDegreesOnChart,
+                kundliData: _jaiminiData,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
-                'Jaimini Astrology',
+                'Jaimini System (Chara Karaka)',
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -2626,6 +2737,41 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // 1. KP Cusp Chart Box
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'KP Cusp Chart (Placidus)',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
+              ),
+              SizedBox(height: 16.h),
+              KundliInteractiveChart(
+                chartStyle: KundliChartStyle.southIndian,
+                isDark: isDark,
+                chartTypeKey: 'Bhava',
+                showUpagrahas: _showUpagrahasOnChart,
+                showDegrees: _showDegreesOnChart,
+                kundliData: _kundliData,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -4117,6 +4263,102 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     super.dispose();
   }
 
+  void _showLocationSelector() {
+    bool isSearching = false;
+    List<Map<String, String>> searchResults = [];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            Future<void> _fetchPlaces(String query) async {
+              setModalState(() => isSearching = true);
+              try {
+                final results = await AstroApiService.getPlaces(query: query);
+                setModalState(() {
+                  searchResults = results;
+                  isSearching = false;
+                });
+              } catch (e) {
+                setModalState(() => isSearching = false);
+              }
+            }
+
+            if (searchResults.isEmpty && !isSearching) {
+              _fetchPlaces("");
+            }
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.75,
+              padding: EdgeInsets.all(24.w),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF161A25) : Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w, height: 4.h,
+                      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2.r)),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  Text('Select Location', style: GoogleFonts.outfit(fontSize: 22.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: 'Search for a city...',
+                      hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+                      prefixIcon: Icon(Icons.search, color: const Color(0xFF4338CA)),
+                      filled: true,
+                      fillColor: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide.none),
+                    ),
+                    onChanged: (val) => _fetchPlaces(val),
+                  ),
+                  SizedBox(height: 16.h),
+                  Expanded(
+                    child: isSearching
+                        ? Center(child: CircularProgressIndicator(color: const Color(0xFF4338CA)))
+                        : ListView.builder(
+                            itemCount: searchResults.length,
+                            itemBuilder: (context, index) {
+                              final city = searchResults[index];
+                              final cityName = city['city'] ?? 'Unknown';
+                              return ListTile(
+                                leading: Icon(Icons.location_on, color: Colors.grey),
+                                title: Text(cityName, style: GoogleFonts.outfit(fontSize: 16.sp, color: isDark ? Colors.white : Colors.black87)),
+                                subtitle: Text('${city['coords']} • ${city['tz']}', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white54 : Colors.black54)),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  setState(() {
+                                    _pobCtrl.text = cityName;
+                                    _latCtrl.text = city['lat_val']!;
+                                    _lonCtrl.text = city['lon_val']!;
+                                    _tzCtrl.text = city['tz_val']!;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -4262,6 +4504,8 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                   SizedBox(height: 14.h),
                   TextField(
                     controller: _pobCtrl,
+                    readOnly: true,
+                    onTap: _showLocationSelector,
                     decoration: InputDecoration(
                       labelText: 'Place of Birth',
                       prefixIcon: Icon(Icons.location_on_rounded, color: Color(0xFF4338CA)),

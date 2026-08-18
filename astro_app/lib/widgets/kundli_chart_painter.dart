@@ -167,7 +167,30 @@ class _MultiKundliPainter extends CustomPainter {
     if (chartTypeKey == 'Bhava' && data['bhava_chalit'] != null) {
       final bData = data['bhava_chalit'];
       final pList = bData['planets'] as List<dynamic>? ?? [];
+      final cuspsList = bData['cusps'] as List<dynamic>? ?? [];
 
+      // 1. Plot the actual House Cusps (I, II, III, etc.)
+      const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      for (final cusp in cuspsList) {
+        final houseNum = (cusp['house_number'] as num?)?.toInt() ?? 1;
+        final signIdx = (cusp['sign_index'] as num?)?.toInt() ?? 1;
+        final degFormatted = cusp['cusp_midpoint_formatted']?.toString() ?? '';
+        
+        String cleanDeg = degFormatted.replaceAll('°', ':').replaceAll("'", '').replaceAll(' ', '');
+        final parts = cleanDeg.split(':');
+        if (parts.length >= 2) {
+          cleanDeg = '${parts[0]}:${parts[1]}';
+        }
+
+        final roman = romanNumerals[houseNum - 1];
+        final label = '[CUSP] $roman $cleanDeg'; // Special tag to style it red later
+        
+        planetsInSign.putIfAbsent(signIdx, () => []).add(label);
+        // We can also put it in planetsInHouse if North Indian chart needs it
+        planetsInHouse.putIfAbsent(houseNum, () => []).add(label);
+      }
+
+      // 2. Plot the Planets
       for (final p in pList) {
         final pName = p['planet']?.toString() ?? '';
         final bhavaHouse = (p['bhava_house'] as num?)?.toInt() ?? 1;
@@ -183,16 +206,35 @@ class _MultiKundliPainter extends CustomPainter {
       return;
     }
 
-    // Default D-1 Rashi or D-9 Navamsha
+    // Lal Kitab Chart (Fixed Aries Lagna)
+    if (chartTypeKey == 'LalKitab' && data['planets'] != null) {
+      final pList = data['planets'] as List<dynamic>? ?? [];
+      for (final p in pList) {
+        final pName = p['planet']?.toString() ?? p['planet_name_simple']?.toString() ?? p['name']?.toString() ?? '';
+        final house = (p['house'] as num?)?.toInt() ?? 1;
+        final degStr = p['longitude_formatted']?.toString() ?? p['degree_formatted']?.toString() ?? '';
+        final isRetro = p['retrograde'] == true || p['is_retrograde'] == true;
+        final isCombust = p['is_combust'] == true;
+        
+        final formatted = _formatPlanetLabel(pName, degStr, isRetro, isCombust, null);
+        
+        // In Lal Kitab, House 1 = Aries (Sign 1), House 2 = Taurus (Sign 2), etc.
+        planetsInHouse.putIfAbsent(house, () => []).add(formatted);
+        planetsInSign.putIfAbsent(house, () => []).add(formatted);
+      }
+      return;
+    }
+
+    // Default D-1 Rashi, D-9 Navamsha, or BNN
     final isD9 = chartTypeKey == 'D-9';
     if (data['planets'] != null) {
       final planetsList = data['planets'] as List<dynamic>;
 
       for (final p in planetsList) {
-        final name = p['name']?.toString() ?? '';
+        final name = p['planet']?.toString() ?? p['name']?.toString() ?? '';
 
         int signIdx = -1;
-        String degFormatted = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? '';
+        String degFormatted = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
 
         if (isD9 && p['navamsha'] != null && p['navamsha']['navamsha_sign_index'] != null) {
           signIdx = (p['navamsha']['navamsha_sign_index'] as num).toInt();
@@ -211,7 +253,7 @@ class _MultiKundliPainter extends CustomPainter {
         }
 
         if (signIdx != -1) {
-          final isRetro = p['is_retrograde'] == true;
+          final isRetro = p['is_retrograde'] == true || p['retrograde'] == true;
           final isCombust = p['is_combust'] == true;
           final marker = p['status_marker']?.toString() ?? '';
 
@@ -259,6 +301,8 @@ class _MultiKundliPainter extends CustomPainter {
   }
 
   int _getAscendantSignIndex(Map<String, dynamic>? data) {
+    if (chartTypeKey == 'LalKitab') return 1; // Always Aries Ascendant in Lal Kitab
+    
     if (data == null) return 11; // Default Aquarius (Kumbha)
 
     if (chartTypeKey != 'D-1' &&
@@ -379,6 +423,12 @@ class _MultiKundliPainter extends CustomPainter {
       centerTitle = 'Navamsha (D-9)';
     } else if (chartTypeKey == 'Bhava') {
       centerTitle = 'Bhava Chalit';
+    } else if (chartTypeKey == 'LalKitab') {
+      centerTitle = 'Lal Kitab';
+    } else if (chartTypeKey == 'BNN') {
+      centerTitle = 'Progressive (BNN)';
+    } else if (chartTypeKey == 'Jaimini') {
+      centerTitle = 'Jaimini Rasi';
     } else if (chartTypeKey != 'D-1') {
       centerTitle = chartTypeKey;
     }
@@ -457,13 +507,19 @@ class _MultiKundliPainter extends CustomPainter {
         final startY = (cellTop + (dy - totalTextHeight) / 2) + (fontSize * 0.4);
 
         for (int pIdx = 0; pIdx < count; pIdx++) {
-          final pText = rawPlanets[pIdx];
+          String pText = rawPlanets[pIdx];
+          
+          final isCusp = pText.startsWith('[CUSP] ');
+          if (isCusp) pText = pText.replaceAll('[CUSP] ', '');
+
           final isPAs = pText.startsWith('As');
           final isPMo = pText.startsWith('Mo');
           final isUp = pText.startsWith('Md') || pText.startsWith('Gk') || pText.startsWith('Dh') || pText.startsWith('Vy') || pText.startsWith('Pv');
 
           Color textColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF0F172A);
-          if (isPAs) {
+          if (isCusp) {
+            textColor = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C); // Deep Red for KP Cusps
+          } else if (isPAs) {
             textColor = ascColor;
           } else if (isPMo) {
             textColor = moonColor;
@@ -478,7 +534,7 @@ class _MultiKundliPainter extends CustomPainter {
             pText,
             Offset(cellLeft + dx * 0.5, startY + (pIdx * lineHeight)),
             textColor,
-            isPAs || isPMo || pText.contains('(R)'),
+            isPAs || isPMo || isCusp || pText.contains('(R)'),
             fontSize,
           );
         }
@@ -588,12 +644,18 @@ class _MultiKundliPainter extends CustomPainter {
         final startY = housePlanetCenters[hIdx - 1].dy - ((count - 1) * lineHeight / 2);
 
         for (int p = 0; p < count; p++) {
-          final pText = planets[p];
+          String pText = planets[p];
+          
+          final isCusp = pText.startsWith('[CUSP] ');
+          if (isCusp) pText = pText.replaceAll('[CUSP] ', '');
+
           final isPAs = pText.startsWith('As');
           final isUp = pText.startsWith('Md') || pText.startsWith('Gk') || pText.startsWith('Dh') || pText.startsWith('Vy') || pText.startsWith('Pv');
 
           Color textColor = isDark ? Colors.white : const Color(0xFF0F172A);
-          if (isPAs) {
+          if (isCusp) {
+            textColor = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C);
+          } else if (isPAs) {
             textColor = ascColor;
           } else if (isUp) {
             textColor = const Color(0xFF6366F1);
@@ -606,7 +668,7 @@ class _MultiKundliPainter extends CustomPainter {
             pText,
             Offset(housePlanetCenters[hIdx - 1].dx, startY + (p * lineHeight)),
             textColor,
-            isPAs || pText.contains('(R)'),
+            isPAs || isCusp || pText.contains('(R)'),
             fontSize,
           );
         }
@@ -664,12 +726,21 @@ class _MultiKundliPainter extends CustomPainter {
       final planets = planetsInSign[sIdx] ?? [];
 
       List<String> lines = [sName];
+      bool hasCusp = false;
+
       if (planets.isNotEmpty) {
-        lines.addAll(planets);
+        for (String p in planets) {
+          if (p.startsWith('[CUSP] ')) {
+            hasCusp = true;
+            lines.add(p.replaceAll('[CUSP] ', ''));
+          } else {
+            lines.add(p);
+          }
+        }
       }
 
       final label = lines.join('\n');
-      final textColor = isAsc ? ascColor : (isDark ? Colors.white : const Color(0xFF1E293B));
+      final textColor = isAsc ? ascColor : (hasCusp ? (isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C)) : (isDark ? Colors.white : const Color(0xFF1E293B)));
       _drawText(canvas, label, eastPositions[sIdx - 1], textColor, isAsc || planets.isNotEmpty, 9.5);
     }
   }
