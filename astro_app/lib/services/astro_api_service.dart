@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1'; // ngrok tunnel
+      return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1'; // ngrok tunnel
     }
     try {
       if (Platform.isAndroid) {
-        return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1'; // ngrok tunnel
+        return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1'; // ngrok tunnel
       }
     } catch (_) {}
-    return 'https://e175-2405-201-f00c-55-ed80-f82a-7ed3-b336.ngrok-free.app/api/v1';
+    return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1';
   }
 
   static String get baseUrl {

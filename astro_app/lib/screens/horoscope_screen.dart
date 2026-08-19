@@ -102,6 +102,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   bool _showUpagrahasOnChart = true;
   bool _showDegreesOnChart = true;
   bool _isCardViewMode = false;
+  bool _isKpTableViewMode = true;
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
@@ -2025,7 +2026,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
               SizedBox(height: 16.h),
               KundliInteractiveChart(
-                chartStyle: KundliChartStyle.southIndian,
+                chartStyle: _currentChartStyle,
                 isDark: isDark,
                 chartTypeKey: 'LalKitab',
                 showUpagrahas: false, // Upagrahas generally not used in Lal Kitab
@@ -2760,7 +2761,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
               SizedBox(height: 16.h),
               KundliInteractiveChart(
-                chartStyle: KundliChartStyle.southIndian,
+                chartStyle: _currentChartStyle,
                 isDark: isDark,
                 chartTypeKey: 'Bhava',
                 showUpagrahas: _showUpagrahasOnChart,
@@ -2782,6 +2783,21 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
             ),
             SizedBox(width: 8.w),
+            InkWell(
+              onTap: () => setState(() => _isKpTableViewMode = !_isKpTableViewMode),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF059669).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  _isKpTableViewMode ? 'Card View' : 'Table View',
+                  style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
@@ -2798,6 +2814,80 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         SizedBox(height: 12.h),
         if (rawPlanets.isEmpty)
           Center(child: Text('No planetary data available'))
+        else if (_isKpTableViewMode)
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: SizedBox(
+                width: 800,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildKpTableHeader(isDark),
+                    Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    ...rawPlanets.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final p = entry.value as Map<String, dynamic>;
+                      final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                          (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                          (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+
+                      final rawName = p['name']?.toString() ?? 'Planet';
+                      final simpleName = p['planet_name_simple']?.toString() ?? rawName.split('(')[0].trim();
+                      final isRetro = p['is_retrograde'] == true;
+                      final karakaCode = p['chara_karaka_code']?.toString() ?? '';
+                      final retroTag = isRetro ? ' (R)' : '';
+                      final karakaTag = karakaCode.isNotEmpty ? ' ($karakaCode)' : '';
+                      final displayName = isLagna ? 'Lagna' : '$simpleName$retroTag$karakaTag';
+
+                      final houseStr = (p['house'] ?? 1).toString();
+                      final deg = p['degree_formatted']?.toString() ?? "00:00:00";
+                      final rawSign = p['sign']?.toString() ?? 'Aries';
+                      final signDisplay = rawSign.split('(')[0].trim();
+                      final nak = p['nakshatra']?.toString() ?? '-';
+                      final pada = p['nakshatra_pada']?.toString() ?? '-';
+
+                      final kp = p['kp_lords'] as Map<String, dynamic>?;
+                      final rl = _getLordShortCode(p['sign_lord']?.toString());
+                      final nl = _getLordShortCode(kp?['star_lord']?.toString() ?? p['nakshatra_lord']?.toString());
+                      final sl = _getLordShortCode(kp?['sub_lord']?.toString());
+                      final ssl = _getLordShortCode(kp?['sub_sub_lord']?.toString());
+
+                      final rowBg = isLagna
+                          ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
+                          : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
+
+                      return Container(
+                        color: rowBg,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                        child: Row(
+                          children: [
+                            Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                            Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                            Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
+                            Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
+                            Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
+                            Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
+                            Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          )
         else
           ...rawPlanets.asMap().entries.map((entry) {
             final idx = entry.key;
