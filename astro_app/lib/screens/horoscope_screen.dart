@@ -132,7 +132,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void initState() {
     super.initState();
     _currentChartStyle = widget.initialChartStyle;
-    _tabController = TabController(length: 5, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(length: 8, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
     _syncDateTimeFromStrings();
     _fetchKundliData();
@@ -666,6 +666,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 Tab(text: 'Lal Kitab'),
                 Tab(text: 'BNN'),
                 Tab(text: 'Jamini'),
+                Tab(text: 'Ashtakavarga'),
+                Tab(text: 'Strength'),
+                Tab(text: 'Kot Chakra'),
               ],
             ),
           ),
@@ -694,6 +697,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 _buildLalKitabTab(context, isDark),
                 _buildBnnTab(context, isDark),
                 _buildJaiminiTab(context, isDark),
+                _buildAshtakvargaTab(context, isDark),
+                _buildStrengthTab(context, isDark),
+                _buildKotChakraTab(context, isDark),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -3281,6 +3287,58 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // Dropdowns for Chart Type and Method
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: 'Rashi Based All',
+                    isExpanded: true,
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
+                    items: ['Rashi Based All'].map((String value) {
+                      return DropdownMenuItem<String>(value: value, child: Text(value));
+                    }).toList(),
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: 'Parashara',
+                    isExpanded: true,
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
+                    items: ['Parashara'].map((String value) {
+                      return DropdownMenuItem<String>(value: value, child: Text(value));
+                    }).toList(),
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
@@ -3310,70 +3368,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        SizedBox(height: 14.h),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.1,
-          ),
-          itemCount: 12,
-          itemBuilder: (context, index) {
-            final houseNum = index + 1;
-            final points = index < displayPoints.length ? displayPoints[index] : 28;
-            final isHigh = points >= 30;
-            final isAvg = points >= 26 && points < 30;
-
-            return Container(
-              decoration: BoxDecoration(
-                color: isHigh
-                    ? const Color(0xFF059669).withValues(alpha: isDark ? 0.2 : 0.1)
-                    : (isAvg ? const Color(0xFF4338CA).withValues(alpha: isDark ? 0.2 : 0.08) : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100)),
-                borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(
-                  color: isHigh
-                      ? const Color(0xFF059669)
-                      : (isAvg ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1))),
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('H$houseNum', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54)),
-                  Text(
-                    '$points',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isHigh
-                          ? const Color(0xFF059669)
-                          : (isAvg ? const Color(0xFF4338CA) : (isDark ? Colors.white : const Color(0xFF0F172A))),
-                    ),
-                  ),
-                  Text(isHigh ? 'Strong' : (isAvg ? 'Moderate' : 'Low'), style: GoogleFonts.outfit(fontSize: 9.sp, color: Colors.grey)),
-                ],
-              ),
-            );
-          },
-        ),
+        
         if (bav != null && bav.isNotEmpty) ...[
           SizedBox(height: 24.h),
-          Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+          Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : Colors.black87)),
           SizedBox(height: 12.h),
           Container(
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.black : const Color(0xFF94A3B8)).withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
+              borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: SingleChildScrollView(
@@ -3387,40 +3390,36 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     // Header Row
                     Row(
                       children: [
-                        SizedBox(
-                          width: 45.w,
-                          child: Text('Signs', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
-                        ),
-                        ...List.generate(12, (index) => Container(
-                          width: 28.w,
+                        SizedBox(width: 40.w, child: Text('Signs', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54))),
+                        ...['Su', 'Mo', 'Ma', 'Me', 'Ju', 'Ve', 'Sa', 'Tot', 'As'].map((col) => Container(
+                          width: 32.w,
                           margin: EdgeInsets.symmetric(horizontal: 2.w),
                           alignment: Alignment.center,
-                          child: Text('${index + 1}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                          child: Text(col, style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: col == 'Tot' ? const Color(0xFF059669) : (isDark ? Colors.white54 : Colors.black54))),
                         )),
-                        Container(
-                          width: 40.w,
-                          margin: EdgeInsets.only(left: 8.w),
-                          alignment: Alignment.centerRight,
-                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
-                        ),
                       ],
                     ),
                     SizedBox(height: 12.h),
-                    // Planet Rows
-                    ...['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'].map((pName) {
-                      final pts = (bav[pName] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
-                      final total = pts.fold(0, (sum, val) => sum + val);
-                      final shortName = pName.length > 2 ? pName.substring(0, 2) : pName;
+                    // Sign Rows (1 to 12)
+                    ...List.generate(12, (rowIndex) {
+                      int totalInSign = 0;
+                      List<int> planetVals = [];
+                      for (String p in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn']) {
+                        final pts = (bav[p] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
+                        final val = pts[rowIndex];
+                        planetVals.add(val);
+                        totalInSign += val;
+                      }
                       
                       return Padding(
                         padding: EdgeInsets.symmetric(vertical: 3.h),
                         child: Row(
                           children: [
                             SizedBox(
-                              width: 45.w,
-                              child: Text(shortName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                              width: 40.w,
+                              child: Text('${rowIndex + 1}', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
                             ),
-                            ...pts.map((val) {
+                            ...planetVals.map((val) {
                               bool isHigh = val >= 5;
                               bool isLow = val <= 3;
                               
@@ -3433,8 +3432,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                             : (isDark ? Colors.white70 : Colors.black87));
                                             
                               return Container(
-                                width: 28.w,
-                                height: 28.h,
+                                width: 32.w,
+                                height: 32.h,
                                 margin: EdgeInsets.symmetric(horizontal: 2.w),
                                 decoration: BoxDecoration(
                                   color: bgColor,
@@ -3445,62 +3444,403 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               );
                             }),
                             Container(
-                              width: 40.w,
-                              margin: EdgeInsets.only(left: 8.w),
-                              alignment: Alignment.centerRight,
-                              child: Text('$total', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                              width: 32.w,
+                              height: 32.h,
+                              margin: EdgeInsets.symmetric(horizontal: 2.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text('$totalInSign', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                            ),
+                            Container(
+                              width: 32.w,
+                              height: 32.h,
+                              margin: EdgeInsets.symmetric(horizontal: 2.w),
+                              alignment: Alignment.center,
+                              child: Text('-', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
                             ),
                           ],
                         ),
                       );
-                    }),
-                    SizedBox(height: 12.h),
-                    // Total SAV Row
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 45.w,
-                          child: Text('Tot', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
-                        ),
-                        ...List.generate(12, (index) {
-                          final val = index < displayPoints.length ? displayPoints[index] : 0;
-                          bool isHigh = val >= 30;
-                          bool isLow = val < 25;
-                          
-                          Color bgColor = isHigh ? const Color(0xFF10B981).withValues(alpha: 0.2) 
-                                      : (isLow ? const Color(0xFFEF4444).withValues(alpha: 0.15) 
-                                      : const Color(0xFF4338CA).withValues(alpha: 0.1));
-                                      
-                          Color textColor = isHigh ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
-                                        : (isLow ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
-                                        : (isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA)));
-                                        
-                          return Container(
-                            width: 28.w,
-                            height: 28.h,
-                            margin: EdgeInsets.symmetric(horizontal: 2.w),
-                            decoration: BoxDecoration(
-                              color: bgColor,
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text('$val', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: textColor)),
-                          );
-                        }),
-                        Container(
-                          width: 40.w,
-                          margin: EdgeInsets.only(left: 8.w),
-                          alignment: Alignment.centerRight,
-                          child: Text('$totalSav', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
-                        ),
-                      ],
-                    ),
+                    })
                   ],
                 ),
               ),
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  // TAB 6: STRENGTH
+  Widget _buildStrengthTab(BuildContext context, bool isDark) {
+    int localTabIndex = 0; // 0 = Shadbala, 1 = Bhava Bala, 2 = Vimsopaka
+    
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        final shadbala = (_kundliData?['shadbala'] as List?) ?? [];
+        final bhavaBala = (_kundliData?['bhava_bala'] as List?) ?? [];
+        final vimsopaka = (_kundliData?['vimsopaka'] as List?) ?? [];
+
+        List currentList = [];
+        String title = "";
+        String valueKey = "";
+        String nameKey = "";
+        double maxVal = 100;
+        
+        if (localTabIndex == 0) {
+          currentList = shadbala;
+          title = "Shadbala Strength";
+          valueKey = "strength_percent";
+          nameKey = "planet";
+          maxVal = 200;
+        } else if (localTabIndex == 1) {
+          currentList = bhavaBala;
+          title = "Bhava Bala (House Strength)";
+          valueKey = "strength";
+          nameKey = "sign";
+          maxVal = 100;
+        } else {
+          currentList = vimsopaka;
+          title = "Vimsopaka Bala";
+          valueKey = "percentage";
+          nameKey = "planet";
+          maxVal = 100;
+        }
+
+        return ListView(
+          padding: EdgeInsets.all(16.w),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            // Segmented Control
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: ['Shadbala', 'Bhava Bala', 'Vimsopaka'].asMap().entries.map((entry) {
+                  final isSelected = localTabIndex == entry.key;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => localTabIndex = entry.key),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF4338CA) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF4338CA).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))] : [],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          entry.value,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.sp,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black54),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            
+            // Bar Chart Section
+            Text(title, style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+            SizedBox(height: 16.h),
+            
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                children: currentList.map((item) {
+                  final name = item[nameKey] ?? (localTabIndex == 1 ? "House ${item['house']}" : "");
+                  final displayTitle = localTabIndex == 1 ? "H${item['house']} ($name)" : name;
+                  double val = (item[valueKey] as num?)?.toDouble() ?? 0.0;
+                  final colorHex = item['color'] as String? ?? "#4338CA";
+                  Color barColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+                  
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 80.w,
+                          child: Text(displayTitle, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                        ),
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final double fillRatio = (val / maxVal).clamp(0.0, 1.0);
+                              return Stack(
+                                children: [
+                                  Container(
+                                    height: 12.h,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 12.h,
+                                    width: constraints.maxWidth * fillRatio,
+                                    decoration: BoxDecoration(
+                                      color: barColor,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                      boxShadow: [
+                                        BoxShadow(color: barColor.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2))
+                                      ]
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                          ),
+                        ),
+                        SizedBox(
+                          width: 60.w,
+                          child: Text(' ${val.toStringAsFixed(1)}', textAlign: TextAlign.right, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            
+            SizedBox(height: 24.h),
+            
+            // Detailed Table Section
+            Text("Detailed Breakdown", style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+            SizedBox(height: 16.h),
+            
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: DataTable(
+                  headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
+                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
+                  columns: localTabIndex == 0 ? [
+                    DataColumn(label: Text('Planet')),
+                    DataColumn(label: Text('Sthana')),
+                    DataColumn(label: Text('Dig')),
+                    DataColumn(label: Text('Kala')),
+                    DataColumn(label: Text('Chesta')),
+                    DataColumn(label: Text('Naisargika')),
+                    DataColumn(label: Text('Drik')),
+                    DataColumn(label: Text('Total')),
+                  ] : localTabIndex == 1 ? [
+                    DataColumn(label: Text('House')),
+                    DataColumn(label: Text('Sign')),
+                    DataColumn(label: Text('Strength')),
+                    DataColumn(label: Text('Rupas')),
+                    DataColumn(label: Text('Rank')),
+                  ] : [
+                    DataColumn(label: Text('Planet')),
+                    DataColumn(label: Text('Score')),
+                    DataColumn(label: Text('Percentage')),
+                    DataColumn(label: Text('Rank')),
+                  ],
+                  rows: currentList.map<DataRow>((item) {
+                    if (localTabIndex == 0) {
+                      return DataRow(cells: [
+                        DataCell(Text(item['planet'] ?? '')),
+                        DataCell(Text('${item['sthana_bala'] ?? ''}')),
+                        DataCell(Text('${item['dig_bala'] ?? ''}')),
+                        DataCell(Text('${item['kala_bala'] ?? ''}')),
+                        DataCell(Text('${item['chesta_bala'] ?? ''}')),
+                        DataCell(Text('${item['naisargika_bala'] ?? ''}')),
+                        DataCell(Text('${item['drik_bala'] ?? ''}')),
+                        DataCell(Text('${item['total_rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                      ]);
+                    } else if (localTabIndex == 1) {
+                      return DataRow(cells: [
+                        DataCell(Text('H${item['house'] ?? ''}')),
+                        DataCell(Text('${item['sign'] ?? ''}')),
+                        DataCell(Text('${item['strength'] ?? ''}')),
+                        DataCell(Text('${item['rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                        DataCell(Text('${item['rank'] ?? ''}')),
+                      ]);
+                    } else {
+                      return DataRow(cells: [
+                        DataCell(Text(item['planet'] ?? '')),
+                        DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                        DataCell(Text('${item['percentage'] ?? ''}%')),
+                        DataCell(Text('${item['rank'] ?? ''}')),
+                      ]);
+                    }
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  // TAB 7: KOT CHAKRA
+  Widget _buildKotChakraTab(BuildContext context, bool isDark) {
+    final kotChakra = _kundliData?['kot_chakra'] as Map<String, dynamic>?;
+    if (kotChakra == null) {
+      return Center(child: Text('Kot Chakra data not available', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87)));
+    }
+
+    final sections = kotChakra['sections'] as Map<String, dynamic>? ?? {};
+    final moonRef = kotChakra['moon_nakshatra_reference'] ?? '';
+
+    return ListView(
+      padding: EdgeInsets.all(16.w),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4C1D95), Color(0xFF6D28D9), Color(0xFF8B5CF6)],
+            ),
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6D28D9).withValues(alpha: 0.35),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Kot Chakra (Fort Diagram)', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  Icon(Icons.fort_rounded, color: Colors.white, size: 28),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text('Reference Nakshatra: $moonRef', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.sp)),
+              SizedBox(height: 4.h),
+              Text('Planetary transits & placements relative to Moon', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp)),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+        
+        ...sections.entries.map((entry) {
+          final title = entry.key;
+          final planets = entry.value as List<dynamic>? ?? [];
+          
+          Color sectionColor;
+          if (title.contains("Stambha")) sectionColor = const Color(0xFFEF4444);
+          else if (title.contains("Madhya")) sectionColor = const Color(0xFFF59E0B);
+          else if (title.contains("Prakara")) sectionColor = const Color(0xFF3B82F6);
+          else sectionColor = const Color(0xFF10B981);
+          
+          return Container(
+            margin: EdgeInsets.only(bottom: 16.h),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: sectionColor.withValues(alpha: 0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: sectionColor.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: sectionColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(15.r), topRight: Radius.circular(15.r)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12.w,
+                        height: 12.h,
+                        decoration: BoxDecoration(color: sectionColor, shape: BoxShape.circle),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(title, style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                      Spacer(),
+                      Text('${planets.length} Planets', style: GoogleFonts.outfit(fontSize: 12.sp, color: sectionColor, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                if (planets.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Text('No planets in this section', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13.sp, fontStyle: FontStyle.italic)),
+                  )
+                else
+                  Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: planets.map((p) {
+                        final pName = p['planet'];
+                        final nak = p['nakshatra'];
+                        final deg = p['degree'];
+                        final colorHex = p['color'] as String? ?? "#4338CA";
+                        final pColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+                        
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(6.w),
+                                decoration: BoxDecoration(color: pColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                                child: Text(pName.substring(0, 2), style: GoogleFonts.outfit(color: pColor, fontWeight: FontWeight.bold, fontSize: 11.sp)),
+                              ),
+                              SizedBox(width: 8.w),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(pName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87)),
+                                  Text('$nak ($deg)', style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
