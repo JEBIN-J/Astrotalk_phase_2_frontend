@@ -4559,6 +4559,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 ),
                 child: DataTable(
+                  columnSpacing: 18.0,
+                  horizontalMargin: 12.0,
+                  headingRowHeight: 40.0,
+                  dataRowMinHeight: 36.0,
+                  dataRowMaxHeight: 38.0,
                   headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
                   dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
                   columns: localTabIndex == 0 ? [
