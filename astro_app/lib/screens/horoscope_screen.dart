@@ -110,6 +110,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _bnnData;
   Map<String, dynamic>? _jaiminiData;
 
+  String _selectedDashaType = 'Vimshottari Dasha';
+  String _daysInYearType = 'Mean Sidereal Year (365.256364)';
+  String _customDaysInYear = '';
+  Map<String, dynamic>? _selectedMahadasha;
+  
+  bool _isLoadingDasha = false;
+  List<dynamic>? _dynamicDashaTimeline;
+  Map<String, dynamic>? _dynamicRunningDasha;
+
+
   static const Map<String, String> _divisionalChartsInfo = {
     'D-1': 'Rashi (Natal Physical Plane)',
     'D-2': 'Hora (Wealth & Liquid Assets)',
@@ -132,7 +142,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void initState() {
     super.initState();
     _currentChartStyle = widget.initialChartStyle;
-    _tabController = TabController(length: 8, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
     _syncDateTimeFromStrings();
     _fetchKundliData();
@@ -243,6 +253,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          daysInYear: _currentDaysInYear,
         ),
         AstroApiService.getLalKitab(
           name: _personName,
@@ -312,15 +323,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 36.h),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(36.r)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 40,
+                    offset: const Offset(0, -10),
                   ),
                 ],
               ),
@@ -331,131 +342,266 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   children: [
                     Center(
                       child: Container(
-                        width: 44.w,
-                        height: 5.h,
+                        width: 50.w,
+                        height: 6.h,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade400,
-                          borderRadius: BorderRadius.circular(3.r),
+                          color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(10.r),
                         ),
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 24.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.tune_rounded, color: Color(0xFF4338CA), size: 22),
-                            SizedBox(width: 8.w),
+                            Container(
+                              padding: EdgeInsets.all(10.w),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF818CF8), Color(0xFF4F46E5)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(Icons.tune_rounded, color: Colors.white, size: 20.sp),
+                            ),
+                            SizedBox(width: 14.w),
                             Text(
-                              'Kundli Settings & Stepper',
+                              'Display Settings',
                               style: GoogleFonts.outfit(
-                                fontSize: 17.sp,
+                                fontSize: 20.sp,
                                 fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
                         ),
-                        IconButton(
-                          icon: Icon(Icons.close_rounded),
-                          onPressed: () => Navigator.pop(ctx),
+                        InkWell(
+                          onTap: () => Navigator.pop(ctx),
+                          borderRadius: BorderRadius.circular(20.r),
+                          child: Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: isDark ? [] : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: Icon(Icons.close_rounded, size: 18.sp, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
+                          ),
                         ),
                       ],
                     ),
-                    Divider(height: 16.h),
+                    SizedBox(height: 32.h),
                     Text(
                       'Time Stepping Interval',
                       style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13.5.sp,
-                        color: const Color(0xFF4338CA),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.sp,
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 14.h),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 12.w,
+                      runSpacing: 12.h,
                       children: StepperInterval.values.map((interval) {
                         final isSel = interval == _stepperInterval;
-                        return ChoiceChip(
-                          label: Text(interval.displayName),
-                          selected: isSel,
-                          selectedColor: const Color(0xFF4338CA),
-                          backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                          labelStyle: GoogleFonts.outfit(
-                            color: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                            fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
-                            fontSize: 12.sp,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
-                          onSelected: (selected) {
-                            if (selected) {
-                              setModalState(() => _stepperInterval = interval);
-                              setState(() => _stepperInterval = interval);
-                            }
+                        return InkWell(
+                          onTap: () {
+                            setModalState(() => _stepperInterval = interval);
+                            setState(() => _stepperInterval = interval);
                           },
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Chart System Model',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13.5.sp,
-                        color: const Color(0xFF4338CA),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: KundliChartStyle.values.map((style) {
-                        final isSel = style == _currentChartStyle;
-                        String label = style == KundliChartStyle.southIndian
-                            ? 'Square (South)'
-                            : style == KundliChartStyle.northIndian
-                                ? 'Diamond (North)'
-                                : 'Sun (East)';
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isSel ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF334155) : Colors.grey.shade200),
-                                foregroundColor: isSel ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                                elevation: isSel ? 2 : 0,
-                                padding: EdgeInsets.symmetric(vertical: 10.h),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+                          borderRadius: BorderRadius.circular(14.r),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+                            decoration: BoxDecoration(
+                              gradient: isSel 
+                                ? const LinearGradient(
+                                    colors: [Color(0xFF818CF8), Color(0xFF4F46E5)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                              color: isSel ? null : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                              borderRadius: BorderRadius.circular(14.r),
+                              border: Border.all(
+                                color: isSel ? Colors.transparent : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                width: 1.5,
                               ),
-                              onPressed: () {
-                                setModalState(() => _currentChartStyle = style);
-                                setState(() => _currentChartStyle = style);
-                              },
-                              child: Text(label, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                              boxShadow: isSel ? [
+                                BoxShadow(
+                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                )
+                              ] : (isDark ? [] : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]),
+                            ),
+                            child: Text(
+                              interval.displayName,
+                              style: GoogleFonts.outfit(
+                                color: isSel ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                                fontSize: 14.sp,
+                              ),
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: 14.h),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Display Upagrahas in Chart (Md, Gk, etc.)', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                      value: _showUpagrahasOnChart,
-                      activeThumbColor: const Color(0xFF4338CA),
-                      onChanged: (val) {
-                        setModalState(() => _showUpagrahasOnChart = val);
-                        setState(() => _showUpagrahasOnChart = val);
-                      },
+                    SizedBox(height: 32.h),
+                    Text(
+                      'Chart System Model',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.sp,
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Display Planetary Degrees (e.g. 20:22)', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                      value: _showDegreesOnChart,
-                      activeThumbColor: const Color(0xFF4338CA),
-                      onChanged: (val) {
-                        setModalState(() => _showDegreesOnChart = val);
-                        setState(() => _showDegreesOnChart = val);
-                      },
+                    SizedBox(height: 14.h),
+                    Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5),
+                        boxShadow: isDark ? [] : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: KundliChartStyle.values.map((style) {
+                          final isSel = style == _currentChartStyle;
+                          String label = style == KundliChartStyle.southIndian
+                              ? 'Square'
+                              : style == KundliChartStyle.northIndian
+                                  ? 'Diamond'
+                                  : 'Sun';
+                          
+                          IconData? icon;
+                          if (style == KundliChartStyle.southIndian) icon = Icons.crop_square_rounded;
+                          if (style == KundliChartStyle.northIndian) icon = Icons.change_history_rounded;
+                          if (style == KundliChartStyle.eastIndian) icon = Icons.wb_sunny_rounded;
+
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setModalState(() => _currentChartStyle = style);
+                                setState(() => _currentChartStyle = style);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeInOut,
+                                padding: EdgeInsets.symmetric(vertical: 12.h),
+                                decoration: BoxDecoration(
+                                  color: isSel ? (isDark ? const Color(0xFF334155) : const Color(0xFFEEF2FF)) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(14.r),
+                                ),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (icon != null) ...[
+                                      Icon(
+                                        icon, 
+                                        size: 16.sp, 
+                                        color: isSel ? const Color(0xFF4F46E5) : (isDark ? Colors.white54 : const Color(0xFF94A3B8))
+                                      ),
+                                      SizedBox(width: 6.w),
+                                    ],
+                                    Text(
+                                      label,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14.sp, 
+                                        fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                                        color: isSel ? const Color(0xFF4F46E5) : (isDark ? Colors.white60 : const Color(0xFF64748B)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    SizedBox(height: 32.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5),
+                        boxShadow: isDark ? [] : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildPremiumToggle(
+                            title: 'Show Upagrahas (Md, Gk)',
+                            icon: Icons.stars_rounded,
+                            iconBg: const Color(0xFFFEF3C7),
+                            iconColor: const Color(0xFFD97706),
+                            value: _showUpagrahasOnChart,
+                            isDark: isDark,
+                            onChanged: (val) {
+                              setModalState(() => _showUpagrahasOnChart = val);
+                              setState(() => _showUpagrahasOnChart = val);
+                            },
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            child: Divider(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                          ),
+                          _buildPremiumToggle(
+                            title: 'Show Planetary Degrees',
+                            icon: Icons.straighten_rounded,
+                            iconBg: const Color(0xFFE0E7FF),
+                            iconColor: const Color(0xFF4F46E5),
+                            value: _showDegreesOnChart,
+                            isDark: isDark,
+                            onChanged: (val) {
+                              setModalState(() => _showDegreesOnChart = val);
+                              setState(() => _showDegreesOnChart = val);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -464,6 +610,54 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildPremiumToggle({
+    required String title,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required bool value,
+    required bool isDark,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(icon, color: iconColor, size: 20.sp),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            Switch.adaptive(
+              value: value,
+              activeColor: Colors.white,
+              activeTrackColor: const Color(0xFF4F46E5),
+              inactiveThumbColor: isDark ? Colors.white70 : Colors.white,
+              inactiveTrackColor: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+              onChanged: onChanged,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -662,6 +856,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14.sp),
               tabs: [
                 Tab(text: 'Vedic (D1)'),
+                Tab(text: 'Dasha'),
                 Tab(text: 'KP System'),
                 Tab(text: 'Lal Kitab'),
                 Tab(text: 'BNN'),
@@ -693,6 +888,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               physics: widget.isSingleTabMode ? const NeverScrollableScrollPhysics() : null,
               children: [
                 _buildLagnaAndDivisionalChartTab(context, isDark),
+                _buildDashaTab(context, isDark),
                 _buildPlanetsTab(context, isDark),
                 _buildLalKitabTab(context, isDark),
                 _buildBnnTab(context, isDark),
@@ -2737,6 +2933,394 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
+  // =========================================================================
+  // DASHA TAB
+  // =========================================================================
+  Widget _buildDashaTab(BuildContext context, bool isDark) {
+    final dashaTypes = [
+      'Vimshottari Dasha', 'Ashtottari Dasha (Method 1)', 'Ashtottari Dasha (Method 2)', 'Yogini Dasha',
+      'Chara Dasha (KN Rao)', 'Vimshottari Dasha (Tribhagi)', 'Vimshottari Dasha (D1-Kshema Ta..)',
+      'Vimshottari Dasha (D1-Utpanna Ta..)', 'Vimshottari Dasha (D1-Adhana Tar..)', 'Vimshottari Dasha (D1-Lagna)',
+      'Vimshottari Dasha (D1-Sun)', 'Vimshottari Dasha (D1-Mars)', 'Vimshottari Dasha (D1-Mercury)',
+      'Vimshottari Dasha (D1-Jupiter)', 'Vimshottari Dasha (D1-Venus)', 'Vimshottari Dasha (D1-Saturn)',
+      'Vimshottari Dasha (D1-Rahu)', 'Vimshottari Dasha (D1-Ketu)', 'Vimshottari Dasha (D9-Lagna)',
+      'Vimshottari Dasha (D9-Sun)', 'Vimshottari Dasha (D9-Moon)', 'Vimshottari Dasha (D9-Mars)',
+      'Vimshottari Dasha (D9-Mercury)', 'Vimshottari Dasha (D9-Jupiter)', 'Vimshottari Dasha (D9-Venus)',
+      'Vimshottari Dasha (D9-Saturn)', 'Vimshottari Dasha (D9-Rahu)', 'Vimshottari Dasha (D9-Ketu)',
+      'Vimshottari Dasha (D10-Lagna)', 'Vimshottari Dasha (D10-Sun)', 'Vimshottari Dasha (D10-Moon)',
+      'Vimshottari Dasha (D10-Mars)', 'Vimshottari Dasha (D10-Mercury)', 'Vimshottari Dasha (D10-Jupiter)',
+      'Vimshottari Dasha (D10-Venus)', 'Vimshottari Dasha (D10-Saturn)', 'Vimshottari Dasha (D10-Rahu)',
+      'Vimshottari Dasha (D10-Ketu)',
+    ];
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // Dropdowns for Dasha Type
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Select Dasha Type', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                value: _selectedDashaType,
+                isExpanded: true,
+                menuMaxHeight: 350,
+                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.white54 : Colors.black54),
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.black12)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5)),
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                ),
+                style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14.sp),
+                items: dashaTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                onChanged: (val) {
+                  if (val != null && val != _selectedDashaType) {
+                    _fetchDynamicDasha(val);
+                  }
+                },
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Text('Days in Year: ', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp)),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _showDaysInYearDialog(isDark),
+                      child: Text(
+                        _daysInYearDisplayLabel,
+                        style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14.sp, fontWeight: FontWeight.w500),
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Icon(Icons.edit_calendar, size: 16, color: const Color(0xFF4338CA)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 20.h),
+        
+        Text(
+          _selectedMahadasha != null ? '$_selectedDashaType - ${_selectedMahadasha!['planet']} Antardasha' : _selectedDashaType,
+          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+        ),
+        SizedBox(height: 12.h),
+
+        // Data Table
+        if (_isLoadingDasha)
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.h),
+              child: const CircularProgressIndicator(color: Color(0xFF4338CA)),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                if (_selectedMahadasha != null)
+                  InkWell(
+                    onTap: () => setState(() => _selectedMahadasha = null),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.arrow_back_rounded, size: 18, color: const Color(0xFF4338CA)),
+                          SizedBox(width: 8.w),
+                          Text('Back to Mahadasha', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                        ],
+                      ),
+                    ),
+                  ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: _selectedMahadasha == null 
+                        ? (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9))
+                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                    borderRadius: _selectedMahadasha == null ? BorderRadius.vertical(top: Radius.circular(16.r)) : BorderRadius.zero,
+                    border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 2, child: Text('Planet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                      Expanded(flex: 3, child: Text('Start Date', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                      Expanded(flex: 3, child: Text('End Date', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                    ],
+                  ),
+                ),
+                ..._buildDashaRows(isDark),
+                Container(
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(16.r)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Note:', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black, fontSize: 13.sp)),
+                      SizedBox(height: 4.h),
+                      Text('1. Tap on planet or date to view next Dasha level.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp)),
+                      Text('2. Long press (tap and hold) on planet or date to view Transit details.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<Widget> _buildDashaRows(bool isDark) {
+    final timeline = _dynamicDashaTimeline ?? (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>? ?? []);
+    
+    if (timeline.isEmpty) {
+      return [Padding(padding: EdgeInsets.all(20), child: Text('Dasha data not available.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black54)))];
+    }
+    
+    List<dynamic> itemsToDisplay = [];
+    
+    if (_selectedMahadasha == null) {
+      itemsToDisplay = timeline;
+    } else {
+      itemsToDisplay = _selectedMahadasha!['antardashas'] as List<dynamic>? ?? [];
+    }
+
+    return itemsToDisplay.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final item = entry.value as Map<String, dynamic>;
+      final isEven = idx % 2 == 0;
+      final rowColor = isEven ? Colors.transparent : (isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02));
+
+      final String planetName = item['planet']?.toString() ?? '-';
+      final String startDateStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
+      final String endDateStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
+
+      return InkWell(
+        onTap: () {
+          if (_selectedMahadasha == null) {
+            setState(() {
+              _selectedMahadasha = item;
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pratyantardasha (Sub-sub period) coming soon!', style: GoogleFonts.outfit()), duration: const Duration(seconds: 2)));
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: rowColor,
+            border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+          ),
+          child: Row(
+            children: [
+              Expanded(flex: 2, child: Text(planetName, style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 13.sp))),
+              Expanded(flex: 3, child: Text(startDateStr, style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp))),
+              Expanded(flex: 3, child: Text(endDateStr, style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp))),
+            ],
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Future<void> _fetchDynamicDasha(String dashaType) async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingDasha = true;
+      _selectedDashaType = dashaType;
+      _selectedMahadasha = null; 
+    });
+    try {
+      final res = await AstroApiService.getDasha(
+        dashaType: dashaType,
+        name: _personName,
+        dateOfBirth: _dobFormattedForApi,
+        timeOfBirth: _tobFormattedForApi,
+        placeOfBirth: _pob,
+        latitude: _latitude,
+        longitude: _longitude,
+        timezone: _timezone,
+        daysInYear: _currentDaysInYear,
+      );
+      if (mounted) {
+        setState(() {
+          _dynamicRunningDasha = res['current_running_dasha'];
+          _dynamicDashaTimeline = res['dasha_timeline'];
+          _isLoadingDasha = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingDasha = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to load $dashaType', style: GoogleFonts.outfit()),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
+  }
+
+  double get _currentDaysInYear {
+    if (_customDaysInYear.isNotEmpty) {
+      return double.tryParse(_customDaysInYear) ?? 365.256364;
+    }
+    if (_daysInYearType.contains('365.256364')) return 365.256364;
+    if (_daysInYearType.contains('365.24219')) return 365.24219;
+    if (_daysInYearType.contains('365.25')) return 365.25;
+    if (_daysInYearType.contains('360')) return 360.0;
+    if (_daysInYearType.contains('365')) return 365.0;
+    return 365.256364;
+  }
+
+  String get _daysInYearDisplayLabel {
+    if (_customDaysInYear.isNotEmpty) return _customDaysInYear;
+    if (_daysInYearType.contains('365.256364')) return '365.256364';
+    if (_daysInYearType.contains('365.24219')) return '365.24219';
+    if (_daysInYearType.contains('365.25')) return '365.25';
+    if (_daysInYearType.contains('360')) return '360';
+    if (_daysInYearType.contains('365')) return '365';
+    return '365.256364';
+  }
+
+  void _showDaysInYearDialog(bool isDark) {
+    final options = [
+      'Mean Sidereal Year (365.256364 days)',
+      'Mean Tropical Year (365.24219 days)',
+      'Year with 365.25 days',
+      'Year with 365 days',
+      'Savana Year (360 days)',
+      'Custom Days'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Days in Year:', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          contentPadding: const EdgeInsets.only(top: 10, bottom: 10),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: options.map((opt) {
+              return InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  if (opt == 'Custom Days') {
+                    _showCustomDaysInputDialog(isDark);
+                  } else {
+                    setState(() {
+                      _daysInYearType = opt;
+                      _customDaysInYear = '';
+                    });
+                    _fetchDynamicDasha(_selectedDashaType);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12, width: 0.5)),
+                  ),
+                  child: Text(
+                    opt,
+                    style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCustomDaysInputDialog(bool isDark) {
+    final TextEditingController customDaysCtrl = TextEditingController(text: _customDaysInYear);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Custom Days:', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: customDaysCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Enter days between 300 and 400',
+              hintStyle: GoogleFonts.outfit(color: isDark ? Colors.white38 : Colors.black38),
+              isDense: true,
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.black12)),
+              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4338CA))),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('CANCEL', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final val = double.tryParse(customDaysCtrl.text);
+                if (val == null || val < 300 || val > 400) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Invalid days, enter days between 300 and 400', style: GoogleFonts.outfit(color: Colors.black)),
+                      backgroundColor: Colors.white,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    _daysInYearType = 'Custom Days';
+                    _customDaysInYear = customDaysCtrl.text;
+                  });
+                  Navigator.pop(ctx);
+                  _fetchDynamicDasha(_selectedDashaType);
+                }
+              },
+              child: Text('OK', style: GoogleFonts.outfit(color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
     final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
 
@@ -3115,160 +3699,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
-  // =========================================================================
-  // TAB 4: VIMSHOTTARI DASHA TIMELINE
-  // =========================================================================
-  Widget _buildDashaTab(BuildContext context, bool isDark) {
-    final dashaTimeline = (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>?) ?? [];
-    final currentRunning = _kundliData?['current_running_dasha'] as Map<String, dynamic>?;
-
-    return ListView(
-      padding: EdgeInsets.all(16.w),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        if (currentRunning != null) ...[
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF312E81).withValues(alpha: 0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Active Mahadasha', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp, fontWeight: FontWeight.w500)),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8.r)),
-                      child: Text('Live Planetary Period', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 6.h),
-                Text(
-                  currentRunning['active_mahadasha']?.toString() ?? 'Jupiter (Guru)',
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Antardasha: ${currentRunning['active_antardasha'] ?? "--"}  •  Pratyantar: ${currentRunning['active_pratyantar'] ?? "--"}',
-                  style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.9), fontSize: 12.5.sp),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-        ],
-
-        Text('120-Year Vimshottari Mahadasha Sequence', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
-        SizedBox(height: 12.h),
-        ...dashaTimeline.map((item) {
-          final planet = item['planet']?.toString() ?? 'Planet';
-          final duration = item['duration_years']?.toString() ?? '7';
-          final start = item['start']?.toString() ?? '';
-          final end = item['end']?.toString() ?? '';
-          final isCompleted = item['is_completed'] == true;
-          final isActive = item['is_active'] == true;
-          final antardashas = (item['antardashas'] as List<dynamic>?) ?? [];
-
-          return Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? (isDark ? const Color(0xFF312E81).withValues(alpha: 0.3) : const Color(0xFFEEF2FF))
-                  : (isDark ? const Color(0xFF1E293B) : Colors.white),
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(
-                color: isActive
-                    ? const Color(0xFF4338CA)
-                    : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              ),
-            ),
-            child: ExpansionTile(
-              leading: Icon(
-                isCompleted
-                    ? Icons.check_circle_rounded
-                    : (isActive ? Icons.play_circle_fill_rounded : Icons.radio_button_unchecked_rounded),
-                color: isCompleted
-                    ? const Color(0xFF059669)
-                    : (isActive ? const Color(0xFF4338CA) : Colors.grey),
-                size: 22,
-              ),
-              title: Text(planet, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp)),
-              subtitle: Text('$start to $end ($duration Years)', style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54)),
-              trailing: isActive
-                  ? Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(color: const Color(0xFF4338CA), borderRadius: BorderRadius.circular(8.r)),
-                      child: Text('Current', style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.5.sp, fontWeight: FontWeight.bold)),
-                    )
-                  : null,
-              children: antardashas.isNotEmpty
-                  ? [
-                      Padding(
-                        padding: EdgeInsets.all(12.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: antardashas.map((ad) {
-                            final adPlanet = ad['planet']?.toString() ?? '';
-                            final adStart = ad['start']?.toString() ?? '';
-                            final adEnd = ad['end']?.toString() ?? '';
-                            final adActive = ad['is_active'] == true;
-                            return Padding(
-                              padding: EdgeInsets.symmetric(vertical: 3.h),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(Icons.circle, size: 6, color: adActive ? const Color(0xFF059669) : Colors.grey),
-                                      SizedBox(width: 6.w),
-                                      Text(
-                                        '$adPlanet Antardasha',
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 12.sp,
-                                          fontWeight: adActive ? FontWeight.bold : FontWeight.w500,
-                                          color: adActive ? const Color(0xFF059669) : null,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    '$adStart - $adEnd',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 11.sp,
-                                      color: adActive ? const Color(0xFF059669) : (isDark ? Colors.white60 : Colors.black54),
-                                      fontWeight: adActive ? FontWeight.bold : FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ]
-                  : [],
-            ),
-          );
-        }),
-      ],
-    );
-  }
 
   // =========================================================================
   // TAB 5: ASHTAKVARGA (SAV & BAV)

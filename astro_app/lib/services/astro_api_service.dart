@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1'; // ngrok tunnel
+      return 'https://cfe2-2401-4900-cade-3a2-a5e2-f68b-b35f-7322.ngrok-free.app/api/v1'; // ngrok tunnel
     }
     try {
       if (Platform.isAndroid) {
-        return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1'; // ngrok tunnel
+        return 'https://cfe2-2401-4900-cade-3a2-a5e2-f68b-b35f-7322.ngrok-free.app/api/v1'; // ngrok tunnel
       }
     } catch (_) {}
-    return 'https://7ebf-2409-40f3-2007-dc1f-3099-5770-235a-5d3.ngrok-free.app/api/v1';
+    return 'https://cfe2-2401-4900-cade-3a2-a5e2-f68b-b35f-7322.ngrok-free.app/api/v1';
   }
 
   static String get baseUrl {
@@ -144,6 +144,7 @@ class AstroApiService {
     double? latitude,
     double? longitude,
     double? timezone,
+    double? daysInYear,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kundli');
     final Map<String, dynamic> bodyMap = {
@@ -155,6 +156,7 @@ class AstroApiService {
     if (latitude != null) bodyMap['latitude'] = latitude;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
+    if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
@@ -165,6 +167,43 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getKundli: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getDasha({
+    required String dashaType,
+    String name = 'User',
+    String dateOfBirth = '1998-12-13',
+    String timeOfBirth = '09:30',
+    String placeOfBirth = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+    double? daysInYear,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/dasha');
+    final Map<String, dynamic> bodyMap = {
+      'dasha_type': dashaType,
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+    if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Dasha: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getDasha: $e');
       rethrow;
     }
   }
