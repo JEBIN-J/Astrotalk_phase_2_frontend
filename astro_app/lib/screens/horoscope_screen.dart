@@ -115,6 +115,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _customDaysInYear = '';
   Map<String, dynamic>? _selectedMahadasha;
   String _selectedBhavaSystem = 'Porphyry (Sripathi)';
+  int _strengthSubTabIndex = 0;
+
 
   
   bool _isLoadingDasha = false;
@@ -4401,10 +4403,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // TAB 6: STRENGTH
   Widget _buildStrengthTab(BuildContext context, bool isDark) {
-    int localTabIndex = 0; // 0 = Shadbala, 1 = Bhava Bala, 2 = Vimsopaka
-    
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
+        int localTabIndex = _strengthSubTabIndex; // Sync with persistent parent state
         final shadbala = (_kundliData?['shadbala'] as List?) ?? [];
         final bhavaBala = (_kundliData?['bhava_bala'] as List?) ?? [];
         final vimsopaka = (_kundliData?['vimsopaka'] as List?) ?? [];
@@ -4451,7 +4452,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   final isSelected = localTabIndex == entry.key;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => localTabIndex = entry.key),
+                      onTap: () {
+                        this.setState(() {
+                          _strengthSubTabIndex = entry.key;
+                        });
+                        setState(() => localTabIndex = entry.key);
+                      },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 12.h),
                         decoration: BoxDecoration(
