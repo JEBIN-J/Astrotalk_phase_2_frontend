@@ -257,6 +257,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           longitude: _longitude,
           timezone: _timezone,
           daysInYear: _currentDaysInYear,
+          bhavaSystem: _selectedBhavaSystem,
         ),
         AstroApiService.getLalKitab(
           name: _personName,
@@ -4509,9 +4510,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       }).toList(),
                       onChanged: (String? val) {
                         if (val != null) {
-                          setState(() {
+                          // Call the parent StatefulWidget setState to trigger data refresh
+                          this.setState(() {
                             _selectedBhavaSystem = val;
                           });
+                          _fetchKundliData();
                         }
                       },
                     ),

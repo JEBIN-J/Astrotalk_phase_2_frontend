@@ -145,6 +145,7 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     double? daysInYear,
+    String? bhavaSystem,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kundli');
     final Map<String, dynamic> bodyMap = {
@@ -157,6 +158,8 @@ class AstroApiService {
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
+    if (bhavaSystem != null) bodyMap['bhava_system'] = bhavaSystem;
+
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
