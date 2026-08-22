@@ -114,6 +114,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _daysInYearType = 'Mean Sidereal Year (365.256364)';
   String _customDaysInYear = '';
   Map<String, dynamic>? _selectedMahadasha;
+  String _selectedBhavaSystem = 'Porphyry (Sripathi)';
+
   
   bool _isLoadingDasha = false;
   List<dynamic>? _dynamicDashaTimeline;
@@ -4469,9 +4471,65 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     ),
                   );
                 }).toList(),
-              ),
+             ),
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 20.h),
+
+            if (localTabIndex == 1) ...[
+              Row(
+                children: [
+                  Text(
+                    'Select Bhava System: ',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: _selectedBhavaSystem,
+                      dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14.sp,
+                        color: const Color(0xFF4338CA),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      underline: Container(
+                        height: 1.5,
+                        color: const Color(0xFF4338CA),
+                      ),
+                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF4338CA)),
+                      items: ['Porphyry (Sripathi)', 'Equal Houses', 'Placidus (KP)'].map((String sys) {
+                        return DropdownMenuItem<String>(
+                          value: sys,
+                          child: Text(sys),
+                        );
+                      }).toList(),
+                      onChanged: (String? val) {
+                        if (val != null) {
+                          setState(() {
+                            _selectedBhavaSystem = val;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Bhava Bala as per System: $_selectedBhavaSystem',
+                style: GoogleFonts.outfit(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+            SizedBox(height: 4.h),
             
             // Bar Chart Section
             Text(title, style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
@@ -4577,7 +4635,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     DataColumn(label: Text('Venus')),
                     DataColumn(label: Text('Saturn')),
                   ] : localTabIndex == 1 ? [
-                    DataColumn(label: Text('Bhava of Cusp')),
+                    DataColumn(label: Text('Bhava')),
+                    DataColumn(label: Text('Bhava Bala')),
+                    DataColumn(label: Text('In Rupas')),
                     DataColumn(label: Text('Bhava Cusp')),
                     DataColumn(label: Text('Adhipati of Cusp')),
                     DataColumn(label: Text('Adhipati Bala')),
@@ -4593,8 +4653,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ? _buildShadbalaDetailedRows(currentList, isDark)
                       : currentList.map<DataRow>((item) {
                           if (localTabIndex == 1) {
+                            final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
+                            final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
+                            final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
+                            final double totalVirupas = adhipatiBala + digBala + drigBala;
+                            final double totalRupas = totalVirupas / 60.0;
+                            
                             return DataRow(cells: [
                               DataCell(Text('H${item['house'] ?? ''}')),
+                              DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+                              DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
                               DataCell(Text('${item['sign'] ?? ''}')),
                               DataCell(Text('${item['adhipati'] ?? ''}')),
                               DataCell(Text('${item['adhipati_bala'] ?? ''}')),
