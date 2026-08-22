@@ -4686,6 +4686,49 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ),
               ),
             ),
+            
+            SizedBox(height: 20.h),
+            // Note card section from image 2
+            Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Note:',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'There are different methods in Shadbala/Bhava-Bala calculations. Tap here to know the calculation methods used in this App.',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.sp,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'In the above table, 1st column is fixed, swipe right/left on other columns to view complete data.',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.sp,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16.h),
           ],
         );
       }
