@@ -4544,8 +4544,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
               child: Column(
                 children: currentList.map((item) {
-                  final name = item[nameKey] ?? (localTabIndex == 1 ? "House ${item['house']}" : "");
-                  final displayTitle = localTabIndex == 1 ? "H${item['house']} ($name)" : name;
+                  final name = item[nameKey] ?? (localTabIndex == 1 ? "${item['house']}" : "");
+                  final displayTitle = localTabIndex == 1 ? "${item['house']} ($name)" : name;
                   double val = (item[valueKey] as num?)?.toDouble() ?? 0.0;
                   final colorHex = item['color'] as String? ?? "#4338CA";
                   Color barColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
@@ -4660,7 +4660,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             final double totalRupas = totalVirupas / 60.0;
                             
                             return DataRow(cells: [
-                              DataCell(Text('H${item['house'] ?? ''}')),
+                              DataCell(Text('${item['house'] ?? ''}')),
+
                               DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
                               DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
                               DataCell(Text('${item['sign'] ?? ''}')),
