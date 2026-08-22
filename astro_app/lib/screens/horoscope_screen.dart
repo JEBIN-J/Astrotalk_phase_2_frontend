@@ -4420,10 +4420,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           maxVal = 2.0; // Shadbala strengths typically range around 0.5 to 2.5
         } else if (localTabIndex == 1) {
           currentList = bhavaBala;
-          title = "Bhava Bala (House Strength)";
+          title = "Bhava Bala (In Rupas)";
           valueKey = "strength";
           nameKey = "sign";
-          maxVal = 100.0;
+          maxVal = 15.0; // Bhava Bala in Rupas typically ranges from 5.0 to 12.0
+
         } else {
           currentList = vimsopaka;
           title = "Vimsopaka Bala";
@@ -4576,11 +4577,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     DataColumn(label: Text('Venus')),
                     DataColumn(label: Text('Saturn')),
                   ] : localTabIndex == 1 ? [
-                    DataColumn(label: Text('House')),
-                    DataColumn(label: Text('Sign')),
-                    DataColumn(label: Text('Strength')),
-                    DataColumn(label: Text('Rupas')),
-                    DataColumn(label: Text('Rank')),
+                    DataColumn(label: Text('Bhava of Cusp')),
+                    DataColumn(label: Text('Bhava Cusp')),
+                    DataColumn(label: Text('Adhipati of Cusp')),
+                    DataColumn(label: Text('Adhipati Bala')),
+                    DataColumn(label: Text('Dig Bala')),
+                    DataColumn(label: Text('Drig Bala')),
                   ] : [
                     DataColumn(label: Text('Planet')),
                     DataColumn(label: Text('Score')),
@@ -4594,9 +4596,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             return DataRow(cells: [
                               DataCell(Text('H${item['house'] ?? ''}')),
                               DataCell(Text('${item['sign'] ?? ''}')),
-                              DataCell(Text('${item['strength'] ?? ''}')),
-                              DataCell(Text('${item['rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                              DataCell(Text('${item['rank'] ?? ''}')),
+                              DataCell(Text('${item['adhipati'] ?? ''}')),
+                              DataCell(Text('${item['adhipati_bala'] ?? ''}')),
+                              DataCell(Text('${item['dig_bala'] ?? ''}')),
+                              DataCell(Text('${item['drig_bala'] ?? ''}')),
                             ]);
                           } else {
                             return DataRow(cells: [
@@ -4607,6 +4610,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             ]);
                           }
                         }).toList(),
+
                 ),
               ),
             ),
