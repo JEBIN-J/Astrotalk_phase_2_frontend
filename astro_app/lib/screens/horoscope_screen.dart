@@ -118,6 +118,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   bool _isLoadingDasha = false;
   List<dynamic>? _dynamicDashaTimeline;
   Map<String, dynamic>? _dynamicRunningDasha;
+  bool _isDashaCardView = false; // false = table (default), true = cards
 
 
   static const Map<String, String> _divisionalChartsInfo = {
@@ -2933,9 +2934,37 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     );
   }
 
-  // =========================================================================
-  // DASHA TAB
-  // =========================================================================
+  // Planet color map for Dasha UI
+  static const Map<String, Color> _planetColors = {
+    'Sun':     Color(0xFFFF8C00),
+    'Moon':    Color(0xFF64B5F6),
+    'Mars':    Color(0xFFEF5350),
+    'Mercury': Color(0xFF66BB6A),
+    'Jupiter': Color(0xFFFFD54F),
+    'Venus':   Color(0xFFCE93D8),
+    'Saturn':  Color(0xFF78909C),
+    'Rahu':    Color(0xFF5C6BC0),
+    'Ketu':    Color(0xFFFF7043),
+    // Yogini
+    'Mangala': Color(0xFFEF5350),
+    'Pingala': Color(0xFFFF8C00),
+    'Dhanya':  Color(0xFF66BB6A),
+    'Bhramari':Color(0xFF64B5F6),
+    'Bhadrika':Color(0xFFCE93D8),
+    'Ulka':    Color(0xFF78909C),
+    'Siddha':  Color(0xFFFFD54F),
+    'Sankata': Color(0xFF5C6BC0),
+  };
+
+  Color _planetColor(String name) =>
+      _planetColors[name] ?? const Color(0xFF4338CA);
+
+  // Planet abbreviation
+  String _planetAbbr(String name) {
+    if (name.length <= 2) return name.toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  }
+
   Widget _buildDashaTab(BuildContext context, bool isDark) {
     final dashaTypes = [
       'Vimshottari Dasha', 'Ashtottari Dasha (Method 1)', 'Ashtottari Dasha (Method 2)', 'Yogini Dasha',
@@ -2953,20 +2982,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       'Vimshottari Dasha (D10-Ketu)',
     ];
 
+
+
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       physics: const BouncingScrollPhysics(),
       children: [
-        // Dropdowns for Dasha Type
+
+        // ── Selector Card ──────────────────────────────────────────────────
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                blurRadius: 10,
+                color: const Color(0xFF4338CA).withValues(alpha: 0.08),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -2974,186 +3006,645 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Select Dasha Type', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  Container(
+                    width: 4.w,
+                    height: 18.h,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4338CA), Color(0xFF7C3AED)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Text(
+                    'Select Dasha Type',
+                    style: GoogleFonts.outfit(
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
               DropdownButtonFormField<String>(
                 value: _selectedDashaType,
                 isExpanded: true,
-                menuMaxHeight: 350,
+                menuMaxHeight: 360,
                 dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.white54 : Colors.black54),
-                decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.black12)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5)),
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                icon: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF4338CA), size: 18),
                 ),
-                style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14.sp),
-                items: dashaTypes.map((type) => DropdownMenuItem(value: type, child: Text(type))).toList(),
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 13.h),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0), width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(color: Color(0xFF4338CA), width: 2),
+                  ),
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.6) : const Color(0xFFF8FAFC),
+                ),
+                style: GoogleFonts.outfit(
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+                items: dashaTypes.map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type, style: GoogleFonts.outfit(fontSize: 13.sp)),
+                )).toList(),
                 onChanged: (val) {
                   if (val != null && val != _selectedDashaType) {
                     _fetchDynamicDasha(val);
                   }
                 },
               ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Text('Days in Year: ', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp)),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _showDaysInYearDialog(isDark),
-                      child: Text(
-                        _daysInYearDisplayLabel,
-                        style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14.sp, fontWeight: FontWeight.w500),
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
+              SizedBox(height: 14.h),
+              InkWell(
+                onTap: () => _showDaysInYearDialog(isDark),
+                borderRadius: BorderRadius.circular(10.r),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
-                  SizedBox(width: 8.w),
-                  Icon(Icons.edit_calendar, size: 16, color: const Color(0xFF4338CA)),
-                ],
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded, size: 15, color: const Color(0xFF4338CA)),
+                      SizedBox(width: 8.w),
+                      Text('Days in Year', style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12.sp)),
+                      const Spacer(),
+                      Text(
+                        _daysInYearDisplayLabel,
+                        style: GoogleFonts.outfit(
+                          color: const Color(0xFF4338CA),
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 6.w),
+                      Icon(Icons.edit_outlined, size: 13, color: const Color(0xFF4338CA)),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 20.h),
-        
-        Text(
-          _selectedMahadasha != null ? '$_selectedDashaType - ${_selectedMahadasha!['planet']} Antardasha' : _selectedDashaType,
-          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
-        ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 16.h),
 
-        // Data Table
-        if (_isLoadingDasha)
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(40.h),
-              child: const CircularProgressIndicator(color: Color(0xFF4338CA)),
-            ),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: [
-                if (_selectedMahadasha != null)
-                  InkWell(
-                    onTap: () => setState(() => _selectedMahadasha = null),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.arrow_back_rounded, size: 18, color: const Color(0xFF4338CA)),
-                          SizedBox(width: 8.w),
-                          Text('Back to Mahadasha', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                        ],
+
+        // ── Section Title + View Toggle ─────────────────────────────────────
+        if (!_isLoadingDasha) ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _selectedMahadasha != null
+                      ? '${_selectedMahadasha!['planet']} Antardasha'
+                      : _selectedDashaType,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              // Table/Card toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFD1D5DB)),
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => setState(() => _isDashaCardView = false),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: !_isDashaCardView
+                              ? const Color(0xFF4338CA)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9.r),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.table_rows_rounded,
+                              size: 14,
+                              color: !_isDashaCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Table',
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w600,
+                                color: !_isDashaCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                  decoration: BoxDecoration(
-                    color: _selectedMahadasha == null 
-                        ? (isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9))
-                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
-                    borderRadius: _selectedMahadasha == null ? BorderRadius.vertical(top: Radius.circular(16.r)) : BorderRadius.zero,
-                    border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(flex: 2, child: Text('Planet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
-                      Expanded(flex: 3, child: Text('Start Date', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
-                      Expanded(flex: 3, child: Text('End Date', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87))),
-                    ],
-                  ),
+                    GestureDetector(
+                      onTap: () => setState(() => _isDashaCardView = true),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: _isDashaCardView
+                              ? const Color(0xFF4338CA)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9.r),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.view_agenda_rounded,
+                              size: 14,
+                              color: _isDashaCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Cards',
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w600,
+                                color: _isDashaCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                ..._buildDashaRows(isDark),
-                Container(
-                  padding: EdgeInsets.all(14.w),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(16.r)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Note:', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black, fontSize: 13.sp)),
-                      SizedBox(height: 4.h),
-                      Text('1. Tap on planet or date to view next Dasha level.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp)),
-                      Text('2. Long press (tap and hold) on planet or date to view Transit details.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12.sp)),
-                    ],
+              ),
+              if (_selectedMahadasha != null) ...[
+                SizedBox(width: 8.w),
+                GestureDetector(
+                  onTap: () => setState(() => _selectedMahadasha = null),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(9.r),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.arrow_back_ios_rounded, size: 11, color: Color(0xFF4338CA)),
+                        SizedBox(width: 3.w),
+                        Text('Back', style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF4338CA), fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ),
                 ),
               ],
+            ],
+          ),
+          SizedBox(height: 10.h),
+        ],
+
+        // ── Data Table / Cards ──────────────────────────────────────────────
+        if (_isLoadingDasha)
+          Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 60.h),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(color: Color(0xFF4338CA), strokeWidth: 3),
+                  SizedBox(height: 16.h),
+                  Text('Calculating Dasha...', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black45, fontSize: 13.sp)),
+                ],
+              ),
+            ),
+          )
+        else
+          ...(_isDashaCardView ? _buildDashaCardRows(isDark) : _buildDashaTableRows(isDark)),
+
+        SizedBox(height: 12.h),
+
+        // ── Note Card ───────────────────────────────────────────────────────
+        if (!_isLoadingDasha)
+          Container(
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.7) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 14, color: const Color(0xFF4338CA)),
+                    SizedBox(width: 6.w),
+                    Text('Note', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B), fontSize: 12.sp)),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                Text('• Tap a row to drill into Antardasha periods.', style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
+                SizedBox(height: 2.h),
+                Text('• Long press for Transit details of that period.', style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
+              ],
             ),
           ),
+        SizedBox(height: 20.h),
       ],
     );
   }
 
-  List<Widget> _buildDashaRows(bool isDark) {
+  // ─── TABLE VIEW ────────────────────────────────────────────────────────────
+  List<Widget> _buildDashaTableRows(bool isDark) {
     final timeline = _dynamicDashaTimeline ?? (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>? ?? []);
-    
-    if (timeline.isEmpty) {
-      return [Padding(padding: EdgeInsets.all(20), child: Text('Dasha data not available.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black54)))];
-    }
-    
-    List<dynamic> itemsToDisplay = [];
-    
-    if (_selectedMahadasha == null) {
-      itemsToDisplay = timeline;
-    } else {
-      itemsToDisplay = _selectedMahadasha!['antardashas'] as List<dynamic>? ?? [];
-    }
 
-    return itemsToDisplay.asMap().entries.map((entry) {
-      final idx = entry.key;
+    if (timeline.isEmpty) return [_buildDashaEmpty(isDark)];
+
+    final List<dynamic> items = _selectedMahadasha == null
+        ? timeline
+        : (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? []);
+
+    // Build a proper table wrapper
+    return [
+      Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.r),
+          child: Column(
+            children: [
+              // Header row
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF3730A3), const Color(0xFF1E1B4B)]
+                        : [const Color(0xFF4338CA), const Color(0xFF6366F1)],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      flex: 4,
+                      child: Text('Planet',
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                              color: Colors.white,
+                              letterSpacing: 0.4)),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text('Start Date',
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                              color: Colors.white70)),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text('End Date',
+                          style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                              color: Colors.white70)),
+                    ),
+                    SizedBox(width: 16.w),
+                  ],
+                ),
+              ),
+              // Data rows
+              ...items.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final item = entry.value as Map<String, dynamic>;
+                final planetName = item['planet']?.toString() ?? '-';
+                final startStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
+                final endStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
+                final isActive = item['is_active'] == true;
+                final pColor = _planetColor(planetName);
+                final isLast = idx == items.length - 1;
+
+                return InkWell(
+                  onTap: () {
+                    if (_selectedMahadasha == null) {
+                      setState(() => _selectedMahadasha = item);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Pratyantardasha coming soon!', style: GoogleFonts.outfit()),
+                          backgroundColor: const Color(0xFF4338CA),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? pColor.withValues(alpha: isDark ? 0.18 : 0.07)
+                          : (idx.isEven
+                              ? (isDark ? Colors.transparent : Colors.white)
+                              : (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFFAFAFF))),
+                      border: isLast
+                          ? null
+                          : Border(bottom: BorderSide(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE8EAF6),
+                              width: 0.8,
+                            )),
+                    ),
+                    child: Row(
+                      children: [
+                        // Colored dot
+                        Container(
+                          width: 10.w,
+                          height: 10.w,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: pColor,
+                            boxShadow: isActive
+                                ? [BoxShadow(color: pColor.withValues(alpha: 0.5), blurRadius: 4)]
+                                : [],
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          flex: 4,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                planetName,
+                                style: GoogleFonts.outfit(
+                                  color: isActive
+                                      ? pColor
+                                      : (isDark ? Colors.white : const Color(0xFF1E293B)),
+                                  fontSize: 13.sp,
+                                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                                ),
+                              ),
+                              if (isActive)
+                                Container(
+                                  margin: EdgeInsets.only(top: 2.h),
+                                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
+                                  decoration: BoxDecoration(
+                                    color: pColor.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text('Active', style: GoogleFonts.outfit(color: pColor, fontSize: 9.sp, fontWeight: FontWeight.bold)),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(
+                            startStr,
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white70 : Colors.black54,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 5,
+                          child: Text(
+                            endStr,
+                            style: GoogleFonts.outfit(
+                              color: isDark ? Colors.white70 : Colors.black54,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: isDark ? Colors.white24 : Colors.black12,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  // ─── CARD VIEW ─────────────────────────────────────────────────────────────
+  List<Widget> _buildDashaCardRows(bool isDark) {
+    final timeline = _dynamicDashaTimeline ?? (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>? ?? []);
+
+    if (timeline.isEmpty) return [_buildDashaEmpty(isDark)];
+
+    final List<dynamic> items = _selectedMahadasha == null
+        ? timeline
+        : (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? []);
+
+    return items.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
-      final isEven = idx % 2 == 0;
-      final rowColor = isEven ? Colors.transparent : (isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02));
+      final planetName = item['planet']?.toString() ?? '-';
+      final startStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
+      final endStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
+      final durationStr = item['duration_years'] != null
+          ? '${item['duration_years']} yrs'
+          : (item['duration_months'] != null ? '${item['duration_months']} mo' : '');
+      final isActive = item['is_active'] == true;
+      final isCompleted = item['is_completed'] == true;
+      final pColor = _planetColor(planetName);
 
-      final String planetName = item['planet']?.toString() ?? '-';
-      final String startDateStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
-      final String endDateStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
-
-      return InkWell(
+      return GestureDetector(
         onTap: () {
           if (_selectedMahadasha == null) {
-            setState(() {
-              _selectedMahadasha = item;
-            });
+            setState(() => _selectedMahadasha = item);
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pratyantardasha (Sub-sub period) coming soon!', style: GoogleFonts.outfit()), duration: const Duration(seconds: 2)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Pratyantardasha coming soon!', style: GoogleFonts.outfit()),
+                backgroundColor: const Color(0xFF4338CA),
+                duration: const Duration(seconds: 2),
+              ),
+            );
           }
         },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: EdgeInsets.only(bottom: 10.h),
           decoration: BoxDecoration(
-            color: rowColor,
-            border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+            color: isActive
+                ? pColor.withValues(alpha: isDark ? 0.2 : 0.07)
+                : (isDark ? const Color(0xFF1E293B) : Colors.white),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(
+              color: isActive
+                  ? pColor.withValues(alpha: 0.55)
+                  : (isDark ? Colors.white.withValues(alpha: 0.07) : const Color(0xFFE2E8F0)),
+              width: isActive ? 1.5 : 1,
+            ),
+            boxShadow: isActive
+                ? [BoxShadow(color: pColor.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))]
+                : [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04), blurRadius: 6, offset: const Offset(0, 2))],
           ),
           child: Row(
             children: [
-              Expanded(flex: 2, child: Text(planetName, style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 13.sp))),
-              Expanded(flex: 3, child: Text(startDateStr, style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp))),
-              Expanded(flex: 3, child: Text(endDateStr, style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp))),
+              // Left accent bar
+              Container(
+                width: 5.w,
+                height: 76.h,
+                decoration: BoxDecoration(
+                  color: pColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16.r),
+                    bottomLeft: Radius.circular(16.r),
+                  ),
+                ),
+              ),
+              SizedBox(width: 14.w),
+              // Planet orb
+              Container(
+                width: 44.w,
+                height: 44.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: pColor.withValues(alpha: isDark ? 0.22 : 0.12),
+                  border: Border.all(color: pColor.withValues(alpha: isActive ? 0.7 : 0.35), width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    _planetAbbr(planetName),
+                    style: GoogleFonts.outfit(
+                      color: pColor,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 14.w),
+              // Info
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 13.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              planetName,
+                              style: GoogleFonts.outfit(
+                                color: isActive ? pColor : (isDark ? Colors.white : const Color(0xFF1E293B)),
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (isActive)
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                              decoration: BoxDecoration(
+                                color: pColor.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: pColor.withValues(alpha: 0.4)),
+                              ),
+                              child: Text('ACTIVE', style: GoogleFonts.outfit(color: pColor, fontSize: 9.sp, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+                            )
+                          else if (isCompleted)
+                            Icon(Icons.check_circle_outline_rounded, size: 16, color: isDark ? Colors.white24 : Colors.black12),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(Icons.play_arrow_rounded, size: 12, color: isDark ? Colors.white38 : Colors.black38),
+                          SizedBox(width: 3.w),
+                          Text(startStr, style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w),
+                            child: Icon(Icons.arrow_forward_rounded, size: 11, color: isDark ? Colors.white24 : Colors.black26),
+                          ),
+                          Text(endStr, style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
+                        ],
+                      ),
+                      if (durationStr.isNotEmpty) ...[
+                        SizedBox(height: 3.h),
+                        Text(durationStr, style: GoogleFonts.outfit(color: pColor.withValues(alpha: 0.8), fontSize: 10.sp, fontWeight: FontWeight.w600)),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(right: 12.w),
+                child: Icon(
+                  _selectedMahadasha == null ? Icons.chevron_right_rounded : Icons.touch_app_outlined,
+                  size: 18,
+                  color: isDark ? Colors.white24 : Colors.black12,
+                ),
+              ),
             ],
           ),
         ),
       );
     }).toList();
   }
+
+  Widget _buildDashaEmpty(bool isDark) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 40.h),
+        child: Column(
+          children: [
+            Icon(Icons.hourglass_empty_rounded, size: 40, color: isDark ? Colors.white24 : Colors.black12),
+            SizedBox(height: 12.h),
+            Text('No Dasha data available.', style: GoogleFonts.outfit(color: isDark ? Colors.white38 : Colors.black38, fontSize: 14.sp)),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _fetchDynamicDasha(String dashaType) async {
     if (!mounted) return;
@@ -3919,26 +4410,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         String title = "";
         String valueKey = "";
         String nameKey = "";
-        double maxVal = 100;
+        double maxVal = 100.0;
         
         if (localTabIndex == 0) {
           currentList = shadbala;
           title = "Shadbala Strength";
-          valueKey = "strength_percent";
+          valueKey = "strength";
           nameKey = "planet";
-          maxVal = 200;
+          maxVal = 2.0; // Shadbala strengths typically range around 0.5 to 2.5
         } else if (localTabIndex == 1) {
           currentList = bhavaBala;
           title = "Bhava Bala (House Strength)";
           valueKey = "strength";
           nameKey = "sign";
-          maxVal = 100;
+          maxVal = 100.0;
         } else {
           currentList = vimsopaka;
           title = "Vimsopaka Bala";
           valueKey = "percentage";
           nameKey = "planet";
-          maxVal = 100;
+          maxVal = 100.0;
         }
 
         return ListView(
@@ -4039,7 +4530,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         ),
                         SizedBox(
                           width: 60.w,
-                          child: Text(' ${val.toStringAsFixed(1)}', textAlign: TextAlign.right, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                          child: Text(
+                            localTabIndex == 0 ? ' ${val.toStringAsFixed(2)}' : ' ${val.toStringAsFixed(1)}',
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                          ),
                         ),
                       ],
                     ),
@@ -4067,14 +4562,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
                   dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
                   columns: localTabIndex == 0 ? [
-                    DataColumn(label: Text('Planet')),
-                    DataColumn(label: Text('Sthana')),
-                    DataColumn(label: Text('Dig')),
-                    DataColumn(label: Text('Kala')),
-                    DataColumn(label: Text('Chesta')),
-                    DataColumn(label: Text('Naisargika')),
-                    DataColumn(label: Text('Drik')),
-                    DataColumn(label: Text('Total')),
+                    DataColumn(label: Text('Bala')),
+                    DataColumn(label: Text('Sun')),
+                    DataColumn(label: Text('Moon')),
+                    DataColumn(label: Text('Mars')),
+                    DataColumn(label: Text('Mercury')),
+                    DataColumn(label: Text('Jupiter')),
+                    DataColumn(label: Text('Venus')),
+                    DataColumn(label: Text('Saturn')),
                   ] : localTabIndex == 1 ? [
                     DataColumn(label: Text('House')),
                     DataColumn(label: Text('Sign')),
@@ -4087,35 +4582,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     DataColumn(label: Text('Percentage')),
                     DataColumn(label: Text('Rank')),
                   ],
-                  rows: currentList.map<DataRow>((item) {
-                    if (localTabIndex == 0) {
-                      return DataRow(cells: [
-                        DataCell(Text(item['planet'] ?? '')),
-                        DataCell(Text('${item['sthana_bala'] ?? ''}')),
-                        DataCell(Text('${item['dig_bala'] ?? ''}')),
-                        DataCell(Text('${item['kala_bala'] ?? ''}')),
-                        DataCell(Text('${item['chesta_bala'] ?? ''}')),
-                        DataCell(Text('${item['naisargika_bala'] ?? ''}')),
-                        DataCell(Text('${item['drik_bala'] ?? ''}')),
-                        DataCell(Text('${item['total_rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                      ]);
-                    } else if (localTabIndex == 1) {
-                      return DataRow(cells: [
-                        DataCell(Text('H${item['house'] ?? ''}')),
-                        DataCell(Text('${item['sign'] ?? ''}')),
-                        DataCell(Text('${item['strength'] ?? ''}')),
-                        DataCell(Text('${item['rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                        DataCell(Text('${item['rank'] ?? ''}')),
-                      ]);
-                    } else {
-                      return DataRow(cells: [
-                        DataCell(Text(item['planet'] ?? '')),
-                        DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                        DataCell(Text('${item['percentage'] ?? ''}%')),
-                        DataCell(Text('${item['rank'] ?? ''}')),
-                      ]);
-                    }
-                  }).toList(),
+                  rows: localTabIndex == 0 
+                      ? _buildShadbalaDetailedRows(currentList, isDark)
+                      : currentList.map<DataRow>((item) {
+                          if (localTabIndex == 1) {
+                            return DataRow(cells: [
+                              DataCell(Text('H${item['house'] ?? ''}')),
+                              DataCell(Text('${item['sign'] ?? ''}')),
+                              DataCell(Text('${item['strength'] ?? ''}')),
+                              DataCell(Text('${item['rupas'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                              DataCell(Text('${item['rank'] ?? ''}')),
+                            ]);
+                          } else {
+                            return DataRow(cells: [
+                              DataCell(Text(item['planet'] ?? '')),
+                              DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                              DataCell(Text('${item['percentage'] ?? ''}%')),
+                              DataCell(Text('${item['rank'] ?? ''}')),
+                            ]);
+                          }
+                        }).toList(),
                 ),
               ),
             ),
@@ -4123,6 +4609,68 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         );
       }
     );
+  }
+
+  List<DataRow> _buildShadbalaDetailedRows(List<dynamic> shadbalaList, bool isDark) {
+    // We need to pivot the shadbalaList (which is a list of planet dicts) into rows of parameters.
+    // Order of planets in columns: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn.
+    final planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+    
+    // Map each planet to its dictionary for quick lookup
+    final map = {for (var item in shadbalaList) item['planet']?.toString() ?? '': item};
+
+    // Helper to get value
+    String val(String planet, String key, {int decimals = 2}) {
+      final pData = map[planet];
+      if (pData == null) return '-';
+      final v = pData[key];
+      if (v is num) return v.toStringAsFixed(decimals);
+      return v?.toString() ?? '-';
+    }
+
+    // Helper to create a row
+    DataRow parameterRow(String label, String key, {bool isSubTotal = false, bool isTotal = false, int decimals = 2, Color? customColor}) {
+      final textStyle = TextStyle(
+        fontWeight: (isSubTotal || isTotal) ? FontWeight.bold : FontWeight.normal,
+        color: customColor ?? ((isSubTotal || isTotal) ? (isDark ? Colors.blue.shade300 : const Color(0xFF1E3A8A)) : null),
+      );
+      return DataRow(
+        cells: [
+          DataCell(Text(label, style: textStyle)),
+          ...planets.map((p) => DataCell(Text(val(p, key, decimals: decimals), style: textStyle))),
+        ],
+      );
+    }
+
+    return [
+      parameterRow('Uchcha', 'uchcha'),
+      parameterRow('Saptavargaja', 'saptavargaja'),
+      parameterRow('Oja-Yugma', 'oja_yugma'),
+      parameterRow('Kendradi', 'kendradi'),
+      parameterRow('Drekkana', 'drekkana'),
+      parameterRow('Sthana Bala', 'sthana_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
+      parameterRow('Dig Bala', 'dig_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
+      parameterRow('Natonnata', 'natonnata'),
+      parameterRow('Paksha', 'paksha'),
+      parameterRow('Tribhaga', 'tribhaga'),
+      parameterRow('Abda', 'abda'),
+      parameterRow('Maasa', 'maasa'),
+      parameterRow('Vaara', 'vaara'),
+      parameterRow('Hora', 'hora'),
+      parameterRow('Ayana', 'ayana'),
+      parameterRow('Yuddha', 'yuddha'),
+      parameterRow('Kaala Bala', 'kala_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
+      parameterRow('Chesta', 'chesta_bala'),
+      parameterRow('Naisargika', 'naisargika_bala'),
+      parameterRow('Drig Bala', 'drik_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
+      parameterRow('Shadbala', 'total_virupas', isTotal: true, customColor: const Color(0xFF10B981)),
+      parameterRow('In Rupas', 'total_rupas', isTotal: true, customColor: const Color(0xFF10B981)),
+      parameterRow('Minimum', 'minimum', decimals: 1),
+      parameterRow('Strength', 'strength'),
+      parameterRow('Rank', 'rank', decimals: 0),
+      parameterRow('Ishta Phala', 'ishta_phala'),
+      parameterRow('Kashta Phala', 'kashta_phala'),
+    ];
   }
 
   // TAB 7: KOT CHAKRA
