@@ -115,6 +115,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _customDaysInYear = '';
   Map<String, dynamic>? _selectedMahadasha;
   String _selectedBhavaSystem = 'Porphyry (Sripathi)';
+  String _selectedVimsopakaRelation = 'As per respective Varga Chart';
   int _strengthSubTabIndex = 0;
 
 
@@ -4408,7 +4409,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         int localTabIndex = _strengthSubTabIndex; // Sync with persistent parent state
         final shadbala = (_kundliData?['shadbala'] as List?) ?? [];
         final bhavaBala = (_kundliData?['bhava_bala'] as List?) ?? [];
-        final vimsopaka = (_kundliData?['vimsopaka'] as List?) ?? [];
 
         List currentList = [];
         String title = "";
@@ -4428,13 +4428,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           valueKey = "strength";
           nameKey = "sign";
           maxVal = 15.0; // Bhava Bala in Rupas typically ranges from 5.0 to 12.0
-
-        } else {
-          currentList = vimsopaka;
-          title = "Vimsopaka Bala";
-          valueKey = "percentage";
-          nameKey = "planet";
-          maxVal = 100.0;
         }
 
         return ListView(
@@ -4482,264 +4475,438 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ),
             SizedBox(height: 20.h),
 
-            if (localTabIndex == 1) ...[
-              Row(
-                children: [
-                  Text(
-                    'Select Bhava System: ',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: DropdownButton<String>(
-                      value: _selectedBhavaSystem,
-                      dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14.sp,
-                        color: const Color(0xFF4338CA),
-                        fontWeight: FontWeight.bold,
+            if (localTabIndex == 2) ...[
+              _buildVimsopakaContent(context, isDark, setState),
+            ] else ...[
+              if (localTabIndex == 1) ...[
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4338CA).withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                      underline: Container(
-                        height: 1.5,
-                        color: const Color(0xFF4338CA),
-                      ),
-                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF4338CA)),
-                      items: ['Porphyry (Sripathi)', 'Equal Houses', 'Placidus (KP)'].map((String sys) {
-                        return DropdownMenuItem<String>(
-                          value: sys,
-                          child: Text(sys),
-                        );
-                      }).toList(),
-                      onChanged: (String? val) {
-                        if (val != null) {
-                          // Call the parent StatefulWidget setState to trigger data refresh
-                          this.setState(() {
-                            _selectedBhavaSystem = val;
-                          });
-                          _fetchKundliData();
-                        }
-                      },
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Bhava Bala as per System: $_selectedBhavaSystem',
-                style: GoogleFonts.outfit(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(Icons.architecture_rounded, color: const Color(0xFF4338CA), size: 24),
+                      ),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Bhava System Configuration',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white60 : Colors.black54,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedBhavaSystem,
+                                isExpanded: true,
+                                isDense: true,
+                                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15.sp,
+                                  color: const Color(0xFF4338CA),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                icon: const Icon(Icons.expand_more_rounded, color: Color(0xFF4338CA)),
+                                items: ['Porphyry (Sripathi)', 'Equal Houses', 'Placidus (KP)'].map((String sys) {
+                                  return DropdownMenuItem<String>(
+                                    value: sys,
+                                    child: Text(sys),
+                                  );
+                                }).toList(),
+                                onChanged: (String? val) {
+                                  if (val != null) {
+                                    // Call the parent StatefulWidget setState to trigger data refresh
+                                    this.setState(() {
+                                      _selectedBhavaSystem = val;
+                                    });
+                                    _fetchKundliData();
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                SizedBox(height: 16.h),
+              ],
+              SizedBox(height: 4.h),
+            
+              // Bar Chart Section
+              Text(title, style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
               SizedBox(height: 16.h),
-            ],
-            SizedBox(height: 4.h),
             
-            // Bar Chart Section
-            Text(title, style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-            SizedBox(height: 16.h),
-            
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                children: currentList.map((item) {
-                  final name = item[nameKey] ?? (localTabIndex == 1 ? "${item['house']}" : "");
-                  final displayTitle = localTabIndex == 1 ? "${item['house']} ($name)" : name;
-                  double val = (item[valueKey] as num?)?.toDouble() ?? 0.0;
-                  final colorHex = item['color'] as String? ?? "#4338CA";
-                  Color barColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-                  
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 12.h),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 80.w,
-                          child: Text(displayTitle, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
-                        ),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final double fillRatio = (val / maxVal).clamp(0.0, 1.0);
-                              return Stack(
-                                children: [
-                                  Container(
-                                    height: 12.h,
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(6.r),
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 12.h,
-                                    width: constraints.maxWidth * fillRatio,
-                                    decoration: BoxDecoration(
-                                      color: barColor,
-                                      borderRadius: BorderRadius.circular(6.r),
-                                      boxShadow: [
-                                        BoxShadow(color: barColor.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2))
-                                      ]
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-                          ),
-                        ),
-                        SizedBox(
-                          width: 60.w,
-                          child: Text(
-                            localTabIndex == 0 ? ' ${val.toStringAsFixed(2)}' : ' ${val.toStringAsFixed(1)}',
-                            textAlign: TextAlign.right,
-                            style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            
-            SizedBox(height: 24.h),
-            
-            // Detailed Table Section
-            Text("Detailed Breakdown", style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-            SizedBox(height: 16.h),
-            
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Container(
+              Container(
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                 ),
-                child: DataTable(
-                  columnSpacing: 18.0,
-                  horizontalMargin: 12.0,
-                  headingRowHeight: 40.0,
-                  dataRowMinHeight: 36.0,
-                  dataRowMaxHeight: 38.0,
-                  headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
-                  columns: localTabIndex == 0 ? [
-                    DataColumn(label: Text('Bala')),
-                    DataColumn(label: Text('Sun')),
-                    DataColumn(label: Text('Moon')),
-                    DataColumn(label: Text('Mars')),
-                    DataColumn(label: Text('Mercury')),
-                    DataColumn(label: Text('Jupiter')),
-                    DataColumn(label: Text('Venus')),
-                    DataColumn(label: Text('Saturn')),
-                  ] : localTabIndex == 1 ? [
-                    DataColumn(label: Text('Bhava')),
-                    DataColumn(label: Text('Bhava Bala')),
-                    DataColumn(label: Text('In Rupas')),
-                    DataColumn(label: Text('Bhava Cusp')),
-                    DataColumn(label: Text('Adhipati of Cusp')),
-                    DataColumn(label: Text('Adhipati Bala')),
-                    DataColumn(label: Text('Dig Bala')),
-                    DataColumn(label: Text('Drig Bala')),
-                  ] : [
-                    DataColumn(label: Text('Planet')),
-                    DataColumn(label: Text('Score')),
-                    DataColumn(label: Text('Percentage')),
-                    DataColumn(label: Text('Rank')),
-                  ],
-                  rows: localTabIndex == 0 
-                      ? _buildShadbalaDetailedRows(currentList, isDark)
-                      : currentList.map<DataRow>((item) {
-                          if (localTabIndex == 1) {
-                            final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
-                            final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
-                            final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
-                            final double totalVirupas = adhipatiBala + digBala + drigBala;
-                            final double totalRupas = totalVirupas / 60.0;
-                            
-                            return DataRow(cells: [
-                              DataCell(Text('${item['house'] ?? ''}')),
-
-                              DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                              DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                              DataCell(Text('${item['sign'] ?? ''}')),
-                              DataCell(Text('${item['adhipati'] ?? ''}')),
-                              DataCell(Text('${item['adhipati_bala'] ?? ''}')),
-                              DataCell(Text('${item['dig_bala'] ?? ''}')),
-                              DataCell(Text('${item['drig_bala'] ?? ''}')),
-                            ]);
-                          } else {
-                            return DataRow(cells: [
-                              DataCell(Text(item['planet'] ?? '')),
-                              DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                              DataCell(Text('${item['percentage'] ?? ''}%')),
-                              DataCell(Text('${item['rank'] ?? ''}')),
-                            ]);
-                          }
-                        }).toList(),
-
+                child: Column(
+                  children: currentList.map((item) {
+                    final name = item[nameKey] ?? (localTabIndex == 1 ? "${item['house']}" : "");
+                    final displayTitle = localTabIndex == 1 ? "${item['house']} ($name)" : name;
+                    double val = (item[valueKey] as num?)?.toDouble() ?? 0.0;
+                    final colorHex = item['color'] as String? ?? "#4338CA";
+                    Color barColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+                  
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 80.w,
+                            child: Text(displayTitle, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                          ),
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final double fillRatio = (val / maxVal).clamp(0.0, 1.0);
+                                return Stack(
+                                  children: [
+                                    Container(
+                                      height: 12.h,
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(6.r),
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 12.h,
+                                      width: constraints.maxWidth * fillRatio,
+                                      decoration: BoxDecoration(
+                                        color: barColor,
+                                        borderRadius: BorderRadius.circular(6.r),
+                                        boxShadow: [
+                                          BoxShadow(color: barColor.withValues(alpha: 0.4), blurRadius: 4, offset: const Offset(0, 2))
+                                        ]
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            ),
+                          ),
+                          SizedBox(
+                            width: 60.w,
+                            child: Text(
+                              localTabIndex == 0 ? ' ${val.toStringAsFixed(2)}' : ' ${val.toStringAsFixed(1)}',
+                              textAlign: TextAlign.right,
+                              style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-            ),
             
-            SizedBox(height: 20.h),
-            // Note card section from image 2
-            Container(
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              SizedBox(height: 24.h),
+            
+              // Detailed Table Section
+              Text("Detailed Breakdown", style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              SizedBox(height: 16.h),
+            
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: DataTable(
+                    columnSpacing: 18.0,
+                    horizontalMargin: 12.0,
+                    headingRowHeight: 40.0,
+                    dataRowMinHeight: 36.0,
+                    dataRowMaxHeight: 38.0,
+                    headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
+                    dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
+                    columns: localTabIndex == 0 ? [
+                      DataColumn(label: Text('Bala')),
+                      DataColumn(label: Text('Sun')),
+                      DataColumn(label: Text('Moon')),
+                      DataColumn(label: Text('Mars')),
+                      DataColumn(label: Text('Mercury')),
+                      DataColumn(label: Text('Jupiter')),
+                      DataColumn(label: Text('Venus')),
+                      DataColumn(label: Text('Saturn')),
+                    ] : localTabIndex == 1 ? [
+                      DataColumn(label: Text('Bhava')),
+                      DataColumn(label: Text('Bhava Bala')),
+                      DataColumn(label: Text('In Rupas')),
+                      DataColumn(label: Text('Bhava Cusp')),
+                      DataColumn(label: Text('Adhipati of Cusp')),
+                      DataColumn(label: Text('Adhipati Bala')),
+                      DataColumn(label: Text('Dig Bala')),
+                      DataColumn(label: Text('Drig Bala')),
+                    ] : [
+                      DataColumn(label: Text('Planet')),
+                      DataColumn(label: Text('Score')),
+                      DataColumn(label: Text('Percentage')),
+                      DataColumn(label: Text('Rank')),
+                    ],
+                    rows: localTabIndex == 0 
+                        ? _buildShadbalaDetailedRows(currentList, isDark)
+                        : currentList.map<DataRow>((item) {
+                            if (localTabIndex == 1) {
+                              final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
+                              final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
+                              final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
+                              final double totalVirupas = adhipatiBala + digBala + drigBala;
+                              final double totalRupas = totalVirupas / 60.0;
+                            
+                              return DataRow(cells: [
+                                DataCell(Text('${item['house'] ?? ''}')),
+
+                                DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                DataCell(Text('${item['sign'] ?? ''}')),
+                                DataCell(Text('${item['adhipati'] ?? ''}')),
+                                DataCell(Text('${item['adhipati_bala'] ?? ''}')),
+                                DataCell(Text('${item['dig_bala'] ?? ''}')),
+                                DataCell(Text('${item['drig_bala'] ?? ''}')),
+                              ]);
+                            } else {
+                              return DataRow(cells: [
+                                DataCell(Text(item['planet'] ?? '')),
+                                DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
+                                DataCell(Text('${item['percentage'] ?? ''}%')),
+                                DataCell(Text('${item['rank'] ?? ''}')),
+                              ]);
+                            }
+                          }).toList(),
+
+                  ),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Note:',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'There are different methods in Shadbala/Bhava-Bala calculations. Tap here to know the calculation methods used in this App.',
-                    style: GoogleFonts.outfit(
-                      fontSize: 12.sp,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                      height: 1.4,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    'In the above table, 1st column is fixed, swipe right/left on other columns to view complete data.',
-                    style: GoogleFonts.outfit(
-                      fontSize: 12.sp,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 16.h),
-          ],
+            
+            ]
+            ],
         );
       }
     );
   }
+
+  Widget _buildVimsopakaContent(BuildContext context, bool isDark, StateSetter setState) {
+    final vimsopakaMap = (_kundliData?['vimsopaka'] as Map?) ?? {};
+    final listKey = _selectedVimsopakaRelation == 'As per respective Varga Chart' ? 'respective' : 'rashi';
+    final List<dynamic> vimsopakaList = (vimsopakaMap[listKey] as List?) ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Dropdown
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Planetary Relationships: ',
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedVimsopakaRelation,
+                    isExpanded: true,
+                    isDense: true,
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      color: const Color(0xFF4338CA),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF4338CA)),
+                    items: ['As per respective Varga Chart', 'As per Rashi Chart for all Vargas'].map((String sys) {
+                      return DropdownMenuItem<String>(
+                        value: sys,
+                        child: Text(sys, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (String? val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedVimsopakaRelation = val;
+                        });
+                        this.setState(() {});
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16),
+        
+        // Vertical Bar Chart
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4338CA).withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Vimsopaka Bala (Shodasa Varga)",
+                style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+              ),
+              SizedBox(height: 24),
+              SizedBox(
+                height: 260,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: vimsopakaList.map((item) {
+                    final double val = (item['shodasa_varga'] as num?)?.toDouble() ?? 0.0;
+                    final double ratio = (val / 20.0).clamp(0.0, 1.0);
+                    final String planetShort = (item['planet'] as String).substring(0, 2);
+                    
+                    List<Color> gradientColors;
+                    Color shadowColor;
+                    if (val >= 15) {
+                      gradientColors = [const Color(0xFF10B981), const Color(0xFF34D399)]; // Vibrant Green
+                      shadowColor = const Color(0xFF10B981);
+                    } else if (val >= 11) {
+                      gradientColors = [const Color(0xFF4338CA), const Color(0xFF6366F1)]; // Deep Indigo to Purple-Blue
+                      shadowColor = const Color(0xFF4338CA);
+                    } else if (val >= 7) {
+                      gradientColors = [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]; // Vibrant Orange
+                      shadowColor = const Color(0xFFF59E0B);
+                    } else {
+                      gradientColors = [const Color(0xFFEF4444), const Color(0xFFF87171)]; // Vibrant Red
+                      shadowColor = const Color(0xFFEF4444);
+                    }
+                    
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          val.toStringAsFixed(2),
+                          style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? Colors.white70 : Colors.black87),
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          width: 36,
+                          height: 180 * ratio,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: gradientColors,
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(color: shadowColor.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          planetShort,
+                          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        SizedBox(height: 16),
+        
+        // Detailed Table Section
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
+            child: DataTable(
+              columnSpacing: 18.0,
+              horizontalMargin: 12.0,
+              headingRowHeight: 40.0,
+              dataRowMinHeight: 36.0,
+              dataRowMaxHeight: 38.0,
+              headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87, fontSize: 13),
+              dataTextStyle: GoogleFonts.outfit(fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+              columns: [
+                DataColumn(label: Text('Planet')),
+                DataColumn(label: Text('Shad Varga')),
+                DataColumn(label: Text('Sapta Varga')),
+                DataColumn(label: Text('Dasa Varga')),
+                DataColumn(label: Text('Shodasa Varga')),
+              ],
+              rows: vimsopakaList.map<DataRow>((item) {
+                return DataRow(cells: [
+                  DataCell(Text('${item['planet']}')),
+                  DataCell(Text('${item['shad_varga']}')),
+                  DataCell(Text('${item['sapta_varga']}')),
+                  DataCell(Text('${item['dasa_varga']}')),
+                  DataCell(Text('${item['shodasa_varga']}')),
+                ]);
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   List<DataRow> _buildShadbalaDetailedRows(List<dynamic> shadbalaList, bool isDark) {
     // We need to pivot the shadbalaList (which is a list of planet dicts) into rows of parameters.
