@@ -88,15 +88,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   late TabController _tabController;
   late TabController _bottomSubTabController;
 
-  String _personName = 'Jebin J';
-  String _dob = '13 Dec 1998';
-  String _tob = '07:18 PM';
-  String _pob = 'Kanyakumari, Tamil Nadu, India';
+  String _personName = '';
+  String _dob = '';
+  String _tob = '';
+  String _pob = '';
 
-  DateTime _currentDateTime = DateTime(1998, 12, 13, 19, 18, 00);
-  double _latitude = 8.0883;
-  double _longitude = 77.5385;
-  double _timezone = 5.5;
+  DateTime _currentDateTime = DateTime.now();
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+  double _timezone = 0.0;
+  
+  bool _isProfileSet = false;
 
   String _activeChartKey = 'D-1';
   StepperInterval _stepperInterval = StepperInterval.oneMinute;
@@ -112,9 +114,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _jaiminiData;
 
   String _selectedDashaType = 'Vimshottari Dasha';
-  String _daysInYearType = 'Mean Sidereal Year (365.256364)';
+  String _daysInYearType = 'Mean Sidereal Year (365.256364 days)';
   String _customDaysInYear = '';
   Map<String, dynamic>? _selectedMahadasha;
+  Map<String, dynamic>? _selectedAntardasha;
   String _selectedBhavaSystem = 'Porphyry (Sripathi)';
   String _selectedVimsopakaRelation = 'As per respective Varga Chart';
   String _selectedAshtakavargaChartType = 'D-1';
@@ -127,6 +130,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   List<dynamic>? _dynamicDashaTimeline;
   Map<String, dynamic>? _dynamicRunningDasha;
   bool _isDashaCardView = false; // false = table (default), true = cards
+  bool _dashaInitialFetchDone = false; // tracks if first-load fetch has run
 
 
   static const Map<String, String> _divisionalChartsInfo = {
@@ -159,8 +163,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     _currentChartStyle = widget.initialChartStyle;
     _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
-    _syncDateTimeFromStrings();
-    _fetchKundliData();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_isProfileSet) {
+        _showEditProfileDialog();
+      }
+    });
+    // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && !_dashaInitialFetchDone && !_isLoadingDasha) {
+        _fetchDynamicDasha(_selectedDashaType);
+      }
+    });
+    // If app opens directly on Dasha tab, fetch immediately after frame
+    if (widget.initialTabIndex == 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_dashaInitialFetchDone && !_isLoadingDasha) {
+          _fetchDynamicDasha(_selectedDashaType);
+        }
+      });
+    }
   }
 
   @override
@@ -307,7 +329,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           _bnnData = futures[2];
           _jaiminiData = futures[3];
           _isLoadingKundli = false;
+          // Reset dasha so it re-fetches fresh data for the new birth details
+          _dynamicDashaTimeline = null;
+          _dynamicRunningDasha = null;
+          _dashaInitialFetchDone = false;
         });
+        // If Dasha tab is currently visible, re-fetch immediately
+        if (_tabController.index == 1) {
+          _fetchDynamicDasha(_selectedDashaType);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -519,10 +549,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         children: KundliChartStyle.values.map((style) {
                           final isSel = style == _currentChartStyle;
                           String label = style == KundliChartStyle.southIndian
-                              ? 'Square'
+                              ? 'South'
                               : style == KundliChartStyle.northIndian
-                                  ? 'Diamond'
-                                  : 'Sun';
+                                  ? 'North'
+                                  : 'East';
                           
                           IconData? icon;
                           if (style == KundliChartStyle.southIndian) icon = Icons.crop_square_rounded;
@@ -791,7 +821,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void _showEditProfileDialog() {
     showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: _isProfileSet, // Prevent dismiss if no profile set
       builder: (ctx) => _EditBirthDetailsDialog(
         initialName: _personName,
         initialDob: _dob,
@@ -809,6 +839,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             _latitude = lat;
             _longitude = lon;
             _timezone = tz;
+            _isProfileSet = true;
             _syncDateTimeFromStrings();
           });
           _fetchKundliData();
@@ -885,20 +916,51 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ),
       ),
-      body: _isLoadingKundli
+      body: !_isProfileSet
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(color: Color(0xFF4338CA)),
-                  SizedBox(height: 14.h),
+                  Icon(Icons.person_add_alt_1_rounded, size: 60, color: const Color(0xFF4338CA).withValues(alpha: 0.5)),
+                  SizedBox(height: 16.h),
                   Text(
-                    'Calculating Swiss Ephemeris Placements...',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
+                    'No Birth Profile Set',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Please enter your birth details\nto calculate the horoscope.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 14.sp),
+                  ),
+                  SizedBox(height: 24.h),
+                  ElevatedButton.icon(
+                    onPressed: _showEditProfileDialog,
+                    icon: const Icon(Icons.edit_note_rounded, color: Colors.white),
+                    label: Text('Create Profile', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4338CA),
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                    ),
                   ),
                 ],
               ),
             )
+          : _isLoadingKundli
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(color: Color(0xFF4338CA)),
+                      SizedBox(height: 14.h),
+                      Text(
+                        'Calculating Swiss Ephemeris Placements...',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
+                      ),
+                    ],
+                  ),
+                )
           : TabBarView(
               controller: _tabController,
               physics: widget.isSingleTabMode ? const NeverScrollableScrollPhysics() : null,
@@ -3130,9 +3192,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             children: [
               Expanded(
                 child: Text(
-                  _selectedMahadasha != null
-                      ? '${_selectedMahadasha!['planet']} Antardasha'
-                      : _selectedDashaType,
+                  _selectedAntardasha != null
+                      ? '${_selectedAntardasha!['planet']} Pratyantardasha'
+                      : _selectedMahadasha != null
+                          ? '${_selectedMahadasha!['planet']} Antardasha'
+                          : _selectedDashaType,
                   style: GoogleFonts.outfit(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.bold,
@@ -3220,7 +3284,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               if (_selectedMahadasha != null) ...[
                 SizedBox(width: 8.w),
                 GestureDetector(
-                  onTap: () => setState(() => _selectedMahadasha = null),
+                  onTap: () => setState(() {
+                    if (_selectedAntardasha != null) {
+                      _selectedAntardasha = null;
+                    } else {
+                      _selectedMahadasha = null;
+                    }
+                  }),
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
                     decoration: BoxDecoration(
@@ -3294,13 +3364,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // ─── TABLE VIEW ────────────────────────────────────────────────────────────
   List<Widget> _buildDashaTableRows(bool isDark) {
-    final timeline = _dynamicDashaTimeline ?? (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>? ?? []);
+    final timeline = _dynamicDashaTimeline ?? [];
 
     if (timeline.isEmpty) return [_buildDashaEmpty(isDark)];
 
-    final List<dynamic> items = _selectedMahadasha == null
-        ? timeline
-        : (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? []);
+    final List<dynamic> items = _selectedAntardasha != null
+        ? (_selectedAntardasha!['pratyantardashas'] as List<dynamic>? ?? [])
+        : _selectedMahadasha != null
+            ? (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? [])
+            : timeline;
 
     // Build a proper table wrapper
     return [
@@ -3377,11 +3449,29 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 return InkWell(
                   onTap: () {
                     if (_selectedMahadasha == null) {
-                      setState(() => _selectedMahadasha = item);
+                      // Drill into Antardasha
+                      setState(() {
+                        _selectedMahadasha = item;
+                        _selectedAntardasha = null;
+                      });
+                    } else if (_selectedAntardasha == null) {
+                      // Drill into Pratyantardasha
+                      final pratis = item['pratyantardashas'];
+                      if (pratis != null && (pratis as List).isNotEmpty) {
+                        setState(() => _selectedAntardasha = item);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('No Pratyantardasha data for ${item['planet']}', style: GoogleFonts.outfit()),
+                            backgroundColor: const Color(0xFF4338CA),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Pratyantardasha coming soon!', style: GoogleFonts.outfit()),
+                          content: Text('${item['planet']} Sookshma Dasha — deepest level reached', style: GoogleFonts.outfit()),
                           backgroundColor: const Color(0xFF4338CA),
                           duration: const Duration(seconds: 2),
                         ),
@@ -3487,13 +3577,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // ─── CARD VIEW ─────────────────────────────────────────────────────────────
   List<Widget> _buildDashaCardRows(bool isDark) {
-    final timeline = _dynamicDashaTimeline ?? (_kundliData?['vimshottari_dasha_timeline'] as List<dynamic>? ?? []);
+    final timeline = _dynamicDashaTimeline ?? [];
 
     if (timeline.isEmpty) return [_buildDashaEmpty(isDark)];
 
-    final List<dynamic> items = _selectedMahadasha == null
-        ? timeline
-        : (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? []);
+    final List<dynamic> items = _selectedAntardasha != null
+        ? (_selectedAntardasha!['pratyantardashas'] as List<dynamic>? ?? [])
+        : _selectedMahadasha != null
+            ? (_selectedMahadasha!['antardashas'] as List<dynamic>? ?? [])
+            : timeline;
 
     return items.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
@@ -3510,11 +3602,29 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return GestureDetector(
         onTap: () {
           if (_selectedMahadasha == null) {
-            setState(() => _selectedMahadasha = item);
+            // Drill into Antardasha
+            setState(() {
+              _selectedMahadasha = item;
+              _selectedAntardasha = null;
+            });
+          } else if (_selectedAntardasha == null) {
+            // Drill into Pratyantardasha
+            final pratis = item['pratyantardashas'];
+            if (pratis != null && (pratis as List).isNotEmpty) {
+              setState(() => _selectedAntardasha = item);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('No Pratyantardasha data for ${item['planet']}', style: GoogleFonts.outfit()),
+                  backgroundColor: const Color(0xFF4338CA),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Pratyantardasha coming soon!', style: GoogleFonts.outfit()),
+                content: Text('${item['planet']} Sookshma Dasha — deepest level reached', style: GoogleFonts.outfit()),
                 backgroundColor: const Color(0xFF4338CA),
                 duration: const Duration(seconds: 2),
               ),
@@ -3666,7 +3776,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     setState(() {
       _isLoadingDasha = true;
       _selectedDashaType = dashaType;
-      _selectedMahadasha = null; 
+      _selectedMahadasha = null;
     });
     try {
       final res = await AstroApiService.getDasha(
@@ -3682,42 +3792,57 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
       if (mounted) {
         setState(() {
-          _dynamicRunningDasha = res['current_running_dasha'];
-          _dynamicDashaTimeline = res['dasha_timeline'];
+          _dynamicRunningDasha = res['current_running_dasha'] as Map<String, dynamic>?;
+          _dynamicDashaTimeline = res['dasha_timeline'] as List<dynamic>?;
+          _dashaInitialFetchDone = true;
           _isLoadingDasha = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoadingDasha = false);
+        setState(() {
+          _isLoadingDasha = false;
+          _dashaInitialFetchDone = true; // Don't retry on error automatically
+        });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to load $dashaType', style: GoogleFonts.outfit()),
+          content: Text('Failed to load $dashaType. Check your connection.', style: GoogleFonts.outfit()),
           backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _fetchDynamicDasha(dashaType),
+          ),
         ));
       }
     }
   }
 
   double get _currentDaysInYear {
-    if (_customDaysInYear.isNotEmpty) {
+    if (_daysInYearType == 'Custom Days') {
       return double.tryParse(_customDaysInYear) ?? 365.256364;
     }
-    if (_daysInYearType.contains('365.256364')) return 365.256364;
-    if (_daysInYearType.contains('365.24219')) return 365.24219;
-    if (_daysInYearType.contains('365.25')) return 365.25;
-    if (_daysInYearType.contains('360')) return 360.0;
-    if (_daysInYearType.contains('365')) return 365.0;
-    return 365.256364;
+    switch (_daysInYearType) {
+      case 'Mean Sidereal Year (365.256364 days)': return 365.256364;
+      case 'Mean Sidereal Year (365.256364)': return 365.256364;
+      case 'Mean Tropical Year (365.24219 days)': return 365.24219;
+      case 'Year with 365.25 days': return 365.25;
+      case 'Year with 365 days': return 365.0;
+      case 'Savana Year (360 days)': return 360.0;
+      default: return 365.256364;
+    }
   }
 
   String get _daysInYearDisplayLabel {
-    if (_customDaysInYear.isNotEmpty) return _customDaysInYear;
-    if (_daysInYearType.contains('365.256364')) return '365.256364';
-    if (_daysInYearType.contains('365.24219')) return '365.24219';
-    if (_daysInYearType.contains('365.25')) return '365.25';
-    if (_daysInYearType.contains('360')) return '360';
-    if (_daysInYearType.contains('365')) return '365';
-    return '365.256364';
+    if (_daysInYearType == 'Custom Days') return _customDaysInYear;
+    switch (_daysInYearType) {
+      case 'Mean Sidereal Year (365.256364 days)': return '365.256364';
+      case 'Mean Sidereal Year (365.256364)': return '365.256364';
+      case 'Mean Tropical Year (365.24219 days)': return '365.24219';
+      case 'Year with 365.25 days': return '365.25';
+      case 'Year with 365 days': return '365';
+      case 'Savana Year (360 days)': return '360';
+      default: return '365.256364';
+    }
   }
 
   void _showDaysInYearDialog(bool isDark) {
@@ -3756,13 +3881,28 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   decoration: BoxDecoration(
+                    color: _daysInYearType == opt ? const Color(0xFF4338CA).withValues(alpha: 0.05) : Colors.transparent,
                     border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12, width: 0.5)),
                   ),
-                  child: Text(
-                    opt,
-                    style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          opt,
+                          style: GoogleFonts.outfit(
+                            color: _daysInYearType == opt 
+                                ? const Color(0xFF4338CA) 
+                                : (isDark ? Colors.white : Colors.black), 
+                            fontSize: 14,
+                            fontWeight: _daysInYearType == opt ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      if (_daysInYearType == opt)
+                        const Icon(Icons.check_circle_rounded, color: Color(0xFF4338CA), size: 20),
+                    ],
                   ),
                 ),
               );
@@ -6226,8 +6366,8 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   late TextEditingController _latCtrl;
   late TextEditingController _lonCtrl;
   late TextEditingController _tzCtrl;
-  late DateTime _selectedDate;
-  late TimeOfDay _selectedTime;
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
 
   @override
   void initState() {
@@ -6238,7 +6378,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     _lonCtrl = TextEditingController(text: widget.initialLon.toString());
     _tzCtrl = TextEditingController(text: widget.initialTz.toString());
 
-    _selectedDate = DateTime(1998, 12, 13);
+    _selectedDate = null;
     try {
       final formats = [
         DateFormat('dd MMM yyyy'),
@@ -6254,7 +6394,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
       }
     } catch (_) {}
 
-    _selectedTime = const TimeOfDay(hour: 19, minute: 18);
+    _selectedTime = null;
     try {
       final tFormats = [
         DateFormat('hh:mm a'),
@@ -6381,8 +6521,8 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final formattedDob = DateFormat('dd MMM yyyy').format(_selectedDate);
-    final formattedTob = _selectedTime.format(context);
+    final formattedDob = _selectedDate != null ? DateFormat('dd MMM yyyy').format(_selectedDate!) : 'Select Date';
+    final formattedTob = _selectedTime != null ? _selectedTime!.format(context) : 'Select Time';
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -6464,7 +6604,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                           onTap: () async {
                             final dt = await showDatePicker(
                               context: context,
-                              initialDate: _selectedDate,
+                              initialDate: _selectedDate ?? DateTime.now(),
                               firstDate: DateTime(1900),
                               lastDate: DateTime(2100),
                             );
@@ -6495,7 +6635,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                           onTap: () async {
                             final tm = await showTimePicker(
                               context: context,
-                              initialTime: _selectedTime,
+                              initialTime: _selectedTime ?? TimeOfDay.now(),
                             );
                             if (tm != null) {
                               setState(() => _selectedTime = tm);
@@ -6592,12 +6732,35 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                     flex: 3,
                     child: BouncyTouchCard(
                       onTap: () {
-                        final name = _nameCtrl.text.trim().isEmpty ? widget.initialName : _nameCtrl.text.trim();
-                        final pob = _pobCtrl.text.trim().isEmpty ? widget.initialPob : _pobCtrl.text.trim();
-                        final lat = double.tryParse(_latCtrl.text.trim()) ?? widget.initialLat;
-                        final lon = double.tryParse(_lonCtrl.text.trim()) ?? widget.initialLon;
-                        final tz = double.tryParse(_tzCtrl.text.trim()) ?? widget.initialTz;
-                        widget.onSave(name, formattedDob, formattedTob, pob, lat, lon, tz);
+                        if (_selectedDate == null || _selectedTime == null) {
+                          showDialog(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              title: Text('Missing Information', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+                              content: Text('Please select your Date and Time of birth to continue.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87)),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(c),
+                                  child: Text('OK', style: GoogleFonts.outfit(color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+                          return;
+                        }
+                        
+                        final name = _nameCtrl.text.trim().isEmpty ? 'User' : _nameCtrl.text.trim();
+                        final pob = _pobCtrl.text.trim().isEmpty ? 'Unknown' : _pobCtrl.text.trim();
+                        final lat = double.tryParse(_latCtrl.text.trim()) ?? 0.0;
+                        final lon = double.tryParse(_lonCtrl.text.trim()) ?? 0.0;
+                        final tz = double.tryParse(_tzCtrl.text.trim()) ?? 0.0;
+                        
+                        final fDob = DateFormat('dd MMM yyyy').format(_selectedDate!);
+                        final fTob = _selectedTime!.format(context);
+                        
+                        widget.onSave(name, fDob, fTob, pob, lat, lon, tz);
                         Navigator.pop(context);
                       },
                       child: Container(
