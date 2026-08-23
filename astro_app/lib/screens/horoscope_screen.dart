@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/astro_models.dart';
@@ -116,6 +117,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _selectedMahadasha;
   String _selectedBhavaSystem = 'Porphyry (Sripathi)';
   String _selectedVimsopakaRelation = 'As per respective Varga Chart';
+  String _selectedAshtakavargaChartType = 'D-1';
+  String _selectedAshtakavargaType = 'Sarva-Ashtakavarga';
   int _strengthSubTabIndex = 0;
 
 
@@ -131,15 +134,21 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     'D-2': 'Hora (Wealth & Liquid Assets)',
     'D-3': 'Drekkana (Siblings & Courage)',
     'D-4': 'Chaturthamsha (Property & Fortune)',
+    'D-5': 'Panchamsha (Spiritual Merit)',
+    'D-6': 'Shashtamsha (Physical Health)',
     'D-7': 'Saptamsha (Children & Progeny)',
+    'D-8': 'Ashtamsha (Longevity & Sudden Events)',
     'D-9': 'Navamsha (Dharma, Soul & Marriage)',
     'D-10': 'Dasamsha (Career & Profession)',
+    'D-11': 'Ekadashamsha (Gains & Finances)',
     'D-12': 'Dwadasamsha (Parents & Lineage)',
     'D-16': 'Shodashamsha (Vehicles & Pleasures)',
     'D-20': 'Vimsamsha (Spiritual Progress)',
-    'D-24': 'Siddhamsa (Higher Knowledge)',
+    'D-24': 'Chaturvimshamsha (Higher Knowledge)',
     'D-27': 'Saptavimsamsha (Strengths)',
     'D-30': 'Trimshamsha (Misfortunes & Arishta)',
+    'D-40': 'Khavedamsha (Ancestral Legacy)',
+    'D-45': 'Akshavedamsha (General Character)',
     'D-60': 'Shashtiamsha (Past Karmic Destiny)',
     'Bhava': 'Bhava Chalit (Cuspal Houses)',
   };
@@ -4201,102 +4210,223 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   // TAB 5: ASHTAKVARGA (SAV & BAV)
   // =========================================================================
   Widget _buildAshtakvargaTab(BuildContext context, bool isDark) {
-    final ashtakvarga = _kundliData?['ashtakvarga'] as Map<String, dynamic>?;
-    final totalSav = ashtakvarga?['total_sav_points'] ?? 337;
-    final signPoints = (ashtakvarga?['sign_points'] as Map<String, dynamic>?) ?? {};
-    final pointValues = signPoints.values.map((v) => (v as num).toInt()).toList();
-    final defaultPoints = [28, 31, 29, 34, 36, 27, 30, 26, 33, 25, 32, 26];
-    final displayPoints = pointValues.isNotEmpty ? pointValues : defaultPoints;
+    final allChartsData = _kundliData?['ashtakvarga'] as Map<String, dynamic>? ?? {};
+    final ashtakvarga = allChartsData[_selectedAshtakavargaChartType] as Map<String, dynamic>? ?? {};
+    
+    int totalPoints = 0;
+    List<dynamic> displayPoints = [];
+    Map<String, dynamic>? bavMatrix = ashtakvarga['bav_matrix'] as Map<String, dynamic>?;
+    
+    if (_selectedAshtakavargaType == 'Sarva-Ashtakavarga') {
+      totalPoints = (ashtakvarga['total_sav_points'] as num?)?.toInt() ?? 337;
+      displayPoints = (ashtakvarga['sav_points'] as List<dynamic>?) ?? List.filled(12, 0);
+    } else if (_selectedAshtakavargaType == 'Trikona Shodhana') {
+      displayPoints = (ashtakvarga['sav_trikona'] as List<dynamic>?) ?? List.filled(12, 0);
+      totalPoints = displayPoints.fold(0, (sum, item) => sum + (item as num).toInt());
+      bavMatrix = ashtakvarga['bav_trikona'] as Map<String, dynamic>?;
+    } else if (_selectedAshtakavargaType == 'Ekadhipatya Shodhana') {
+      displayPoints = (ashtakvarga['sav_ekadhipatya'] as List<dynamic>?) ?? List.filled(12, 0);
+      totalPoints = displayPoints.fold(0, (sum, item) => sum + (item as num).toInt());
+      bavMatrix = ashtakvarga['bav_ekadhipatya'] as Map<String, dynamic>?;
+    } else if (_selectedAshtakavargaType == 'Shodhya Pinda') {
+      bavMatrix = null;
+    } else if (_selectedAshtakavargaType.startsWith('Bhinna-Ashtakavarga of')) {
+      final planet = _selectedAshtakavargaType.replaceAll('Bhinna-Ashtakavarga of ', '');
+      displayPoints = (ashtakvarga['bav_matrix']?[planet] as List<dynamic>?) ?? List.filled(12, 0);
+      totalPoints = displayPoints.fold(0, (sum, item) => sum + (item as num).toInt());
+      bavMatrix = ashtakvarga['bav_matrix'] as Map<String, dynamic>?;
+    }
 
-    final bav = (ashtakvarga?['bav_matrix'] ?? ashtakvarga?['bhinnashtakavarga']) as Map<String, dynamic>?;
+    final chartTypes = [
+      'D-1', 'D-9', 'D-2', 'D-3', 'D-4', 'D-5', 'D-6', 'D-7', 'D-8', 'D-10', 'D-11', 'D-12', 'D-16', 'D-20', 'D-24', 'D-27', 'D-30', 'D-40', 'D-45', 'D-60'
+    ];
+    
+    final ashtakvargaTypes = [
+      'Sarva-Ashtakavarga',
+      'Trikona Shodhana',
+      'Ekadhipatya Shodhana',
+      'Shodhya Pinda',
+      'Bhinna-Ashtakavarga of Sun',
+      'Bhinna-Ashtakavarga of Moon',
+      'Bhinna-Ashtakavarga of Mars',
+      'Bhinna-Ashtakavarga of Mercury',
+      'Bhinna-Ashtakavarga of Jupiter',
+      'Bhinna-Ashtakavarga of Venus',
+      'Bhinna-Ashtakavarga of Saturn',
+      'Bhinna-Ashtakavarga of Lagna'
+    ];
 
     return ListView(
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
-        // Dropdowns for Chart Type and Method
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: 'Rashi Based All',
-                    isExpanded: true,
-                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
-                    items: ['Rashi Based All'].map((String value) {
-                      return DropdownMenuItem<String>(value: value, child: Text(value));
-                    }).toList(),
-                    onChanged: (_) {},
+        
+        // Chart Style Toggle
+        Container(
+          width: double.infinity,
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _currentChartStyle = KundliChartStyle.northIndian),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: _currentChartStyle == KundliChartStyle.northIndian ? (isDark ? const Color(0xFF3B82F6) : Colors.white) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8.r),
+                      boxShadow: _currentChartStyle == KundliChartStyle.northIndian ? [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))] : [],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text('North Indian', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: _currentChartStyle == KundliChartStyle.northIndian ? (isDark ? Colors.white : const Color(0xFF3B82F6)) : (isDark ? Colors.white54 : Colors.black54))),
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: 'Parashara',
-                    isExpanded: true,
-                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
-                    items: ['Parashara'].map((String value) {
-                      return DropdownMenuItem<String>(value: value, child: Text(value));
-                    }).toList(),
-                    onChanged: (_) {},
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _currentChartStyle = KundliChartStyle.southIndian),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: _currentChartStyle == KundliChartStyle.southIndian ? (isDark ? const Color(0xFF3B82F6) : Colors.white) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8.r),
+                      boxShadow: _currentChartStyle == KundliChartStyle.southIndian ? [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))] : [],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text('South Indian', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: _currentChartStyle == KundliChartStyle.southIndian ? (isDark ? Colors.white : const Color(0xFF3B82F6)) : (isDark ? Colors.white54 : Colors.black54))),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        SizedBox(height: 16.h),
-
+        // Premium Dropdown Filters Section
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF065F46), Color(0xFF059669), Color(0xFF10B981)],
-            ),
-            borderRadius: BorderRadius.circular(20.r),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF059669).withValues(alpha: 0.35),
+                color: isDark ? Colors.black26 : const Color(0xFFE2E8F0).withValues(alpha: 0.8),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
-              ),
+              )
             ],
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9), width: 1.5),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text('Sarvashtakvarga (SAV)', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp)),
-                  Text('$totalSav Points', style: GoogleFonts.outfit(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                  Icon(Icons.pie_chart_rounded, size: 18.sp, color: const Color(0xFF3B82F6)),
+                  SizedBox(width: 8.w),
+                  Text('Select Chart Type', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp, fontWeight: FontWeight.w600)),
                 ],
               ),
-              Icon(Icons.grid_view_rounded, color: Colors.white, size: 36),
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedAshtakavargaChartType,
+                    isExpanded: true,
+                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFF3B82F6)),
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                    items: chartTypes.map((String value) {
+                      final label = _divisionalChartsInfo[value]?.split(' ')[0] ?? value;
+                      return DropdownMenuItem<String>(value: value, child: Text('$label ($value)'));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedAshtakavargaChartType = val);
+                    },
+                  ),
+                ),
+              ),
+              
+              SizedBox(height: 16.h),
+              
+              Row(
+                children: [
+                  Icon(Icons.filter_list_rounded, size: 18.sp, color: const Color(0xFF10B981)),
+                  SizedBox(width: 8.w),
+                  Text('Select Ashtakavarga Method', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedAshtakavargaType,
+                    isExpanded: true,
+                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFF10B981)),
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                    items: ashtakvargaTypes.map((String value) {
+                      return DropdownMenuItem<String>(value: value, child: Text(value));
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedAshtakavargaType = val);
+                    },
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+        SizedBox(height: 20.h),
+
+        // Shodhya Pinda View
+        if (_selectedAshtakavargaType == 'Shodhya Pinda')
+          _buildShodhyaPindaView(ashtakvarga['shodhya_pinda'] as Map<String, dynamic>?, isDark)
+        else ...[
+          // Summary Header
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('$_selectedAshtakavargaType for ($_selectedAshtakavargaChartType)', 
+                     style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 15.sp, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: 16.h),
+          
+          // Custom South Indian Chart Grid Layout
+          
+          _currentChartStyle == KundliChartStyle.northIndian
+              ? _buildNorthIndianAshtakavargaChart(displayPoints, ashtakvarga['ascendant_sign_index'] ?? 1, isDark)
+              : _buildSouthIndianAshtakavargaChart(displayPoints, isDark),
+
+        ],
         
-        if (bav != null && bav.isNotEmpty) ...[
+        if (bavMatrix != null && bavMatrix.isNotEmpty) ...[
           SizedBox(height: 24.h),
           Text('Bhinnashtakavarga (BAV) Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : Colors.black87)),
           SizedBox(height: 12.h),
@@ -4332,7 +4462,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       int totalInSign = 0;
                       List<int> planetVals = [];
                       for (String p in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn']) {
-                        final pts = (bav[p] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
+                        final pts = (bavMatrix![p] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
                         final val = pts[rowIndex];
                         planetVals.add(val);
                         totalInSign += val;
@@ -4398,6 +4528,190 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ),
           ),
         ],
+      ],
+    );
+  }
+
+
+  // =========================================================================
+  // CUSTOM NORTH INDIAN CHART WIDGET
+  // =========================================================================
+  Widget _buildNorthIndianAshtakavargaChart(List<dynamic> points, int ascSignIdx, bool isDark) {
+    if (points.length < 12) return SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      height: 320.h,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black26 : const Color(0xFFE2E8F0).withValues(alpha: 0.8),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10.r),
+        child: CustomPaint(
+          painter: _NorthIndianAshtakavargaPainter(points: points, ascSignIdx: ascSignIdx, isDark: isDark),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // CUSTOM SOUTH INDIAN CHART WIDGET
+  // =========================================================================
+  Widget _buildSouthIndianAshtakavargaChart(List<dynamic> points, bool isDark) {
+    if (points.length < 12) return SizedBox.shrink();
+    
+    Color borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    Color textColor = isDark ? Colors.white : Colors.black87;
+    
+    Widget buildBox(int signIndex) {
+      final point = (points[signIndex - 1] as num).toInt();
+      
+      Color bgColor = Colors.transparent;
+      if (point >= 30) {
+        bgColor = const Color(0xFF10B981).withValues(alpha: 0.08); // Subtle green
+      } else if (point <= 25) {
+        bgColor = const Color(0xFFEF4444).withValues(alpha: 0.05); // Subtle red
+      }
+      
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor, width: 0.5),
+          color: bgColor,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '$point', 
+          style: GoogleFonts.outfit(
+            fontSize: 18.sp, 
+            fontWeight: FontWeight.bold, 
+            color: point >= 30 ? const Color(0xFF10B981) : (point <= 25 ? const Color(0xFFEF4444) : textColor)
+          )
+        ),
+      );
+    }
+    
+    Widget buildCenterLogo() {
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor, width: 0.5),
+          gradient: LinearGradient(
+            colors: isDark ? [const Color(0xFF1E293B), const Color(0xFF0F172A)] : [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        ),
+        alignment: Alignment.center,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: EdgeInsets.all(4.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.grid_view_rounded, color: isDark ? Colors.white24 : Colors.black12, size: 24.sp),
+                SizedBox(height: 4.h),
+                Text('SOUTH\nINDIAN\nCHART', textAlign: TextAlign.center, style: GoogleFonts.outfit(color: isDark ? Colors.white30 : Colors.black26, fontSize: 12.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 320.h,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: borderColor, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black26 : const Color(0xFFE2E8F0).withValues(alpha: 0.8),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10.r),
+        child: Column(
+          children: [
+            Expanded(child: Row(
+              children: [
+                Expanded(child: buildBox(12)), // Pisces
+                Expanded(child: buildBox(1)),  // Aries
+                Expanded(child: buildBox(2)),  // Taurus
+                Expanded(child: buildBox(3)),  // Gemini
+              ],
+            )),
+            Expanded(child: Row(
+              children: [
+                Expanded(child: buildBox(11)), // Aquarius
+                Expanded(flex: 2, child: buildCenterLogo()), // Center Empty
+                Expanded(child: buildBox(4)),  // Cancer
+              ],
+            )),
+            Expanded(child: Row(
+              children: [
+                Expanded(child: buildBox(10)), // Capricorn
+                Expanded(flex: 2, child: Container(decoration: BoxDecoration(color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC), border: Border.all(color: borderColor, width: 0.5)))),
+                Expanded(child: buildBox(5)),  // Leo
+              ],
+            )),
+            Expanded(child: Row(
+              children: [
+                Expanded(child: buildBox(9)),  // Sagittarius
+                Expanded(child: buildBox(8)),  // Scorpio
+                Expanded(child: buildBox(7)),  // Libra
+                Expanded(child: buildBox(6)),  // Virgo
+              ],
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // SHODHYA PINDA VIEW
+  // =========================================================================
+  Widget _buildShodhyaPindaView(Map<String, dynamic>? pinda, bool isDark) {
+    if (pinda == null || pinda.isEmpty) return SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Shodhya Pinda Multipliers', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : Colors.black87)),
+        SizedBox(height: 12.h),
+        ...['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'].map((planet) {
+          final val = pinda[planet] ?? 0;
+          return Container(
+            margin: EdgeInsets.only(bottom: 8.h),
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(planet, style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87)),
+                Text('$val', style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: const Color(0xFF3B82F6))),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }
@@ -6328,4 +6642,120 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     );
   }
 
+}
+
+
+
+class _NorthIndianAshtakavargaPainter extends CustomPainter {
+  final List<dynamic> points;
+  final int ascSignIdx;
+  final bool isDark;
+
+  _NorthIndianAshtakavargaPainter({required this.points, required this.ascSignIdx, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeColor = isDark ? const Color(0xFF6366F1) : const Color(0xFF4338CA);
+    final linePaint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final bgFill = Paint()
+      ..color = isDark ? const Color(0xFF1E293B) : Colors.white
+      ..style = PaintingStyle.fill;
+
+    final w = size.width;
+    final h = size.height;
+
+    // Background
+    final rect = Rect.fromLTWH(0, 0, w, h);
+    canvas.drawRect(rect, bgFill);
+
+    // Diagonals and inner diamond
+    canvas.drawLine(Offset.zero, Offset(w, h), linePaint);
+    canvas.drawLine(Offset(w, 0), Offset(0, h), linePaint);
+
+    final kendraPath = Path()
+      ..moveTo(w / 2, 0)
+      ..lineTo(w, h / 2)
+      ..lineTo(w / 2, h)
+      ..lineTo(0, h / 2)
+      ..close();
+    canvas.drawPath(kendraPath, linePaint);
+
+    // Outline
+    canvas.drawRect(rect, linePaint);
+
+    // House Centers for Text Placement
+    final houseCenters = [
+      Offset(w * 0.50, h * 0.20), // H1
+      Offset(w * 0.25, h * 0.12), // H2
+      Offset(w * 0.12, h * 0.25), // H3
+      Offset(w * 0.25, h * 0.50), // H4
+      Offset(w * 0.12, h * 0.75), // H5
+      Offset(w * 0.25, h * 0.88), // H6
+      Offset(w * 0.50, h * 0.80), // H7
+      Offset(w * 0.75, h * 0.88), // H8
+      Offset(w * 0.88, h * 0.75), // H9
+      Offset(w * 0.75, h * 0.50), // H10
+      Offset(w * 0.88, h * 0.25), // H11
+      Offset(w * 0.75, h * 0.12), // H12
+    ];
+
+    for (int hIdx = 1; hIdx <= 12; hIdx++) {
+      final signNumber = ((ascSignIdx + hIdx - 2) % 12) + 1;
+      final point = (points[signNumber - 1] as num).toInt();
+      
+      final textColor = point >= 30 ? const Color(0xFF10B981) : (point <= 25 ? const Color(0xFFEF4444) : (isDark ? Colors.white : Colors.black87));
+      
+      final tp = TextPainter(
+        text: TextSpan(
+          text: '$point',
+          style: GoogleFonts.outfit(
+            color: textColor,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: ui.TextDirection.ltr,
+      );
+      tp.layout();
+      
+      final center = houseCenters[hIdx - 1];
+      tp.paint(canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+      
+      // Draw tiny sign number
+      final signTp = TextPainter(
+        text: TextSpan(
+          text: '$signNumber',
+          style: GoogleFonts.outfit(
+            color: isDark ? Colors.white30 : Colors.black26,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: ui.TextDirection.ltr,
+      );
+      signTp.layout();
+      
+      // Position tiny sign number slightly above or below depending on house
+      double sDx = center.dx - signTp.width / 2;
+      double sDy = center.dy - tp.height / 2 - signTp.height - 2;
+      
+      if (hIdx == 1) sDy = center.dy - tp.height / 2 - signTp.height - 4;
+      if (hIdx == 4) sDy = center.dy + tp.height / 2 + 2;
+      if (hIdx == 7) sDy = center.dy + tp.height / 2 + 4;
+      if (hIdx == 10) sDy = center.dy + tp.height / 2 + 2;
+      
+      signTp.paint(canvas, Offset(sDx, sDy));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _NorthIndianAshtakavargaPainter oldDelegate) {
+    return true;
+  }
 }
