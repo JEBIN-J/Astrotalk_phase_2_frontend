@@ -64,13 +64,13 @@ extension StepperIntervalExt on StepperInterval {
   }
 }
 
-class HoroscopeScreen extends StatefulWidget {
+class PrashnaScreen extends StatefulWidget {
   final KundliChartStyle initialChartStyle;
   final int initialTabIndex;
   final bool isSingleTabMode;
   final String? appBarTitle;
 
-  const HoroscopeScreen({
+  const PrashnaScreen({
     super.key,
     this.initialChartStyle = KundliChartStyle.southIndian, // Default South Indian Chart
     this.initialTabIndex = 0,
@@ -79,10 +79,10 @@ class HoroscopeScreen extends StatefulWidget {
   });
 
   @override
-  State<HoroscopeScreen> createState() => _HoroscopeScreenState();
+  State<PrashnaScreen> createState() => _PrashnaScreenState();
 }
 
-class _HoroscopeScreenState extends State<HoroscopeScreen>
+class _PrashnaScreenState extends State<PrashnaScreen>
     with TickerProviderStateMixin {
   late KundliChartStyle _currentChartStyle;
   late TabController _tabController;
@@ -161,7 +161,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void initState() {
     super.initState();
     _currentChartStyle = widget.initialChartStyle;
-    _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(length: 6, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -169,17 +169,35 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         _showEditProfileDialog();
       }
     });
-    // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
+    // Fetch Dasha based on active tab
     _tabController.addListener(() {
-      if (_tabController.index == 1 && !_dashaInitialFetchDone && !_isLoadingDasha) {
-        _fetchDynamicDasha(_selectedDashaType);
+      if (!_tabController.indexIsChanging && _tabController.index >= 1) {
+        String newDasha = 'Vimshottari Dasha';
+        if (_tabController.index == 1) newDasha = 'Vimshottari Dasha';
+        if (_tabController.index == 2) newDasha = 'Yogini Dasha';
+        if (_tabController.index == 3) newDasha = 'Kala Chakra Dasha';
+        if (_tabController.index == 4) newDasha = 'Ashtottari Dasha (Method 1)';
+        if (_tabController.index == 5) newDasha = 'Chara Dasha (KN Rao)';
+        
+        if (newDasha != _selectedDashaType || (!_dashaInitialFetchDone && !_isLoadingDasha)) {
+          setState(() {
+            _selectedDashaType = newDasha;
+          });
+          _fetchDynamicDasha(newDasha);
+        }
       }
     });
-    // If app opens directly on Dasha tab, fetch immediately after frame
-    if (widget.initialTabIndex == 1) {
+    if (widget.initialTabIndex >= 1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_dashaInitialFetchDone && !_isLoadingDasha) {
-          _fetchDynamicDasha(_selectedDashaType);
+        if (mounted) {
+            String newDasha = 'Vimshottari Dasha';
+            if (_tabController.index == 1) newDasha = 'Vimshottari Dasha';
+            if (_tabController.index == 2) newDasha = 'Yogini Dasha';
+            if (_tabController.index == 3) newDasha = 'Kala Chakra Dasha';
+            if (_tabController.index == 4) newDasha = 'Ashtottari Dasha (Method 1)';
+            if (_tabController.index == 5) newDasha = 'Chara Dasha (KN Rao)';
+            setState(() { _selectedDashaType = newDasha; });
+            _fetchDynamicDasha(newDasha);
         }
       });
     }
@@ -868,7 +886,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         foregroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
         centerTitle: false,
         title: Text(
-          widget.appBarTitle ?? 'Horoscope',
+          widget.appBarTitle ?? 'Prashna Chart',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20.sp),
         ),
         actions: [
@@ -902,15 +920,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
               unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14.sp),
               tabs: [
-                Tab(text: 'Vedic (D1)'),
-                Tab(text: 'Dasha'),
-                Tab(text: 'KP System'),
-                Tab(text: 'Lal Kitab'),
-                Tab(text: 'BNN'),
-                Tab(text: 'Jamini'),
-                Tab(text: 'Ashtakavarga'),
-                Tab(text: 'Strength'),
-                Tab(text: 'Kot Chakra'),
+                Tab(text: 'Chart & Planets'),
+                Tab(text: 'Vimsottari'),
+                Tab(text: 'Yogini'),
+                Tab(text: 'Kala Chakra'),
+                Tab(text: 'Ashtottari'),
+                Tab(text: 'Chara'),
               ],
             ),
           ),
@@ -966,14 +981,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               physics: widget.isSingleTabMode ? const NeverScrollableScrollPhysics() : null,
               children: [
                 _buildLagnaAndDivisionalChartTab(context, isDark),
-                _buildDashaTab(context, isDark),
-                _buildPlanetsTab(context, isDark),
-                _buildLalKitabTab(context, isDark),
-                _buildBnnTab(context, isDark),
-                _buildJaiminiTab(context, isDark),
-                _buildAshtakvargaTab(context, isDark),
-                _buildStrengthTab(context, isDark),
-                _buildKotChakraTab(context, isDark),
+                _buildSpecificDashaTab(context, isDark, 'Vimshottari Dasha'),
+                _buildSpecificDashaTab(context, isDark, 'Yogini Dasha'),
+                _buildSpecificDashaTab(context, isDark, 'Kala Chakra Dasha'),
+                _buildSpecificDashaTab(context, isDark, 'Ashtottari Dasha (Method 1)'),
+                _buildSpecificDashaTab(context, isDark, 'Chara Dasha (KN Rao)'),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -1568,16 +1580,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       child: Row(
         children: [
-          Expanded(flex: 3, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 3, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 3, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 3, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 2, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+          Expanded(flex: 1, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+          Expanded(flex: 1, child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
         ],
       ),
     );
@@ -1681,7 +1693,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: _isCardViewMode ? 500 : 950,
+                width: _isCardViewMode ? 500 : 800,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -1770,16 +1782,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             child: Row(
                               children: [
-                                Expanded(flex: 3, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)), overflow: TextOverflow.ellipsis))),
+                                Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
+                                Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
+                                Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
+                                Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
+                                Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
                               ],
                             ),
                           );
@@ -1835,24 +1847,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: 600.w,
+                width: 450.w,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                      child: Row(
-                        children: [
-                          Expanded(flex: 3, child: Text('Upagraha', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 2, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 2, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 3, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 1, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-                          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-                        ],
-                      ),
-                    ),
+                    _buildTableHeader(['Upagraha', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
                     Divider(height: 1.h),
                     Expanded(
                       child: ListView.separated(
@@ -1868,19 +1867,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           final signDisplay = rawSign.split('(')[0].trim();
                           final nak = u['nakshatra']?.toString() ?? 'Ashwini';
                           final pada = (u['pada'] ?? 1).toString();
-                          final nl = u['nakshatra_lord']?.toString() ?? '';
-                          final nlCode = _getLordShortCode(nl);
 
                           return Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             child: Row(
                               children: [
-                                Expanded(flex: 3, child: Text(name, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(nlCode, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
+                                Expanded(flex: 1, child: Text(name, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600))),
+                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
                               ],
                             ),
                           );
@@ -1922,7 +1918,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: 600.w,
+                width: 500.w,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -3056,6 +3052,78 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _planetAbbr(String name) {
     if (name.length <= 2) return name.toUpperCase();
     return name.substring(0, 2).toUpperCase();
+  }
+
+
+  Widget _buildSpecificDashaTab(BuildContext context, bool isDark, String dashaName) {
+    if (_isLoadingDasha || (_selectedDashaType != dashaName && _dynamicDashaTimeline == null)) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: Color(0xFF4338CA)),
+            SizedBox(height: 14.h),
+            Text(
+              'Calculating $dashaName Timeline...',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_dynamicDashaTimeline == null || _dynamicDashaTimeline!.isEmpty) {
+      return Center(
+        child: Text(
+          'No Dasha data available.',
+          style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black54),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        if (_dynamicRunningDasha != null)
+          Container(
+            padding: EdgeInsets.all(16.w),
+            margin: EdgeInsets.only(bottom: 16.h),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF312E81), Color(0xFF4338CA)],
+              ),
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.timeline, color: Colors.white, size: 28),
+                SizedBox(width: 14.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Running Dasha',
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '${_dynamicRunningDasha!['planet']}',
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Ends: ${_dynamicRunningDasha!['end_date_formatted'] ?? _dynamicRunningDasha!['end_date']}',
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ...(_isDashaCardView ? _buildDashaCardRows(isDark) : _buildDashaTableRows(isDark)),
+      ],
+    );
   }
 
   Widget _buildDashaTab(BuildContext context, bool isDark) {

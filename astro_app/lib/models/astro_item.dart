@@ -106,6 +106,15 @@ class AstroItem {
       secondaryColor: Color(0xFFFBBF24),
     ),
     const AstroItem(
+      id: 'prashna',
+      title: 'Prashna',
+      subtitle: 'Horary Astrology',
+      iconKey: 'horoscope',
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFF475569),
+      secondaryColor: Color(0xFF94A3B8),
+    ),
+    const AstroItem(
       id: 'daily_horoscope',
       title: 'Daily Horoscope',
       subtitle: 'Daily Sun Sign Predictions',
@@ -143,16 +152,7 @@ class AstroItem {
       primaryColor: Color(0xFF0D9488),
       secondaryColor: Color(0xFF2DD4BF),
     ),
-    const AstroItem(
-      id: 'palm_reading',
-      title: 'Palm Reading',
-      subtitle: 'AI Vision Palmistry Analysis',
-      iconKey: 'palm_reading',
-      category: AstroCategory.aiTools,
-      primaryColor: Color(0xFF7C3AED),
-      secondaryColor: Color(0xFFA78BFA),
-      badge: 'AI',
-    ),
+
     const AstroItem(
       id: 'face_reading',
       title: 'Face Reading',
@@ -181,15 +181,7 @@ class AstroItem {
       primaryColor: Color(0xFFEA580C),
       secondaryColor: Color(0xFFFB923C),
     ),
-    const AstroItem(
-      id: 'admin_panel',
-      title: 'Admin Panel',
-      subtitle: 'Manage Users & Subscriptions',
-      iconKey: 'admin',
-      category: AstroCategory.utilities,
-      primaryColor: Color(0xFF475569),
-      secondaryColor: Color(0xFF94A3B8),
-    ),
+
     const AstroItem(
       id: 'subscribe',
       title: 'Subscribe',

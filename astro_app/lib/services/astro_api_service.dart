@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://172.20.10.11:5000/api/v1'; // ngrok tunnel
+        return 'http://10.157.170.225:5000/api/v1'; // ngrok tunnel
       }
     } catch (_) {}
     return 'http://127.0.0.1:5000/api/v1';
@@ -374,39 +374,10 @@ class AstroApiService {
   }
 
   // =========================================================================
-  // 5. AI VISION (PALM & FACE READING)
+  // 5. AI VISION (FACE READING)
   // =========================================================================
   
-  static Future<Map<String, dynamic>> analyzeVision({required bool isFace, String? filePath}) async {
-    if (isFace) {
-      return await readFace(filePath ?? '');
-    } else {
-      return await readPalm(filePath ?? '');
-    }
-  }
 
-  static Future<Map<String, dynamic>> readPalm(String filePath) async {
-    final uri = Uri.parse('$baseUrl/ai-vision/palm-reading');
-    try {
-      final request = http.MultipartRequest('POST', uri);
-      if (authToken.isNotEmpty) {
-        request.headers['Authorization'] = 'Bearer $authToken';
-      }
-      request.files.add(await http.MultipartFile.fromPath('file', filePath));
-      
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 20));
-      final res = await http.Response.fromStream(streamedResponse);
-      
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body) as Map<String, dynamic>;
-      } else {
-        throw Exception('Failed to read palm: ${res.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('API Error readPalm: $e');
-      rethrow;
-    }
-  }
 
   static Future<Map<String, dynamic>> readFace(String filePath) async {
     final uri = Uri.parse('$baseUrl/ai-vision/face-reading');

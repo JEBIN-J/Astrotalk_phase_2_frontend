@@ -5,8 +5,6 @@ import 'horoscope_screen.dart';
 import 'ai_calling_screen.dart';
 import 'ai_chat_screen.dart';
 import 'vision_reading_screen.dart';
-import 'admin_panel_screen.dart';
-import 'admin_login_screen.dart';
 import 'notifications_screen.dart';
 import 'muhurat_screen.dart';
 import 'subscribe_screen.dart';
@@ -51,11 +49,8 @@ class AstroFeatureDialogs {
       case 'chat_bot':
         targetScreen = const AiChatScreen();
         break;
-      case 'palm_reading':
-        targetScreen = const VisionReadingScreen(isFace: false);
-        break;
       case 'face_reading':
-        targetScreen = const VisionReadingScreen(isFace: true);
+        targetScreen = const VisionReadingScreen();
         break;
       case 'daily_quotes':
         // Show as a snackbar or popup for now since it's simple
@@ -66,8 +61,10 @@ class AstroFeatureDialogs {
       case 'notifications':
         targetScreen = const NotificationsScreen();
         break;
-      case 'admin_panel':
-        targetScreen = const AdminLoginScreen();
+      case 'prashna':
+        // targetScreen = const PrashnaScreen();
+        // Fallback for now if there is no prashna screen
+        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);
         break;
       case 'subscribe':
         targetScreen = const SubscribeScreen();

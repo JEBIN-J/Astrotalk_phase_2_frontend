@@ -5,10 +5,10 @@ import 'package:image_picker/image_picker.dart';
 import '../services/astro_api_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class VisionReadingScreen extends StatefulWidget {
-  final bool isFace; // true for Face Reading, false for Palm Reading
 
-  const VisionReadingScreen({super.key, required this.isFace});
+class VisionReadingScreen extends StatefulWidget {
+
+  const VisionReadingScreen({super.key});
 
   @override
   State<VisionReadingScreen> createState() => _VisionReadingScreenState();
@@ -63,10 +63,7 @@ class _VisionReadingScreenState extends State<VisionReadingScreen> with SingleTi
     });
 
     try {
-      final res = await AstroApiService.analyzeVision(
-        isFace: widget.isFace,
-        filePath: _selectedImage!.path,
-      );
+      final res = await AstroApiService.readFace(_selectedImage!.path);
       if (mounted) {
         setState(() {
           _results = res;
@@ -86,9 +83,9 @@ class _VisionReadingScreenState extends State<VisionReadingScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = widget.isFace ? const Color(0xFF2563EB) : const Color(0xFF7C3AED);
-    final title = widget.isFace ? 'AI Face Reading' : 'AI Palm Reading';
-    final icon = widget.isFace ? Icons.face_retouching_natural_rounded : Icons.back_hand_rounded;
+    final primaryColor = const Color(0xFF2563EB);
+    final title = 'AI Face Reading';
+    final icon = Icons.face_retouching_natural_rounded;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -122,7 +119,9 @@ class _VisionReadingScreenState extends State<VisionReadingScreen> with SingleTi
                 alignment: Alignment.center,
                 fit: StackFit.expand,
                 children: [
-                  if (_selectedImage != null)
+                  if (_results != null && _results!['annotated_image_url'] != null)
+                    Image.network(_results!['annotated_image_url'], fit: BoxFit.cover)
+                  else if (_selectedImage != null)
                     Image.file(_selectedImage!, fit: BoxFit.cover)
                   else
                     Column(
@@ -231,6 +230,7 @@ class _VisionReadingScreenState extends State<VisionReadingScreen> with SingleTi
                     ),
                   ),
                 ),
+                
             ] else if (_isAnalyzing) ...[
                Text(
                  'Analyzing cosmic imprints...',
@@ -263,15 +263,17 @@ class _VisionReadingScreenState extends State<VisionReadingScreen> with SingleTi
                       children: [
                         Icon(Icons.auto_awesome_rounded, color: primaryColor),
                         SizedBox(width: 8.w),
-                        Text(
-                          'AI Analysis Complete',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
+                        Expanded(
+                          child: Text(
+                            'AI Analysis Complete',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Spacer(),
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                           decoration: BoxDecoration(
