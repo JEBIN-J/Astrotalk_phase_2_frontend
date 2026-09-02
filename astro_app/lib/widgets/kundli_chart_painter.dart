@@ -120,9 +120,19 @@ class _MultiKundliPainter extends CustomPainter {
           .replaceAll('"', '')
           .replaceAll(' ', '');
       final parts = cleaned.split(':');
-      if (parts.length >= 2) {
-        final d = parts[0].trim();
-        final m = parts[1].trim();
+      if (parts.length >= 3) {
+        int d = int.tryParse(parts[0].trim()) ?? 0;
+        int m = int.tryParse(parts[1].trim()) ?? 0;
+        int s = int.tryParse(parts[2].trim()) ?? 0;
+        if (s >= 30) m += 1;
+        if (m >= 60) {
+          m -= 60;
+          d += 1;
+        }
+        degStr = ' ${d.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+      } else if (parts.length == 2) {
+        final d = parts[0].trim().padLeft(2, '0');
+        final m = parts[1].trim().padLeft(2, '0');
         degStr = ' $d:$m';
       }
     }
@@ -156,7 +166,23 @@ class _MultiKundliPainter extends CustomPainter {
         final isCombust = p['is_combust'] == true;
         final marker = p['status_marker']?.toString() ?? '';
 
-        final formatted = _formatPlanetLabel(pName, '', isRetro, isCombust, marker);
+        String degStr = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
+        if (degStr.isEmpty && data['planets'] != null) {
+          final mainPlanets = data['planets'] as List<dynamic>;
+          for (final mp in mainPlanets) {
+            final mpSimpleName = mp['planet_name_simple']?.toString() ?? '';
+            final mpName = mp['planet']?.toString() ?? mp['name']?.toString() ?? '';
+            final simpleName = p['planet_name_simple']?.toString() ?? pName;
+            
+            if ((mpSimpleName.isNotEmpty && simpleName.isNotEmpty && mpSimpleName.toLowerCase() == simpleName.toLowerCase()) ||
+                (mpName.toLowerCase().contains(simpleName.toLowerCase()))) {
+              degStr = mp['degree_formatted']?.toString() ?? mp['degree_dms']?.toString() ?? mp['degree']?.toString() ?? '';
+              break;
+            }
+          }
+        }
+
+        final formatted = _formatPlanetLabel(pName, degStr, isRetro, isCombust, marker);
         planetsInSign.putIfAbsent(sIdx, () => []).add(formatted);
         planetsInHouse.putIfAbsent(hNum, () => []).add(formatted);
       }
@@ -176,9 +202,19 @@ class _MultiKundliPainter extends CustomPainter {
         final signIdx = (cusp['sign_index'] as num?)?.toInt() ?? 1;
         final degFormatted = cusp['cusp_midpoint_formatted']?.toString() ?? '';
         
-        String cleanDeg = degFormatted.replaceAll('°', ':').replaceAll("'", '').replaceAll(' ', '');
+        String cleanDeg = degFormatted.replaceAll('°', ':').replaceAll("'", ':').replaceAll(' ', '');
         final parts = cleanDeg.split(':');
-        if (parts.length >= 2) {
+        if (parts.length >= 3) {
+          int min = int.tryParse(parts[1]) ?? 0;
+          int sec = int.tryParse(parts[2]) ?? 0;
+          if (sec >= 30) min += 1;
+          int deg = int.tryParse(parts[0]) ?? 0;
+          if (min >= 60) {
+            min -= 60;
+            deg += 1;
+          }
+          cleanDeg = '${deg.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
+        } else if (parts.length >= 2) {
           cleanDeg = '${parts[0]}:${parts[1]}';
         }
 

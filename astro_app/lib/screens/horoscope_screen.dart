@@ -368,7 +368,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Container(
+        
+    return Container(
               padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 36.h),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -976,49 +977,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 _buildKotChakraTab(context, isDark),
               ],
             ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: BouncyTouchCard(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Kundli PDF ready! Saved to Downloads folder.', style: GoogleFonts.outfit()),
-                  backgroundColor: const Color(0xFF059669),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: Container(
-              height: 50.h,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
-                ),
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4338CA).withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Download Complete Janam Kundli PDF',
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+
     );
   }
 
@@ -1544,6 +1503,54 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   // --- HELPER: KP LORD SHORT CODE ---
+  Map<String, String> _getKpLordsFromDegree(double absDegree) {
+    const dashaYears = [
+      {'lord': 'Ke', 'years': 7},
+      {'lord': 'Ve', 'years': 20},
+      {'lord': 'Su', 'years': 6},
+      {'lord': 'Mo', 'years': 10},
+      {'lord': 'Ma', 'years': 7},
+      {'lord': 'Ra', 'years': 18},
+      {'lord': 'Ju', 'years': 16},
+      {'lord': 'Sa', 'years': 19},
+      {'lord': 'Me', 'years': 17},
+    ];
+    
+    final nakIndex = (absDegree / (13.0 + 20.0/60.0)).floor();
+    final startLordIdx = nakIndex % 9;
+    final nakStartDegree = nakIndex * (13.0 + 20.0/60.0);
+    double remainingDeg = absDegree - nakStartDegree;
+    
+    int subLordIdx = startLordIdx;
+    double currentSubLength = 0;
+    for (int i = 0; i < 9; i++) {
+      int idx = (startLordIdx + i) % 9;
+      currentSubLength = (dashaYears[idx]['years'] as int) / 120.0 * (13.0 + 20.0/60.0);
+      if (remainingDeg < currentSubLength) {
+        subLordIdx = idx;
+        break;
+      }
+      remainingDeg -= currentSubLength;
+    }
+    
+    int subSubLordIdx = subLordIdx;
+    for (int i = 0; i < 9; i++) {
+      int idx = (subLordIdx + i) % 9;
+      double subSubLength = (dashaYears[idx]['years'] as int) / 120.0 * currentSubLength;
+      if (remainingDeg < subSubLength) {
+        subSubLordIdx = idx;
+        break;
+      }
+      remainingDeg -= subSubLength;
+    }
+
+    return {
+      'nl': dashaYears[startLordIdx]['lord'] as String,
+      'sl': dashaYears[subLordIdx]['lord'] as String,
+      'ssl': dashaYears[subSubLordIdx]['lord'] as String,
+    };
+  }
+
   String _getLordShortCode(String? lord) {
     if (lord == null || lord.isEmpty) return '-';
     final lower = lord.toLowerCase().trim();
@@ -1585,9 +1592,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 1: PLANETS TABLE ---
   Widget _buildBottomPlanetsTable(bool isDark) {
-    final basePlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
-    List<Map<String, dynamic>> dynamicPlanets = [];
-
+    List<dynamic> basePlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
+    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+      final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
+      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
+        basePlanets = (divCharts[_activeChartKey]['planets'] as List<dynamic>?) ?? basePlanets;
+      }
+    }
+    
+    final List<Map<String, dynamic>> dynamicPlanets = [];
+    
     for (var bp in basePlanets) {
       Map<String, dynamic> dp = Map<String, dynamic>.from(bp);
       final rawName = dp['name']?.toString() ?? '';
@@ -1612,29 +1626,96 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             }
           }
         }
-      } else if (_activeChartKey != 'D-1') {
-        final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
-        if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
-          if (isLagna) {
-            dp['sign'] = divCharts[_activeChartKey]['ascendant_sign'];
-            dp['house'] = 1;
-          } else {
-            final divPlanets = divCharts[_activeChartKey]['planets'] as List<dynamic>?;
-            if (divPlanets != null) {
-              final match = divPlanets.firstWhere(
-                (p) => p['planet']?.toString() == simpleName,
-                orElse: () => null,
-              );
-              if (match != null) {
-                dp['sign'] = match['sign'];
-                dp['house'] = match['house'];
-              }
-            }
-          }
-        }
       }
       dynamicPlanets.add(dp);
     }
+    final List<Map<String, dynamic>> processedPlanets = [];
+    for (int idx = 0; idx < dynamicPlanets.length; idx++) {
+      final p = dynamicPlanets[idx];
+      final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+          (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+          (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+
+      String displayName = p['table_display_name']?.toString() ?? '';
+      if (displayName.isEmpty) {
+        if (isLagna) {
+          displayName = 'Lagna';
+        } else {
+          final rawName = p['name']?.toString();
+          final simpleName = p['planet_name_simple']?.toString() ??
+              (rawName != null && rawName.isNotEmpty ? rawName.split(' ').first : 'Planet');
+          final isRetro = p['is_retrograde'] == true;
+          final karakaCode = p['chara_karaka_code']?.toString() ?? '';
+          final retroTag = isRetro ? ' (R)' : '';
+          final karakaTag = karakaCode.isNotEmpty ? (isRetro ? '($karakaCode)' : ' ($karakaCode)') : '';
+          displayName = '$simpleName$retroTag$karakaTag';
+        }
+      }
+
+      String houseStr = p['house']?.toString() ?? '-';
+      String deg = p['degree_formatted']?.toString() ?? "00:00:00";
+      String rawSign = p['sign']?.toString() ?? 'Aries';
+      String nak = p['nakshatra']?.toString() ?? '-';
+      String pada = p['pada']?.toString() ?? '-';
+
+      Map<String, dynamic>? kp = p['kp_lords'] as Map<String, dynamic>?;
+      String rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
+      
+      if (rl == '-' || rl.isEmpty) {
+        int sIdx = (p['sign_index'] as num?)?.toInt() ?? 1;
+        if (p['sign_index'] == null && p['sign'] != null) {
+          final sName = p['sign'].toString().toLowerCase();
+          if (sName.contains('ari')) sIdx = 1;
+          else if (sName.contains('tau')) sIdx = 2;
+          else if (sName.contains('gem')) sIdx = 3;
+          else if (sName.contains('can')) sIdx = 4;
+          else if (sName.contains('leo')) sIdx = 5;
+          else if (sName.contains('vir')) sIdx = 6;
+          else if (sName.contains('lib')) sIdx = 7;
+          else if (sName.contains('sco')) sIdx = 8;
+          else if (sName.contains('sag')) sIdx = 9;
+          else if (sName.contains('cap')) sIdx = 10;
+          else if (sName.contains('aqu')) sIdx = 11;
+          else if (sName.contains('pis')) sIdx = 12;
+        }
+        rl = const ['-', 'Ma', 'Ve', 'Me', 'Mo', 'Su', 'Me', 'Ve', 'Ma', 'Ju', 'Sa', 'Sa', 'Ju'][sIdx.clamp(0, 12)];
+      }
+
+      String nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
+      String sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
+      String ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
+
+      if ((sl == '-' || sl.isEmpty || ssl == '-' || ssl.isEmpty) && p['absolute_degree'] != null) {
+        final absDeg = (p['absolute_degree'] as num).toDouble();
+        final calculatedLords = _getKpLordsFromDegree(absDeg);
+        if (sl == '-' || sl.isEmpty) sl = _getLordShortCode(calculatedLords['sl']);
+        if (ssl == '-' || ssl.isEmpty) ssl = _getLordShortCode(calculatedLords['ssl']);
+      }
+
+      final signDisplay = rawSign.split('(')[0].trim();
+
+      final rowBg = isLagna
+          ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
+          : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
+
+      processedPlanets.add({
+        'original': p,
+        'idx': idx,
+        'isLagna': isLagna,
+        'displayName': displayName,
+        'houseStr': houseStr,
+        'deg': deg,
+        'signDisplay': signDisplay,
+        'nak': nak,
+        'pada': pada,
+        'rl': rl,
+        'nl': nl,
+        'sl': sl,
+        'ssl': ssl,
+        'rowBg': rowBg,
+      });
+    }
+
 
     return Container(
       decoration: BoxDecoration(
@@ -1677,119 +1758,172 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: SizedBox(
-                width: _isCardViewMode ? 500 : 950,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_isCardViewMode)
-                      _buildTableHeader(['Planet', 'House', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark)
-                    else
-                      _buildKpTableHeader(isDark),
-                    Divider(height: 1.h),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: dynamicPlanets.length,
-                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        itemBuilder: (ctx, idx) {
-                          final p = dynamicPlanets[idx];
-                          final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                              (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                              (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+            child: _isCardViewMode
+                ? SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: SizedBox(
+                      width: 500,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildTableHeader(['Planet', 'House', 'Degree', 'Rashi', 'Nakshatra', 'Pada'], isDark),
+                          Divider(height: 1.h),
+                          Expanded(
+                            child: ListView.separated(
+                              itemCount: processedPlanets.length,
+                              separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                              itemBuilder: (ctx, idx) {
+                                final pp = processedPlanets[idx];
+                                final p = pp['original'];
+                                final displayName = pp['displayName'];
+                                final houseStr = pp['houseStr'];
+                                final deg = pp['deg'];
+                                final signDisplay = pp['signDisplay'];
+                                final nak = pp['nak'];
+                                final pada = pp['pada'];
+                                final nl = pp['nl'];
+                                final sl = pp['sl'];
+                                final ssl = pp['ssl'];
+                                
+                                final ownedHouses = (p['kp_owned_houses'] as List<dynamic>?)?.join(', ') ?? 'None';
+                                final occupiedHouse = p['kp_occupied_house']?.toString() ?? '-';
+                                final significators = (p['kp_significators'] as List<dynamic>?)?.join(', ') ?? '-';
+                                final navSign = p['navamsha']?['navamsha_sign']?.toString() ?? '';
+                                final dignity = p['dignity']?.toString() ?? 'Direct';
+                                final planetCode = p['chara_karaka_code']?.toString() ?? '';
+                                final colorHex = p['color']?.toString() ?? '#4338CA';
+                                final color = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
 
-                          String displayName = p['table_display_name']?.toString() ?? '';
-                          if (displayName.isEmpty) {
-                            if (isLagna) {
-                              displayName = 'Lagna';
-                            } else {
-                              final rawName = p['name']?.toString();
-                              final simpleName = p['planet_name_simple']?.toString() ??
-                                  (rawName != null && rawName.isNotEmpty ? rawName.split(' ').first : 'Planet');
-                              final isRetro = p['is_retrograde'] == true;
-                              final karakaCode = p['chara_karaka_code']?.toString() ?? '';
-                              final retroTag = isRetro ? ' (R)' : '';
-                              final karakaTag = karakaCode.isNotEmpty ? (isRetro ? '($karakaCode)' : ' ($karakaCode)') : '';
-                              displayName = '$simpleName$retroTag$karakaTag';
-                            }
-                          }
+                                if (displayName == 'Lagna' || displayName == 'Ascendant') {
+                                  return _buildPlanetCard(
+                                    displayName, houseStr, deg, signDisplay, nak, pada, nl,
+                                    isDark, isLagna: true,
+                                    kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
+                                    dignity: dignity,
+                                    planetCode: planetCode,
+                                    color: color,
+                                  );
+                                }
 
-                          final houseStr = p['house']?.toString() ?? '-';
-                          final deg = p['degree_formatted']?.toString() ?? "00:00:00";
-                          final rawSign = p['sign']?.toString() ?? 'Aries';
-                          final signDisplay = rawSign.split('(')[0].trim();
-                          final nak = p['nakshatra']?.toString() ?? '-';
-                          final pada = p['pada']?.toString() ?? '-';
-
-                          final kp = p['kp_lords'] as Map<String, dynamic>?;
-                          final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
-                          final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
-                          final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
-                          final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
-
-                          final rowBg = isLagna
-                              ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
-                              : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
-
-                          if (_isCardViewMode) {
-                            final ownedHouses = (p['kp_owned_houses'] as List<dynamic>?)?.join(', ') ?? 'None';
-                            final occupiedHouse = p['kp_occupied_house']?.toString() ?? '-';
-                            final significators = (p['kp_significators'] as List<dynamic>?)?.join(', ') ?? '-';
-                            final navSign = p['navamsha']?['navamsha_sign']?.toString() ?? '';
-                            final dignity = p['dignity']?.toString() ?? 'Direct';
-                            final planetCode = p['chara_karaka_code']?.toString() ?? '';
-                            final colorHex = p['color']?.toString() ?? '#4338CA';
-                            final color = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-
-                            if (displayName == 'Lagna' || displayName == 'Ascendant') {
-                              return _buildPlanetCard(
-                                displayName, houseStr, deg, signDisplay, nak, pada, nl,
-                                isDark, isLagna: true,
-                                kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
-                                dignity: dignity,
-                                planetCode: planetCode,
-                                color: color,
-                              );
-                            }
-
-                            return _buildPlanetCard(
-                              displayName, houseStr, deg, signDisplay, nak, pada, nl,
-                              isDark,
-                              kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
-                              kpSignificators: 'Occupied: $occupiedHouse | Owned: $ownedHouses | Significators: $significators',
-                              dignity: dignity,
-                              planetCode: planetCode,
-                              color: color,
-                            );
-                          }
-
-                          return Container(
-                            color: rowBg,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                            child: Row(
-                              children: [
-                                Expanded(flex: 3, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)), overflow: TextOverflow.ellipsis))),
-                              ],
+                                return _buildPlanetCard(
+                                  displayName, houseStr, deg, signDisplay, nak, pada, nl,
+                                  isDark,
+                                  kpLords: 'KP Lords: Star: $nl • Sub: $sl • SS: $ssl   D9: $navSign',
+                                  kpSignificators: 'Occupied: $occupiedHouse | Owned: $ownedHouses | Significators: $significators',
+                                  dignity: dignity,
+                                  planetCode: planetCode,
+                                  color: color,
+                                );
+                              },
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  )
+                : SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // LEFT COLUMN (Sticky)
+                        SizedBox(
+                          width: 120.w,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Container(
+                                height: 34.h,
+                                color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                alignment: Alignment.centerLeft,
+                                child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis),
+                              ),
+                              Divider(height: 1.h),
+                              ...processedPlanets.map((pp) {
+                                final idx = pp['idx'];
+                                return Column(
+                                  children: [
+                                    Container(
+                                      height: 34.h,
+                                      color: pp['rowBg'],
+                                      padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(pp['displayName'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                    ),
+                                    if (idx < processedPlanets.length - 1)
+                                      Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                                  ],
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                        // RIGHT COLUMNS (Scrollable Horizontally)
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            child: SizedBox(
+                              width: 830,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Container(
+                                    height: 34.h,
+                                    color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                    child: Row(
+                                      children: [
+                                        Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                      ],
+                                    ),
+                                  ),
+                                  Divider(height: 1.h),
+                                  ...processedPlanets.map((pp) {
+                                    final idx = pp['idx'];
+                                    return Column(
+                                      children: [
+                                        Container(
+                                          height: 34.h,
+                                          color: pp['rowBg'],
+                                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                          child: Row(
+                                            children: [
+                                              Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text(pp['houseStr'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['deg'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['signDisplay'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['nak'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 2, child: Center(child: Text(pp['pada'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 2, child: Center(child: Text(pp['rl'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 2, child: Center(child: Text(pp['nl'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 2, child: Center(child: Text(pp['sl'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)), overflow: TextOverflow.ellipsis))),
+                                              Expanded(flex: 2, child: Center(child: Text(pp['ssl'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)), overflow: TextOverflow.ellipsis))),
+                                            ],
+                                          ),
+                                        ),
+                                        if (idx < processedPlanets.length - 1)
+                                          Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                                      ],
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -1798,7 +1932,39 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 2: UPAGRAHA TABLE ---
   Widget _buildBottomUpagrahaTable(bool isDark) {
-    final upagrahas = (_kundliData?['upagrahas'] as List<dynamic>?) ?? [];
+    List<dynamic> upagrahas = (_kundliData?['upagrahas'] as List<dynamic>?) ?? [];
+    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+      final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
+      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
+        upagrahas = (divCharts[_activeChartKey]['upagrahas'] as List<dynamic>?) ?? upagrahas;
+      }
+    }
+
+    
+    final List<Map<String, dynamic>> processedUpagrahas = [];
+    for (int idx = 0; idx < upagrahas.length; idx++) {
+      final u = upagrahas[idx] as Map<String, dynamic>;
+      final rawName = u['name']?.toString() ?? 'Upagraha';
+      final name = rawName.split('(')[0].trim();
+      final code = u['short_code']?.toString() ?? '';
+      final deg = u['degree_formatted']?.toString() ?? '00:00:00';
+      final rawSign = u['sign']?.toString() ?? 'Aries';
+      final signDisplay = rawSign.split('(')[0].trim();
+      final nak = u['nakshatra']?.toString() ?? 'Ashwini';
+      final pada = (u['pada'] ?? 1).toString();
+      final nl = u['nakshatra_lord']?.toString() ?? '';
+      final nlCode = _getLordShortCode(nl);
+
+      processedUpagrahas.add({
+        'idx': idx,
+        'name': name,
+        'deg': deg,
+        'signDisplay': signDisplay,
+        'nak': nak,
+        'pada': pada,
+        'nlCode': nlCode,
+      });
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -1816,7 +1982,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               children: [
                 Expanded(
                   child: Text(
-                    'Upagraha Positions for Rashi (D-1)',
+                    'Upagraha Positions for ${_divisionalChartsInfo[_activeChartKey] ?? "Rashi (D-1)"}',
                     style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -1832,63 +1998,95 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
           Expanded(
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              child: SizedBox(
-                width: 600.w,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                      child: Row(
-                        children: [
-                          Expanded(flex: 3, child: Text('Upagraha', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 2, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 2, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 3, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          Expanded(flex: 1, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-                          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155))))),
-                        ],
-                      ),
-                    ),
-                    Divider(height: 1.h),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: upagrahas.length,
-                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        itemBuilder: (ctx, idx) {
-                          final u = upagrahas[idx] as Map<String, dynamic>;
-                          final rawName = u['name']?.toString() ?? 'Upagraha';
-                          final name = rawName.split('(')[0].trim();
-                          final code = u['short_code']?.toString() ?? '';
-                          final deg = u['degree_formatted']?.toString() ?? '00:00:00';
-                          final rawSign = u['sign']?.toString() ?? 'Aries';
-                          final signDisplay = rawSign.split('(')[0].trim();
-                          final nak = u['nakshatra']?.toString() ?? 'Ashwini';
-                          final pada = (u['pada'] ?? 1).toString();
-                          final nl = u['nakshatra_lord']?.toString() ?? '';
-                          final nlCode = _getLordShortCode(nl);
-
-                          return Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                            child: Row(
-                              children: [
-                                Expanded(flex: 3, child: Text(name, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 2, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 3, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                                Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
-                                Expanded(flex: 2, child: Center(child: Text(nlCode, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
-                              ],
-                            ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // LEFT COLUMN (Sticky)
+                  SizedBox(
+                    width: 120.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 42.h,
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text('Upagraha', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis),
+                        ),
+                        Divider(height: 1.h),
+                        ...processedUpagrahas.map((pp) {
+                          final idx = pp['idx'];
+                          return Column(
+                            children: [
+                              Container(
+                                height: 42.h,
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                alignment: Alignment.centerLeft,
+                                child: Text(pp['name'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                              ),
+                              if (idx < processedUpagrahas.length - 1)
+                                Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                            ],
                           );
-                        },
+                        }),
+                      ],
+                    ),
+                  ),
+                  // RIGHT COLUMNS (Scrollable Horizontally)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: SizedBox(
+                        width: 380.w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              height: 42.h,
+                              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 1, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                ],
+                              ),
+                            ),
+                            Divider(height: 1.h),
+                            ...processedUpagrahas.map((pp) {
+                              final idx = pp['idx'];
+                              return Column(
+                                children: [
+                                  Container(
+                                    height: 42.h,
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                    child: Row(
+                                      children: [
+                                        Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text(pp['deg'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text(pp['signDisplay'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['nak'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 1, child: Center(child: Text(pp['pada'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Center(child: Text(pp['nlCode'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
+                                      ],
+                                    ),
+                                  ),
+                                  if (idx < processedUpagrahas.length - 1)
+                                    Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                                ],
+                              );
+                            }),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1899,7 +2097,47 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 3: ARUDHA TABLE ---
   Widget _buildBottomArudhaTable(bool isDark) {
-    final arudhas = (_kundliData?['arudha_padas'] as List<dynamic>?) ?? [];
+    List<dynamic> arudhas = (_kundliData?['arudha_padas'] as List<dynamic>?) ?? [];
+    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+      final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
+      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
+        arudhas = (divCharts[_activeChartKey]['arudha_padas'] as List<dynamic>?) ?? arudhas;
+      }
+    }
+
+    
+    final List<Map<String, dynamic>> processedArudhas = [];
+    for (int idx = 0; idx < arudhas.length; idx++) {
+      final a = arudhas[idx] as Map<String, dynamic>;
+      final code = a['code']?.toString() ?? 'A1';
+      final rawName = a['name']?.toString() ?? '';
+      final name = rawName.split('(')[0].trim();
+      final deg = a['degree_formatted']?.toString() ?? '00:00:00';
+      final rawSign = a['sign']?.toString() ?? 'Aries';
+      final sign = rawSign.split('(')[0].trim();
+      final nak = a['nakshatra']?.toString() ?? 'Ashwini';
+      final pada = (a['pada'] ?? 1).toString();
+      
+      final rawNl = a['nakshatra_lord']?.toString() ?? '';
+      final nl = (rawNl.isEmpty || rawNl == 'null' || rawNl == '-') 
+          ? _getNakshatraLordFromNakshatra(nak) 
+          : rawNl;
+
+      final isArudhaLagna = code.startsWith('AL') || code.startsWith('UL');
+      final rowBg = isArudhaLagna ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.15) : const Color(0xFFEEF2FF)) : Colors.transparent;
+
+      processedArudhas.add({
+        'idx': idx,
+        'code': code,
+        'name': name,
+        'deg': deg,
+        'sign': sign,
+        'nak': nak,
+        'pada': pada,
+        'nl': nl,
+        'rowBg': rowBg,
+      });
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -1919,67 +2157,105 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
           Expanded(
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              child: SizedBox(
-                width: 600.w,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTableHeader(['Arudha Pada', 'Degree', 'Rashi', 'Nakshatra', 'Pada', 'Nakshatra Lord'], isDark),
-                    Divider(height: 1.h),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: arudhas.length,
-                        separatorBuilder: (_, __) => Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        itemBuilder: (ctx, idx) {
-                          final a = arudhas[idx] as Map<String, dynamic>;
-                          final code = a['code']?.toString() ?? 'A1';
-                          final rawName = a['name']?.toString() ?? '';
-                          final name = rawName.split('(')[0].trim();
-                          final deg = a['degree_formatted']?.toString() ?? '00:00:00';
-                          final rawSign = a['sign']?.toString() ?? 'Aries';
-                          final sign = rawSign.split('(')[0].trim();
-                          final nak = a['nakshatra']?.toString() ?? 'Ashwini';
-                          final pada = (a['pada'] ?? 1).toString();
-                          
-                          // Bulletproof fallback to calculate from name if backend was not restarted or returns null/empty
-                          final rawNl = a['nakshatra_lord']?.toString() ?? '';
-                          final nl = (rawNl.isEmpty || rawNl == 'null' || rawNl == '-') 
-                              ? _getNakshatraLordFromNakshatra(nak) 
-                              : rawNl;
-
-                          final isArudhaLagna = code.startsWith('AL') || code.startsWith('UL');
-
-                          return Container(
-                            color: isArudhaLagna ? (isDark ? const Color(0xFF4338CA).withValues(alpha: 0.15) : const Color(0xFFEEF2FF)) : Colors.transparent,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(code, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                                      if (name.isNotEmpty)
-                                        Text(name, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54)),
-                                    ],
-                                  ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // LEFT COLUMN (Sticky)
+                  SizedBox(
+                    width: 120.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 48.h,
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text('Arudha Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis),
+                        ),
+                        Divider(height: 1.h),
+                        ...processedArudhas.map((pp) {
+                          final idx = pp['idx'];
+                          return Column(
+                            children: [
+                              Container(
+                                height: 56.h,
+                                color: pp['rowBg'],
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                alignment: Alignment.centerLeft,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(pp['code'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                    if ((pp['name'] as String).isNotEmpty)
+                                      Text(pp['name'], style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54)),
+                                  ],
                                 ),
-                                Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                                Expanded(flex: 1, child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
-                                Expanded(flex: 1, child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                              ],
-                            ),
+                              ),
+                              if (idx < processedArudhas.length - 1)
+                                Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                            ],
                           );
-                        },
+                        }),
+                      ],
+                    ),
+                  ),
+                  // RIGHT COLUMNS (Scrollable Horizontally)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: SizedBox(
+                        width: 380.w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              height: 48.h,
+                              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text('Nakshatra Lord', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+                                ],
+                              ),
+                            ),
+                            Divider(height: 1.h),
+                            ...processedArudhas.map((pp) {
+                              final idx = pp['idx'];
+                              return Column(
+                                children: [
+                                  Container(
+                                    height: 56.h,
+                                    color: pp['rowBg'],
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                    child: Row(
+                                      children: [
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['deg'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['sign'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 3, child: Align(alignment: Alignment.centerLeft, child: Text(pp['nak'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text(pp['pada'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))),
+                                        Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: Text(pp['nl'], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)), overflow: TextOverflow.ellipsis))),
+                                      ],
+                                    ),
+                                  ),
+                                  if (idx < processedArudhas.length - 1)
+                                    Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                                ],
+                              );
+                            }),
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1990,153 +2266,174 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 4: OTHERS (Special Lagnas & Chara Karakas) ---
   Widget _buildBottomOthersTable(bool isDark) {
-    final specialLagnas = (_kundliData?['special_lagnas'] as List<dynamic>?) ?? [];
-    final charaKarakas = (_kundliData?['chara_karakas'] as List<dynamic>?) ?? [];
+    List<dynamic> specialLagnas = (_kundliData?['special_lagnas'] as List<dynamic>?) ?? [];
+    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+      final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
+      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
+        specialLagnas = (divCharts[_activeChartKey]['special_lagnas'] as List<dynamic>?) ?? specialLagnas;
+      }
+    }
+
+    final List<Map<String, dynamic>> processedLagnas = [];
+    for (int idx = 0; idx < specialLagnas.length; idx++) {
+      final s = specialLagnas[idx] as Map<String, dynamic>;
+      final rawName = s['name']?.toString() ?? '';
+      
+      String code = rawName;
+      String name = rawName;
+      
+      final codeMatch = RegExp(r'\((.*?)\)').firstMatch(rawName);
+      if (codeMatch != null) {
+        code = codeMatch.group(1) ?? name;
+        name = rawName.split('(')[0].trim();
+      } else {
+        // Create an acronym if no code exists
+        code = rawName.split(' ').map((e) => e.isNotEmpty ? e[0].toUpperCase() : '').join('');
+        if (code.length > 3) code = code.substring(0, 3);
+      }
+      
+      final sign = s['sign']?.toString() ?? '';
+      final signDisplay = sign.split('(')[0].trim();
+      final deg = s['degree_formatted']?.toString() ?? '';
+      final nak = s['nakshatra']?.toString() ?? '';
+      final pada = s['pada']?.toString() ?? '-';
+      final nl = s['nakshatra_lord']?.toString() ?? '-';
+      final nlCode = _getLordShortCode(nl);
+
+      processedLagnas.add({
+        'idx': idx,
+        'code': code,
+        'name': name,
+        'deg': deg,
+        'signDisplay': signDisplay,
+        'nak': nak,
+        'pada': pada,
+        'nlCode': nlCode,
+      });
+    }
 
     return ListView(
       physics: const BouncingScrollPhysics(),
       children: [
         Container(
-          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Special Lagnas',
-                    style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4338CA).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6.r),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Special Lagnas & Mathematical Sphutas',
+                        style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
-                    child: Text('Parashara', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              SizedBox(height: 8.h),
-              ...specialLagnas.map((s) {
-                final rawName = s['name']?.toString() ?? '';
-                final name = rawName.split('(')[0].trim();
-                final sign = s['sign']?.toString() ?? '';
-                final deg = s['degree_formatted']?.toString() ?? '';
-                final nak = s['nakshatra']?.toString() ?? '';
-                final sig = s['significance']?.toString() ?? '';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4338CA).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(name, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('$sign • $deg • $nak', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600)),
-                            if (sig.isNotEmpty)
-                              Text(sig, style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-
-        Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              Container(height: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Jaimini 7 Chara Karakas',
-                    style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6)),
-                  ),
+                  // FIXED LEFT COLUMN
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    width: 110.w, // Slightly smaller to fit content
                     decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6.r),
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      border: Border(right: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
                     ),
-                    child: Text('Longitudes', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              ...charaKarakas.map((k) {
-                final p = k['planet']?.toString() ?? '';
-                final code = k['karaka_code']?.toString() ?? '';
-                final name = k['karaka_name']?.toString() ?? '';
-                final sig = k['significance']?.toString() ?? '';
-                final deg = k['degree_in_sign']?.toString() ?? '';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44.w,
-                        padding: EdgeInsets.symmetric(vertical: 3.h),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 32.h,
+                          alignment: Alignment.centerLeft,
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          child: Text('Objects', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569))),
                         ),
-                        child: Text(code, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8B5CF6))),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        ...processedLagnas.map((s) {
+                          final isEven = s['idx'] % 2 == 0;
+                          return Container(
+                            height: 38.h,
+                            alignment: Alignment.centerLeft,
+                            color: isEven ? Colors.transparent : (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('$p ($name)', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600)),
-                                Text(deg, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54)),
+                                Text(s['code'], style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                SizedBox(height: 2.h),
+                                Text(s['name'], style: GoogleFonts.outfit(fontSize: 9.sp, color: isDark ? Colors.white60 : Colors.black54), maxLines: 1, overflow: TextOverflow.ellipsis),
                               ],
                             ),
-                            Text(sig, style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  // SCROLLABLE RIGHT COLUMNS
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: SizedBox(
+                        width: 320.w, // Added width for Nakshatra Lord
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              height: 32.h,
+                              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 3, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569)))),
+                                  Expanded(flex: 3, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569)))),
+                                  Expanded(flex: 4, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569)))),
+                                  Expanded(flex: 2, child: Text('Pada', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569)), textAlign: TextAlign.center)),
+                                  Expanded(flex: 3, child: Text('Lord', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF475569)), textAlign: TextAlign.center)),
+                                ],
+                              ),
+                            ),
+                            ...processedLagnas.map((s) {
+                              final isEven = s['idx'] % 2 == 0;
+                              return Container(
+                                height: 38.h,
+                                color: isEven ? Colors.transparent : (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)),
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 3, child: Text(s['deg'], style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w500))),
+                                    Expanded(flex: 3, child: Text(s['signDisplay'], style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+                                    Expanded(flex: 4, child: Text(s['nak'], style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                                    Expanded(flex: 2, child: Text(s['pada'], style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600), textAlign: TextAlign.center)),
+                                    Expanded(flex: 3, child: Text(s['nlCode'], style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : const Color(0xFF334155)), textAlign: TextAlign.center)),
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                );
-              }),
+                ],
+              ),
             ],
           ),
         ),
+        SizedBox(height: 24.h),
       ],
     );
   }
