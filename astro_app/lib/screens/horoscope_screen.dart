@@ -1366,58 +1366,68 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         ),
         SizedBox(height: 14.h),
 
-        // 7. Bottom 4 Sub-Tabs Bar (Planets, Upagraha, Arudha, Others)
-        Container(
-          height: 44.h,
-          padding: EdgeInsets.all(3.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: TabBar(
-            controller: _bottomSubTabController,
-            labelColor: Colors.white,
-            unselectedLabelColor: isDark ? Colors.white70 : const Color(0xFF475569),
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
+        // 7. Bottom Sub-Tabs Bar (Planets, [Upagraha], Arudha, Others)
+        Builder(
+          builder: (context) {
+            final bool showUpagraha = _activeChartKey != 'D-9';
+            final int tabCount = showUpagraha ? 4 : 3;
+            
+            return DefaultTabController(
+              length: tabCount,
+              child: Column(
+                children: [
+                  Container(
+                    height: 44.h,
+                    padding: EdgeInsets.all(3.w),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: TabBar(
+                      labelColor: Colors.white,
+                      unselectedLabelColor: isDark ? Colors.white70 : const Color(0xFF475569),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicator: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
+                        ),
+                        borderRadius: BorderRadius.circular(9.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4338CA).withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5.sp),
+                      unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.5.sp),
+                      tabs: [
+                        const Tab(text: 'Planets'),
+                        if (showUpagraha) const Tab(text: 'Upagraha'),
+                        const Tab(text: 'Arudha'),
+                        const Tab(text: 'Others'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  SizedBox(
+                    height: 380.h,
+                    child: TabBarView(
+                      children: [
+                        _buildBottomPlanetsTable(isDark),
+                        if (showUpagraha) _buildBottomUpagrahaTable(isDark),
+                        _buildBottomArudhaTable(isDark),
+                        _buildBottomOthersTable(isDark),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
               ),
-              borderRadius: BorderRadius.circular(9.r),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4338CA).withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5.sp),
-            unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.5.sp),
-            tabs: [
-              Tab(text: 'Planets'),
-              Tab(text: 'Upagraha'),
-              Tab(text: 'Arudha'),
-              Tab(text: 'Others'),
-            ],
-          ),
+            );
+          },
         ),
-        SizedBox(height: 12.h),
-
-        // 8. Bottom Content Area (Internal scrolling list)
-        SizedBox(
-          height: 380.h,
-          child: TabBarView(
-            controller: _bottomSubTabController,
-            children: [
-              _buildBottomPlanetsTable(isDark),
-              _buildBottomUpagrahaTable(isDark),
-              _buildBottomArudhaTable(isDark),
-              _buildBottomOthersTable(isDark),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
       ],
     );
   }
@@ -2115,6 +2125,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       final deg = a['degree_formatted']?.toString() ?? '00:00:00';
       final rawSign = a['sign']?.toString() ?? 'Aries';
       final sign = rawSign.split('(')[0].trim();
+      
       final nak = a['nakshatra']?.toString() ?? 'Ashwini';
       final pada = (a['pada'] ?? 1).toString();
       
