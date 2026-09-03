@@ -22,9 +22,9 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.241.202.225:5000/api/v1'; // ngrok tunnel
+        return 'http://192.168.29.223:5000/api/v1'; // ngrok tunnel
       }
-    } catch (_) {} 
+    } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';
   }
 
