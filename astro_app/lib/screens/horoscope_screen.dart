@@ -131,6 +131,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _dynamicRunningDasha;
   bool _isDashaCardView = false; // false = table (default), true = cards
   bool _dashaInitialFetchDone = false; // tracks if first-load fetch has run
+  String _bhavaReferenceChart = 'Bhava'; // 'Bhava', 'D-1', 'D-9', etc.
 
 
   static const Map<String, String> _divisionalChartsInfo = {
@@ -1277,6 +1278,115 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ),
         SizedBox(height: 10.h),
+        
+        if (_activeChartKey == 'Bhava') ...[
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left Dropdown (House System)
+                Expanded(
+                  flex: 11,
+                  child: Row(
+                    children: [
+                      Text('Bhava', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 15.sp, fontWeight: FontWeight.bold)),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              isDense: true,
+                              value: _selectedBhavaSystem,
+                              icon: const Icon(Icons.arrow_drop_down, size: 20),
+                              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 13.sp),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedBhavaSystem = newValue;
+                                  });
+                                  _fetchKundliData();
+                                }
+                              },
+                              items: ['Porphyry (Sripathi)', 'Equal Houses', 'Placidus (KP)'].map((String sys) {
+                                return DropdownMenuItem<String>(
+                                  value: sys,
+                                  child: Text(sys, overflow: TextOverflow.ellipsis),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                // Right Dropdown (Reference Chart)
+                Expanded(
+                  flex: 9,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        isDense: true,
+                        value: _bhavaReferenceChart,
+                        icon: const Icon(Icons.arrow_drop_down, size: 20),
+                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 13.sp),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _bhavaReferenceChart = newValue;
+                            });
+                          }
+                        },
+                        items: const [
+                          DropdownMenuItem<String>(value: 'Bhava', child: Text('Bhava Chalit', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-1',  child: Text('Rashi (D-1)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-9',  child: Text('Navamsha (D-9)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-2',  child: Text('Hora (D-2)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-3',  child: Text('Drekkana (D-3)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-4',  child: Text('Chaturthamsha (D-4)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-5',  child: Text('Panchamsha (D-5)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-6',  child: Text('Shashtamsha (D-6)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-7',  child: Text('Saptamsha (D-7)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-8',  child: Text('Ashtamsha (D-8)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-10', child: Text('Dashamsha (D-10)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-11', child: Text('Ekadashamsha (D-11)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-12', child: Text('Dwadashamsha (D-12)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-16', child: Text('Shodashamsha (D-16)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-20', child: Text('Vimshamsha (D-20)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-24', child: Text('Chaturvimshamsha (D-24)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-27', child: Text('Saptavimshamsha (D-27)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-30', child: Text('Trimshamsha (D-30)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-40', child: Text('Khavedamsha (D-40)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-45', child: Text('Akshavedamsha (D-45)', overflow: TextOverflow.ellipsis)),
+                          DropdownMenuItem<String>(value: 'D-60', child: Text('Shashtyamsha (D-60)', overflow: TextOverflow.ellipsis)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 10.h),
+        ],
 
         // 5. Chart Model Quick 1-Tap Toggle (Square vs Diamond vs Sun)
         Container(
@@ -1331,7 +1441,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               KundliInteractiveChart(
                 chartStyle: _currentChartStyle,
                 isDark: isDark,
-                chartTypeKey: _activeChartKey,
+                chartTypeKey: _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey,
                 showUpagrahas: _showUpagrahasOnChart,
                 showDegrees: _showDegreesOnChart,
                 kundliData: _kundliData,
@@ -1364,52 +1474,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ],
           ),
         ),
-        SizedBox(height: 14.h),
+        SizedBox(height: 16.h),
 
         // 7. Bottom Sub-Tabs Bar (Planets, [Upagraha], Arudha, Others)
         Builder(
           builder: (context) {
             if (_activeChartKey == 'Bhava') {
-              return DefaultTabController(
-                length: 1,
-                child: Column(
-                  children: [
-                    Container(
-                      height: 44.h,
-                      padding: EdgeInsets.all(3.w),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: TabBar(
-                        labelColor: Colors.white,
-                        unselectedLabelColor: isDark ? Colors.white70 : const Color(0xFF475569),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicator: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
-                          ),
-                          borderRadius: BorderRadius.circular(9.r),
-                          boxShadow: [
-                            BoxShadow(color: const Color(0xFF4338CA).withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 1)),
-                          ],
-                        ),
-                        labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.5.sp),
-                        tabs: const [Tab(text: 'Bhava Cusps')],
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    SizedBox(
-                      height: 380.h,
-                      child: TabBarView(
-                        children: [
-                          _buildBhavaCuspsTable(isDark),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                  ],
-                ),
+              return Column(
+                children: [
+                  if (_selectedBhavaSystem == 'Placidus (KP)')
+                    _buildKpCuspsTable(isDark)
+                  else
+                    _buildBhavaCuspsTable(isDark),
+                  SizedBox(height: 16.h),
+                ],
               );
             }
 
@@ -1680,134 +1758,222 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // --- Header ---
+          Container(
+            height: 48.h,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: Row(
+              children: [
+                Expanded(flex: 2, child: Text('Bhava', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                Expanded(flex: 4, child: Text('Bhava Start', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                Expanded(flex: 4, child: Text('Bhava Cusp', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                Expanded(flex: 4, child: Text('Bhava End', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+              ],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // --- Header ---
-              Container(
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                child: Row(
-                  children: [
-                    Expanded(flex: 2, child: Text('Bhava', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                    Expanded(flex: 4, child: Text('Bhava Start', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                    Expanded(flex: 4, child: Text('Bhava Cusp', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                    Expanded(flex: 4, child: Text('Bhava End', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                  ],
-                ),
-              ),
-              Divider(height: 1.h, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              // --- Rows ---
-              ...cuspsList.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final c = entry.value as Map<String, dynamic>;
+          Divider(height: 1.h, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          // --- Rows ---
+          ...cuspsList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final c = entry.value as Map<String, dynamic>;
 
-                final houseNum = (c['house_number'] ?? idx + 1).toString();
-                final rowBg = idx % 2 == 0
-                    ? Colors.transparent
-                    : (isDark ? const Color(0xFF334155).withValues(alpha: 0.2) : const Color(0xFFF8FAFC));
+            final houseNum = (c['house_number'] ?? idx + 1).toString();
+            final rowBg = idx % 2 == 0
+                ? Colors.transparent
+                : (isDark ? const Color(0xFF334155).withValues(alpha: 0.2) : const Color(0xFFF8FAFC));
 
-                // Bhava Start (= cusp start — same as cusp for Sripathi)
-                final startDeg  = c['start_formatted']?.toString() ?? c['cusp_midpoint_formatted']?.toString() ?? '-';
-                final startSign = c['start_sign']?.toString() ?? c['sign']?.toString() ?? '-';
-                final startNak  = c['start_nakshatra']?.toString() ?? c['nakshatra']?.toString() ?? '-';
+            final startDeg  = c['start_formatted']?.toString() ?? c['cusp_midpoint_formatted']?.toString() ?? '-';
+            final startSign = c['start_sign']?.toString() ?? c['sign']?.toString() ?? '-';
+            final startNak  = c['start_nakshatra']?.toString() ?? c['nakshatra']?.toString() ?? '-';
 
-                // Bhava Cusp / Madhya
-                final cuspDeg   = c['cusp_midpoint_formatted']?.toString() ?? '-';
-                final cuspSign  = c['sign']?.toString() ?? '-';
-                final cuspNak   = c['nakshatra']?.toString() ?? '-';
+            final cuspDeg   = c['cusp_midpoint_formatted']?.toString() ?? '-';
+            final cuspSign  = c['sign']?.toString() ?? '-';
+            final cuspNak   = c['nakshatra']?.toString() ?? '-';
 
-                // Bhava End
-                final endDeg    = c['end_formatted']?.toString() ?? '-';
-                final endSign   = c['end_sign']?.toString() ?? '-';
-                final endNak    = c['end_nakshatra']?.toString() ?? '-';
+            final endDeg    = c['end_formatted']?.toString() ?? '-';
+            final endSign   = c['end_sign']?.toString() ?? '-';
+            final endNak    = c['end_nakshatra']?.toString() ?? '-';
 
-                return Column(
-                  children: [
-                    Container(
-                      height: 62.h,
-                      color: rowBg,
-                      padding: EdgeInsets.symmetric(horizontal: 10.w),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // House number
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              houseNum,
-                              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
-                            ),
-                          ),
-                          // Bhava Start
-                          Expanded(
-                            flex: 4,
-                            child: _cuspCell(
-                              degree: startDeg,
-                              sign: startSign,
-                              nakshatra: startNak,
-                              degreeColor: isDark ? Colors.white : const Color(0xFF1E293B),
-                              isDarkMode: isDark,
-                            ),
-                          ),
-                          // Bhava Cusp (highlighted green)
-                          Expanded(
-                            flex: 4,
-                            child: _cuspCell(
-                              degree: cuspDeg,
-                              sign: cuspSign,
-                              nakshatra: cuspNak,
-                              degreeColor: const Color(0xFF059669),
-                              isDarkMode: isDark,
-                            ),
-                          ),
-                          // Bhava End
-                          Expanded(
-                            flex: 4,
-                            child: _cuspCell(
-                              degree: endDeg,
-                              sign: endSign,
-                              nakshatra: endNak,
-                              degreeColor: isDark ? Colors.white70 : const Color(0xFF475569),
-                              isDarkMode: isDark,
-                            ),
-                          ),
-                        ],
+            return Column(
+              children: [
+                Container(
+                  height: 62.h,
+                  color: rowBg,
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          houseNum,
+                          style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                        ),
                       ),
-                    ),
-                    if (idx < cuspsList.length - 1)
-                      Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                  ],
-                );
-              }),
-            ],
-          ),
-        ),
-      ],
+                      Expanded(
+                        flex: 4,
+                        child: _cuspCell(
+                          degree: startDeg,
+                          sign: startSign,
+                          nakshatra: startNak,
+                          degreeColor: isDark ? Colors.white : const Color(0xFF1E293B),
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 4,
+                        child: _cuspCell(
+                          degree: cuspDeg,
+                          sign: cuspSign,
+                          nakshatra: cuspNak,
+                          degreeColor: const Color(0xFF059669),
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 4,
+                        child: _cuspCell(
+                          degree: endDeg,
+                          sign: endSign,
+                          nakshatra: endNak,
+                          degreeColor: isDark ? Colors.white70 : const Color(0xFF475569),
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (idx < cuspsList.length - 1)
+                  Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 
 
   // --- BOTTOM TAB 1: PLANETS TABLE ---
+  // --- KP CUSPS TABLE (Placidus / KP Mode) ---
+  Widget _buildKpCuspsTable(bool isDark) {
+    final cuspsList = _kundliData?['bhava_chalit']?['cusps'] as List<dynamic>? ?? [];
+
+    final headerStyle = GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold,
+        color: isDark ? Colors.white70 : const Color(0xFF334155));
+
+    Widget cell(String text, {Color? color, bool bold = false}) => Text(
+      text,
+      style: GoogleFonts.outfit(
+        fontSize: 10.5.sp,
+        fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+        color: color ?? (isDark ? Colors.white70 : const Color(0xFF1E293B)),
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: SizedBox(
+          width: 460.w,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ---- Header ----
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+                ),
+                child: Row(children: [
+                  Expanded(flex: 3, child: Text('Bhava', style: headerStyle)),
+                  Expanded(flex: 6, child: Text('Cusp', style: headerStyle)),
+                  Expanded(flex: 5, child: Text('Rashi', style: headerStyle)),
+                  Expanded(flex: 7, child: Text('Nakshatra', style: headerStyle)),
+                  Expanded(flex: 2, child: Text('Pd', style: headerStyle)),
+                  Expanded(flex: 2, child: Text('RL', style: headerStyle)),
+                  Expanded(flex: 2, child: Text('NL', style: headerStyle)),
+                  Expanded(flex: 2, child: Text('SL', style: headerStyle)),
+                  Expanded(flex: 3, child: Text('SSL', style: headerStyle)),
+                ]),
+              ),
+              Divider(height: 1.h, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              // ---- Rows ----
+              ...cuspsList.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final c   = entry.value as Map<String, dynamic>;
+
+                final rowBg = idx % 2 == 0
+                    ? Colors.transparent
+                    : (isDark ? const Color(0xFF334155).withValues(alpha: 0.2) : const Color(0xFFF8FAFC));
+
+                final house   = (c['house_number'] ?? idx + 1).toString();
+                final cusp    = c['cusp_midpoint_formatted']?.toString() ?? '-';
+                final rashi   = c['sign']?.toString() ?? '-';
+                final nak     = c['nakshatra']?.toString() ?? '-';
+                final pada    = c['pada']?.toString() ?? '-';
+                final rl      = c['rl']?.toString() ?? '-';
+                final nl      = c['nl']?.toString() ?? '-';
+                final sl      = c['sl']?.toString() ?? '-';
+                final ssl     = c['ssl']?.toString() ?? '-';
+
+                return Column(children: [
+                  Container(
+                    color: rowBg,
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 9.h),
+                    child: Row(children: [
+                      Expanded(flex: 3, child: cell(house, color: const Color(0xFF4338CA), bold: true)),
+                      Expanded(flex: 6, child: cell(cusp, color: const Color(0xFF059669), bold: true)),
+                      Expanded(flex: 5, child: cell(rashi)),
+                      Expanded(flex: 7, child: cell(nak)),
+                      Expanded(flex: 2, child: cell(pada)),
+                      Expanded(flex: 2, child: cell(rl, color: const Color(0xFF7C3AED))),
+                      Expanded(flex: 2, child: cell(nl, color: const Color(0xFFDB2777))),
+                      Expanded(flex: 2, child: cell(sl, color: const Color(0xFFD97706))),
+                      Expanded(flex: 3, child: cell(ssl, color: const Color(0xFF0891B2))),
+                    ]),
+                  ),
+              if (idx < cuspsList.length - 1)
+                Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+            ]);
+          }),
+        ],
+      ),
+        ),
+      ),
+    );
+  }
+
+  // --- BOTTOM TAB 1: PLANETS TABLE ---
   Widget _buildBottomPlanetsTable(bool isDark) {
+    final effectiveChartKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
     List<dynamic> basePlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
-    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+    
+    if (effectiveChartKey != 'D-1' && effectiveChartKey != 'Bhava') {
       final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
-      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
-        basePlanets = (divCharts[_activeChartKey]['planets'] as List<dynamic>?) ?? basePlanets;
+      if (divCharts != null && divCharts.containsKey(effectiveChartKey)) {
+        basePlanets = (divCharts[effectiveChartKey]['planets'] as List<dynamic>?) ?? basePlanets;
       }
     }
     
@@ -1822,7 +1988,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       rawName.toLowerCase().contains('ascendant') || 
                       rawName.toLowerCase().contains('lagna');
 
-      if (_activeChartKey == 'Bhava') {
+      if (effectiveChartKey == 'Bhava') {
         if (isLagna) {
           dp['house'] = 1;
         } else {
