@@ -1450,7 +1450,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 // NO cusp overlays). This matches reference app behavior.
                 // Bhava house numbers (from backend bhava_chalit) appear only in the table below.
                 // For any other right-dropdown selection (D-9, D-2...), show that chart directly.
-                chartTypeKey: _activeChartKey,
+                // When on the Bhava tab:
+                // - If Rashi (D-1) is selected, show the Bhava Chalit chart (planets shifted to Bhava houses).
+                // - If any other chart (e.g. D-9) is selected, show that specific divisional chart for reference.
+                chartTypeKey: _activeChartKey == 'Bhava'
+                    ? (_bhavaReferenceChart == 'D-1' ? 'Bhava' : _bhavaReferenceChart)
+                    : _activeChartKey,
                 showUpagrahas: _showUpagrahasOnChart,
                 showDegrees: _showDegreesOnChart,
                 kundliData: _kundliData,
@@ -1488,7 +1493,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         // 7. Bottom Sub-Tabs Bar (Planets, [Upagraha], Arudha, Others)
         Builder(
           builder: (context) {
-            if (_activeChartKey == 'Bhava') {
+            if (_activeChartKey == 'Bhava' && _bhavaReferenceChart == 'D-1') {
               return Column(
                 children: [
                   if (_selectedBhavaSystem == 'Placidus (KP)')
@@ -1500,7 +1505,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               );
             }
 
-            final bool showUpagraha = _activeChartKey != 'D-9';
+            final String effectiveKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
+            final bool showUpagraha = effectiveKey != 'D-9';
             final int tabCount = showUpagraha ? 4 : 3;
             
             return DefaultTabController(
@@ -2323,11 +2329,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 2: UPAGRAHA TABLE ---
   Widget _buildBottomUpagrahaTable(bool isDark) {
+    final effectiveChartKey = (_activeChartKey == 'Bhava' && _bhavaReferenceChart == 'D-1') ? 'Bhava' : (_activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey);
     List<dynamic> upagrahas = (_kundliData?['upagrahas'] as List<dynamic>?) ?? [];
-    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+    if (effectiveChartKey != 'D-1' && effectiveChartKey != 'Bhava') {
       final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
-      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
-        upagrahas = (divCharts[_activeChartKey]['upagrahas'] as List<dynamic>?) ?? upagrahas;
+      if (divCharts != null && divCharts.containsKey(effectiveChartKey)) {
+        upagrahas = (divCharts[effectiveChartKey]['upagrahas'] as List<dynamic>?) ?? upagrahas;
       }
     }
 
@@ -2488,11 +2495,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 3: ARUDHA TABLE ---
   Widget _buildBottomArudhaTable(bool isDark) {
+    final effectiveChartKey = (_activeChartKey == 'Bhava' && _bhavaReferenceChart == 'D-1') ? 'Bhava' : (_activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey);
     List<dynamic> arudhas = (_kundliData?['arudha_padas'] as List<dynamic>?) ?? [];
-    if (_activeChartKey != 'D-1' && _activeChartKey != 'Bhava') {
+    if (effectiveChartKey != 'D-1' && effectiveChartKey != 'Bhava') {
       final divCharts = _kundliData?['divisional_charts'] as Map<String, dynamic>?;
-      if (divCharts != null && divCharts.containsKey(_activeChartKey)) {
-        arudhas = (divCharts[_activeChartKey]['arudha_padas'] as List<dynamic>?) ?? arudhas;
+      if (divCharts != null && divCharts.containsKey(effectiveChartKey)) {
+        arudhas = (divCharts[effectiveChartKey]['arudha_padas'] as List<dynamic>?) ?? arudhas;
       }
     }
 
@@ -3399,6 +3407,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           final linkages = p['linkages'] as List<dynamic>? ?? [];
 
           // Only show planets that actually form combinations to reduce clutter
+          final String effectiveKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
+          if (effectiveKey == 'D-9') return const SizedBox.shrink();
+
           if (linkages.isEmpty) return const SizedBox.shrink();
 
           return Container(
