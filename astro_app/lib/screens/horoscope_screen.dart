@@ -1891,7 +1891,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   // --- BOTTOM TAB 1: PLANETS TABLE ---
   // --- KP CUSPS TABLE (Placidus / KP Mode) ---
   Widget _buildKpCuspsTable(bool isDark) {
-    final cuspsList = _kundliData?['bhava_chalit']?['cusps'] as List<dynamic>? ?? [];
+    List<dynamic> cuspsList = [];
+    if (_bhavaReferenceChart == 'D-1' || _kundliData?['divisional_charts'] == null || !_kundliData!['divisional_charts'].containsKey(_bhavaReferenceChart)) {
+      cuspsList = _kundliData?['bhava_chalit']?['cusps'] as List<dynamic>? ?? [];
+    } else {
+      cuspsList = _kundliData!['divisional_charts'][_bhavaReferenceChart]['cusps'] as List<dynamic>? ?? [];
+    }
 
     final headerStyle = GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold,
         color: isDark ? Colors.white70 : const Color(0xFF334155));
