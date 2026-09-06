@@ -1494,7 +1494,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         // 7. Bottom Sub-Tabs Bar (Planets, [Upagraha], Arudha, Others)
         Builder(
           builder: (context) {
-            if (_activeChartKey == 'Bhava' && _bhavaReferenceChart == 'D-1') {
+            if (_activeChartKey == 'Bhava') {
               return Column(
                 children: [
                   if (_selectedBhavaSystem == 'Placidus (KP)')
