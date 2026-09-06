@@ -999,13 +999,35 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   // TAB 1: CHART TAB (Live Stepper + Sub-Vargas + Interactive Chart + 4 Tables)
   // =========================================================================
   Widget _buildLagnaAndDivisionalChartTab(BuildContext context, bool isDark) {
-    final ascLagna = _kundliData?['ascendant_lagna']?.toString() ?? _kundliData?['ascendant_sign']?.toString() ?? 'Gemini';
-    final ascDeg = _kundliData?['ascendant_degree_formatted']?.toString() ?? _kundliData?['ascendant_degree']?.toString() ?? '';
-    final ascDisplay = ascDeg.isNotEmpty ? '$ascLagna ($ascDeg)' : ascLagna;
+    final String effectiveKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
+    
+    String ascLagna = _kundliData?['ascendant_lagna']?.toString() ?? _kundliData?['ascendant_sign']?.toString() ?? 'Gemini';
+    String ascDeg = _kundliData?['ascendant_degree_formatted']?.toString() ?? _kundliData?['ascendant_degree']?.toString() ?? '';
+    String moonSign = _kundliData?['moon_sign_rashi']?.toString() ?? _kundliData?['moon_sign']?.toString() ?? 'Virgo';
+    String nakshatra = _kundliData?['nakshatra']?.toString() ?? 'Chitra';
+    String nakPada = _kundliData?['nakshatra_pada']?.toString() ?? '2';
+    
+    if (effectiveKey != 'D-1' && _kundliData?['divisional_charts'] != null) {
+      final divChart = _kundliData!['divisional_charts'][effectiveKey];
+      if (divChart != null && divChart['planets'] != null) {
+        final List<dynamic> pList = divChart['planets'];
+        
+        final ascPlanet = pList.firstWhere((p) => p['name'] == 'Ascendant' || p['planet'] == 'Ascendant', orElse: () => null);
+        if (ascPlanet != null) {
+          ascLagna = ascPlanet['sign']?.toString() ?? ascLagna;
+          ascDeg = ascPlanet['degree_formatted']?.toString() ?? ascDeg;
+        }
+        
+        final moonPlanet = pList.firstWhere((p) => p['name'] == 'Moon' || p['planet'] == 'Moon', orElse: () => null);
+        if (moonPlanet != null) {
+          moonSign = moonPlanet['sign']?.toString() ?? moonSign;
+          nakshatra = moonPlanet['nakshatra']?.toString() ?? nakshatra;
+          nakPada = moonPlanet['pada']?.toString() ?? nakPada;
+        }
+      }
+    }
 
-    final moonSign = _kundliData?['moon_sign_rashi']?.toString() ?? _kundliData?['moon_sign']?.toString() ?? 'Virgo';
-    final nakshatra = _kundliData?['nakshatra']?.toString() ?? 'Chitra';
-    final nakPada = _kundliData?['nakshatra_pada']?.toString() ?? '2';
+    final ascDisplay = ascDeg.isNotEmpty ? '$ascLagna ($ascDeg)' : ascLagna;
     final ayanamsa = _kundliData?['ayanamsa_formatted']?.toString() ?? "Lahiri 23° 50' 32\"";
 
     return ListView(
