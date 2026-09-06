@@ -1270,7 +1270,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         Center(
           child: Text(
             _activeChartKey == 'Bhava'
-              ? 'Bhava [$_selectedBhavaSystem] details for ${_divisionalChartsInfo[_bhavaReferenceChart] ?? _bhavaReferenceChart}'
+              ? (_bhavaReferenceChart == 'D-1' 
+                  ? 'Bhava [$_selectedBhavaSystem] details for ${_divisionalChartsInfo[_bhavaReferenceChart] ?? _bhavaReferenceChart}'
+                  : '${_divisionalChartsInfo[_bhavaReferenceChart] ?? _bhavaReferenceChart}')
               : 'Chart Type: ${_divisionalChartsInfo[_activeChartKey] ?? _activeChartKey}',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
@@ -1312,14 +1314,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               icon: const Icon(Icons.arrow_drop_down, size: 20),
                               dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                               style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 13.sp),
-                              onChanged: (String? newValue) {
+                              onChanged: _bhavaReferenceChart == 'D-1' ? (String? newValue) {
                                 if (newValue != null) {
                                   setState(() {
                                     _selectedBhavaSystem = newValue;
                                   });
                                   _fetchKundliData();
                                 }
-                              },
+                              } : null,
                               items: ['Porphyry (Sripathi)', 'Equal Houses', 'Placidus (KP)'].map((String sys) {
                                 return DropdownMenuItem<String>(
                                   value: sys,
