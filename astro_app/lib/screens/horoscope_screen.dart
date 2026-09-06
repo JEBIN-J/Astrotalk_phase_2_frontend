@@ -131,7 +131,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _dynamicRunningDasha;
   bool _isDashaCardView = false; // false = table (default), true = cards
   bool _dashaInitialFetchDone = false; // tracks if first-load fetch has run
-  String _bhavaReferenceChart = 'Bhava'; // 'Bhava', 'D-1', 'D-9', etc.
+  String _bhavaReferenceChart = 'D-1'; // 'Bhava', 'D-1', 'D-9', etc.
 
 
   static const Map<String, String> _divisionalChartsInfo = {
@@ -1269,7 +1269,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         // 4. Active Chart Title Banner
         Center(
           child: Text(
-            'Chart Type: ${_divisionalChartsInfo[_activeChartKey] ?? _activeChartKey}',
+            _activeChartKey == 'Bhava'
+              ? 'Bhava [$_selectedBhavaSystem] details for ${_divisionalChartsInfo[_bhavaReferenceChart] ?? _bhavaReferenceChart}'
+              : 'Chart Type: ${_divisionalChartsInfo[_activeChartKey] ?? _activeChartKey}',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 13.5.sp,
@@ -1288,8 +1290,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 // Left Dropdown (House System)
                 Expanded(
                   flex: 11,
-                  child: Row(
-                    children: [
+                  child: Opacity(
+                    opacity: _bhavaReferenceChart == 'Bhava' ? 1.0 : 0.5,
+                    child: Row(
+                      children: [
                       Text('Bhava', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 15.sp, fontWeight: FontWeight.bold)),
                       SizedBox(width: 8.w),
                       Expanded(
@@ -1312,6 +1316,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                 if (newValue != null) {
                                   setState(() {
                                     _selectedBhavaSystem = newValue;
+                                    _bhavaReferenceChart = 'D-1';
                                   });
                                   _fetchKundliData();
                                 }
@@ -1328,6 +1333,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ),
                     ],
                   ),
+                ),
                 ),
                 SizedBox(width: 8.w),
                 // Right Dropdown (Reference Chart)
@@ -1356,7 +1362,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           }
                         },
                         items: const [
-                          DropdownMenuItem<String>(value: 'Bhava', child: Text('Bhava Chalit', overflow: TextOverflow.ellipsis)),
                           DropdownMenuItem<String>(value: 'D-1',  child: Text('Rashi (D-1)', overflow: TextOverflow.ellipsis)),
                           DropdownMenuItem<String>(value: 'D-9',  child: Text('Navamsha (D-9)', overflow: TextOverflow.ellipsis)),
                           DropdownMenuItem<String>(value: 'D-2',  child: Text('Hora (D-2)', overflow: TextOverflow.ellipsis)),
@@ -1441,7 +1446,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               KundliInteractiveChart(
                 chartStyle: _currentChartStyle,
                 isDark: isDark,
-                chartTypeKey: _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey,
+                // Rashi (D-1) in Bhava tab: show plain D-1 chart (planets in physical signs,
+                // NO cusp overlays). This matches reference app behavior.
+                // Bhava house numbers (from backend bhava_chalit) appear only in the table below.
+                // For any other right-dropdown selection (D-9, D-2...), show that chart directly.
+                chartTypeKey: _activeChartKey,
                 showUpagrahas: _showUpagrahasOnChart,
                 showDegrees: _showDegreesOnChart,
                 kundliData: _kundliData,
@@ -1967,7 +1976,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // --- BOTTOM TAB 1: PLANETS TABLE ---
   Widget _buildBottomPlanetsTable(bool isDark) {
-    final effectiveChartKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
+    final effectiveChartKey = (_activeChartKey == 'Bhava' && _bhavaReferenceChart == 'D-1') ? 'Bhava' : (_activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey);
     List<dynamic> basePlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
     
     if (effectiveChartKey != 'D-1' && effectiveChartKey != 'Bhava') {
@@ -2003,6 +2012,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             }
           }
         }
+      } else if (effectiveChartKey != 'D-1') {
+        if (isLagna) {
+          dp['house'] = 1;
+        }
+        // Divisional house is not calculated on frontend to respect "backend calculations only"
       }
       dynamicPlanets.add(dp);
     }
@@ -2110,7 +2124,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               children: [
                 Expanded(
                   child: Text(
-                    'Planetary Positions for ${_divisionalChartsInfo[_activeChartKey] ?? "Rashi (D-1)"}',
+                    'Planetary Positions for ${_divisionalChartsInfo[effectiveChartKey] ?? "Rashi (D-1)"}',
                     style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,

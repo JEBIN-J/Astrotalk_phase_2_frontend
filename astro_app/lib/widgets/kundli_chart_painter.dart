@@ -102,7 +102,7 @@ class _MultiKundliPainter extends CustomPainter {
     }
 
     String markers = '';
-    if (isRetro && !lower.contains('rahu') && !lower.contains('ketu')) {
+    if (isRetro) {
       markers += '(R)';
     }
     if (isCombust && !lower.contains('sun')) {
@@ -155,32 +155,18 @@ class _MultiKundliPainter extends CustomPainter {
         data['divisional_charts'][chartTypeKey] != null) {
       final vData = data['divisional_charts'][chartTypeKey];
       final pList = vData['planets'] as List<dynamic>? ?? [];
-      final vAscSignIdx = (vData['ascendant_sign_index'] as num?)?.toInt() ?? ascSignIdx;
 
       for (final p in pList) {
         final pName = p['planet']?.toString() ?? '';
+        // Use backend-provided sign_index directly — no frontend recalculation
         final sIdx = (p['sign_index'] as num?)?.toInt() ?? 1;
-        final rawHouse = ((sIdx - vAscSignIdx) % 12) + 1;
-        final hNum = rawHouse <= 0 ? rawHouse + 12 : rawHouse;
+        // Use backend-provided house directly — no frontend recalculation
+        final hNum = (p['house'] as num?)?.toInt() ?? sIdx;
         final isRetro = p['is_retrograde'] == true;
         final isCombust = p['is_combust'] == true;
         final marker = p['status_marker']?.toString() ?? '';
 
-        String degStr = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
-        if (degStr.isEmpty && data['planets'] != null) {
-          final mainPlanets = data['planets'] as List<dynamic>;
-          for (final mp in mainPlanets) {
-            final mpSimpleName = mp['planet_name_simple']?.toString() ?? '';
-            final mpName = mp['planet']?.toString() ?? mp['name']?.toString() ?? '';
-            final simpleName = p['planet_name_simple']?.toString() ?? pName;
-            
-            if ((mpSimpleName.isNotEmpty && simpleName.isNotEmpty && mpSimpleName.toLowerCase() == simpleName.toLowerCase()) ||
-                (mpName.toLowerCase().contains(simpleName.toLowerCase()))) {
-              degStr = mp['degree_formatted']?.toString() ?? mp['degree_dms']?.toString() ?? mp['degree']?.toString() ?? '';
-              break;
-            }
-          }
-        }
+        final degStr = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
 
         final formatted = _formatPlanetLabel(pName, degStr, isRetro, isCombust, marker);
         planetsInSign.putIfAbsent(sIdx, () => []).add(formatted);
@@ -195,36 +181,9 @@ class _MultiKundliPainter extends CustomPainter {
       final pList = bData['planets'] as List<dynamic>? ?? [];
       final cuspsList = bData['cusps'] as List<dynamic>? ?? [];
 
-      // 1. Plot the actual House Cusps (I, II, III, etc.)
-      const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-      for (final cusp in cuspsList) {
-        final houseNum = (cusp['house_number'] as num?)?.toInt() ?? 1;
-        final signIdx = (cusp['sign_index'] as num?)?.toInt() ?? 1;
-        final degFormatted = cusp['cusp_midpoint_formatted']?.toString() ?? '';
-        
-        String cleanDeg = degFormatted.replaceAll('°', ':').replaceAll("'", ':').replaceAll(' ', '');
-        final parts = cleanDeg.split(':');
-        if (parts.length >= 3) {
-          int min = int.tryParse(parts[1]) ?? 0;
-          int sec = int.tryParse(parts[2]) ?? 0;
-          if (sec >= 30) min += 1;
-          int deg = int.tryParse(parts[0]) ?? 0;
-          if (min >= 60) {
-            min -= 60;
-            deg += 1;
-          }
-          cleanDeg = '${deg.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
-        } else if (parts.length >= 2) {
-          cleanDeg = '${parts[0]}:${parts[1]}';
-        }
-
-        final roman = romanNumerals[houseNum - 1];
-        final label = '[CUSP] $roman $cleanDeg'; // Special tag to style it red later
-        
-        planetsInSign.putIfAbsent(signIdx, () => []).add(label);
-        // We can also put it in planetsInHouse if North Indian chart needs it
-        planetsInHouse.putIfAbsent(houseNum, () => []).add(label);
-      }
+      // 1. Plot the actual House Cusps (I, II, III, etc.) - REMOVED
+      // The reference app does not show cusp lines in the visual chart, 
+      // it only shifts the planets. Showing cusps clutters the UI.
 
       // 2. Plot the Planets
       for (final p in pList) {
@@ -235,9 +194,14 @@ class _MultiKundliPainter extends CustomPainter {
         final isCombust = p['is_combust'] == true;
 
         final formatted = _formatPlanetLabel(pName, degStr, isRetro, isCombust, null);
+        
+        // In Bhava Chalit, the South Indian grid (planetsInSign) still represents 12 signs,
+        // but planets are placed in the sign corresponding to their Bhava House relative to Ascendant.
+        // e.g. If Asc is Sagittarius (9) and planet is in House 10, it goes in Virgo (6).
+        final visualSignIdx = ((ascSignIdx - 1) + (bhavaHouse - 1)) % 12 + 1;
+        
         planetsInHouse.putIfAbsent(bhavaHouse, () => []).add(formatted);
-        final sIdx = ((ascSignIdx + bhavaHouse - 2) % 12) + 1;
-        planetsInSign.putIfAbsent(sIdx, () => []).add(formatted);
+        planetsInSign.putIfAbsent(visualSignIdx, () => []).add(formatted);
       }
       return;
     }
@@ -261,29 +225,26 @@ class _MultiKundliPainter extends CustomPainter {
       return;
     }
 
-    // Default D-1 Rashi, D-9 Navamsha, or BNN
-    final isD9 = chartTypeKey == 'D-9';
+    // Default D-1 Rashi, BNN, Jaimini (D-9 now handled in divisional charts branch above)
     if (data['planets'] != null) {
       final planetsList = data['planets'] as List<dynamic>;
 
       for (final p in planetsList) {
         final name = p['planet']?.toString() ?? p['name']?.toString() ?? '';
 
+        // Use backend sign_index directly — no frontend sign name matching
         int signIdx = -1;
-        String degFormatted = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
+        final String degFormatted = p['degree_formatted']?.toString() ?? p['degree_dms']?.toString() ?? p['degree']?.toString() ?? '';
 
-        if (isD9 && p['navamsha'] != null && p['navamsha']['navamsha_sign_index'] != null) {
-          signIdx = (p['navamsha']['navamsha_sign_index'] as num).toInt();
+        if (p['sign_index'] != null) {
+          signIdx = (p['sign_index'] as num).toInt();
         } else {
-          if (p['sign_index'] != null) {
-            signIdx = (p['sign_index'] as num).toInt();
-          } else {
-            final signName = p['sign']?.toString() ?? '';
-            for (int i = 0; i < signNames.length; i++) {
-              if (signNames[i].toLowerCase() == signName.toLowerCase()) {
-                signIdx = i + 1;
-                break;
-              }
+          // Fallback: derive from sign name only if sign_index missing
+          final signName = p['sign']?.toString() ?? '';
+          for (int i = 0; i < signNames.length; i++) {
+            if (signNames[i].toLowerCase() == signName.toLowerCase()) {
+              signIdx = i + 1;
+              break;
             }
           }
         }
@@ -296,20 +257,21 @@ class _MultiKundliPainter extends CustomPainter {
           final formatted = _formatPlanetLabel(name, degFormatted, isRetro, isCombust, marker);
 
           planetsInSign.putIfAbsent(signIdx, () => []).add(formatted);
-          final rawHouse = (((signIdx - ascSignIdx) % 12) + 1);
-          final houseNum = rawHouse <= 0 ? rawHouse + 12 : rawHouse;
+          // Use backend-provided house directly — no frontend math
+          final houseNum = (p['house'] as num?)?.toInt() ?? 1;
           planetsInHouse.putIfAbsent(houseNum, () => []).add(formatted);
         }
       }
     }
 
-    // Upagrahas in D-1 chart
-    if (showUpagrahas && !isD9 && data['upagrahas'] != null) {
+    // Upagrahas — only show on D-1 Rashi chart, not on divisional charts
+    if (showUpagrahas && chartTypeKey == 'D-1' && data['upagrahas'] != null) {
       final upagrahasList = data['upagrahas'] as List<dynamic>;
       for (final u in upagrahasList) {
         final code = u['short_code']?.toString() ?? 'Up';
-        if (code == 'Md' || code == 'Gk' || code == 'Dh' || code == 'Vy' || code == 'Pv') {
+        if (code == 'Md') {
           final sIdx = (u['sign_index'] as num?)?.toInt() ?? 1;
+          final hNum = (u['house'] as num?)?.toInt() ?? 1;
           final degStr = u['degree_formatted']?.toString() ?? '';
           String label = code;
           if (showDegrees && degStr.isNotEmpty) {
@@ -319,8 +281,6 @@ class _MultiKundliPainter extends CustomPainter {
             }
           }
           planetsInSign.putIfAbsent(sIdx, () => []).add(label);
-          final rawHouse = ((sIdx - ascSignIdx) % 12) + 1;
-          final hNum = rawHouse <= 0 ? rawHouse + 12 : rawHouse;
           planetsInHouse.putIfAbsent(hNum, () => []).add(label);
         }
       }
@@ -348,17 +308,6 @@ class _MultiKundliPainter extends CustomPainter {
       return (data['divisional_charts'][chartTypeKey]['ascendant_sign_index'] as num?)?.toInt() ?? 11;
     }
 
-    if (chartTypeKey == 'D-9' && data['planets'] != null) {
-      for (final p in data['planets'] as List<dynamic>) {
-        final name = p['name']?.toString().toLowerCase() ?? '';
-        if ((name.contains('ascendant') || name.contains('lagna')) &&
-            p['navamsha'] != null &&
-            p['navamsha']['navamsha_sign_index'] != null) {
-          return (p['navamsha']['navamsha_sign_index'] as num).toInt();
-        }
-      }
-    }
-
     if (data['ascendant_sign_index'] != null) {
       return (data['ascendant_sign_index'] as num).toInt();
     }
@@ -368,7 +317,7 @@ class _MultiKundliPainter extends CustomPainter {
         return i + 1;
       }
     }
-    return 11;
+    return 1;
   }
 
   @override
@@ -454,20 +403,33 @@ class _MultiKundliPainter extends CustomPainter {
     canvas.drawRect(centerRect, linePaint);
 
     // Center Chart Title
-    String centerTitle = 'Rashi (D-1)';
-    if (chartTypeKey == 'D-9') {
-      centerTitle = 'Navamsha (D-9)';
-    } else if (chartTypeKey == 'Bhava') {
-      centerTitle = 'Bhava Chalit';
-    } else if (chartTypeKey == 'LalKitab') {
-      centerTitle = 'Lal Kitab';
-    } else if (chartTypeKey == 'BNN') {
-      centerTitle = 'Progressive (BNN)';
-    } else if (chartTypeKey == 'Jaimini') {
-      centerTitle = 'Jaimini Rasi';
-    } else if (chartTypeKey != 'D-1') {
-      centerTitle = chartTypeKey;
-    }
+    const chartNames = {
+      'D-1':  'Rashi (D-1)',
+      'D-2':  'Hora (D-2)',
+      'D-3':  'Drekkana (D-3)',
+      'D-4':  'Chaturthamsha (D-4)',
+      'D-5':  'Panchamsha (D-5)',
+      'D-6':  'Shashtamsha (D-6)',
+      'D-7':  'Saptamsha (D-7)',
+      'D-8':  'Ashtamsha (D-8)',
+      'D-9':  'Navamsha (D-9)',
+      'D-10': 'Dasamsha (D-10)',
+      'D-11': 'Ekadashamsha (D-11)',
+      'D-12': 'Dwadasamsha (D-12)',
+      'D-16': 'Shodashamsha (D-16)',
+      'D-20': 'Vimsamsha (D-20)',
+      'D-24': 'Chaturvimsamsha (D-24)',
+      'D-27': 'Saptavimsamsha (D-27)',
+      'D-30': 'Trimshamsha (D-30)',
+      'D-40': 'Khavedamsha (D-40)',
+      'D-45': 'Akshavedamsha (D-45)',
+      'D-60': 'Shashtiamsha (D-60)',
+      'Bhava':    'Bhava Chalit',
+      'LalKitab': 'Lal Kitab',
+      'BNN':      'Progressive (BNN)',
+      'Jaimini':  'Jaimini Rasi',
+    };
+    final centerTitle = chartNames[chartTypeKey] ?? chartTypeKey;
 
     _drawText(
       canvas,
