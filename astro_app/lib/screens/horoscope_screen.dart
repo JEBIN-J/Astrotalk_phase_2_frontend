@@ -1291,7 +1291,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 Expanded(
                   flex: 11,
                   child: Opacity(
-                    opacity: _bhavaReferenceChart == 'Bhava' ? 1.0 : 0.5,
+                    opacity: _bhavaReferenceChart == 'D-1' ? 1.0 : 0.5,
                     child: Row(
                       children: [
                       Text('Bhava', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 15.sp, fontWeight: FontWeight.bold)),
@@ -1316,7 +1316,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                 if (newValue != null) {
                                   setState(() {
                                     _selectedBhavaSystem = newValue;
-                                    _bhavaReferenceChart = 'D-1';
                                   });
                                   _fetchKundliData();
                                 }
