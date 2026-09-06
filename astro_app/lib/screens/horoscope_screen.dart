@@ -1739,7 +1739,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
   // --- BOTTOM TAB: BHAVA CUSPS (Only shown when Bhava is selected) ---
   Widget _buildBhavaCuspsTable(bool isDark) {
-    final cuspsList = _kundliData?['bhava_chalit']?['cusps'] as List<dynamic>? ?? [];
+    List<dynamic> cuspsList = [];
+    if (_bhavaReferenceChart == 'D-1' || _kundliData?['divisional_charts'] == null || !_kundliData!['divisional_charts'].containsKey(_bhavaReferenceChart)) {
+      cuspsList = _kundliData?['bhava_chalit']?['cusps'] as List<dynamic>? ?? [];
+    } else {
+      cuspsList = _kundliData!['divisional_charts'][_bhavaReferenceChart]['cusps'] as List<dynamic>? ?? [];
+    }
 
     // Helper: builds a two-line cell  (degree on top, "Sign - Nakshatra" below)
     Widget _cuspCell({
