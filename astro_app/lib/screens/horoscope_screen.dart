@@ -5352,7 +5352,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     ...List.generate(12, (rowIndex) {
                       int totalInSign = 0;
                       List<int> planetVals = [];
-                      for (String p in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn']) {
+                      for (String p in ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Lagna']) {
                         final pts = (bavMatrix![p] as List<dynamic>?)?.map((x) => (x as num).toInt()).toList() ?? List.filled(12, 0);
                         final val = pts[rowIndex];
                         planetVals.add(val);
@@ -5367,7 +5367,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                               width: 40.w,
                               child: Text('${rowIndex + 1}', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
                             ),
-                            ...planetVals.map((val) {
+                            ...planetVals.sublist(0, 7).map((val) {
                               bool isHigh = val >= 5;
                               bool isLow = val <= 3;
                               
@@ -5400,14 +5400,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               alignment: Alignment.center,
-                              child: Text('$totalInSign', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                              child: Text('${totalInSign - planetVals.last}', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                             ),
+                            // Lagna (As) Column Data
                             Container(
                               width: 32.w,
                               height: 32.h,
                               margin: EdgeInsets.symmetric(horizontal: 2.w),
                               alignment: Alignment.center,
-                              child: Text('-', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54)),
+                              child: Text('${planetVals.last}', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
                             ),
                           ],
                         ),
