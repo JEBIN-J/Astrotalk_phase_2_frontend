@@ -5626,13 +5626,21 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           title = "Shadbala Strength";
           valueKey = "strength";
           nameKey = "planet";
-          maxVal = 2.0; // Shadbala strengths typically range around 0.5 to 2.5
+          // Dynamic max from data with 20% buffer
+          maxVal = shadbala.isEmpty ? 2.0 : (shadbala
+            .map((e) => (e[valueKey] as num?)?.toDouble() ?? 0.0)
+            .reduce((a, b) => a > b ? a : b)) * 1.2;
+          if (maxVal <= 0) maxVal = 2.0;
         } else if (localTabIndex == 1) {
           currentList = bhavaBala;
           title = "Bhava Bala (In Rupas)";
           valueKey = "strength";
           nameKey = "sign";
-          maxVal = 15.0; // Bhava Bala in Rupas typically ranges from 5.0 to 12.0
+          // Dynamic max from data with 20% buffer
+          maxVal = bhavaBala.isEmpty ? 15.0 : (bhavaBala
+            .map((e) => (e[valueKey] as num?)?.toDouble() ?? 0.0)
+            .reduce((a, b) => a > b ? a : b)) * 1.2;
+          if (maxVal <= 0) maxVal = 15.0;
         }
 
         return ListView(
@@ -5883,22 +5891,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         ? _buildShadbalaDetailedRows(currentList, isDark)
                         : currentList.map<DataRow>((item) {
                             if (localTabIndex == 1) {
+                              // Use backend-provided values directly — no re-calculation in Flutter
                               final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
                               final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
                               final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
                               final double totalVirupas = adhipatiBala + digBala + drigBala;
-                              final double totalRupas = totalVirupas / 60.0;
+                              // Use backend rupas (strength field = total_rupas from backend)
+                              final double totalRupas = (item['rupas'] as num?)?.toDouble() ?? (item['strength'] as num?)?.toDouble() ?? (totalVirupas / 60.0);
                             
                               return DataRow(cells: [
                                 DataCell(Text('${item['house'] ?? ''}')),
-
                                 DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
                                 DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
                                 DataCell(Text('${item['sign'] ?? ''}')),
                                 DataCell(Text('${item['adhipati'] ?? ''}')),
-                                DataCell(Text('${item['adhipati_bala'] ?? ''}')),
-                                DataCell(Text('${item['dig_bala'] ?? ''}')),
-                                DataCell(Text('${item['drig_bala'] ?? ''}')),
+                                DataCell(Text(adhipatiBala.toStringAsFixed(2))),
+                                DataCell(Text(digBala.toStringAsFixed(2))),
+                                DataCell(Text(drigBala.toStringAsFixed(2))),
                               ]);
                             } else {
                               return DataRow(cells: [
