@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.222:5000/api/v1'; // ngrok tunnel
+        return 'http://10.94.164.225:5000/api/v1'; // ngrok tunnel
       }
     } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';
@@ -267,6 +267,7 @@ class AstroApiService {
     double? latitude,
     double? longitude,
     double? timezone,
+    String? targetDateStr,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/bnn');
     final Map<String, dynamic> bodyMap = {
@@ -278,6 +279,7 @@ class AstroApiService {
     if (latitude != null) bodyMap['latitude'] = latitude;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
+    if (targetDateStr != null) bodyMap['target_date_str'] = targetDateStr;
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);

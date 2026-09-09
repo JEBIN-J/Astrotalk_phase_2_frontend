@@ -107,6 +107,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   bool _isCardViewMode = false;
   bool _isKpTableViewMode = true;
   bool _isLalKitabTableViewMode = true;
+  bool _isBnnEventTableViewMode = true;
+
+  int _bnnTargetYear = DateTime.now().year;
+  bool _isScrubbingBnn = false;
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
@@ -3385,253 +3389,415 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
     }
 
-    final planets = _bnnData!['planets'] as List<dynamic>? ?? [];
-    final analysis = _bnnData!['event_analysis'] as List<dynamic>? ?? [];
+    final bnnPlanets = _bnnData!['planets'] as List<dynamic>? ?? [];
+    final relationships = _bnnData!['relationships'] as List<dynamic>? ?? [];
+    final trineGroups = _bnnData!['trine_groups'] as List<dynamic>? ?? [];
+    final events = _bnnData!['events'] as List<dynamic>? ?? [];
+    final progressions = _bnnData!['progressions'] as Map<String, dynamic>? ?? {};
+    final jupProgression = progressions['jupiter'] as Map<String, dynamic>? ?? {};
+    final saturnProgression = progressions['saturn'] as Map<String, dynamic>? ?? {};
+    
+    // Map planets for the interactive chart, ensuring they have 'name' and 'sign_index'.
+    // We also pull the Ascendant from _kundliData so the chart can orient itself correctly.
+    final chartPlanets = bnnPlanets.map((p) {
+      // If it's Jupiter, Saturn, Rahu, or Ketu, override its sign_index with its progressed position!
+      int sIndex = p['sign_index'] ?? 1;
+      if (p['planet'] == 'Jupiter' && jupProgression['current_progressed_sign_index'] != null) {
+        sIndex = jupProgression['current_progressed_sign_index'];
+      } else if (p['planet'] == 'Saturn' && saturnProgression['current_progressed_sign_index'] != null) {
+        sIndex = saturnProgression['current_progressed_sign_index'];
+      }
+      return {
+        'name': p['planet'],
+        'sign_index': sIndex,
+        'degree_dms': p['degree'],
+        'is_retrograde': p['retrograde'],
+      };
+    }).toList();
+    
+    if (_kundliData != null) {
+      final kPlanets = _kundliData!['planets'] as List<dynamic>? ?? [];
+      final ascendant = kPlanets.firstWhere((p) => p['name'] == 'Ascendant' || p['name'] == 'Lagna', orElse: () => null);
+      if (ascendant != null) chartPlanets.add(ascendant);
+    }
+
+    final Map<String, dynamic> chartData = {'planets': chartPlanets};
+
+    Widget buildCardTitle(String title, IconData icon, Color color) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 12.h),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20.sp),
+            SizedBox(width: 8.w),
+            Text(
+              title,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : color),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget buildDataRow(String label, String value, {Color? valueColor}) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 8.h),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 2, child: Text(label, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black54))),
+            Expanded(flex: 3, child: Text(value, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: valueColor ?? (isDark ? Colors.white : Colors.black87)))),
+          ],
+        ),
+      );
+    }
 
     return ListView(
-      padding: EdgeInsets.all(16.w),
-      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       children: [
-        // 1. BNN Chart Box
+        // Time Travel UI
+        Container(
+          padding: EdgeInsets.all(16.w),
+          margin: EdgeInsets.only(bottom: 16.h),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark ? [const Color(0xFF1E293B), const Color(0xFF0F172A)] : [Colors.white, const Color(0xFFF8FAFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Time Travel (Age):', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFF4338CA)),
+                    onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(-1),
+                  ),
+                  _isScrubbingBnn 
+                    ? SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4338CA)))
+                    : Text('$_bnnTargetYear', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: const Color(0xFF4338CA))),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFF4338CA)),
+                    onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(1),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+
+        // 2. Progressive Chart (Dynamically Populated)
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Column(
             children: [
-              Text(
-                'Progressive Chart (BNN)',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
-              ),
-              SizedBox(height: 16.h),
+              buildCardTitle('Progressive Chart (BNN)', Icons.grid_on_rounded, const Color(0xFF4338CA)),
               KundliInteractiveChart(
                 chartStyle: _currentChartStyle,
                 isDark: isDark,
                 chartTypeKey: 'BNN',
                 showUpagrahas: false,
                 showDegrees: _showDegreesOnChart,
-                kundliData: _bnnData,
+                kundliData: chartData,
               ),
             ],
           ),
         ),
-        SizedBox(height: 24.h),
+        SizedBox(height: 16.h),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                'Bhrigu Nandi Nadi (BNN)',
-                style: GoogleFonts.outfit(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
+        // 3. Natal Planetary Positions
+        ExpansionTile(
+          title: Text('Natal Planetary Positions', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+          collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          children: bnnPlanets.map((p) {
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+              child: Row(
+                children: [
+                  Expanded(flex: 2, child: Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: p['retrograde'] == true ? Colors.red : null))),
+                  Expanded(flex: 2, child: Text(p['sign'].toString())),
+                  Expanded(flex: 2, child: Text(p['degree'].toString(), style: GoogleFonts.outfit(color: Colors.blue))),
+                  Expanded(flex: 2, child: Text(p['retrograde'] == true ? '(R)' : 'Direct', style: GoogleFonts.outfit(fontSize: 11.sp))),
+                ],
               ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: const Color(0xFF10B981)),
-              ),
-              child: Text(
-                'Sign-based Linkages',
-                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
-              ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
-        SizedBox(height: 8.h),
-        Text(
-          'BNN evaluates true planetary interactions via Conjunctions (Same Sign), Trines (1-5-9), and Adjacent Signs (2-12).',
-          style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black54),
-        ),
-        SizedBox(height: 24.h),
+        SizedBox(height: 16.h),
 
-        // 1. Predictive Event Analysis based on Karakas
-        Text(
-          'Predictive Observations',
-          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        // 4. Trine Groups
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildCardTitle('Directional Trine Groups', Icons.explore, const Color(0xFF059669)),
+              ...trineGroups.map((g) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(g['group'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                      Text(g['signs'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey)),
+                      SizedBox(height: 4.h),
+                      Text((g['planets'] as List).isEmpty ? 'Empty' : (g['planets'] as List).join(', '), style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
         ),
-        SizedBox(height: 12.h),
-        ...analysis.map((item) {
-          final category = item['category']?.toString() ?? '';
-          final observation = item['observation']?.toString() ?? '';
-          final details = (item['details'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-          final karaka = item['karaka_planet']?.toString() ?? '';
+        SizedBox(height: 16.h),
 
-          return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      category,
-                      style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+        // 5. Relationship Matrix
+        ExpansionTile(
+          title: Text('BNN Relationship Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+          collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          children: relationships.map((r) {
+            final strength = r['strength_percentage'] as int;
+            Color strengthColor = strength >= 75 ? Colors.green : (strength >= 50 ? Colors.orange : Colors.grey);
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${r['planet_a']} + ${r['planet_b']}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                        decoration: BoxDecoration(color: strengthColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
+                        child: Text('${strength}%', style: GoogleFonts.outfit(color: strengthColor, fontWeight: FontWeight.bold, fontSize: 11.sp)),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 4.h),
+                  Text('${r['relationship_type']} (${r['sign_distance']} signs)', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue)),
+                  Text(r['meaning'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 16.h),
+
+        // 6. Jupiter Progression
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildCardTitle('Jupiter Progression (Jeeva)', Icons.loop, const Color(0xFFD97706)),
+              if (jupProgression.isNotEmpty) ...[
+                buildDataRow('Natal Position', '${jupProgression['natal_sign']} ${jupProgression['natal_degree']}'),
+                buildDataRow('Current Cycle', '${jupProgression['current_cycle']}'),
+                buildDataRow('Elapsed / Remaining', '${jupProgression['elapsed_progression_years']}y / ${jupProgression['remaining_progression_years']}y'),
+                buildDataRow('Progressed Sign', '${jupProgression['current_progressed_sign_name']} (${jupProgression['current_progressed_sign_index']})'),
+              ] else
+                const Text('Data not available'),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // 7. Saturn Progression
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildCardTitle('Saturn Progression (Karma)', Icons.work_history, const Color(0xFF2563EB)),
+              if (saturnProgression.isNotEmpty) ...[
+                buildDataRow('Natal Position', '${saturnProgression['natal_sign']} ${saturnProgression['natal_degree']}'),
+                buildDataRow('Current Cycle', '${saturnProgression['cycle']}'),
+                buildDataRow('Elapsed / Remaining', '${saturnProgression['elapsed_progression_years']}y / ${saturnProgression['remaining_progression_years']}y'),
+                buildDataRow('Progressed Sign', '${saturnProgression['current_progressed_sign_name']} (${saturnProgression['current_progressed_sign_index']})'),
+              ] else
+                const Text('Data not available'),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // 8. Event Activation
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFFE11D48).withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  buildCardTitle('Event Activation (Dynamic)', Icons.event_available, const Color(0xFFE11D48)),
+                  InkWell(
+                    onTap: () => setState(() => _isBnnEventTableViewMode = !_isBnnEventTableViewMode),
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: const Color(0xFFE11D48).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
-                        'Karaka: $karaka',
-                        style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF475569)),
+                        _isBnnEventTableViewMode ? 'Card View' : 'Table View',
+                        style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFFE11D48)),
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  observation,
-                  style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
-                ),
-                if (details.isNotEmpty) ...[
-                  SizedBox(height: 12.h),
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: details.map((d) => Padding(
-                        padding: EdgeInsets.only(bottom: 4.h),
-                        child: Text('• $d', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white54 : Colors.black54)),
-                      )).toList(),
-                    ),
-                  )
-                ]
-              ],
-            ),
-          );
-        }),
-
-        SizedBox(height: 24.h),
-
-        // 2. Exact Planetary Combinations
-        Text(
-          'Planetary Linkages & Yoga',
-          style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-        ),
-        SizedBox(height: 12.h),
-        ...planets.map((p) {
-          final planet = p['planet']?.toString() ?? '';
-          final sign = p['sign']?.toString() ?? '';
-          final degree = p['degree']?.toString() ?? '';
-          final karakaMeaning = p['karaka']?.toString() ?? '';
-          final linkages = p['linkages'] as List<dynamic>? ?? [];
-
-          // Only show planets that actually form combinations to reduce clutter
-          final String effectiveKey = _activeChartKey == 'Bhava' ? _bhavaReferenceChart : _activeChartKey;
-          if (effectiveKey == 'D-9') return const SizedBox.shrink();
-
-          if (linkages.isEmpty) return const SizedBox.shrink();
-
-          return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '$planet in $sign',
-                      style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                    ),
-                    const Spacer(),
-                    Text(
-                      degree,
-                      style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF94A3B8)),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Represents: $karakaMeaning',
-                  style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF059669), fontStyle: FontStyle.italic),
-                ),
-                SizedBox(height: 12.h),
-                ...linkages.map((lk) {
-                  final lkPlanet = lk['planet']?.toString() ?? '';
-                  final type = lk['type']?.toString() ?? '';
-                  final meaning = lk['meaning']?.toString() ?? '';
-                  
-                  Color badgeColor = const Color(0xFF64748B);
-                  if (type.contains('Conjunction')) badgeColor = const Color(0xFFDC2626);
-                  if (type.contains('Trine')) badgeColor = const Color(0xFFD97706);
-
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 8.h),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 80.w,
-                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                          margin: EdgeInsets.only(right: 8.w, top: 2.h),
-                          decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
-                          child: Text(
-                            '+ $lkPlanet',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: badgeColor),
-                          ),
+                  ),
+                ],
+              ),
+              if (_isBnnEventTableViewMode)
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      Container(
+                        color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                        child: Row(
+                          children: [
+                            Expanded(flex: 3, child: Text('Event', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                            Expanded(flex: 3, child: Text('Karakas', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                            Expanded(flex: 3, child: Text('Natal/Trst', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                            Expanded(flex: 3, child: Text('Status', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                          ],
                         ),
-                        Expanded(
-                          child: Column(
+                      ),
+                      ...events.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final e = entry.value;
+                        final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+                        Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                        return Container(
+                          color: rowBg,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                type,
-                                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54),
-                              ),
-                              Text(
-                                meaning,
-                                style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white : Colors.black87),
-                              ),
+                              Expanded(flex: 3, child: Text(e['event'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold))),
+                              Expanded(flex: 3, child: Text(e['karakas'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp))),
+                              Expanded(flex: 3, child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${e['strength']}%', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue, fontWeight: FontWeight.bold)),
+                                  Text(e['transit_trigger'] == 'Yes' ? 'Trst: Yes' : 'Trst: No', style: GoogleFonts.outfit(fontSize: 10.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : Colors.grey)),
+                                ],
+                              )),
+                              Expanded(flex: 3, child: Text(e['status'].toString().replaceAll(' BNN confirmation', ''), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor, height: 1.2))),
                             ],
                           ),
+                        );
+                      }),
+                    ],
+                  )
+                )
+              else
+                ...events.map((e) {
+                  Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(e['event'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                            Text(e['status'].toString(), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor)),
+                          ],
                         ),
+                        Text('Karakas: ${e['karakas']}', style: GoogleFonts.outfit(fontSize: 11.sp)),
+                        Text('Natal Conn: ${e['natal_connection']} (${e['strength']}%)', style: GoogleFonts.outfit(fontSize: 11.sp)),
+                        Text('Transit Triggered: ${e['transit_trigger']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : null)),
+                        Divider(height: 16.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
                       ],
                     ),
                   );
                 }),
-              ],
-            ),
-          );
-        }),
+            ],
+          ),
+        ),
+        
+        SizedBox(height: 48.h),
       ],
     );
+  }
+
+  Future<void> _fetchBnnDataOnly() async {
+    setState(() => _isScrubbingBnn = true);
+    try {
+      final res = await AstroApiService.getBnn(
+        name: _personName,
+        dateOfBirth: _dobFormattedForApi,
+        timeOfBirth: _tobFormattedForApi,
+        placeOfBirth: _pob,
+        latitude: _latitude,
+        longitude: _longitude,
+        timezone: _timezone,
+        targetDateStr: '$_bnnTargetYear-01-01',
+      );
+      if (mounted) {
+        setState(() {
+          _bnnData = res;
+          _isScrubbingBnn = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isScrubbingBnn = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading BNN: $e')));
+      }
+    }
+  }
+
+  void _changeBnnTargetYear(int delta) {
+    setState(() {
+      _bnnTargetYear += delta;
+    });
+    _fetchBnnDataOnly();
   }
 
   Widget _buildJaiminiTab(BuildContext context, bool isDark) {
