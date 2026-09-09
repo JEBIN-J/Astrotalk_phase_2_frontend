@@ -106,6 +106,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   bool _showDegreesOnChart = true;
   bool _isCardViewMode = false;
   bool _isKpTableViewMode = true;
+  bool _isLalKitabTableViewMode = true;
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
@@ -3036,35 +3037,169 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         ),
         SizedBox(height: 24.h),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                'Lal Kitab Houses & Remedies',
-                style: GoogleFonts.outfit(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                ),
+            Text(
+              'Lal Kitab Houses & Remedies',
+              style: GoogleFonts.outfit(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDE68A).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: const Color(0xFFFDE68A)),
-              ),
-              child: Text(
-                'Calculated Logically',
-                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706)),
-              ),
+            SizedBox(height: 10.h),
+            Row(
+              children: [
+                InkWell(
+                  onTap: () => setState(() => _isLalKitabTableViewMode = !_isLalKitabTableViewMode),
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isLalKitabTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
+                          size: 14.sp,
+                          color: const Color(0xFF0284C7),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          _isLalKitabTableViewMode ? 'Switch to Card View' : 'Switch to Table View',
+                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         SizedBox(height: 16.h),
-        ...planets.map((p) {
+        if (_isLalKitabTableViewMode)
+          Builder(builder: (ctx) {
+            final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Fixed Left Column (Planet)
+                  SizedBox(
+                    width: 80.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 40.h,
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
+                        ),
+                        Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        ...planets.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final p = entry.value as Map<String, dynamic>;
+                          final planet = p['planet']?.toString() ?? '';
+                          final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                          return Container(
+                            height: 44.h,
+                            color: rowBg,
+                            padding: EdgeInsets.symmetric(horizontal: 12.w),
+                            alignment: Alignment.centerLeft,
+                            child: Text(planet, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+
+                  // 2. Scrollable Right Area
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 40.h,
+                            color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 45.w, child: Text('House', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                SizedBox(width: 70.w, child: Text('Sign', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                SizedBox(width: 75.w, child: Text('Degree', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                SizedBox(width: 85.w, child: Text('Dignity', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                SizedBox(width: 65.w, child: Center(child: Text('Remedies', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                              ],
+                            ),
+                          ),
+                          Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                          ...planets.asMap().entries.map((entry) {
+                            final idx = entry.key;
+                            final p = entry.value as Map<String, dynamic>;
+                            final house = p['house']?.toString() ?? '';
+                            final sign = p['sign']?.toString() ?? '';
+                            final degree = p['longitude_formatted']?.toString() ?? '';
+                            final dignity = p['dignity']?.toString() ?? 'Neutral';
+                            final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+                            final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+                            final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                            Color dignityColor = const Color(0xFF64748B);
+                            if (dignity == 'Exalted') dignityColor = const Color(0xFF059669);
+                            if (dignity == 'Debilitated') dignityColor = const Color(0xFFDC2626);
+
+                            return Container(
+                              height: 44.h,
+                              color: rowBg,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w),
+                              child: Row(
+                                children: [
+                                  SizedBox(width: 45.w, child: Text(house, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  SizedBox(width: 70.w, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  SizedBox(width: 75.w, child: Text(degree, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  SizedBox(width: 85.w, child: Text(dignity, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: dignityColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  SizedBox(width: 65.w, child: Center(
+                                    child: rem.isNotEmpty 
+                                        ? Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                            decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
+                                            child: Text('${rem.length}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
+                                          )
+                                        : Text('-', style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey)),
+                                  )),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          })
+        else
+          ...planets.map((p) {
           final planet = p['planet']?.toString() ?? '';
           final house = p['house']?.toString() ?? '';
           final sign = p['sign']?.toString() ?? '';
