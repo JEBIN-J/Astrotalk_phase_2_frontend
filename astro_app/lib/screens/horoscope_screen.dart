@@ -2089,38 +2089,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       String pada = p['pada']?.toString() ?? '-';
 
       Map<String, dynamic>? kp = p['kp_lords'] as Map<String, dynamic>?;
-      String rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? _getLordShortCode(p['sign_lord']?.toString());
-      
-      if (rl == '-' || rl.isEmpty) {
-        int sIdx = (p['sign_index'] as num?)?.toInt() ?? 1;
-        if (p['sign_index'] == null && p['sign'] != null) {
-          final sName = p['sign'].toString().toLowerCase();
-          if (sName.contains('ari')) sIdx = 1;
-          else if (sName.contains('tau')) sIdx = 2;
-          else if (sName.contains('gem')) sIdx = 3;
-          else if (sName.contains('can')) sIdx = 4;
-          else if (sName.contains('leo')) sIdx = 5;
-          else if (sName.contains('vir')) sIdx = 6;
-          else if (sName.contains('lib')) sIdx = 7;
-          else if (sName.contains('sco')) sIdx = 8;
-          else if (sName.contains('sag')) sIdx = 9;
-          else if (sName.contains('cap')) sIdx = 10;
-          else if (sName.contains('aqu')) sIdx = 11;
-          else if (sName.contains('pis')) sIdx = 12;
-        }
-        rl = const ['-', 'Ma', 'Ve', 'Me', 'Mo', 'Su', 'Me', 'Ve', 'Ma', 'Ju', 'Sa', 'Sa', 'Ju'][sIdx.clamp(0, 12)];
-      }
-
-      String nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? _getLordShortCode(p['nakshatra_lord']?.toString());
-      String sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? _getLordShortCode(kp?['sub_lord']?.toString());
-      String ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? _getLordShortCode(kp?['sub_sub_lord']?.toString());
-
-      if ((sl == '-' || sl.isEmpty || ssl == '-' || ssl.isEmpty) && p['absolute_degree'] != null) {
-        final absDeg = (p['absolute_degree'] as num).toDouble();
-        final calculatedLords = _getKpLordsFromDegree(absDeg);
-        if (sl == '-' || sl.isEmpty) sl = _getLordShortCode(calculatedLords['sl']);
-        if (ssl == '-' || ssl.isEmpty) ssl = _getLordShortCode(calculatedLords['ssl']);
-      }
+      String rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? '-';
+      String nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? '-';
+      String sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? '-';
+      String ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? '-';
 
       final signDisplay = rawSign.split('(')[0].trim();
 
@@ -4760,41 +4732,48 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         ),
         SizedBox(height: 24.h),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                'Planetary Coordinates & KP Lords',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp),
+            Text(
+              'Planetary Coordinates & KP Lords',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold, 
+                fontSize: 18.sp,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
-            SizedBox(width: 8.w),
-            InkWell(
-              onTap: () => setState(() => _isKpTableViewMode = !_isKpTableViewMode),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF059669).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6.r),
+            SizedBox(height: 10.h),
+            Row(
+              children: [
+                InkWell(
+                  onTap: () => setState(() => _isKpTableViewMode = !_isKpTableViewMode),
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF059669).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isKpTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
+                          size: 14.sp,
+                          color: const Color(0xFF059669),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          _isKpTableViewMode ? 'Switch to Card View' : 'Switch to Table View',
+                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: Text(
-                  _isKpTableViewMode ? 'Card View' : 'Table View',
-                  style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
-                ),
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: const Color(0xFF059669).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Text(
-                'Swiss Ephemeris Live',
-                style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF059669), fontWeight: FontWeight.bold),
-              ),
+              ],
             ),
           ],
         ),
@@ -4802,79 +4781,150 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         if (rawPlanets.isEmpty)
           Center(child: Text('No planetary data available'))
         else if (_isKpTableViewMode)
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: SizedBox(
-                width: 750,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildKpTableHeader(isDark),
-                    Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                    ...rawPlanets.asMap().entries.map((entry) {
-                      final idx = entry.key;
-                      final p = entry.value as Map<String, dynamic>;
-                      final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                          (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                          (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
+          Builder(builder: (ctx) {
+            final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
+            final processedPlanets = rawPlanets.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final p = entry.value as Map<String, dynamic>;
+              final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                  (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
+                  (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
 
-                      final rawName = p['name']?.toString() ?? 'Planet';
-                      final simpleName = p['planet_name_simple']?.toString() ?? rawName.split('(')[0].trim();
-                      final isRetro = p['is_retrograde'] == true;
-                      final karakaCode = p['chara_karaka_code']?.toString() ?? '';
-                      final retroTag = isRetro ? ' (R)' : '';
-                      final karakaTag = karakaCode.isNotEmpty ? ' ($karakaCode)' : '';
-                      final displayName = isLagna ? 'Lagna' : '$simpleName$retroTag$karakaTag';
+              final rawName = p['name']?.toString() ?? 'Planet';
+              final simpleName = p['planet_name_simple']?.toString() ?? rawName.split('(')[0].trim();
+              final isRetro = p['is_retrograde'] == true;
+              final karakaCode = p['chara_karaka_code']?.toString() ?? '';
+              final retroTag = isRetro ? ' (R)' : '';
+              final karakaTag = karakaCode.isNotEmpty ? ' ($karakaCode)' : '';
+              final displayName = isLagna ? 'Lagna' : '$simpleName$retroTag$karakaTag';
 
-                      final houseStr = (p['house'] ?? 1).toString();
-                      final deg = p['degree_formatted']?.toString() ?? "00:00:00";
-                      final rawSign = p['sign']?.toString() ?? 'Aries';
-                      final signDisplay = rawSign.split('(')[0].trim();
-                      final nak = p['nakshatra']?.toString() ?? '-';
-                      final pada = p['nakshatra_pada']?.toString() ?? '-';
+              final houseStr = (p['house'] ?? 1).toString();
+              final deg = p['degree_formatted']?.toString() ?? "00:00:00";
+              final rawSign = p['sign']?.toString() ?? 'Aries';
+              final signDisplay = rawSign.split('(')[0].trim();
+              final nak = p['nakshatra']?.toString() ?? '-';
+              final pada = p['pada']?.toString() ?? p['nakshatra_pada']?.toString() ?? '-';
 
-                      final kp = p['kp_lords'] as Map<String, dynamic>?;
-                      final rl = _getLordShortCode(p['sign_lord']?.toString());
-                      final nl = _getLordShortCode(kp?['star_lord']?.toString() ?? p['nakshatra_lord']?.toString());
-                      final sl = _getLordShortCode(kp?['sub_lord']?.toString());
-                      final ssl = _getLordShortCode(kp?['sub_sub_lord']?.toString());
+              final kp = p['kp_lords'] as Map<String, dynamic>?;
+              final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? '-';
+              final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? '-';
+              final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? '-';
+              final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? '-';
 
-                      final rowBg = isLagna
-                          ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
-                          : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
+              final rowBg = isLagna
+                  ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
+                  : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
 
-                      return Container(
-                        color: rowBg,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                        child: Row(
+              return {
+                'displayName': displayName,
+                'houseStr': houseStr,
+                'deg': deg,
+                'signDisplay': signDisplay,
+                'nak': nak,
+                'pada': pada,
+                'rl': rl,
+                'nl': nl,
+                'sl': sl,
+                'ssl': ssl,
+                'rowBg': rowBg,
+              };
+            }).toList();
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Fixed Left Column (Planet)
+                  SizedBox(
+                    width: 140.w,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          height: 38.h,
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
+                        ),
+                        Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        ...processedPlanets.map((p) {
+                          return Container(
+                            height: 40.h,
+                            color: p['rowBg'] as Color,
+                            padding: EdgeInsets.symmetric(horizontal: 10.w),
+                            alignment: Alignment.centerLeft,
+                            child: Text(p['displayName'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+
+                  // 2. Scrollable Right Area
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: SizedBox(
+                        width: 550, // Width for the remaining columns
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Expanded(flex: 4, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
-                            Expanded(flex: 2, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
-                            Expanded(flex: 3, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 4, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 2, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
-                            Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
-                            Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
-                            Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),
-                            Expanded(flex: 1, child: Center(child: Text(ssl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6))))),
+                            Container(
+                              height: 38.h,
+                              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              child: Row(
+                                children: [
+                                  Expanded(flex: 2, child: Text('House', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                  Expanded(flex: 3, child: Text('Degree', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                  Expanded(flex: 3, child: Text('Rashi', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                  Expanded(flex: 4, child: Text('Nakshatra', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                                  Expanded(flex: 2, child: Center(child: Text('Pada', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 1, child: Center(child: Text('RL', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 1, child: Center(child: Text('NL', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 1, child: Center(child: Text('SL', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                                  Expanded(flex: 1, child: Center(child: Text('SSL', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                                ],
+                              ),
+                            ),
+                            Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                            ...processedPlanets.map((p) {
+                              return Container(
+                                height: 40.h,
+                                color: p['rowBg'] as Color,
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 2, child: Text(p['houseStr'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    Expanded(flex: 3, child: Text(p['deg'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    Expanded(flex: 3, child: Text(p['signDisplay'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    Expanded(flex: 4, child: Text(p['nak'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                    Expanded(flex: 2, child: Center(child: Text(p['pada'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis))),
+                                    Expanded(flex: 1, child: Center(child: Text(p['rl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), maxLines: 1, overflow: TextOverflow.ellipsis))),
+                                    Expanded(flex: 1, child: Center(child: Text(p['nl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), maxLines: 1, overflow: TextOverflow.ellipsis))),
+                                    Expanded(flex: 1, child: Center(child: Text(p['sl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)), maxLines: 1, overflow: TextOverflow.ellipsis))),
+                                    Expanded(flex: 1, child: Center(child: Text(p['ssl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)), maxLines: 1, overflow: TextOverflow.ellipsis))),
+                                  ],
+                                ),
+                              );
+                            }),
                           ],
                         ),
-                      );
-                    }),
-                  ],
-                ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          )
+            );
+          })
         else
           ...rawPlanets.asMap().entries.map((entry) {
             final idx = entry.key;

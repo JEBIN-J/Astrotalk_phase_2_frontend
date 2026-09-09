@@ -195,13 +195,12 @@ class _MultiKundliPainter extends CustomPainter {
 
         final formatted = _formatPlanetLabel(pName, degStr, isRetro, isCombust, null);
         
-        // In Bhava Chalit, the South Indian grid (planetsInSign) still represents 12 signs,
-        // but planets are placed in the sign corresponding to their Bhava House relative to Ascendant.
-        // e.g. If Asc is Sagittarius (9) and planet is in House 10, it goes in Virgo (6).
-        final visualSignIdx = ((ascSignIdx - 1) + (bhavaHouse - 1)) % 12 + 1;
+        // In Bhava Chalit, the North Indian grid (planetsInHouse) plots by house,
+        // while the South Indian grid (planetsInSign) MUST plot by actual zodiac sign.
+        final actualSignIdx = (p['sign_index'] as num?)?.toInt() ?? (((ascSignIdx - 1) + (bhavaHouse - 1)) % 12 + 1);
         
         planetsInHouse.putIfAbsent(bhavaHouse, () => []).add(formatted);
-        planetsInSign.putIfAbsent(visualSignIdx, () => []).add(formatted);
+        planetsInSign.putIfAbsent(actualSignIdx, () => []).add(formatted);
       }
       return;
     }
