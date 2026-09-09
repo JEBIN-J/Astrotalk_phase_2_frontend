@@ -1745,16 +1745,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       child: Row(
         children: [
-          Expanded(flex: 3, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 4, child: Text('Planet', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text('House', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 3, child: Text('Degree', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 3, child: Text('Rashi', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
-          Expanded(flex: 3, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 4, child: Text('Nakshatra', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Center(child: Text('Pada', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
-          Expanded(flex: 2, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+          Expanded(flex: 1, child: Center(child: Text('RL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+          Expanded(flex: 1, child: Center(child: Text('NL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+          Expanded(flex: 1, child: Center(child: Text('SL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
+          Expanded(flex: 1, child: Center(child: Text('SSL', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)), overflow: TextOverflow.ellipsis))),
         ],
       ),
     );
@@ -4813,7 +4813,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: SizedBox(
-                width: 800,
+                width: 750,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -4856,12 +4856,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                         child: Row(
                           children: [
-                            Expanded(flex: 1, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
-                            Expanded(flex: 1, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
-                            Expanded(flex: 1, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 1, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 1, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
-                            Expanded(flex: 1, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
+                            Expanded(flex: 4, child: Text(displayName, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold))),
+                            Expanded(flex: 2, child: Text(houseStr, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)))),
+                            Expanded(flex: 3, child: Text(deg, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 3, child: Text(signDisplay, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 4, child: Text(nak, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500))),
+                            Expanded(flex: 2, child: Center(child: Text(pada, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold)))),
                             Expanded(flex: 1, child: Center(child: Text(rl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA))))),
                             Expanded(flex: 1, child: Center(child: Text(nl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669))))),
                             Expanded(flex: 1, child: Center(child: Text(sl, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706))))),

@@ -467,6 +467,7 @@ class _MultiKundliPainter extends CustomPainter {
       final cellTop = dy * row;
 
       // Draw classical South Indian double diagonal lines for Lagna / Ascendant
+      // Moved to top-right corner to avoid overlapping with text
       if (isAsc) {
         final ascSlashPaint = Paint()
           ..color = (isDark ? const Color(0xFFF43F5E) : const Color(0xFFE11D48)).withValues(alpha: 0.7)
@@ -474,13 +475,13 @@ class _MultiKundliPainter extends CustomPainter {
           ..strokeWidth = 2.0;
 
         canvas.drawLine(
-          Offset(cellLeft + 4, cellTop + 14),
-          Offset(cellLeft + dx - 14, cellTop + dy - 4),
+          Offset(cellLeft + dx - 16, cellTop + 8),
+          Offset(cellLeft + dx - 8, cellTop + 16),
           ascSlashPaint,
         );
         canvas.drawLine(
-          Offset(cellLeft + 14, cellTop + 4),
-          Offset(cellLeft + dx - 4, cellTop + dy - 14),
+          Offset(cellLeft + dx - 22, cellTop + 8),
+          Offset(cellLeft + dx - 14, cellTop + 16),
           ascSlashPaint,
         );
       }
