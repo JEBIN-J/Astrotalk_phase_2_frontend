@@ -346,6 +346,43 @@ class AstroApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getKotaChakra({
+    String name = 'User',
+    String dateOfBirth = '1998-12-13',
+    String timeOfBirth = '09:30',
+    String placeOfBirth = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+    String? transitDate,
+    String? transitTime,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/kota-chakra');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+    if (transitDate != null) bodyMap['transit_date'] = transitDate;
+    if (transitTime != null) bodyMap['transit_time'] = transitTime;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Kota Chakra: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getKotaChakra: $e');
+      rethrow;
+    }
+  }
+
   // =========================================================================
   // 4. AI CHAT & CALLING
   // =========================================================================

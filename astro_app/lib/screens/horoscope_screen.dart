@@ -117,6 +117,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Map<String, dynamic>? _lalKitabData;
   Map<String, dynamic>? _bnnData;
   Map<String, dynamic>? _jaiminiData;
+  Map<String, dynamic>? _kotaChakraData;
+  String _transitDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  String _transitTime = DateFormat('HH:mm').format(DateTime.now());
 
   String _selectedDashaType = 'Vimshottari Dasha';
   String _daysInYearType = 'Mean Sidereal Year (365.256364 days)';
@@ -327,6 +330,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           longitude: _longitude,
           timezone: _timezone,
         ),
+        AstroApiService.getKotaChakra(
+          name: _personName,
+          dateOfBirth: _dobFormattedForApi,
+          timeOfBirth: _tobFormattedForApi,
+          placeOfBirth: _pob,
+          latitude: _latitude,
+          longitude: _longitude,
+          timezone: _timezone,
+          transitDate: _transitDate,
+          transitTime: _transitTime,
+        ),
       ]);
       
       if (mounted) {
@@ -335,6 +349,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           _lalKitabData = futures[1];
           _bnnData = futures[2];
           _jaiminiData = futures[3];
+          _kotaChakraData = futures[4];
           _isLoadingKundli = false;
           // Reset dasha so it re-fetches fresh data for the new birth details
           _dynamicDashaTimeline = null;
@@ -7095,32 +7110,225 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   // TAB 7: KOT CHAKRA
   Widget _buildKotChakraTab(BuildContext context, bool isDark) {
-    final kotChakra = _kundliData?['kot_chakra'] as Map<String, dynamic>?;
-    if (kotChakra == null) {
+    if (_kotaChakraData == null) {
       return Center(child: Text('Kot Chakra data not available', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87)));
     }
 
-    final sections = kotChakra['sections'] as Map<String, dynamic>? ?? {};
-    final moonRef = kotChakra['moon_nakshatra_reference'] ?? '';
+    final overview = _kotaChakraData!['overview'] as Map<String, dynamic>? ?? {};
+    final natal = _kotaChakraData!['natal_reference'] as Map<String, dynamic>? ?? {};
+    final zones = _kotaChakraData!['zones'] as Map<String, dynamic>? ?? {};
+    final transits = _kotaChakraData!['transits'] as List<dynamic>? ?? [];
+    final nakMapping = _kotaChakraData!['nakshatra_mapping'] as List<dynamic>? ?? [];
+    final alerts = _kotaChakraData!['alerts'] as List<dynamic>? ?? [];
+
+    final stambhaPlanets = zones['STAMBHA'] as List<dynamic>? ?? [];
+    final madhyaPlanets = zones['MADHYA'] as List<dynamic>? ?? [];
+    final prakaaraPlanets = zones['PRAKAARA'] as List<dynamic>? ?? [];
+    final bahyaPlanets = zones['BAHYA'] as List<dynamic>? ?? [];
+
+    Widget buildCollapsibleSection(String title, String? subtitle, IconData icon, Color color, {required Widget child, required bool isDark, bool initiallyExpanded = false}) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            )
+          ],
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: initiallyExpanded,
+            tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+            iconColor: color,
+            collapsedIconColor: isDark ? Colors.white70 : Colors.black54,
+            title: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
+                  child: Icon(icon, color: color, size: 20.sp),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                      if (subtitle != null) ...[
+                        SizedBox(height: 2.h),
+                        Text(subtitle, style: GoogleFonts.outfit(fontSize: 12.sp, color: color)),
+                      ]
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                child: child,
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget buildCustomTable({
+      required List<String> headers,
+      required List<List<Widget>> rows,
+    }) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
+            dataRowMaxHeight: double.infinity,
+            dataRowMinHeight: 48.h,
+            headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
+            columnSpacing: 16.w,
+            horizontalMargin: 16.w,
+            columns: headers.map((h) => DataColumn(label: Text(h))).toList(),
+            rows: rows.asMap().entries.map((entry) {
+              final index = entry.key;
+              final cells = entry.value;
+              return DataRow(
+                color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
+                cells: cells.map((c) => DataCell(Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: c,
+                ))).toList(),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+
+    Widget buildZoneTable(String title, List<dynamic> pList, Color color) {
+      return buildCollapsibleSection(
+        title,
+        '${pList.length} Planets',
+        Icons.group_work,
+        color,
+        isDark: isDark,
+        child: pList.isEmpty ? Padding(padding: EdgeInsets.all(16.w), child: Text('No planets in this zone.', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54))) : buildCustomTable(
+          headers: ['Planet', 'Nakshatra', 'Rel Pos', 'Nature', 'Move'],
+          rows: pList.map((p) => [
+            Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black87)),
+            Text(p['nakshatra'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            Text(p['relative_position'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            Text(p['nature'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            Text(p['movement'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+          ]).toList(),
+        ),
+      );
+    }
 
     return ListView(
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
+        // TRANSIT DATE PICKER
+        Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Transit Date & Time', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () async {
+                        final dt = DateTime.tryParse(_transitDate);
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: dt ?? DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _transitDate = DateFormat('yyyy-MM-dd').format(picked);
+                          });
+                          _fetchKundliData();
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8.r)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_transitDate, style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87)),
+                            Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () async {
+                        final timeParts = _transitTime.split(':');
+                        final tod = TimeOfDay(hour: int.parse(timeParts[0]), minute: int.parse(timeParts[1]));
+                        final picked = await showTimePicker(context: context, initialTime: tod);
+                        if (picked != null) {
+                          setState(() {
+                            _transitTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                          });
+                          _fetchKundliData();
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 12.w),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8.r)),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_transitTime, style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87)),
+                            Icon(Icons.access_time, size: 16.sp, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // SUMMARY CARD
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF4C1D95), Color(0xFF6D28D9), Color(0xFF8B5CF6)],
-            ),
+            gradient: const LinearGradient(colors: [Color(0xFF4C1D95), Color(0xFF6D28D9), Color(0xFF8B5CF6)]),
             borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6D28D9).withValues(alpha: 0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: const Color(0xFF6D28D9).withValues(alpha: 0.35), blurRadius: 12, offset: const Offset(0, 4))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -7128,124 +7336,140 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Kot Chakra (Fort Diagram)', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                  Text('Kota Chakra', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
                   Icon(Icons.fort_rounded, color: Colors.white, size: 28),
                 ],
               ),
               SizedBox(height: 8.h),
-              Text('Reference Nakshatra: $moonRef', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.sp)),
-              SizedBox(height: 4.h),
-              Text('Planetary transits & placements relative to Moon', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12.sp)),
+              Text('Reference Nakshatra: ${natal['janma_nakshatra']}', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.sp)),
+              Text('Kota Swami: ${natal['kota_swami']}', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.sp)),
+              Text('Kota Paala: ${natal['kota_paala']}', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13.sp)),
+              SizedBox(height: 12.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Stambha: ${stambhaPlanets.length}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                  Text('Madhya: ${madhyaPlanets.length}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                  Text('Prakaara: ${prakaaraPlanets.length}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                  Text('Bahya: ${bahyaPlanets.length}', style: GoogleFonts.outfit(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                ],
+              ),
             ],
           ),
         ),
-        SizedBox(height: 24.h),
-        
-        ...sections.entries.map((entry) {
-          final title = entry.key;
-          final planets = entry.value as List<dynamic>? ?? [];
-          
-          Color sectionColor;
-          if (title.contains("Stambha")) sectionColor = const Color(0xFFEF4444);
-          else if (title.contains("Madhya")) sectionColor = const Color(0xFFF59E0B);
-          else if (title.contains("Prakara")) sectionColor = const Color(0xFF3B82F6);
-          else sectionColor = const Color(0xFF10B981);
-          
-          return Container(
-            margin: EdgeInsets.only(bottom: 16.h),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: sectionColor.withValues(alpha: 0.3), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: sectionColor.withValues(alpha: 0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ],
-            ),
+        SizedBox(height: 16.h),
+
+        // 4 ZONES (TABLES)
+        buildZoneTable('Bahya (Exterior)', bahyaPlanets, const Color(0xFF10B981)),
+        SizedBox(height: 16.h),
+        buildZoneTable('Prakaara (Boundary)', prakaaraPlanets, const Color(0xFF3B82F6)),
+        SizedBox(height: 16.h),
+        buildZoneTable('Madhya (Middle)', madhyaPlanets, const Color(0xFFF59E0B)),
+        SizedBox(height: 16.h),
+        buildZoneTable('Stambha (Inner Pillar)', stambhaPlanets, const Color(0xFFEF4444)),
+        SizedBox(height: 16.h),
+
+        // ALL TRANSITS TABLE
+        buildCollapsibleSection(
+          'Transit Planetary Positions',
+          'All calculated transits',
+          Icons.public,
+          const Color(0xFF6366F1),
+          isDark: isDark,
+          child: buildCustomTable(
+            headers: ['Planet', 'Deg', 'Nak', 'Pd', 'R', 'Zone'],
+            rows: transits.map((p) => [
+              Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: isDark ? Colors.white : Colors.black87)),
+              Text(p['longitude'].toString().split('.').first, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(p['nakshatra'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(p['pada'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(p['retrograde'] == true ? 'R' : '', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.redAccent)),
+              Text(p['zone'].toString().substring(0, 3), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // MOVEMENT
+        buildCollapsibleSection(
+          'Movement Analysis',
+          'Pravesha, Nirgamana, Stall',
+          Icons.sync_alt,
+          const Color(0xFF06B6D4),
+          isDark: isDark,
+          child: buildCustomTable(
+            headers: ['Planet', 'Movement', 'Zone', 'Nature'],
+            rows: transits.map((p) => [
+              Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black87)),
+              Text(p['movement'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: p['movement'] == 'PRAVESHA' ? Colors.green : p['movement'] == 'NIRGAMANA' ? Colors.orange : (isDark ? Colors.white70 : Colors.black87))),
+              Text(p['zone'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(p['nature'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // ALERTS
+        if (alerts.isNotEmpty)
+          buildCollapsibleSection(
+            'Kota Alerts',
+            '${alerts.length} active conditions',
+            Icons.warning_amber_rounded,
+            const Color(0xFFEF4444),
+            isDark: isDark,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  decoration: BoxDecoration(
-                    color: sectionColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(15.r), topRight: Radius.circular(15.r)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.h,
-                        decoration: BoxDecoration(color: sectionColor, shape: BoxShape.circle),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(title, style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-                      Spacer(),
-                      Text('${planets.length} Planets', style: GoogleFonts.outfit(fontSize: 12.sp, color: sectionColor, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
+              children: alerts.map((a) => Container(
+                margin: EdgeInsets.only(bottom: 8.h),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
                 ),
-                if (planets.isEmpty)
-                  Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Text('No planets in this section', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13.sp, fontStyle: FontStyle.italic)),
-                  )
-                else
-                  Padding(
-                    padding: EdgeInsets.all(12.w),
-                    child: Wrap(
-                      spacing: 8.w,
-                      runSpacing: 8.h,
-                      children: planets.map((p) {
-                        final pName = p['planet'];
-                        final nak = p['nakshatra'];
-                        final deg = p['degree'];
-                        final colorHex = p['color'] as String? ?? "#4338CA";
-                        final pColor = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-                        
-                        return Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6.w),
-                                decoration: BoxDecoration(color: pColor.withValues(alpha: 0.1), shape: BoxShape.circle),
-                                child: Text(pName.substring(0, 2), style: GoogleFonts.outfit(color: pColor, fontWeight: FontWeight.bold, fontSize: 11.sp)),
-                              ),
-                              SizedBox(width: 8.w),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(pName, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87)),
-                                  Text('$nak ($deg)', style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.redAccent, size: 20.sp),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(a['rule'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87)),
+                          SizedBox(height: 4.h),
+                          Text(a['details'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                  ],
+                ),
+              )).toList(),
             ),
-          );
-        }),
+          ),
+          
+        if (alerts.isNotEmpty) SizedBox(height: 16.h),
+
+        // NAKSHATRA MAPPING MASTER TABLE
+        buildCollapsibleSection(
+          '28-Nakshatra Reference',
+          'Including Abhijit',
+          Icons.star_border,
+          const Color(0xFF8B5CF6),
+          isDark: isDark,
+          child: buildCustomTable(
+            headers: ['#', 'Nakshatra', 'Rel', 'Zone'],
+            rows: nakMapping.map((n) => [
+              Text(n['index'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(n['nakshatra'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black87)),
+              Text(n['relative_position'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(n['zone'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
+          ),
+        ),
       ],
     );
   }
 
-  // =========================================================================
-  // HELPER WIDGETS
-  // =========================================================================
   Widget _buildProfileChip(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
