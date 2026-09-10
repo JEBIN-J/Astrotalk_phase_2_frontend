@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/astro_item.dart';
 import '../models/astro_models.dart';
 import 'horoscope_screen.dart';
+import 'prashna_screen.dart';
 import 'ai_calling_screen.dart';
 import 'ai_chat_screen.dart';
 import 'vision_reading_screen.dart';
@@ -62,9 +63,7 @@ class AstroFeatureDialogs {
         targetScreen = const NotificationsScreen();
         break;
       case 'prashna':
-        // targetScreen = const PrashnaScreen();
-        // Fallback for now if there is no prashna screen
-        targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);
+        targetScreen = const PrashnaScreen();
         break;
       case 'subscribe':
         targetScreen = const SubscribeScreen();

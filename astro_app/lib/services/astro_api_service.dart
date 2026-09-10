@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.222:5001/api/v1'; // ngrok tunnel
+        return 'http://10.94.164.225:5000/api/v1'; // ngrok tunnel
       }
     } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';
@@ -379,6 +379,37 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getKotaChakra: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPrashnaChart({
+    required String questionDate,
+    required String questionTime,
+    String placeOfQuestion = 'Delhi, India',
+    double? latitude,
+    double? longitude,
+    double? timezone,
+  }) async {
+    final uri = Uri.parse('$baseUrl/prashna/chart');
+    final Map<String, dynamic> bodyMap = {
+      'question_date': questionDate,
+      'question_time': questionTime,
+      'place': placeOfQuestion,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Prashna Chart: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getPrashnaChart: $e');
       rethrow;
     }
   }
