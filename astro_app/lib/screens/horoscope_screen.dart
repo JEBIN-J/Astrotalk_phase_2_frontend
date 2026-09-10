@@ -3881,6 +3881,57 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
+    
+    Widget buildCustomTable({
+      required List<String> headers,
+      required List<int> flexes,
+      required List<List<Widget>> rows,
+    }) {
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: const Color(0xFF4338CA),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              child: Row(
+                children: List.generate(headers.length, (i) => Expanded(
+                  flex: flexes[i],
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: Text(headers[i], style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                )),
+              ),
+            ),
+            ...rows.asMap().entries.map((entry) {
+              final index = entry.key;
+              final cells = entry.value;
+              return Container(
+                color: index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent,
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                child: Row(
+                  children: List.generate(cells.length, (i) => Expanded(
+                    flex: flexes[i],
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 8.w),
+                      child: cells[i],
+                    ),
+                  )),
+                ),
+              );
+            }).toList(),
+          ],
+        ),
+      );
+    }
+
     Widget buildToggle() {
       return Container(
         margin: EdgeInsets.only(bottom: 16.h, top: 16.h),
@@ -4007,54 +4058,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           initiallyExpanded: true,
           [
             if (!_isJaiminiCardView)
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Rank')),
-                    DataColumn(label: Text('Karaka')),
-                    DataColumn(label: Text('Planet')),
-                    DataColumn(label: Text('Eff. Degree')),
-                    DataColumn(label: Text('Sign')),
-                  ],
-                  rows: charaKarakas.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final ck = entry.value;
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(Text(ck['rank'].toString())),
-                        DataCell(Text(ck['karaka_code'].toString(), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4338CA)))),
-                        DataCell(Text(ck['planet'].toString())),
-                        DataCell(Text(ck['effective_degree'].toString())),
-                        DataCell(Text(ck['sign'].toString())),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+          buildCustomTable(
+            headers: ['Rank', 'Karaka', 'Planet', 'Eff. Degree', 'Sign'],
+            flexes: [1, 2, 2, 2, 2],
+            rows: charaKarakas.map((ck) => [
+              Text(ck['rank'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(ck['karaka_code'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+              Text(ck['planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+              Text(ck['effective_degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(ck['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
           )
         else
           ...charaKarakas.map((ck) {
@@ -4115,52 +4128,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
         buildCollapsibleSection('Arudha Padas', 'The illusion/image of each house in society.', [
         if (!_isJaiminiCardView)
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Pada')),
-                    DataColumn(label: Text('Sign')),
-                    DataColumn(label: Text('Lord')),
-                    DataColumn(label: Text('Exception')),
-                  ],
-                  rows: arudhas.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final a = entry.value;
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(Text(a['name'].toString().split(' ').first, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4338CA)))),
-                        DataCell(Text(a['final_pada'].toString())),
-                        DataCell(Text(a['sign_lord'].toString())),
-                        DataCell(Text(a['exception'].toString())),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+          buildCustomTable(
+            headers: ['Pada', 'Pada Sign', 'House Lord', 'Exception'],
+            flexes: [1, 2, 2, 2],
+            rows: arudhas.map((a) => [
+              Text(a['name'].toString().split(' ').first, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+              Text(a['final_pada'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+              Text(a['sign_lord'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(a['exception'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
           )
         else
           Wrap(
@@ -4204,53 +4180,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
         buildCollapsibleSection('Rashi Drishti (Aspects)', null, [
         if (!_isJaiminiCardView)
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Sign')),
-                    DataColumn(label: Text('Aspects Signs')),
-                    DataColumn(label: Text('Planets in Sign')),
-                  ],
-                  rows: rashiMatrix.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final rm = entry.value;
-                    final aspects = (rm['aspects'] as List).join(', ');
-                    final planets = (rm['planets_in_sign'] as List).join(', ');
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(Text(rm['sign'].toString(), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4338CA)))),
-                        DataCell(Text(aspects.isEmpty ? '-' : aspects)),
-                        DataCell(Text(planets.isEmpty ? '-' : planets)),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+          buildCustomTable(
+            headers: ['Sign', 'Aspects Signs', 'Planets in Sign'],
+            flexes: [2, 4, 2],
+            rows: rashiMatrix.map((rm) {
+              final aspects = (rm['aspects'] as List).join(', ');
+              final planets = (rm['planets_in_sign'] as List).join(', ');
+              return [
+                Text(rm['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                Text(aspects.isEmpty ? '-' : aspects, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ];
+            }).toList(),
           )
         else
           Container(
@@ -4290,63 +4231,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
         buildCollapsibleSection('Argala on Arudha Lagna', 'Planetary interventions and obstructions.', [
         if (!_isJaiminiCardView)
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Argala Type')),
-                    DataColumn(label: Text('Causing Planets')),
-                    DataColumn(label: Text('Obstructing (Virodh)')),
-                    DataColumn(label: Text('Status')),
-                  ],
-                  rows: argalas.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final arg = entry.value;
-                    final argP = (arg['argala_planets'] as List).join(', ');
-                    final virP = (arg['virodh_planets'] as List).join(', ');
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(Text(arg['type'].toString(), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4338CA)))),
-                        DataCell(Text(argP.isEmpty ? 'None' : argP)),
-                        DataCell(Text(virP.isEmpty ? 'None' : virP)),
-                        DataCell(
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                            decoration: BoxDecoration(
-                              color: arg['status'] == 'Effective' ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Text(arg['status'].toString(), style: TextStyle(color: arg['status'] == 'Effective' ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 12.sp)),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+          buildCustomTable(
+            headers: ['Argala Type', 'Causing Planets', 'Obstructing (Virodh)', 'Status'],
+            flexes: [2, 2, 2, 2],
+            rows: argalas.map((arg) {
+              final argP = (arg['argala_planets'] as List).join(', ');
+              final virP = (arg['virodh_planets'] as List).join(', ');
+              return [
+                Text(arg['type'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                Text(argP.isEmpty ? 'None' : argP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(virP.isEmpty ? 'None' : virP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(arg['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: arg['status'] == 'Effective' ? Colors.green : Colors.red)),
+              ];
+            }).toList(),
           )
         else
           ...argalas.map((arg) {
@@ -4389,63 +4286,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
         buildCollapsibleSection('Chara Dasha Timeline', 'Sign-based life periods.', [
         if (!_isJaiminiCardView)
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Dasha Sign')),
-                    DataColumn(label: Text('Duration')),
-                    DataColumn(label: Text('Start')),
-                    DataColumn(label: Text('End')),
-                  ],
-                  rows: dashas.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final d = entry.value;
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(d['sign'].toString(), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4338CA))),
-                              if (d['antardashas'] != null)
-                                Text('${(d['antardashas'] as List).length} Sub-periods', style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey)),
-                            ],
-                          ),
-                        ),
-                        DataCell(Text('${d['duration']} Yrs')),
-                        DataCell(Text(d['start_date'].toString())),
-                        DataCell(Text(d['end_date'].toString())),
-                      ],
-                    );
-                  }).toList(),
-                ),
+          buildCustomTable(
+            headers: ['Dasha Sign', 'Duration', 'Start', 'End'],
+            flexes: [2, 1, 2, 2],
+            rows: dashas.map((d) => [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(d['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                  if (d['antardashas'] != null)
+                    Text('${(d['antardashas'] as List).length} Sub-periods', style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey)),
+                ],
               ),
-            ),
+              Text('${d['duration']} Yrs', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(d['start_date'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(d['end_date'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
           )
         else
           Container(
@@ -4503,106 +4360,105 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         ),
         
         buildCollapsibleSection('Special Lagnas', 'Other Ascendants used in Jaimini.', [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
+        if (!_isJaiminiCardView)
+          buildCustomTable(
+            headers: ['Lagna Name', 'Sign', 'Degree'],
+            flexes: [2, 1, 1],
+            rows: specialLagnas.map((sl) => [
+              Text(sl['name'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+              Text(sl['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(sl['degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
+          )
+        else
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: specialLagnas.map((sl) {
+              return Container(
+                width: (MediaQuery.of(context).size.width - 40.w) / 2,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(sl['name']?.toString().split(' ').first ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                    SizedBox(height: 8.h),
+                    Text(sl['sign']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    SizedBox(height: 4.h),
+                    Text(sl['degree']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-              ),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                columnSpacing: 32.w,
-                horizontalMargin: 16.w,
-                dataRowMaxHeight: 60.h,
-                dataRowMinHeight: 60.h,
-                columns: const [
-                  DataColumn(label: Text('Lagna Name')),
-                  DataColumn(label: Text('Sign')),
-                  DataColumn(label: Text('Degree')),
-                ],
-                rows: specialLagnas.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final sl = entry.value;
-                  return DataRow(
-                    color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                    cells: [
-                      DataCell(Text(sl['name'].toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
-                      DataCell(Text(sl['sign'].toString())),
-                      DataCell(Text(sl['degree'].toString())),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
           ],
         ),
 
-        buildCollapsibleSection('Karakamsha Analysis', 'Houses counted from Karakamsha ($overview["karakamsha"]).', [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-              ),
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                columnSpacing: 32.w,
-                horizontalMargin: 16.w,
-                dataRowMaxHeight: 60.h,
-                dataRowMinHeight: 60.h,
-                columns: const [
-                  DataColumn(label: Text('House')),
-                  DataColumn(label: Text('Sign')),
-                  DataColumn(label: Text('Planets')),
-                  DataColumn(label: Text('Rashi Drishti')),
-                ],
-                rows: kAnalysis.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final k = entry.value;
-                  final planets = (k['planets'] as List).join(', ');
-                  final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
-                  return DataRow(
-                    color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                    cells: [
-                      DataCell(Text(k['house'].toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
-                      DataCell(Text(k['sign'].toString())),
-                      DataCell(Text(planets.isEmpty ? '-' : planets)),
-                      DataCell(Text(drishti.isEmpty ? '-' : drishti)),
+        buildCollapsibleSection('Karakamsha Analysis', 'Houses counted from Karakamsha (${overview["karakamsha"]}).', [
+        if (!_isJaiminiCardView)
+          buildCustomTable(
+            headers: ['House', 'Sign', 'Planets', 'Rashi Drishti'],
+            flexes: [1, 1, 2, 2],
+            rows: kAnalysis.map((k) {
+              final planets = (k['planets'] as List).join(', ');
+              final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
+              return [
+                Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(drishti.isEmpty ? '-' : drishti, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ];
+            }).toList(),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: kAnalysis.length,
+              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              itemBuilder: (context, index) {
+                final k = kAnalysis[index];
+                final planets = (k['planets'] as List).join(', ');
+                final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
+                return Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6.w),
+                            decoration: BoxDecoration(color: const Color(0xFF4338CA).withValues(alpha: 0.1), shape: BoxShape.circle),
+                            child: Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      Text('Planets: ${planets.isEmpty ? 'None' : planets}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                      Text('Rashi Drishti: ${drishti.isEmpty ? 'None' : drishti}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
                     ],
-                  );
-                }).toList(),
-              ),
+                  ),
+                );
+              },
             ),
           ),
-        ),
           ],
         ),
 
@@ -4611,6 +4467,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
            Padding(
             padding: EdgeInsets.symmetric(vertical: 8.h),
             child: Text('No Jaimini Yogas formed.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
+          )
+        else if (!_isJaiminiCardView)
+          buildCustomTable(
+            headers: ['Yoga', 'Planets', 'Status'],
+            flexes: [2, 3, 2],
+            rows: yogas.map((y) => [
+              Text(y['yoga'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
+              Text(y['planets'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text(y['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.green)),
+            ]).toList(),
           )
         else
           ...yogas.map((y) {
@@ -4653,52 +4519,48 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             padding: EdgeInsets.symmetric(vertical: 8.h),
             child: Text('No major transit activations today.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
           )
+        else if (!_isJaiminiCardView)
+          buildCustomTable(
+            headers: ['Planet', 'Current Sign', 'Connections'],
+            flexes: [2, 2, 3],
+            rows: transits.map((t) => [
+              Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+              Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              Text((t['connections'] as List).join(', '), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+            ]).toList(),
+          )
         else
           Container(
-            width: double.infinity,
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
+              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                ),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA)),
-                  headingTextStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                  dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                  columnSpacing: 32.w,
-                  horizontalMargin: 16.w,
-                  dataRowMaxHeight: 60.h,
-                  dataRowMinHeight: 60.h,
-                  columns: const [
-                    DataColumn(label: Text('Transit Planet')),
-                    DataColumn(label: Text('Current Sign')),
-                    DataColumn(label: Text('Connections')),
-                  ],
-                  rows: transits.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final t = entry.value;
-                    final connections = (t['connections'] as List).join(', ');
-                    return DataRow(
-                      color: WidgetStateProperty.all(index.isEven ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent),
-                      cells: [
-                        DataCell(Text(t['transit_planet'].toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
-                        DataCell(Text(t['transit_sign'].toString())),
-                        DataCell(Text(connections)),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: transits.length,
+              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              itemBuilder: (context, index) {
+                final t = transits[index];
+                return Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                          Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Text('Connections: ${(t['connections'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           ],
