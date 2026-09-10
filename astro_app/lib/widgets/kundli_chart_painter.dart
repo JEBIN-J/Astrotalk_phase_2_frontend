@@ -310,12 +310,31 @@ class _MultiKundliPainter extends CustomPainter {
     if (data['ascendant_sign_index'] != null) {
       return (data['ascendant_sign_index'] as num).toInt();
     }
-    final ascSign = data['ascendant_sign']?.toString() ?? data['ascendant_lagna']?.toString() ?? '';
+    
+    String ascSign = data['ascendant_sign']?.toString() ?? data['ascendant_lagna']?.toString() ?? '';
+    if (ascSign.isEmpty && data['overview'] != null && data['overview']['ascendant_sign'] != null) {
+      ascSign = data['overview']['ascendant_sign'].toString();
+    }
+    
     for (int i = 0; i < signNames.length; i++) {
       if (ascSign.toLowerCase().contains(signNames[i].toLowerCase())) {
         return i + 1;
       }
     }
+    
+    if (data['planets'] != null) {
+      for (final p in data['planets']) {
+        final pName = (p['planet'] ?? p['name'] ?? '').toString().toLowerCase();
+        if (pName.contains('ascendant') || pName.contains('lagna')) {
+          if (p['sign_index'] != null) return (p['sign_index'] as num).toInt();
+          final sName = p['sign']?.toString() ?? '';
+          for (int i = 0; i < signNames.length; i++) {
+            if (sName.toLowerCase() == signNames[i].toLowerCase()) return i + 1;
+          }
+        }
+      }
+    }
+    
     return 1;
   }
 
