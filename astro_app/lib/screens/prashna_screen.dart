@@ -415,27 +415,34 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(widget.appBarTitle ?? 'Prashna Chart', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        title: Text(widget.appBarTitle ?? 'Prashna Chart', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 20.sp, letterSpacing: 0.2)),
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         foregroundColor: isDark ? Colors.white : Colors.black87,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(56),
           child: Container(
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
-            ),
+            margin: EdgeInsets.only(bottom: 8.h),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              indicatorColor: const Color(0xFF4F46E5),
-              indicatorWeight: 3,
-              labelColor: const Color(0xFF4F46E5),
+              dividerColor: Colors.transparent,
+              indicatorSize: TabBarIndicatorSize.label,
+              indicatorPadding: EdgeInsets.symmetric(horizontal: -12.w, vertical: 2.h),
+              indicator: BoxDecoration(
+                borderRadius: BorderRadius.circular(24.r),
+                color: isDark ? const Color(0xFF4F46E5).withValues(alpha: 0.2) : const Color(0xFFEEF2FF),
+                border: Border.all(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), width: 1.5),
+              ),
+              labelColor: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4338CA),
               unselectedLabelColor: isDark ? Colors.white60 : const Color(0xFF64748B),
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
               unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14.sp),
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
               tabs: const [
                 Tab(text: 'Overview'),
                 Tab(text: 'Vimshottari'),
@@ -477,9 +484,9 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                         children: [
                           _buildOverviewTab(),
                           _buildVimshottariTab(_prashnaData!['vimshottari']),
-                          _buildDashaTimelineTab(_prashnaData!['yogini']),
+                          _buildDashaTimelineTab(_prashnaData!['yogini'], showD1Chart: true),
                           _buildKalaChakraTab(_prashnaData!['kala_chakra']),
-                          _buildDashaTimelineTab(_prashnaData!['ashtottari']),
+                          _buildDashaTimelineTab(_prashnaData!['ashtottari'], showD1Chart: true),
                           _buildCharaTab(_prashnaData!['chara']),
                           _buildNavamsaTab(_prashnaData!['navamsa']),
                         ],
@@ -1225,7 +1232,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
               final int mdIdx = entry.key;
               final md = entry.value;
               final ads = md['antardashas'] as List? ?? [];
-              final mdName = md['lord'] ?? md['planet'];
+              final mdName = md['sign'] ?? md['lord'] ?? md['planet'] ?? '-';
               final mdStart = md['start_date'] ?? md['start'] ?? '-';
               final mdEnd = md['end_date'] ?? md['end'] ?? '-';
               final mdActive = md['is_active'] == true;
@@ -1247,7 +1254,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                   // Antardashas
                   if (ads.isNotEmpty)
                     ...ads.map((ad) {
-                      final adName = ad['lord'] ?? ad['planet'];
+                      final adName = ad['sign'] ?? ad['lord'] ?? ad['planet'] ?? '-';
                       final adStart = ad['start_date'] ?? ad['start'] ?? '-';
                       final adEnd = ad['end_date'] ?? ad['end'] ?? '-';
                       final adActive = ad['is_active'] == true;
@@ -1309,18 +1316,35 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
               ),
             ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          child: Column(
             children: [
-              _kcStat('Deha', kcData['deha']),
-              Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
-              _kcStat('Jeeva', kcData['jeeva']),
-              Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
-              _kcStat('Direction', kcData['direction']),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _kcStat('Deha', kcData['deha']),
+                  Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
+                  _kcStat('Jeeva', kcData['jeeva']),
+                  Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
+                  _kcStat('Direction', kcData['direction']),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Container(height: 1, color: Colors.white.withValues(alpha: 0.2)),
+              SizedBox(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _kcStat('Nakshatra', '${kcData['moon_nakshatra']} (Pada ${kcData['pada']})'),
+                  Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
+                  _kcStat('Lord', kcData['nakshatra_lord']),
+                  Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.3)),
+                  _kcStat('Cycle', '${kcData['total_cycle_years']} Yrs'),
+                ],
+              ),
             ],
           ),
         ),
-        Expanded(child: _buildDashaTimelineTab(kcData)),
+        Expanded(child: _buildDashaTimelineTab(kcData, showD1Chart: true)),
       ],
     );
   }
@@ -1349,7 +1373,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
   }
 
   Widget _buildCharaTab(Map<String, dynamic>? charaData) {
-    return _buildDashaTimelineTab(charaData);
+    return _buildDashaTimelineTab(charaData, showD1Chart: true);
   }
 
   Widget _buildNavamsaTab(Map<String, dynamic>? navamsaData) {
@@ -1395,10 +1419,11 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
           child: SizedBox(
             height: 350.h,
             child: KundliInteractiveChart(
-              kundliData: navamsaData,
+              kundliData: navamsaData['chart'],
               chartTypeKey: 'D-9',
               chartStyle: _chartStyle,
               isDark: isDark,
+              showDegrees: false,
             ),
           ),
         ),
