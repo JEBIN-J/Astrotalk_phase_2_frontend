@@ -158,6 +158,11 @@ class _MultiKundliPainter extends CustomPainter {
 
       for (final p in pList) {
         final pName = p['planet']?.toString() ?? '';
+        final pNameLower = pName.toLowerCase();
+        if (pNameLower.contains('uranus') || pNameLower.contains('neptune') || pNameLower.contains('pluto')) {
+          continue;
+        }
+        
         // Use backend-provided sign_index directly — no frontend recalculation
         final sIdx = (p['sign_index'] as num?)?.toInt() ?? 1;
         // Use backend-provided house directly — no frontend recalculation
@@ -230,6 +235,10 @@ class _MultiKundliPainter extends CustomPainter {
 
       for (final p in planetsList) {
         final name = p['planet']?.toString() ?? p['name']?.toString() ?? '';
+        final nameLower = name.toLowerCase();
+        if (nameLower.contains('uranus') || nameLower.contains('neptune') || nameLower.contains('pluto') || nameLower.contains('harshal') || nameLower.contains('varun') || nameLower.contains('yama')) {
+          continue;
+        }
 
         // Use backend sign_index directly — no frontend sign name matching
         int signIdx = -1;
