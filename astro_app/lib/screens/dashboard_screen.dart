@@ -416,7 +416,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           ),
 
           // 6. Astrotalk Bento Hero Card (if in Bento Mode)
-          if (_currentStyle == DashboardStyle.bentoModern && _searchQuery.isEmpty)
+          if (_currentStyle == DashboardStyle.bentoModern && _searchQuery.isEmpty && _selectedCategory == AstroCategory.all)
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16, 2, 16, 14),
@@ -441,9 +441,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             ),
 
           // 6.5. Daily Horoscope Personalized Banner
-          SliverToBoxAdapter(
-            child: _buildDailyHoroscopeBanner(context, isDark),
-          ),
+          if (_searchQuery.isEmpty && _selectedCategory == AstroCategory.all)
+            SliverToBoxAdapter(
+              child: _buildDailyHoroscopeBanner(context, isDark),
+            ),
           
 
 

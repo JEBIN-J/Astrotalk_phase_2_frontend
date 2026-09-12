@@ -44,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Astrological Calculations'),
           _buildSelectTile('Default Kundli Format', _chartStyle, ['North Indian', 'South Indian', 'East Indian'], (v) => setState(() => _chartStyle = v), isDark),
           _buildSelectTile('Default Ayanamsa', _ayanamsa, ['Lahiri (Chitra Paksha)', 'Krishnamurti (KP)', 'B.V. Raman', 'Fagan / Bradley'], (v) => setState(() => _ayanamsa = v), isDark),
-          _buildSwitchTile('High Precision Swiss Ephemeris (0.01")', _highPrecisionEphemeris, (v) => setState(() => _highPrecisionEphemeris = v), isDark),
+          _buildSwitchTile('High Precision Ephemeris (0.01")', _highPrecisionEphemeris, (v) => setState(() => _highPrecisionEphemeris = v), isDark),
           SizedBox(height: 16.h),
 
           _buildSectionHeader('Localization & Appearance'),

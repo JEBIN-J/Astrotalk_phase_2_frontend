@@ -65,7 +65,7 @@ class AboutScreen extends StatelessWidget {
 
           Text('Engine Specifications', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp)),
           SizedBox(height: 12.h),
-          _buildInfoTile('Calculation Core', 'Swiss Ephemeris v2.10 High Precision Engine', isDark),
+          _buildInfoTile('Calculation Core', 'High Precision Core Engine', isDark),
           _buildInfoTile('Ayanamsa Precision', 'Lahiri (Chitra Paksha) with 0.001" arcsecond precision', isDark),
           _buildInfoTile('Panchanga Algorithm', 'Traditional 5-Anga Surya Siddhanta + Modern Ephemeris', isDark),
           _buildInfoTile('Kundli Milan', '36 Guna Ashtakoota with Nadi & Bhakoot dosha cancellation', isDark),

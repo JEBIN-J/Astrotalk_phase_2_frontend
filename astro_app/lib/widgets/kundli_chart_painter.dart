@@ -265,8 +265,8 @@ class _MultiKundliPainter extends CustomPainter {
           final formatted = _formatPlanetLabel(name, degFormatted, isRetro, isCombust, marker);
 
           planetsInSign.putIfAbsent(signIdx, () => []).add(formatted);
-          // Use backend-provided house directly — no frontend math
-          final houseNum = (p['house'] as num?)?.toInt() ?? 1;
+          // Use backend-provided house, otherwise calculate from sign index
+          final houseNum = (p['house'] as num?)?.toInt() ?? ((signIdx - ascSignIdx + 12) % 12) + 1;
           planetsInHouse.putIfAbsent(houseNum, () => []).add(formatted);
         }
       }

@@ -164,6 +164,16 @@ class AstroItem {
       badge: 'AI',
     ),
     const AstroItem(
+      id: 'palm_reading',
+      title: 'Palm Reading',
+      subtitle: 'AI Palmistry & Life Lines',
+      iconKey: 'palm_reading',
+      category: AstroCategory.aiTools,
+      primaryColor: Color(0xFFD946EF),
+      secondaryColor: Color(0xFFE879F9),
+      badge: 'AI',
+    ),
+    const AstroItem(
       id: 'daily_quotes',
       title: 'Daily Quotes',
       subtitle: 'Motivation & Cosmic Wisdom',

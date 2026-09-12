@@ -133,7 +133,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                               children: [
                                 Text('Update Prashna Details', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20.sp, fontWeight: FontWeight.bold)),
                                 SizedBox(height: 4.h),
-                                Text('Recalculate Swiss Ephemeris Placements', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.8), fontSize: 13.sp)),
+                                Text('Recalculate Planetary Placements', style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.8), fontSize: 13.sp)),
                               ],
                             ),
                           ),
@@ -981,7 +981,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                   border: Border(top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
                 ),
                 child: Text(
-                  'Calculated dynamically via Swiss Ephemeris.\nConvention: ${calcDetails['calendar_convention']}\nSystem: ${data['system']} (${data['calculation_basis']})',
+                  'Calculated dynamically via High Precision Core.\nConvention: ${calcDetails['calendar_convention']}\nSystem: ${data['system']} (${data['calculation_basis']})',
                   style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               )

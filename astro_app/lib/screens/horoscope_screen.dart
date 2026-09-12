@@ -174,6 +174,21 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialTabIndex);
     _bottomSubTabController = TabController(length: 4, vsync: this);
     
+    // Initialize from GlobalBirthProfile
+    final profile = GlobalBirthProfile();
+    if (profile.isProfileSet) {
+      _personName = profile.personName;
+      _dob = profile.dob;
+      _tob = profile.tob;
+      _pob = profile.pob;
+      _latitude = profile.latitude;
+      _longitude = profile.longitude;
+      _timezone = profile.timezone;
+      _currentDateTime = profile.currentDateTime;
+      _isProfileSet = true;
+      _fetchKundliData();
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_isProfileSet) {
         _showEditProfileDialog();
@@ -865,6 +880,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             _isProfileSet = true;
             _syncDateTimeFromStrings();
           });
+          
+          // Save to GlobalBirthProfile
+          GlobalBirthProfile().updateProfile(
+            name: name,
+            dateOfBirth: dob,
+            timeOfBirth: tob,
+            placeOfBirth: pob,
+            lat: lat,
+            lon: lon,
+            tz: tz,
+            dateTime: _currentDateTime,
+          );
+
           _fetchKundliData();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -908,32 +936,44 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ],
         bottom: widget.isSingleTabMode ? null : PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(54),
           child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-              border: Border(bottom: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0))),
-            ),
+            margin: EdgeInsets.only(bottom: 6.h),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              labelColor: const Color(0xFF4338CA),
-              unselectedLabelColor: isDark ? Colors.white60 : const Color(0xFF64748B),
-              indicatorColor: const Color(0xFF009688),
-              indicatorWeight: 3,
-              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
-              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14.sp),
+              labelColor: Colors.white,
+              unselectedLabelColor: isDark ? Colors.white54 : const Color(0xFF64748B),
+              indicatorSize: TabBarIndicatorSize.label,
+              indicator: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4338CA), Color(0xFF312E81)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4338CA).withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              labelPadding: EdgeInsets.symmetric(horizontal: 16.w),
+              labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp),
+              unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
               tabs: [
-                Tab(text: 'Vedic (D1)'),
-                Tab(text: 'Dasha'),
-                Tab(text: 'KP System'),
-                Tab(text: 'Lal Kitab'),
-                Tab(text: 'BNN'),
-                Tab(text: 'Jamini'),
-                Tab(text: 'Ashtakavarga'),
-                Tab(text: 'Strength'),
-                Tab(text: 'Kot Chakra'),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Vedic (D1)'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Dasha'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('KP System'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Lal Kitab'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('BNN'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Jamini'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Ashtakavarga'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Strength'))),
+                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Kot Chakra'))),
               ],
             ),
           ),
@@ -978,7 +1018,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       const CircularProgressIndicator(color: Color(0xFF4338CA)),
                       SizedBox(height: 14.h),
                       Text(
-                        'Calculating Swiss Ephemeris Placements...',
+                        'Calculating Planetary Placements...',
                         style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
                       ),
                     ],
@@ -1524,7 +1564,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     ],
                   ),
                   Text(
-                    'Swiss Ephemeris Precision',
+                    'High Precision Calculation',
                     style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white54 : Colors.black45, fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -4925,34 +4965,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         else
           ...(_isDashaCardView ? _buildDashaCardRows(isDark) : _buildDashaTableRows(isDark)),
 
-        SizedBox(height: 12.h),
-
-        // ── Note Card ───────────────────────────────────────────────────────
-        if (!_isLoadingDasha)
-          Container(
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.7) : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, size: 14, color: const Color(0xFF4338CA)),
-                    SizedBox(width: 6.w),
-                    Text('Note', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B), fontSize: 12.sp)),
-                  ],
-                ),
-                SizedBox(height: 6.h),
-                Text('• Tap a row to drill into Antardasha periods.', style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
-                SizedBox(height: 2.h),
-                Text('• Long press for Transit details of that period.', style: GoogleFonts.outfit(color: isDark ? Colors.white60 : Colors.black54, fontSize: 11.sp)),
-              ],
-            ),
-          ),
         SizedBox(height: 20.h),
       ],
     );
@@ -5035,7 +5047,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ...items.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final item = entry.value as Map<String, dynamic>;
-                final planetName = item['planet']?.toString() ?? '-';
+                final planetName = item['lord']?.toString() ?? item['planet']?.toString() ?? '-';
                 final startStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
                 final endStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
                 final isActive = item['is_active'] == true;
@@ -5185,7 +5197,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
     return items.asMap().entries.map((entry) {
       final item = entry.value as Map<String, dynamic>;
-      final planetName = item['planet']?.toString() ?? '-';
+      final planetName = item['lord']?.toString() ?? item['planet']?.toString() ?? '-';
       final startStr = item['start']?.toString() ?? item['start_date']?.toString() ?? '-';
       final endStr = item['end']?.toString() ?? item['end_date']?.toString() ?? '-';
       final durationStr = item['duration_years'] != null
@@ -8465,7 +8477,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                           ),
                         ),
                         Text(
-                          'Recalculate Swiss Ephemeris Placements',
+                          'Recalculate Planetary Placements',
                           style: GoogleFonts.outfit(
                             fontSize: 12.sp,
                             color: Colors.white70,

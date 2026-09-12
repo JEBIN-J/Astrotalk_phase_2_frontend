@@ -116,3 +116,41 @@ class DailyAstroInsight {
     ),
   ];
 }
+
+/// Singleton to hold the globally shared birth profile details across all sections
+class GlobalBirthProfile {
+  static final GlobalBirthProfile _instance = GlobalBirthProfile._internal();
+  factory GlobalBirthProfile() => _instance;
+  GlobalBirthProfile._internal();
+
+  String personName = '';
+  String dob = '';
+  String tob = '';
+  String pob = '';
+  double latitude = 0.0;
+  double longitude = 0.0;
+  double timezone = 0.0;
+  DateTime currentDateTime = DateTime.now();
+  bool isProfileSet = false;
+
+  void updateProfile({
+    required String name,
+    required String dateOfBirth,
+    required String timeOfBirth,
+    required String placeOfBirth,
+    required double lat,
+    required double lon,
+    required double tz,
+    required DateTime dateTime,
+  }) {
+    personName = name;
+    dob = dateOfBirth;
+    tob = timeOfBirth;
+    pob = placeOfBirth;
+    latitude = lat;
+    longitude = lon;
+    timezone = tz;
+    currentDateTime = dateTime;
+    isProfileSet = true;
+  }
+}
