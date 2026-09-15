@@ -106,6 +106,16 @@ class AstroItem {
       secondaryColor: Color(0xFFFBBF24),
     ),
     const AstroItem(
+      id: 'tarot',
+      title: 'Tarot',
+      subtitle: 'Readings, Astro-Tarot & Spreads',
+      iconKey: 'tarot', // Assuming or falling back
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFF9333EA),
+      secondaryColor: Color(0xFFD8B4FE),
+      badge: 'New',
+    ),
+    const AstroItem(
       id: 'prashna',
       title: 'Prashna',
       subtitle: 'Horary Astrology',

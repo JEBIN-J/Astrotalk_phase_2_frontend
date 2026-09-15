@@ -6,6 +6,7 @@ import 'prashna_screen.dart';
 import 'coming_soon_screen.dart';
 import 'muhurat_screen.dart';
 import 'daily_horoscope_screen.dart';
+import 'tarot_dashboard_screen.dart';
 
 class AstroFeatureDialogs {
   /// Navigates to the dedicated full-screen Page with specialized functionality
@@ -56,6 +57,9 @@ class AstroFeatureDialogs {
         return;
       case 'prashna':
         targetScreen = const PrashnaScreen();
+        break;
+      case 'tarot':
+        targetScreen = TarotDashboardScreen();
         break;
       default:
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);
