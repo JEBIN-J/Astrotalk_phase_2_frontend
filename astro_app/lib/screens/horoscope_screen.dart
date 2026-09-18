@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,7 @@ import '../services/astro_api_service.dart';
 import '../widgets/celestial_animations.dart';
 import '../widgets/kundli_chart_painter.dart';
 import 'api_settings_screen.dart';
+import 'kp_system_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 enum StepperInterval {
@@ -131,8 +133,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _selectedAshtakavargaChartType = 'D-1';
   String _selectedAshtakavargaType = 'Sarva-Ashtakavarga';
   int _strengthSubTabIndex = 0;
-
-
+  Timer? _stepperDebounce;
   
   bool _isLoadingDasha = false;
   List<dynamic>? _dynamicDashaTimeline;
@@ -212,6 +213,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   @override
   void dispose() {
+    _stepperDebounce?.cancel();
     _tabController.dispose();
     _bottomSubTabController.dispose();
     super.dispose();
@@ -231,47 +233,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     return '-';
   }
 
-  void _syncDateTimeFromStrings() {
-    try {
-      DateTime? d;
-      final dFormats = [
-        DateFormat('dd MMM yyyy'),
-        DateFormat('d MMM yyyy'),
-        DateFormat('yyyy-MM-dd'),
-        DateFormat('dd/MM/yyyy'),
-      ];
-      for (final f in dFormats) {
-        try {
-          d = f.parse(_dob.trim());
-          break;
-        } catch (_) {}
-      }
-
-      int hour = 19;
-      int minute = 18;
-      int second = 0;
-
-      final tFormats = [
-        DateFormat('hh:mm a'),
-        DateFormat('h:mm a'),
-        DateFormat('HH:mm:ss'),
-        DateFormat('HH:mm'),
-      ];
-      for (final f in tFormats) {
-        try {
-          final t = f.parse(_tob.trim());
-          hour = t.hour;
-          minute = t.minute;
-          second = t.second;
-          break;
-        } catch (_) {}
-      }
-
-      if (d != null) {
-        _currentDateTime = DateTime(d.year, d.month, d.day, hour, minute, second);
-      }
-    } catch (_) {}
-  }
 
   String get _dobFormattedForApi =>
       DateFormat('yyyy-MM-dd').format(_currentDateTime);
@@ -304,7 +265,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   Future<void> _fetchKundliData() async {
-    setState(() => _isLoadingKundli = true);
+    if (_kundliData == null) {
+      setState(() => _isLoadingKundli = true);
+    }
     try {
       final futures = await Future.wait([
         AstroApiService.getKundli(
@@ -317,7 +280,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           timezone: _timezone,
           daysInYear: _currentDaysInYear,
           bhavaSystem: _selectedBhavaSystem,
-        ),
+        ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getLalKitab(
           name: _personName,
           dateOfBirth: _dobFormattedForApi,
@@ -326,7 +289,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
-        ),
+        ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getBnn(
           name: _personName,
           dateOfBirth: _dobFormattedForApi,
@@ -335,7 +298,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
-        ),
+        ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getJaimini(
           name: _personName,
           dateOfBirth: _dobFormattedForApi,
@@ -344,7 +307,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
-        ),
+        ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getKotaChakra(
           name: _personName,
           dateOfBirth: _dobFormattedForApi,
@@ -355,16 +318,16 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           timezone: _timezone,
           transitDate: _transitDate,
           transitTime: _transitTime,
-        ),
+        ).catchError((e) => <String, dynamic>{}),
       ]);
       
       if (mounted) {
         setState(() {
-          _kundliData = futures[0];
-          _lalKitabData = futures[1];
-          _bnnData = futures[2];
-          _jaiminiData = futures[3];
-          _kotaChakraData = futures[4];
+          if (futures[0].isNotEmpty) _kundliData = futures[0];
+          if (futures[1].isNotEmpty) _lalKitabData = futures[1];
+          if (futures[2].isNotEmpty) _bnnData = futures[2];
+          if (futures[3].isNotEmpty) _jaiminiData = futures[3];
+          if (futures[4].isNotEmpty) _kotaChakraData = futures[4];
           _isLoadingKundli = false;
           // Reset dasha so it re-fetches fresh data for the new birth details
           _dynamicDashaTimeline = null;
@@ -393,7 +356,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       _dob = DateFormat('dd MMM yyyy').format(_currentDateTime);
       _tob = DateFormat('hh:mm a').format(_currentDateTime);
     });
-    _fetchKundliData();
+    _stepperDebounce?.cancel();
+    _stepperDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _fetchKundliData();
+    });
   }
 
   void _showSettingsModal() {
@@ -862,35 +828,36 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       barrierDismissible: _isProfileSet, // Prevent dismiss if no profile set
       builder: (ctx) => _EditBirthDetailsDialog(
         initialName: _personName,
+        initialDateTime: _currentDateTime,
         initialDob: _dob,
         initialTob: _tob,
         initialPob: _pob,
         initialLat: _latitude,
         initialLon: _longitude,
         initialTz: _timezone,
-        onSave: (name, dob, tob, pob, lat, lon, tz) {
+        onSave: (name, birthDateTime, pob, lat, lon, tz) {
           setState(() {
             _personName = name;
-            _dob = dob;
-            _tob = tob;
+            _currentDateTime = birthDateTime;
+            _dob = DateFormat('dd MMM yyyy').format(birthDateTime);
+            _tob = DateFormat('hh:mm a').format(birthDateTime);
             _pob = pob;
             _latitude = lat;
             _longitude = lon;
             _timezone = tz;
             _isProfileSet = true;
-            _syncDateTimeFromStrings();
           });
           
           // Save to GlobalBirthProfile
           GlobalBirthProfile().updateProfile(
             name: name,
-            dateOfBirth: dob,
-            timeOfBirth: tob,
+            dateOfBirth: _dob,
+            timeOfBirth: _tob,
             placeOfBirth: pob,
             lat: lat,
             lon: lon,
             tz: tz,
-            dateTime: _currentDateTime,
+            dateTime: birthDateTime,
           );
 
           _fetchKundliData();
@@ -5576,303 +5543,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
-    final rawPlanets = (_kundliData?['planets'] as List<dynamic>?) ?? [];
-
-    return ListView(
-      padding: EdgeInsets.all(16.w),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        // 1. KP Cusp Chart Box
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Text(
-                'KP Cusp Chart (Placidus)',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
-              ),
-              SizedBox(height: 16.h),
-              KundliInteractiveChart(
-                chartStyle: _currentChartStyle,
-                isDark: isDark,
-                chartTypeKey: 'Bhava',
-                showUpagrahas: _showUpagrahasOnChart,
-                showDegrees: _showDegreesOnChart,
-                kundliData: _kundliData,
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 24.h),
-
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Planetary Coordinates & KP Lords',
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.bold, 
-                fontSize: 18.sp,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
-              ),
-            ),
-            SizedBox(height: 10.h),
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => setState(() => _isKpTableViewMode = !_isKpTableViewMode),
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF059669).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _isKpTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
-                          size: 14.sp,
-                          color: const Color(0xFF059669),
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          _isKpTableViewMode ? 'Switch to Card View' : 'Switch to Table View',
-                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        if (rawPlanets.isEmpty)
-          Center(child: Text('No planetary data available'))
-        else if (_isKpTableViewMode)
-          Builder(builder: (ctx) {
-            final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
-            final processedPlanets = rawPlanets.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final p = entry.value as Map<String, dynamic>;
-              final isLagna = (p['planet_name_simple']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                  (p['name']?.toString().toLowerCase().contains('ascendant') ?? false) ||
-                  (p['name']?.toString().toLowerCase().contains('lagna') ?? false);
-
-              final rawName = p['name']?.toString() ?? 'Planet';
-              final simpleName = p['planet_name_simple']?.toString() ?? rawName.split('(')[0].trim();
-              final isRetro = p['is_retrograde'] == true;
-              final karakaCode = p['chara_karaka_code']?.toString() ?? '';
-              final retroTag = isRetro ? ' (R)' : '';
-              final karakaTag = karakaCode.isNotEmpty ? ' ($karakaCode)' : '';
-              final displayName = isLagna ? 'Lagna' : '$simpleName$retroTag$karakaTag';
-
-              final houseStr = (p['house'] ?? 1).toString();
-              final deg = p['degree_formatted']?.toString() ?? "00:00:00";
-              final rawSign = p['sign']?.toString() ?? 'Aries';
-              final signDisplay = rawSign.split('(')[0].trim();
-              final nak = p['nakshatra']?.toString() ?? '-';
-              final pada = p['pada']?.toString() ?? p['nakshatra_pada']?.toString() ?? '-';
-
-              final kp = p['kp_lords'] as Map<String, dynamic>?;
-              final rl = p['rl']?.toString() ?? kp?['rl']?.toString() ?? '-';
-              final nl = p['nl']?.toString() ?? kp?['nl']?.toString() ?? '-';
-              final sl = p['sl']?.toString() ?? kp?['sl']?.toString() ?? '-';
-              final ssl = p['ssl']?.toString() ?? kp?['ssl']?.toString() ?? '-';
-
-              final rowBg = isLagna
-                  ? (isDark ? const Color(0xFF881337).withValues(alpha: 0.28) : const Color(0xFFFFF1F2))
-                  : (idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent);
-
-              return {
-                'displayName': displayName,
-                'houseStr': houseStr,
-                'deg': deg,
-                'signDisplay': signDisplay,
-                'nak': nak,
-                'pada': pada,
-                'rl': rl,
-                'nl': nl,
-                'sl': sl,
-                'ssl': ssl,
-                'rowBg': rowBg,
-              };
-            }).toList();
-
-            return Container(
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. Fixed Left Column (Planet)
-                  SizedBox(
-                    width: 140.w,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          height: 38.h,
-                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                          padding: EdgeInsets.symmetric(horizontal: 10.w),
-                          alignment: Alignment.centerLeft,
-                          child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
-                        ),
-                        Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        ...processedPlanets.map((p) {
-                          return Container(
-                            height: 40.h,
-                            color: p['rowBg'] as Color,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w),
-                            alignment: Alignment.centerLeft,
-                            child: Text(p['displayName'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-
-                  // 2. Scrollable Right Area
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: SizedBox(
-                        width: 550, // Width for the remaining columns
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              height: 38.h,
-                              color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                              padding: EdgeInsets.symmetric(horizontal: 10.w),
-                              child: Row(
-                                children: [
-                                  Expanded(flex: 2, child: Text('House', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                  Expanded(flex: 3, child: Text('Degree', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                  Expanded(flex: 3, child: Text('Rashi', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                  Expanded(flex: 4, child: Text('Nakshatra', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                  Expanded(flex: 2, child: Center(child: Text('Pada', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                                  Expanded(flex: 1, child: Center(child: Text('RL', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                                  Expanded(flex: 1, child: Center(child: Text('NL', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                                  Expanded(flex: 1, child: Center(child: Text('SL', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                                  Expanded(flex: 1, child: Center(child: Text('SSL', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                                ],
-                              ),
-                            ),
-                            Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                            ...processedPlanets.map((p) {
-                              return Container(
-                                height: 40.h,
-                                color: p['rowBg'] as Color,
-                                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                                child: Row(
-                                  children: [
-                                    Expanded(flex: 2, child: Text(p['houseStr'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                    Expanded(flex: 3, child: Text(p['deg'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                    Expanded(flex: 3, child: Text(p['signDisplay'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                    Expanded(flex: 4, child: Text(p['nak'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                    Expanded(flex: 2, child: Center(child: Text(p['pada'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis))),
-                                    Expanded(flex: 1, child: Center(child: Text(p['rl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), maxLines: 1, overflow: TextOverflow.ellipsis))),
-                                    Expanded(flex: 1, child: Center(child: Text(p['nl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF059669)), maxLines: 1, overflow: TextOverflow.ellipsis))),
-                                    Expanded(flex: 1, child: Center(child: Text(p['sl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFFD97706)), maxLines: 1, overflow: TextOverflow.ellipsis))),
-                                    Expanded(flex: 1, child: Center(child: Text(p['ssl'] as String, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF8B5CF6)), maxLines: 1, overflow: TextOverflow.ellipsis))),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          })
-        else
-          ...rawPlanets.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final p = entry.value as Map<String, dynamic>;
-            final rawName = p['name']?.toString() ?? 'Planet';
-            final name = rawName.split('(')[0].trim();
-            final sanskrit = p['sanskrit_name']?.toString() ?? '';
-            final sign = p['sign']?.toString() ?? 'Aries';
-            final degree = p['degree_formatted']?.toString() ?? "15° 00'";
-            final speed = (p['speed_deg_per_day'] as num?)?.toDouble() ?? 0.0;
-            final isRetro = p['is_retrograde'] == true;
-            final nakshatra = p['nakshatra']?.toString() ?? 'Ashwini';
-            final pada = (p['nakshatra_pada'] ?? 1).toString();
-            final house = (p['house'] ?? 1).toString();
-            final lord = p['nakshatra_lord']?.toString() ?? 'Ketu';
-            final dignity = p['dignity']?.toString() ?? (isRetro ? 'Retrograde' : 'Direct');
-
-            final kp = p['kp_lords'] as Map<String, dynamic>?;
-            final starLord = kp?['star_lord']?.toString() ?? lord;
-            final subLord = kp?['sub_lord']?.toString() ?? '';
-            final subSubLord = kp?['sub_sub_lord']?.toString() ?? '';
-
-            final navamsha = p['navamsha'] as Map<String, dynamic>?;
-            final navSign = navamsha?['navamsha_sign']?.toString() ?? '';
-            final isVargottama = navamsha?['is_vargottama'] == true;
-
-            final colorHex = p['color']?.toString() ?? '#4338CA';
-            Color color;
-            try {
-              color = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-            } catch (_) {
-              color = const Color(0xFF4338CA);
-            }
-
-            final kpOwnedHouses = (p['kp_owned_houses'] as List<dynamic>?)?.join(', ') ?? 'None';
-            final kpOccupiedHouse = p['kp_occupied_house']?.toString() ?? '-';
-            final kpSignificators = (p['kp_significators'] as List<dynamic>?)?.join(', ') ?? '-';
-            final kpSigString = 'Occupied: $kpOccupiedHouse | Owned: $kpOwnedHouses | Significators: $kpSignificators';
-
-            return _buildDetailedPlanetCard(
-              idx,
-              name,
-              sanskrit,
-              sign,
-              degree,
-              speed,
-              isRetro,
-              nakshatra,
-              pada,
-              house,
-              lord,
-              starLord,
-              subLord,
-              subSubLord,
-              navSign,
-              isVargottama,
-              dignity,
-              color,
-              isDark,
-              kpSignificators: kpSigString,
-            );
-          }),
-      ],
+    return KpSystemView(
+      key: ValueKey('$_dobFormattedForApi-$_tobFormattedForApi-$_latitude-$_longitude-$_timezone-$_personName'),
+      personName: _personName,
+      dateOfBirth: _dobFormattedForApi,
+      timeOfBirth: _tobFormattedForApi,
+      placeOfBirth: _pob,
+      latitude: _latitude,
+      longitude: _longitude,
+      timezone: _timezone,
+      chartStyle: _currentChartStyle,
+      isDark: isDark,
+      onEditProfile: _showEditProfileDialog,
     );
   }
 
@@ -8240,18 +7922,181 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 }
 
+class _LocationSelectorSheet extends StatefulWidget {
+  final Function(Map<String, String> city) onSelect;
+
+  const _LocationSelectorSheet({required this.onSelect});
+
+  @override
+  State<_LocationSelectorSheet> createState() => _LocationSelectorSheetState();
+}
+
+class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  bool _isSearching = false;
+  List<Map<String, String>> _searchResults = [];
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlaces('');
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchPlaces(String query) async {
+    setState(() => _isSearching = true);
+    try {
+      final results = await AstroApiService.getPlaces(query: query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSearching = false);
+      }
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _fetchPlaces(query);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161A25) : Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'Select Location',
+            style: GoogleFonts.outfit(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+          ),
+          SizedBox(height: 14.h),
+          TextField(
+            controller: _searchCtrl,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            decoration: InputDecoration(
+              hintText: 'Search for a city (e.g. Chennai, Mumbai)...',
+              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF4338CA)),
+              suffixIcon: _searchCtrl.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        _fetchPlaces('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide.none),
+            ),
+            onChanged: _onSearchChanged,
+          ),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: _isSearching
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)))
+                : _searchResults.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.location_off_rounded, size: 40.sp, color: Colors.grey),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'No matching locations found',
+                              style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white60 : Colors.black54),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'You can also type your city and coordinates directly in the form.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final city = _searchResults[index];
+                          final cityName = city['city'] ?? 'Unknown';
+                          return ListTile(
+                            leading: const Icon(Icons.location_on, color: Color(0xFF4338CA)),
+                            title: Text(
+                              cityName,
+                              style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                            ),
+                            subtitle: Text(
+                              '${city['coords']} • ${city['tz']}',
+                              style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white54 : Colors.black54),
+                            ),
+                            onTap: () {
+                              widget.onSelect(city);
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EditBirthDetailsDialog extends StatefulWidget {
   final String initialName;
+  final DateTime? initialDateTime;
   final String initialDob;
   final String initialTob;
   final String initialPob;
   final double initialLat;
   final double initialLon;
   final double initialTz;
-  final Function(String name, String dob, String tob, String pob, double lat, double lon, double tz) onSave;
+  final Function(String name, DateTime birthDateTime, String pob, double lat, double lon, double tz) onSave;
 
   const _EditBirthDetailsDialog({
     required this.initialName,
+    this.initialDateTime,
     required this.initialDob,
     required this.initialTob,
     required this.initialPob,
@@ -8283,38 +8128,68 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     _lonCtrl = TextEditingController(text: widget.initialLon.toString());
     _tzCtrl = TextEditingController(text: widget.initialTz.toString());
 
-    _selectedDate = null;
-    try {
-      final formats = [
-        DateFormat('dd MMM yyyy'),
-        DateFormat('d MMM yyyy'),
-        DateFormat('yyyy-MM-dd'),
-        DateFormat('dd/MM/yyyy'),
-      ];
-      for (final f in formats) {
-        try {
-          _selectedDate = f.parse(widget.initialDob.trim());
-          break;
-        } catch (_) {}
-      }
-    } catch (_) {}
+    if (widget.initialDateTime != null) {
+      _selectedDate = widget.initialDateTime;
+      _selectedTime = TimeOfDay(
+        hour: widget.initialDateTime!.hour,
+        minute: widget.initialDateTime!.minute,
+      );
+    } else {
+      _selectedDate = _parseDob(widget.initialDob);
+      _selectedTime = _parseTob(widget.initialTob);
+    }
 
-    _selectedTime = null;
-    try {
-      final tFormats = [
-        DateFormat('hh:mm a'),
-        DateFormat('h:mm a'),
-        DateFormat('HH:mm:ss'),
-        DateFormat('HH:mm'),
-      ];
-      for (final f in tFormats) {
-        try {
-          final t = f.parse(widget.initialTob.trim());
-          _selectedTime = TimeOfDay(hour: t.hour, minute: t.minute);
-          break;
-        } catch (_) {}
+    _selectedDate ??= DateTime(1996, 12, 13);
+    _selectedTime ??= const TimeOfDay(hour: 9, minute: 30);
+  }
+
+  DateTime? _parseDob(String raw) {
+    final s = raw.trim();
+    if (s.isEmpty) return null;
+    final formats = [
+      DateFormat('dd MMM yyyy'),
+      DateFormat('d MMM yyyy'),
+      DateFormat('yyyy-MM-dd'),
+      DateFormat('dd/MM/yyyy'),
+      DateFormat('dd-MM-yyyy'),
+    ];
+    for (final f in formats) {
+      try {
+        return f.parse(s);
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  TimeOfDay? _parseTob(String raw) {
+    final s = raw.replaceAll('\u202F', ' ').replaceAll('\u00A0', ' ').trim();
+    if (s.isEmpty) return null;
+
+    final match = RegExp(r'^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*([AaPp][Mm])?').firstMatch(s);
+    if (match != null) {
+      int h = int.parse(match.group(1)!);
+      final m = int.parse(match.group(2)!);
+      final ampm = match.group(3)?.toUpperCase();
+      if (ampm != null) {
+        if (ampm == 'PM' && h < 12) h += 12;
+        if (ampm == 'AM' && h == 12) h = 0;
       }
-    } catch (_) {}
+      return TimeOfDay(hour: h.clamp(0, 23), minute: m.clamp(0, 59));
+    }
+
+    final formats = [
+      DateFormat('hh:mm a'),
+      DateFormat('h:mm a'),
+      DateFormat('HH:mm:ss'),
+      DateFormat('HH:mm'),
+    ];
+    for (final f in formats) {
+      try {
+        final dt = f.parse(s);
+        return TimeOfDay(hour: dt.hour, minute: dt.minute);
+      } catch (_) {}
+    }
+    return null;
   }
 
   @override
@@ -8328,106 +8203,32 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   }
 
   void _showLocationSelector() {
-    bool isSearching = false;
-    List<Map<String, String>> searchResults = [];
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setModalState) {
-            Future<void> _fetchPlaces(String query) async {
-              setModalState(() => isSearching = true);
-              try {
-                final results = await AstroApiService.getPlaces(query: query);
-                setModalState(() {
-                  searchResults = results;
-                  isSearching = false;
-                });
-              } catch (e) {
-                setModalState(() => isSearching = false);
-              }
-            }
-
-            if (searchResults.isEmpty && !isSearching) {
-              _fetchPlaces("");
-            }
-
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.75,
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF161A25) : Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40.w, height: 4.h,
-                      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2.r)),
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-                  Text('Select Location', style: GoogleFonts.outfit(fontSize: 22.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-                  SizedBox(height: 16.h),
-                  TextField(
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      hintText: 'Search for a city...',
-                      hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
-                      prefixIcon: Icon(Icons.search, color: const Color(0xFF4338CA)),
-                      filled: true,
-                      fillColor: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.1),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide.none),
-                    ),
-                    onChanged: (val) => _fetchPlaces(val),
-                  ),
-                  SizedBox(height: 16.h),
-                  Expanded(
-                    child: isSearching
-                        ? Center(child: CircularProgressIndicator(color: const Color(0xFF4338CA)))
-                        : ListView.builder(
-                            itemCount: searchResults.length,
-                            itemBuilder: (context, index) {
-                              final city = searchResults[index];
-                              final cityName = city['city'] ?? 'Unknown';
-                              return ListTile(
-                                leading: Icon(Icons.location_on, color: Colors.grey),
-                                title: Text(cityName, style: GoogleFonts.outfit(fontSize: 16.sp, color: isDark ? Colors.white : Colors.black87)),
-                                subtitle: Text('${city['coords']} • ${city['tz']}', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white54 : Colors.black54)),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  setState(() {
-                                    _pobCtrl.text = cityName;
-                                    _latCtrl.text = city['lat_val']!;
-                                    _lonCtrl.text = city['lon_val']!;
-                                    _tzCtrl.text = city['tz_val']!;
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (ctx) => _LocationSelectorSheet(
+        onSelect: (city) {
+          setState(() {
+            _pobCtrl.text = city['city'] ?? '';
+            _latCtrl.text = city['lat_val'] ?? _latCtrl.text;
+            _lonCtrl.text = city['lon_val'] ?? _lonCtrl.text;
+            _tzCtrl.text = city['tz_val'] ?? _tzCtrl.text;
+          });
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final formattedDob = _selectedDate != null ? DateFormat('dd MMM yyyy').format(_selectedDate!) : 'Select Date';
-    final formattedTob = _selectedTime != null ? _selectedTime!.format(context) : 'Select Time';
+    final formattedDob = _selectedDate != null
+        ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+        : 'Select Date';
+    final formattedTob = _selectedTime != null
+        ? DateFormat('hh:mm a').format(DateTime(2020, 1, 1, _selectedTime!.hour, _selectedTime!.minute))
+        : 'Select Time';
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -8447,269 +8248,345 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
                 ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Edit Birth Profile',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Recalculate Planetary Placements',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _nameCtrl,
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: const Icon(Icons.person_rounded, color: Color(0xFF4338CA)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                      ),
+                    ),
+                    SizedBox(height: 14.h),
+                    Row(
                       children: [
-                        Text(
-                          'Edit Birth Profile',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18.sp,
-                            color: Colors.white,
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final dt = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDate ?? DateTime.now(),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime(2100),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.fromSeed(
+                                        seedColor: const Color(0xFF4338CA),
+                                        brightness: isDark ? Brightness.dark : Brightness.light,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (dt != null) {
+                                setState(() => _selectedDate = dt);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 13.h),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade400),
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF4338CA)),
+                                  SizedBox(width: 8.w),
+                                  Expanded(
+                                    child: Text(
+                                      formattedDob,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12.5.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        Text(
-                          'Recalculate Planetary Placements',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12.sp,
-                            color: Colors.white70,
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final tm = await showTimePicker(
+                                context: context,
+                                initialTime: _selectedTime ?? TimeOfDay.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: ColorScheme.fromSeed(
+                                        seedColor: const Color(0xFF4338CA),
+                                        brightness: isDark ? Brightness.dark : Brightness.light,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (tm != null) {
+                                setState(() => _selectedTime = tm);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(14.r),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 13.h),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade400),
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF4338CA)),
+                                  SizedBox(width: 8.w),
+                                  Expanded(
+                                    child: Text(
+                                      formattedTob,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12.5.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      prefixIcon: Icon(Icons.person_rounded, color: Color(0xFF4338CA)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                    SizedBox(height: 14.h),
+                    TextField(
+                      controller: _pobCtrl,
+                      readOnly: false,
+                      decoration: InputDecoration(
+                        labelText: 'Place of Birth',
+                        hintText: 'e.g. Kanyakumari, Tamil Nadu, India',
+                        prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFF4338CA)),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.search_rounded, color: Color(0xFF4338CA)),
+                          tooltip: 'Search City Coordinates',
+                          onPressed: _showLocationSelector,
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 14.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final dt = await showDatePicker(
+                    SizedBox(height: 14.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _latCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                            decoration: InputDecoration(
+                              labelText: 'Latitude',
+                              prefixIcon: const Icon(Icons.explore_rounded, color: Color(0xFF059669)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: TextField(
+                            controller: _lonCtrl,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                            decoration: InputDecoration(
+                              labelText: 'Longitude',
+                              prefixIcon: const Icon(Icons.explore_rounded, color: Color(0xFF059669)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 14.h),
+                    TextField(
+                      controller: _tzCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      decoration: InputDecoration(
+                        labelText: 'Time Zone Offset (e.g. 5.5 for IST)',
+                        prefixIcon: const Icon(Icons.schedule_rounded, color: Color(0xFFD97706)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(26)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      flex: 3,
+                      child: BouncyTouchCard(
+                        onTap: () {
+                          if (_selectedDate == null || _selectedTime == null) {
+                            showDialog(
                               context: context,
-                              initialDate: _selectedDate ?? DateTime.now(),
-                              firstDate: DateTime(1900),
-                              lastDate: DateTime(2100),
-                            );
-                            if (dt != null) {
-                              setState(() => _selectedDate = dt);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(14.r),
-                          child: Container(
-                            padding: EdgeInsets.all(12.w),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(14.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF4338CA)),
-                                SizedBox(width: 8.w),
-                                Text(formattedDob, style: GoogleFonts.outfit(fontSize: 12.5.sp)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final tm = await showTimePicker(
-                              context: context,
-                              initialTime: _selectedTime ?? TimeOfDay.now(),
-                            );
-                            if (tm != null) {
-                              setState(() => _selectedTime = tm);
-                            }
-                          },
-                          borderRadius: BorderRadius.circular(14.r),
-                          child: Container(
-                            padding: EdgeInsets.all(12.w),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(14.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.access_time_rounded, size: 18, color: Color(0xFF4338CA)),
-                                SizedBox(width: 8.w),
-                                Text(formattedTob, style: GoogleFonts.outfit(fontSize: 12.5.sp)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 14.h),
-                  TextField(
-                    controller: _pobCtrl,
-                    readOnly: true,
-                    onTap: _showLocationSelector,
-                    decoration: InputDecoration(
-                      labelText: 'Place of Birth',
-                      prefixIcon: Icon(Icons.location_on_rounded, color: Color(0xFF4338CA)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
-                    ),
-                  ),
-                  SizedBox(height: 14.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _latCtrl,
-                          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
-                          decoration: InputDecoration(
-                            labelText: 'Latitude',
-                            prefixIcon: Icon(Icons.explore_rounded, color: Color(0xFF059669)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: TextField(
-                          controller: _lonCtrl,
-                          keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
-                          decoration: InputDecoration(
-                            labelText: 'Longitude',
-                            prefixIcon: Icon(Icons.explore_rounded, color: Color(0xFF059669)),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 14.h),
-                  TextField(
-                    controller: _tzCtrl,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true, signed: true),
-                    decoration: InputDecoration(
-                      labelText: 'Time Zone Offset (e.g. 5.5 for IST)',
-                      prefixIcon: Icon(Icons.schedule_rounded, color: Color(0xFFD97706)),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(20, 12, 20, 18),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(26)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : Colors.black54)),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    flex: 3,
-                    child: BouncyTouchCard(
-                      onTap: () {
-                        if (_selectedDate == null || _selectedTime == null) {
-                          showDialog(
-                            context: context,
-                            builder: (c) => AlertDialog(
-                              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              title: Text('Missing Information', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
-                              content: Text('Please select your Date and Time of birth to continue.', style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black87)),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(c),
-                                  child: Text('OK', style: GoogleFonts.outfit(color: const Color(0xFF4338CA), fontWeight: FontWeight.bold)),
+                              builder: (c) => AlertDialog(
+                                backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Text(
+                                  'Missing Information',
+                                  style: GoogleFonts.outfit(
+                                    color: isDark ? Colors.white : Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ],
-                            ),
-                          );
-                          return;
-                        }
-                        
-                        final name = _nameCtrl.text.trim().isEmpty ? 'User' : _nameCtrl.text.trim();
-                        final pob = _pobCtrl.text.trim().isEmpty ? 'Unknown' : _pobCtrl.text.trim();
-                        final lat = double.tryParse(_latCtrl.text.trim()) ?? 0.0;
-                        final lon = double.tryParse(_lonCtrl.text.trim()) ?? 0.0;
-                        final tz = double.tryParse(_tzCtrl.text.trim()) ?? 0.0;
-                        
-                        final fDob = DateFormat('dd MMM yyyy').format(_selectedDate!);
-                        final fTob = _selectedTime!.format(context);
-                        
-                        widget.onSave(name, fDob, fTob, pob, lat, lon, tz);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4338CA), Color(0xFF6366F1)],
-                          ),
-                          borderRadius: BorderRadius.circular(14.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4338CA).withValues(alpha: 0.38),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'Save & Calculate',
-                              style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14.sp,
-                                color: Colors.white,
+                                content: Text(
+                                  'Please select your Date and Time of birth to continue.',
+                                  style: GoogleFonts.outfit(
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(c),
+                                    child: Text(
+                                      'OK',
+                                      style: GoogleFonts.outfit(
+                                        color: const Color(0xFF4338CA),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                            );
+                            return;
+                          }
+
+                          final birthDateTime = DateTime(
+                            _selectedDate!.year,
+                            _selectedDate!.month,
+                            _selectedDate!.day,
+                            _selectedTime!.hour,
+                            _selectedTime!.minute,
+                          );
+
+                          final name = _nameCtrl.text.trim().isEmpty ? 'User' : _nameCtrl.text.trim();
+                          final pob = _pobCtrl.text.trim().isEmpty ? 'Unknown' : _pobCtrl.text.trim();
+                          final lat = double.tryParse(_latCtrl.text.trim()) ?? widget.initialLat;
+                          final lon = double.tryParse(_lonCtrl.text.trim()) ?? widget.initialLon;
+                          final tz = double.tryParse(_tzCtrl.text.trim()) ?? widget.initialTz;
+
+                          widget.onSave(name, birthDateTime, pob, lat, lon, tz);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4338CA), Color(0xFF6366F1)],
                             ),
-                          ],
+                            borderRadius: BorderRadius.circular(14.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4338CA).withValues(alpha: 0.38),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Save & Calculate',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-
 }
 
 

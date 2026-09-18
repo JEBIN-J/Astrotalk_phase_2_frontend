@@ -18,11 +18,11 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:5000/api/v1'; // ngrok tunnel
+      return 'http://127.0.0.1:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.172.117.225:5000/api/v1'; // ngrok tunnel
+        return 'http://10.0.2.2:5000/api/v1'; // Connects to local Flask backend from Android Emulator
       }
     } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';
@@ -169,8 +169,8 @@ class AstroApiService {
         throw Exception('Failed to load Kundli: ${res.statusCode}');
       }
     } catch (e) {
-      debugPrint('API Error getKundli: $e');
-      rethrow;
+      debugPrint('API Error getKundli: $e (using fallback)');
+      return _fallbackKundli(name, dateOfBirth, timeOfBirth, placeOfBirth);
     }
   }
 
@@ -207,6 +207,41 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getDasha: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getKpSystemData({
+    String name = 'User',
+    required String dateOfBirth,
+    required String timeOfBirth,
+    required String placeOfBirth,
+    double? latitude,
+    double? longitude,
+    double? timezone,
+    required String ayanamsa,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/kp');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': dateOfBirth,
+      'time_of_birth': timeOfBirth,
+      'place_of_birth': placeOfBirth,
+      'ayanamsa': ayanamsa,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load KP System: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getKpSystemData: $e');
       rethrow;
     }
   }
@@ -616,7 +651,9 @@ class AstroApiService {
         final list = data['results'] as List<dynamic>?;
         if (list != null) return list.map((e) => e as Map<String, dynamic>).toList();
       }
-    } catch (e) {}
+    } catch (_) {
+      // Ignore network errors and fallback to popular places
+    }
     return _popularPlacesFallback.where((p) => p['name'].toString().toLowerCase().contains(query.toLowerCase())).toList();
   }
 
@@ -644,6 +681,7 @@ class AstroApiService {
   // LOCAL FALLBACK DATA
   // =========================================================================
 
+  // ignore: unused_element
   static Map<String, dynamic> _fallbackKundli(String name, String dob, String tob, String pob) {
     return {
       'person_name': name,
