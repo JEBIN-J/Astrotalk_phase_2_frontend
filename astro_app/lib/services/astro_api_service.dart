@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:5000/api/v1'; // Connects to local Flask backend from Android Emulator
+        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator
       }
     } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';

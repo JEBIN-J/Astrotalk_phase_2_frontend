@@ -432,7 +432,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                 chartTypeKey: _activeChartType,
                 showUpagrahas: false,
                 showDegrees: true,
-                showKpCusps: true,
+                showKpCusps: _activeChartType != 'D-9',
                 kundliData: _kpData,
               ),
             ],
@@ -441,10 +441,25 @@ class _KpSystemViewState extends State<KpSystemView> {
         SizedBox(height: 20.h),
 
         // Lower Table: Switches between Bhava Table and Planetary Table
-        if (_activeChartType == 'Bhava')
-          _buildBhavaTable(cusps, isDark)
-        else
-          _buildPlanetaryTable(planets, isDark),
+        Builder(
+          builder: (context) {
+            if (_activeChartType == 'Bhava') {
+              return _buildBhavaTable(cusps, isDark);
+            } else {
+              List<dynamic> activePlanets = planets;
+              if (_activeChartType == 'D-9' && _kpData?['divisional_charts']?['D-9']?['planets'] != null) {
+                activePlanets = _kpData!['divisional_charts']['D-9']['planets'] as List<dynamic>;
+              }
+              return _buildPlanetaryTable(activePlanets, isDark);
+            }
+          },
+        ),
+        SizedBox(height: 24.h),
+        
+        // 5. RULING PLANETS
+        if (_kpData?['ruling_planets'] != null)
+          _buildRulingPlanetsSection(_kpData!['ruling_planets'], isDark),
+        SizedBox(height: 24.h),
       ],
     );
   }
@@ -478,13 +493,74 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
-  // 4. PLANETARY TABLE
-  Widget _buildPlanetaryTable(List<dynamic> planets, bool isDark) {
+  // 5. RULING PLANETS
+  Widget _buildRulingPlanetsSection(Map<String, dynamic> rp, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Planetary Coordinates & KP Lords',
+          'Ruling Planets (Calculated)',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+        ),
+        SizedBox(height: 10.h),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+          child: Column(
+            children: [
+              _buildRpItem('Lagna Rashi Lord', rp['lagna_rashi_lord']?.toString() ?? '-', isDark),
+              Divider(height: 1, thickness: 1, color: isDark ? Colors.white12 : Colors.black12),
+              _buildRpItem('Lagna Nakshatra Lord', rp['lagna_nakshatra_lord']?.toString() ?? '-', isDark),
+              Divider(height: 1, thickness: 1, color: isDark ? Colors.white12 : Colors.black12),
+              _buildRpItem('Moon Rashi Lord', rp['moon_rashi_lord']?.toString() ?? '-', isDark),
+              Divider(height: 1, thickness: 1, color: isDark ? Colors.white12 : Colors.black12),
+              _buildRpItem('Moon Nakshatra Lord', rp['moon_nakshatra_lord']?.toString() ?? '-', isDark),
+              Divider(height: 1, thickness: 1, color: isDark ? Colors.white12 : Colors.black12),
+              _buildRpItem('Vedic Day Lord', rp['day_lord']?.toString() ?? '-', isDark, isLast: true),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRpItem(String label, String value, bool isDark, {bool isLast = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87),
+          ),
+          Text(
+            value.toUpperCase(),
+            style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 4. PLANETARY TABLE
+  Widget _buildPlanetaryTable(List<dynamic> planets, bool isDark) {
+    String title = 'Planetary Coordinates & KP Lords';
+    if (_activeChartType == 'D-1') {
+      title = 'Planetary Positions for Rashi (D-1)';
+    } else if (_activeChartType == 'D-9') {
+      title = 'Planetary Positions for Navamsha (D-9)';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
         ),
         SizedBox(height: 10.h),
@@ -543,7 +619,7 @@ class _KpSystemViewState extends State<KpSystemView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'KP Bhava Cuspal Table (Placidus)',
+          'Placidus (KP) Bhava Details',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
         ),
         SizedBox(height: 10.h),
