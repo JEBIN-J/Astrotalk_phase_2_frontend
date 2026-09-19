@@ -256,11 +256,7 @@ class _MultiKundliPainter extends CustomPainter {
       // 1. Plot the Planets
       for (final p in pList) {
         final pName = p['planet']?.toString() ?? '';
-        if (showKpCusps &&
-            (pName.toLowerCase().contains('ascendant') ||
-                pName.toLowerCase().contains('lagna'))) {
-          continue;
-        }
+
         final bhavaHouse = ((p['bhava_house'] ?? p['house']) as num?)?.toInt() ?? 1;
         final degStr = p['degree_formatted']?.toString() ?? '';
         final isRetro = p['is_retrograde'] == true;
@@ -329,10 +325,7 @@ class _MultiKundliPainter extends CustomPainter {
             nameLower.contains('yama')) {
           continue;
         }
-        if (showKpCusps &&
-            (nameLower.contains('ascendant') || nameLower.contains('lagna'))) {
-          continue;
-        }
+
 
         final isRetro = p['is_retrograde'] == true || p['retrograde'] == true;
         final isCombust = p['is_combust'] == true;
@@ -439,10 +432,7 @@ class _MultiKundliPainter extends CustomPainter {
         }
 
         // When showing KP Cusps, Cusp 1 (I) represents the Ascendant
-        if (showKpCusps &&
-            (nameLower.contains('ascendant') || nameLower.contains('lagna'))) {
-          continue;
-        }
+
 
         // Use backend sign_index directly — no frontend sign name matching
         int signIdx = -1;
@@ -603,9 +593,8 @@ class _MultiKundliPainter extends CustomPainter {
       if (sIdx < 1 || sIdx > 12) continue;
 
       int targetSignIdx = sIdx;
-      if (chartTypeKey == 'D-9' && cuspDeg != null) {
-        // Navamsa sign calculation (each pada/navamsa is 3° 20' = 30° / 9)
-        targetSignIdx = ((cuspDeg / (30.0 / 9.0)).floor() % 12) + 1;
+      if (chartTypeKey == 'D-9') {
+        targetSignIdx = (c['navamsha_sign_index'] as num?)?.toInt() ?? sIdx;
       }
 
       final roman = romanNumerals[hNum - 1];

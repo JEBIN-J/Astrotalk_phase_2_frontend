@@ -56,11 +56,11 @@ class _KpSystemViewState extends State<KpSystemView> {
     '4-Step',
   ];
 
-  String _selectedAyanamsa = 'Krishnamurti (KP New)';
+  String _selectedAyanamsa = 'Krishnamurti (KP Old)';
   int _activeSectionIndex = 0;
 
   // KP Chart specific state
-  String _activeChartType = 'Bhava'; // 'Bhava', 'D-1', 'D-9'
+  String _activeChartType = 'D-1'; // 'Bhava', 'D-1', 'D-9'
 
   // Significators specific state
   int _significatorSubTabIndex = 0; // 0: Planet, 1: House
@@ -587,14 +587,15 @@ class _KpSystemViewState extends State<KpSystemView> {
                 DataColumn(label: Text('Nakshatra', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Paada', style: _headerStyle(isDark))),
               ],
-              rows: planets.map((p) {
-                final isLagna = p['name'] == 'Ascendant' || p['name'] == 'Lagna';
-                return DataRow(
-                  color: isLagna
-                      ? WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: isDark ? 0.2 : 0.08))
-                      : null,
-                  cells: [
-                    DataCell(Text(p['table_display_name'] ?? p['name'] ?? '', style: _cellBoldStyle(isDark))),
+                rows: planets.map((p) {
+                  final isLagna = p['name'] == 'Ascendant' || p['name'] == 'Lagna';
+                  final displayName = isLagna ? 'Lagna' : (p['table_display_name'] ?? p['name'] ?? '');
+                  return DataRow(
+                    color: isLagna
+                        ? WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: isDark ? 0.2 : 0.08))
+                        : null,
+                    cells: [
+                      DataCell(Text(displayName, style: _cellBoldStyle(isDark))),
                     DataCell(Text(p['rl'] ?? '-', style: _cellStyle(isDark))),
                     DataCell(Text(p['nl'] ?? '-', style: _cellStyle(isDark))),
                     DataCell(Text(p['sl'] ?? '-', style: _cellBadgeStyle(const Color(0xFF059669)))),

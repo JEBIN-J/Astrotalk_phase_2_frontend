@@ -22,7 +22,7 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator
+        return 'http://10.172.117.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator
       }
     } catch (_) {}  
     return 'http://127.0.0.1:5000/api/v1';
@@ -169,8 +169,8 @@ class AstroApiService {
         throw Exception('Failed to load Kundli: ${res.statusCode}');
       }
     } catch (e) {
-      debugPrint('API Error getKundli: $e (using fallback)');
-      return _fallbackKundli(name, dateOfBirth, timeOfBirth, placeOfBirth);
+      debugPrint('API Error getKundli: $e');
+      rethrow;
     }
   }
 
@@ -681,26 +681,7 @@ class AstroApiService {
   // LOCAL FALLBACK DATA
   // =========================================================================
 
-  // ignore: unused_element
-  static Map<String, dynamic> _fallbackKundli(String name, String dob, String tob, String pob) {
-    return {
-      'person_name': name,
-      'date_of_birth': dob,
-      'time_of_birth': tob,
-      'place_of_birth': pob,
-      'ascendant_lagna': 'Aquarius (03° 35\' 00")',
-      'moon_sign_rashi': 'Leo (Simha)',
-      'nakshatra': 'Uttara Phalguni',
-      'nakshatra_pada': 1,
-      'current_running_dasha': {
-        'active_mahadasha': 'Jupiter (Guru)'
-      },
-      'planets': [
-        {'name': 'Ascendant', 'sign': 'Aquarius', 'house': 1, 'degree_formatted': '03:35:00', 'nakshatra': 'Dhanishta', 'dignity': 'Lagna'},
-        {'name': 'Sun', 'sign': 'Cancer', 'house': 6, 'degree_formatted': '21:49:12', 'nakshatra': 'Ashlesha', 'dignity': 'Neutral'},
-      ]
-    };
-  }
+
 
   static final List<Map<String, dynamic>> _popularPlacesFallback = [
     {'name': 'New Delhi', 'state': 'Delhi', 'country': 'India', 'latitude': 28.6139, 'longitude': 77.2090, 'timezone': 5.5, 'formatted_name': 'New Delhi, Delhi, India'},
