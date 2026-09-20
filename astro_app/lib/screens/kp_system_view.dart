@@ -56,7 +56,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     '4-Step',
   ];
 
-  String _selectedAyanamsa = 'Krishnamurti (KP Old)';
+  String _selectedAyanamsa = 'Krishnamurti (KP New)';
   int _activeSectionIndex = 0;
 
   // KP Chart specific state
@@ -681,10 +681,108 @@ class _KpSystemViewState extends State<KpSystemView> {
     final birthLord = dasha?['birth_nakshatra_lord']?.toString() ?? '';
     final balance = dasha?['balance_formatted']?.toString() ?? '';
 
+    List<DataRow> tableRows = [];
+    for (var maha in mahadashas) {
+      final mPlanet = maha['planet']?.toString() ?? '';
+      final mStart = maha['start']?.toString() ?? '';
+      final mEnd = maha['end']?.toString() ?? '';
+      final isActive = maha['is_active'] == true;
+      final isExpanded = _expandedMahadashas.contains(mPlanet);
+      final antaras = (maha['antardashas'] as List<dynamic>?) ?? [];
+      
+      final mColor = isActive ? const Color(0xFF059669) : (isDark ? Colors.white : const Color(0xFF1E293B));
+
+      tableRows.add(DataRow(
+        color: WidgetStateProperty.all(isActive ? const Color(0xFF059669).withValues(alpha: 0.1) : Colors.transparent),
+        cells: [
+          DataCell(Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 12.r,
+                backgroundColor: isActive ? const Color(0xFF059669) : const Color(0xFF4338CA),
+                child: Text(
+                  _getLordShort(mPlanet),
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 9.sp, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Text('$mPlanet MD', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: mColor)),
+            ],
+          )),
+          DataCell(Text(mStart, style: _cellStyle(isDark))),
+          DataCell(Text(mEnd, style: _cellStyle(isDark))),
+          DataCell(
+            InkWell(
+              onTap: () {
+                setState(() {
+                  if (isExpanded) {
+                    _expandedMahadashas.remove(mPlanet);
+                  } else {
+                    _expandedMahadashas.add(mPlanet);
+                  }
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(isExpanded ? 'Hide AD' : 'View AD', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+                    SizedBox(width: 4.w),
+                    Icon(isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 16.sp, color: isDark ? Colors.white70 : Colors.black87),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ));
+
+      if (isExpanded) {
+        for (var anta in antaras) {
+          final aPlanet = anta['planet']?.toString() ?? '';
+          final aStart = anta['start']?.toString() ?? '';
+          final aEnd = anta['end']?.toString() ?? '';
+          final aActive = anta['is_active'] == true;
+          
+          tableRows.add(DataRow(
+            color: WidgetStateProperty.all(aActive ? const Color(0xFF059669).withValues(alpha: 0.05) : (isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02))),
+            cells: [
+              DataCell(Padding(
+                padding: EdgeInsets.only(left: 24.w),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.subdirectory_arrow_right, size: 14.sp, color: isDark ? Colors.white38 : Colors.black38),
+                    SizedBox(width: 8.w),
+                    Text('$aPlanet AD', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: aActive ? const Color(0xFF059669) : (isDark ? Colors.white70 : Colors.black87))),
+                  ],
+                ),
+              )),
+              DataCell(Text(aStart, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54))),
+              DataCell(Text(aEnd, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54))),
+              DataCell(aActive 
+                ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(color: const Color(0xFF059669), borderRadius: BorderRadius.circular(4.r)),
+                    child: Text('RUNNING', style: GoogleFonts.outfit(fontSize: 9.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                  )
+                : const SizedBox.shrink()
+              ),
+            ],
+          ));
+        }
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Balance info banner
         Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
@@ -711,159 +809,38 @@ class _KpSystemViewState extends State<KpSystemView> {
           'Vimshottari Dasha Timeline',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 12.h),
 
-        ...mahadashas.map((maha) {
-          final mPlanet = maha['planet']?.toString() ?? '';
-          final mStart = maha['start']?.toString() ?? '';
-          final mEnd = maha['end']?.toString() ?? '';
-          final isActive = maha['is_active'] == true;
-          final isExpanded = _expandedMahadashas.contains(mPlanet);
-          final antaras = (maha['antardashas'] as List<dynamic>?) ?? [];
-
-          return Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: isActive ? const Color(0xFF059669) : (isDark ? Colors.white12 : Colors.black12),
-                width: isActive ? 1.5 : 1.0,
-              ),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  dense: true,
-                  onTap: () {
-                    setState(() {
-                      if (isExpanded) {
-                        _expandedMahadashas.remove(mPlanet);
-                      } else {
-                        _expandedMahadashas.add(mPlanet);
-                      }
-                    });
-                  },
-                  leading: CircleAvatar(
-                    radius: 14.r,
-                    backgroundColor: isActive ? const Color(0xFF059669) : const Color(0xFF4338CA),
-                    child: Text(
-                      _getLordShort(mPlanet),
-                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Text(
-                        '$mPlanet Mahadasha',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                      ),
-                      if (isActive) ...[
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(color: const Color(0xFF059669), borderRadius: BorderRadius.circular(6.r)),
-                          child: Text('RUNNING', style: GoogleFonts.outfit(color: Colors.white, fontSize: 9.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ],
-                  ),
-                  subtitle: Text(
-                    '$mStart - $mEnd',
-                    style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54),
-                  ),
-                  trailing: Icon(
-                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-                if (isExpanded)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    color: isDark ? Colors.black26 : const Color(0xFFF8FAFC),
-                    child: Column(
-                      children: antaras.map((ad) {
-                        final aPlanet = ad['planet']?.toString() ?? '';
-                        final aStart = ad['start']?.toString() ?? '';
-                        final aEnd = ad['end']?.toString() ?? '';
-                        final isAdActive = ad['is_active'] == true;
-                        final adKey = '$mPlanet-$aPlanet';
-                        final isAdExpanded = _expandedAntardashas.contains(adKey);
-                        final pratis = (ad['pratyantardashas'] as List<dynamic>?) ?? [];
-
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 4.h),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF334155) : Colors.white,
-                            borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: isAdActive ? const Color(0xFF059669) : Colors.transparent),
-                          ),
-                          child: Column(
-                            children: [
-                              ListTile(
-                                dense: true,
-                                onTap: () {
-                                  setState(() {
-                                    if (isAdExpanded) {
-                                      _expandedAntardashas.remove(adKey);
-                                    } else {
-                                      _expandedAntardashas.add(adKey);
-                                    }
-                                  });
-                                },
-                                title: Text(
-                                  '$mPlanet - $aPlanet',
-                                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                                ),
-                                subtitle: Text('$aStart - $aEnd', style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white60 : Colors.black54)),
-                                trailing: Icon(isAdExpanded ? Icons.remove : Icons.add, size: 16.sp, color: isDark ? Colors.white54 : Colors.black45),
-                              ),
-                              if (isAdExpanded)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                                  child: Column(
-                                    children: pratis.map((pd) {
-                                      final isPdActive = pd['is_active'] == true;
-                                      return Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 2.h),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              '$mPlanet - $aPlanet - ${pd['planet']}',
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 10.5.sp,
-                                                fontWeight: isPdActive ? FontWeight.bold : FontWeight.normal,
-                                                color: isPdActive ? const Color(0xFF059669) : (isDark ? Colors.white70 : Colors.black87),
-                                              ),
-                                            ),
-                                            Text(
-                                              '${pd['start']} - ${pd['end']}',
-                                              style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white54 : Colors.black54),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+              dividerThickness: 0.3,
+              dataRowMinHeight: 45.h,
+              dataRowMaxHeight: 45.h,
+              headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+              columnSpacing: 24.w,
+              horizontalMargin: 16.w,
+              columns: [
+                DataColumn(label: Text('Dasha Lord', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Start Date', style: _headerStyle(isDark))),
+                DataColumn(label: Text('End Date', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Action', style: _headerStyle(isDark))),
               ],
+              rows: tableRows,
             ),
-          );
-        }),
+          ),
+        ),
       ],
     );
   }
-
-  // =========================================================================
-  // SECTION 3: SIGNIFICATORS (Planet & House)
-  // =========================================================================
   Widget _buildSignificatorsSection(bool isDark) {
     final sigs = _kpData?['significators'] as Map<String, dynamic>?;
     final planetSigs = (sigs?['planet_significators'] as List<dynamic>?) ?? [];
@@ -987,6 +964,121 @@ class _KpSystemViewState extends State<KpSystemView> {
   // =========================================================================
   // SECTION 4: KP ASPECTS (Planets & KP Cusp)
   // =========================================================================
+
+  Widget _buildPlanetAspectsTable(List<dynamic> planets, List<dynamic> aspects, bool isDark) {
+    if (planets.isEmpty) return _buildInfoCard('No planets available.', isDark);
+    if (aspects.isEmpty) return _buildInfoCard('No major planetary aspects within orb.', isDark);
+
+    final planetNames = planets.map((p) => p['name'].toString()).toList();
+    
+    // Create a matrix: Map<RowPlanet, Map<ColPlanet, aspectData>>
+    Map<String, Map<String, dynamic>> aspectMatrix = {};
+    for (var p in planetNames) {
+      aspectMatrix[p] = {};
+    }
+    
+    for (var asp in aspects) {
+      String p1 = asp['p1_name'].toString();
+      String p2 = asp['p2_name'].toString();
+      if (planetNames.contains(p1) && planetNames.contains(p2)) {
+        aspectMatrix[p1]![p2] = asp;
+        aspectMatrix[p2]![p1] = asp; // Mirror
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sticky First Column
+          Container(
+            decoration: BoxDecoration(
+              border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12, width: 1.w)),
+            ),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+              dividerThickness: 0.3,
+              dataRowMinHeight: 50.h,
+              dataRowMaxHeight: 50.h,
+              columnSpacing: 10.w,
+              horizontalMargin: 12.w,
+              columns: [
+                DataColumn(label: Text('Planet', style: _headerStyle(isDark))),
+              ],
+              rows: planetNames.map((pName) {
+                return DataRow(
+                  cells: [
+                    DataCell(Text(_getLordShort(pName), style: _cellBoldStyle(isDark))),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+          
+          // Scrollable Matrix Body
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+                dividerThickness: 0.3,
+                dataRowMinHeight: 50.h,
+                dataRowMaxHeight: 50.h,
+                columnSpacing: 20.w,
+                horizontalMargin: 12.w,
+                columns: planetNames.map((pName) {
+                  return DataColumn(label: Center(child: Text(_getLordShort(pName), style: _headerStyle(isDark))));
+                }).toList(),
+                rows: planetNames.map((rowP) {
+                  return DataRow(
+                    cells: planetNames.map((colP) {
+                      if (rowP == colP) {
+                        return DataCell(Center(child: Text('-', style: _cellStyle(isDark))));
+                      }
+                      final asp = aspectMatrix[rowP]?[colP];
+                      if (asp == null) {
+                        return DataCell(Center(child: Text('', style: _cellStyle(isDark))));
+                      }
+                      
+                      String shortAsp = asp['short_name']?.toString() ?? asp['aspect_name']?.toString() ?? '';
+                      if (shortAsp.length > 4) shortAsp = shortAsp.substring(0, 4);
+                      
+                      String orbText = asp['strength'] != null 
+                          ? '(${asp['orb']} | ${asp['strength']})'
+                          : '(${asp['orb']}°)';
+                          
+                      final isHarmonious = asp['nature']?.toString().toLowerCase().contains('harmonious') ?? false;
+                      final color = isHarmonious ? const Color(0xFF059669) : const Color(0xFFDC2626);
+
+                      return DataCell(
+                        Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(shortAsp, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: color)),
+                              SizedBox(height: 2.h),
+                              Text(orbText, style: GoogleFonts.outfit(fontSize: 9.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAspectsSection(bool isDark) {
     final aspects = _kpData?['aspects'] as Map<String, dynamic>?;
     final planetAspects = (aspects?['planet_aspects'] as List<dynamic>?) ?? [];
@@ -1143,26 +1235,45 @@ class _KpSystemViewState extends State<KpSystemView> {
         ),
         SizedBox(height: 12.h),
 
-        ...nadiList.map((nadi) {
-          final pName = nadi['planet'] ?? '';
-          final script = nadi['nadi_script'] ?? '';
-          final links = (nadi['nadi_links'] as List<dynamic>?) ?? [];
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+              dividerThickness: 0.3,
+              dataRowMinHeight: 60.h,
+              dataRowMaxHeight: 120.h,
+              headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+              columnSpacing: 24.w,
+              horizontalMargin: 16.w,
+              columns: [
+                DataColumn(label: Text('Planet', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Position', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Planet (Source)', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Nakshatra Lord', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Sub Lord', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Active Links', style: _headerStyle(isDark))),
+              ],
+              rows: nadiList.map((nadi) {
+                final pName = nadi['planet'] ?? '';
+                final script = nadi['nadi_script'] ?? '';
+                final links = (nadi['nadi_links'] as List<dynamic>?) ?? [];
+                
+                final scriptParts = script.split(RegExp(r'\s*(?:->|→|➔)\s*'));
+                final source = scriptParts.isNotEmpty ? scriptParts[0] : '--';
+                final nLord = scriptParts.length > 1 ? scriptParts[1] : '--';
+                final sLord = scriptParts.length > 2 ? scriptParts[2] : '--';
 
-          return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                return DataRow(
+                  cells: [
+                    DataCell(Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         CircleAvatar(
                           radius: 12.r,
@@ -1173,56 +1284,49 @@ class _KpSystemViewState extends State<KpSystemView> {
                           ),
                         ),
                         SizedBox(width: 8.w),
-                        Text(
-                          '$pName in ${nadi['rashi']}',
-                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                        ),
+                        Text(pName, style: _cellBoldStyle(isDark)),
                       ],
-                    ),
-                    Text(
-                      '${nadi['nakshatra']} (Pada ${nadi['pada']})',
-                      style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
+                    )),
+                    DataCell(Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(nadi['rashi'] ?? '', style: _cellStyle(isDark)),
+                        Text('${nadi['nakshatra']} (P${nadi['pada']})', style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                      ],
+                    )),
+                    DataCell(Text(source, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF312E81)))),
+                    DataCell(Text(nLord, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF312E81)))),
+                    DataCell(Text(sLord, style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF312E81)))),
+                    DataCell(
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        width: 250.w,
+                        child: links.isEmpty ? Text('--', style: _cellStyle(isDark)) : Wrap(
+                          spacing: 4.w,
+                          runSpacing: 4.h,
+                          children: links.map((link) {
+                            return Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF059669).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Text(
+                                '${link['type']}: ${link['nature']}',
+                                style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                SizedBox(height: 10.h),
-
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4338CA).withValues(alpha: isDark ? 0.2 : 0.06),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    script,
-                    style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF312E81)),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-
-                if (links.isNotEmpty)
-                  Wrap(
-                    spacing: 6.w,
-                    runSpacing: 4.h,
-                    children: links.map((link) {
-                      return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF059669).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          '${link['type']}: ${link['nature']}',
-                          style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-              ],
+                );
+              }).toList(),
             ),
-          );
-        }),
+          ),
+        ),
       ],
     );
   }
@@ -1261,127 +1365,120 @@ class _KpSystemViewState extends State<KpSystemView> {
         ),
         SizedBox(height: 14.h),
 
-        ...(_fourStepSubTabIndex == 0 ? planets : cusps).map((item) {
-          final subject = item['subject'] ?? '';
-          final flow = item['flow'] ?? '';
-          final s1 = item['step_1'] ?? {};
-          final s2 = item['step_2'] ?? {};
-          final s3 = item['step_3'] ?? {};
-          final s4 = item['step_4'] ?? {};
-
-          return Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            padding: EdgeInsets.all(14.w),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      subject,
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp, color: const Color(0xFF4338CA)),
-                    ),
-                    Text(
-                      '4-Step Chain',
-                      style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black45),
-                    ),
+        if (_fourStepSubTabIndex == 0) ...[
+          if (planets.isEmpty)
+            _buildInfoCard('No 4-step planet data available.', isDark)
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+                  dividerThickness: 0.3,
+                  dataRowMinHeight: 60.h,
+                  dataRowMaxHeight: 90.h,
+                  headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                  columnSpacing: 16.w,
+                  horizontalMargin: 12.w,
+                  columns: [
+                    DataColumn(label: Text('Planet', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 1 (Source)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 2 (Execution)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 3 (Decider)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 4 (Result)', style: _headerStyle(isDark))),
                   ],
-                ),
-                SizedBox(height: 8.h),
+                  rows: planets.map((p) {
+                    final s1 = p['step_1']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s2 = p['step_2']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s3 = p['step_3']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s4 = p['step_4']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
 
-                _buildStepRow('Step 1 (Source)', s1['summary'] ?? '', isDark),
-                _buildStepRow('Step 2 (Execution)', s2['summary'] ?? '', isDark),
-                _buildStepRow('Step 3 (Decider Sub)', s3['summary'] ?? '', isDark, isHighlight: true),
-                _buildStepRow('Step 4 (End Result)', s4['summary'] ?? '', isDark),
-
-                SizedBox(height: 8.h),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF059669).withValues(alpha: isDark ? 0.2 : 0.08),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    flow,
-                    style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669)),
-                  ),
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(p['subject']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: const Color(0xFF4338CA)))),
+                        DataCell(Text(s1, style: _cellStyle(isDark))),
+                        DataCell(Text(s2, style: _cellStyle(isDark))),
+                        DataCell(Text(s3, style: _cellStyle(isDark))),
+                        DataCell(Text(s4, style: _cellStyle(isDark))),
+                      ],
+                    );
+                  }).toList(),
                 ),
-              ],
+              ),
             ),
-          );
-        }),
+        ],
+
+        if (_fourStepSubTabIndex == 1) ...[
+          if (cusps.isEmpty)
+            _buildInfoCard('No 4-step cusp data available.', isDark)
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(const Color(0xFF4338CA).withValues(alpha: 0.1)),
+                  dividerThickness: 0.3,
+                  dataRowMinHeight: 60.h,
+                  dataRowMaxHeight: 90.h,
+                  headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                  columnSpacing: 16.w,
+                  horizontalMargin: 12.w,
+                  columns: [
+                    DataColumn(label: Text('Cusp', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 1 (Source)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 2 (Execution)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 3 (Decider)', style: _headerStyle(isDark))),
+                    DataColumn(label: Text('Step 4 (Result)', style: _headerStyle(isDark))),
+                  ],
+                  rows: cusps.map((c) {
+                    final s1 = c['step_1']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s2 = c['step_2']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s3 = c['step_3']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+                    final s4 = c['step_4']?['summary']?.toString().replaceAll(' occupies ', '
+Occ: ').replaceAll(', rules ', '
+Rules: ') ?? '';
+
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(c['subject']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: const Color(0xFF4338CA)))),
+                        DataCell(Text(s1, style: _cellStyle(isDark))),
+                        DataCell(Text(s2, style: _cellStyle(isDark))),
+                        DataCell(Text(s3, style: _cellStyle(isDark))),
+                        DataCell(Text(s4, style: _cellStyle(isDark))),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
-
-  Widget _buildStepRow(String title, String summary, bool isDark, {bool isHighlight = false}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110.w,
-            child: Text(
-              title,
-              style: GoogleFonts.outfit(
-                fontSize: 11.sp,
-                fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
-                color: isHighlight ? const Color(0xFF059669) : (isDark ? Colors.white70 : const Color(0xFF475569)),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              summary,
-              style: GoogleFonts.outfit(
-                fontSize: 11.sp,
-                fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-                color: isHighlight ? (isDark ? Colors.white : const Color(0xFF059669)) : (isDark ? Colors.white60 : Colors.black87),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPillTab({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildLoadingView(bool isDark) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 60.h),
