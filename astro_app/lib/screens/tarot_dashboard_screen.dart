@@ -1,99 +1,255 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../services/tarot_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'tarot_reading_screen.dart';
 import 'tarot_history_screen.dart';
 import 'tarot_library_screen.dart';
-import 'astro_tarot_form_screen.dart';
+import 'tarot_deck_selection_screen.dart';
 
-class TarotDashboardScreen extends StatelessWidget {
+class TarotDashboardScreen extends StatefulWidget {
+  const TarotDashboardScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Tarot'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.history),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotHistoryScreen())),
-          ),
-          IconButton(
-            icon: Icon(Icons.library_books),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotLibraryScreen())),
-          )
-        ],
-      ),
-      body: GridView.count(
-        crossAxisCount: 2,
-        padding: EdgeInsets.all(16),
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
+  State<TarotDashboardScreen> createState() => _TarotDashboardScreenState();
+}
+
+class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
+  void _openSpread(String endpoint, String title, {String? question}) {
+    int requiredCards = 1;
+    if (endpoint == 'three-card') {
+      requiredCards = 3;
+    } else if (endpoint == 'love' || endpoint == 'career') {
+      requiredCards = 5;
+    } else if (endpoint == 'celtic-cross') {
+      requiredCards = 10;
+    } else if (endpoint == 'year-ahead') {
+      requiredCards = 12;
+    }
+
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => TarotDeckSelectionScreen(
+        endpoint: endpoint,
+        title: title,
+        question: question ?? title,
+        requiredCards: requiredCards,
+      )
+    ));
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.only(top: 32.h, bottom: 16.h, left: 20.w, right: 20.w),
+      child: Row(
         children: [
-          _buildCard(context, 'Daily Card', Icons.today, () => _openDaily(context)),
-          _buildCard(context, 'Single Card', Icons.filter_1, () => _openSpread(context, 'single')),
-          _buildCard(context, 'Three Card', Icons.filter_3, () => _openSpread(context, 'three-card')),
-          _buildCard(context, 'Yes / No', Icons.thumbs_up_down, () => _openSpread(context, 'yes-no')),
-          _buildCard(context, 'Love', Icons.favorite, () => _openSpread(context, 'love')),
-          _buildCard(context, 'Career', Icons.work, () => _openSpread(context, 'career')),
-          _buildCard(context, 'Celtic Cross', Icons.api, () => _openSpread(context, 'celtic-cross')),
-          _buildCard(context, 'Year Ahead', Icons.calendar_month, () => _openSpread(context, 'year-ahead')),
-          _buildCard(context, 'Astro-Tarot', Icons.star, () => Navigator.push(context, MaterialPageRoute(builder: (_) => AstroTarotFormScreen()))),
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFFFD700).withValues(alpha: 0.2), 
+                  const Color(0xFF9370DB).withValues(alpha: 0.2)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                width: 1.w,
+              ),
+            ),
+            child: Icon(icon, color: const Color(0xFFFFD700), size: 22.sp),
+          ),
+          SizedBox(width: 14.w),
+          Text(
+            title, 
+            style: GoogleFonts.outfit(
+              fontSize: 22.sp, 
+              fontWeight: FontWeight.w700, 
+              color: Colors.white,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                ),
+              ],
+            )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCard(BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  Widget _buildCategoryCard(String title, String imageAsset, VoidCallback onTap) {
+    return Padding(
+      padding: EdgeInsets.only(right: 16.w),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: Theme.of(context).primaryColor),
-            SizedBox(height: 8),
-            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ],
+        borderRadius: BorderRadius.circular(20.r),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: Container(
+            width: 160.w,
+            height: 180.h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.r),
+              image: DecorationImage(
+                image: AssetImage(imageAsset),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.4), BlendMode.darken),
+              ),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.9),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                    child: Text(
+                      title, 
+                      style: GoogleFonts.outfit(
+                        fontSize: 16.sp, 
+                        fontWeight: FontWeight.bold, 
+                        color: Colors.white,
+                        height: 1.2,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  void _openDaily(BuildContext context) async {
-    try {
-      showDialog(context: context, builder: (_) => Center(child: CircularProgressIndicator()));
-      final tzOffset = DateTime.now().timeZoneOffset.inHours.toDouble();
-      final reading = await TarotService().getDailyReading(tzOffset);
-      Navigator.pop(context); // close dialog
-      
-      Navigator.push(context, MaterialPageRoute(
-        builder: (_) => TarotReadingScreen(spreadData: {
-          'spread_type': 'Daily',
-          'positions': [
-            {'position_name': 'Daily Insight', 'card': reading['reading']}
-          ]
-        })
-      ));
-    } catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+  Widget _buildHorizontalList(List<Widget> cards) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Row(
+        children: cards,
+      ),
+    );
   }
 
-  void _openSpread(BuildContext context, String endpoint) async {
-    try {
-      showDialog(context: context, builder: (_) => Center(child: CircularProgressIndicator()));
-      final reading = await TarotService().drawSpread(endpoint, question: "General Reading");
-      Navigator.pop(context); // close dialog
-      
-      Navigator.push(context, MaterialPageRoute(
-        builder: (_) => TarotReadingScreen(spreadData: reading)
-      ));
-    } catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text('Tarot Mystique', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 24.sp)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white70),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotHistoryScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.library_books, color: Colors.white70),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotLibraryScreen())),
+          )
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B0F19),
+          image: DecorationImage(
+            image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.65), 
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.only(bottom: 40.h, top: 10.h),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                child: Text(
+                  "Seek clarity in the cards",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16.sp,
+                    color: Colors.white60,
+                    letterSpacing: 1.2,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+
+              _buildSectionHeader('Get Answers', Icons.auto_awesome),
+              _buildHorizontalList([
+                _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_answers.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
+                _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_answers.jpg', () => _openSpread('single', 'Immediate Question')),
+                _buildCategoryCard('Will Your Wish Be Fulfilled?', 'assets/images/tarot/tarot_answers.jpg', () => _openSpread('celtic-cross', 'Will Your Wish Be Fulfilled?')),
+                _buildCategoryCard('Get Help in Making a Decision', 'assets/images/tarot/tarot_answers.jpg', () => _openSpread('three-card', 'Decision Spread')),
+              ]),
+
+              _buildSectionHeader('New Readings', Icons.flare),
+              _buildHorizontalList([
+                _buildCategoryCard('Wheel of the Year 2026', 'assets/images/tarot/tarot_new.jpg', () => _openSpread('year-ahead', 'Wheel of the Year 2026')),
+                _buildCategoryCard('Is It a Good Time to Start a New Relationship?', 'assets/images/tarot/tarot_new.jpg', () => _openSpread('love', 'New Relationship Timing')),
+                _buildCategoryCard('What Is My Education Horoscope 2026?', 'assets/images/tarot/tarot_new.jpg', () => _openSpread('single', 'Education 2026')),
+                _buildCategoryCard('What Should I Do to Achieve My Dream Job?', 'assets/images/tarot/tarot_new.jpg', () => _openSpread('career', 'Dream Job 2026')),
+              ]),
+
+              _buildSectionHeader('Love & Relationship', Icons.favorite),
+              _buildHorizontalList([
+                _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love.jpg', () => _openSpread('love', 'Relationship Potential')),
+                _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love.jpg', () => _openSpread('love', 'Relationship Purpose')),
+                _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love.jpg', () => _openSpread('love', 'Love Life Overview')),
+                _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
+                _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love.jpg', () => _openSpread('three-card', 'Dating Life')),
+              ]),
+              
+              _buildSectionHeader('Horoscope', Icons.calendar_month),
+              _buildHorizontalList([
+                _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
+                _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
+                _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope.jpg', () => _openSpread('year-ahead', '2026 Reading')),
+              ]),
+
+              _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
+              _buildHorizontalList([
+                _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
+                _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
+                _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
+                _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams.jpg', () => _openSpread('three-card', 'Travel Reading')),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

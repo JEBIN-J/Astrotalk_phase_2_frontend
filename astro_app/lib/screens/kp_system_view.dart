@@ -1331,6 +1331,34 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
+  Widget _buildPillTab({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4338CA) : (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 14.sp,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
+      ),
+    );
+  }
+
   // =========================================================================
   // SECTION 6: 4-STEP KP
   // =========================================================================
@@ -1393,18 +1421,10 @@ class _KpSystemViewState extends State<KpSystemView> {
                     DataColumn(label: Text('Step 4 (Result)', style: _headerStyle(isDark))),
                   ],
                   rows: planets.map((p) {
-                    final s1 = p['step_1']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s2 = p['step_2']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s3 = p['step_3']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s4 = p['step_4']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
+                    final s1 = p['step_1']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s2 = p['step_2']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s3 = p['step_3']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s4 = p['step_4']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
 
                     return DataRow(
                       cells: [
@@ -1449,18 +1469,10 @@ Rules: ') ?? '';
                     DataColumn(label: Text('Step 4 (Result)', style: _headerStyle(isDark))),
                   ],
                   rows: cusps.map((c) {
-                    final s1 = c['step_1']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s2 = c['step_2']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s3 = c['step_3']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
-                    final s4 = c['step_4']?['summary']?.toString().replaceAll(' occupies ', '
-Occ: ').replaceAll(', rules ', '
-Rules: ') ?? '';
+                    final s1 = c['step_1']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s2 = c['step_2']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s3 = c['step_3']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
+                    final s4 = c['step_4']?['summary']?.toString().replaceAll(' occupies ', '\nOcc: ').replaceAll(', rules ', '\nRules: ') ?? '';
 
                     return DataRow(
                       cells: [

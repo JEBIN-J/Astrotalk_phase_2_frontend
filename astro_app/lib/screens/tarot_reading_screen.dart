@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'tarot_card_details_screen.dart';
+import '../services/astro_api_service.dart';
 
 class TarotReadingScreen extends StatefulWidget {
   final Map<String, dynamic> spreadData;
@@ -10,123 +14,333 @@ class TarotReadingScreen extends StatefulWidget {
 }
 
 class _TarotReadingScreenState extends State<TarotReadingScreen> {
-  // To track which cards have been "revealed" by the user tapping on them
   Set<int> _revealedIndices = {};
 
   @override
   Widget build(BuildContext context) {
     final positions = widget.spreadData['positions'] as List<dynamic>;
     
+    final spreadType = widget.spreadData['spread_type'].toString().replaceAll('_', '/').toUpperCase();
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('${widget.spreadData['spread_type']} Reading'),
+        title: Text(
+          '$spreadType READING', 
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFFF5D67D),
+            fontSize: 18.sp,
+            letterSpacing: 1.2,
+          )
+        ),
+        backgroundColor: Colors.transparent,
+        foregroundColor: const Color(0xFFF5D67D),
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: positions.length,
-        itemBuilder: (context, index) {
-          final pos = positions[index];
-          final card = pos['card'];
-          final isRevealed = _revealedIndices.contains(index);
-
-          return Card(
-            margin: EdgeInsets.only(bottom: 16),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  _revealedIndices.add(index);
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: isRevealed
-                    ? _buildRevealedCard(pos, card)
-                    : _buildFaceDownCard(pos['position_name']),
-              ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0B0F19),
+          image: DecorationImage(
+            image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              const Color(0xFF0B0515).withValues(alpha: 0.6), 
+              BlendMode.darken,
             ),
-          );
-        },
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(positions.length, (index) {
+              final pos = positions[index];
+              final card = pos['card'];
+              final isRevealed = _revealedIndices.contains(index);
+
+              return Padding(
+                padding: EdgeInsets.only(bottom: index == positions.length - 1 ? 0 : 20.h),
+                child: GestureDetector(
+                  onTap: () {
+                    if (!isRevealed) {
+                      setState(() {
+                        _revealedIndices.add(index);
+                      });
+                    } else {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => TarotCardDetailsScreen(
+                          cardData: card,
+                          positionName: pos['position_name'],
+                        )
+                      ));
+                    }
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      final rotateAnim = Tween(begin: 3.14159, end: 0.0).animate(animation);
+                      return AnimatedBuilder(
+                        animation: rotateAnim,
+                        child: child,
+                        builder: (context, child) {
+                          final isUnder = (ValueKey(isRevealed) != child!.key);
+                          var tilt = ((animation.value - 0.5).abs() - 0.5) * 0.003;
+                          tilt *= isUnder ? -1.0 : 1.0;
+                          final value = isUnder ? min(rotateAnim.value, 3.14159 / 2) : rotateAnim.value;
+                          return Transform(
+                            transform: Matrix4.rotationY(value)..setEntry(3, 0, tilt),
+                            alignment: Alignment.center,
+                            child: child,
+                          );
+                        },
+                      );
+                    },
+                    child: isRevealed
+                        ? _buildRevealedCard(pos, card, key: const ValueKey(true))
+                        : _buildFaceDownCard(pos['position_name'], key: const ValueKey(false)),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+      ),
       ),
     );
   }
 
-  Widget _buildFaceDownCard(String positionName) {
+  double min(double a, double b) => a < b ? a : b;
+
+  Widget _buildFaceDownCard(String positionName, {Key? key}) {
     return Container(
-      height: 200,
+      key: key,
+      height: 400.h,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.indigo.shade900,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber, width: 2),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.star, color: Colors.amber, size: 48),
-            SizedBox(height: 16),
-            Text(
-              positionName,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            SizedBox(height: 8),
-            Text('Tap to Reveal', style: TextStyle(color: Colors.white70)),
-          ],
+        color: const Color(0xFF1B1E38),
+        borderRadius: BorderRadius.circular(24.r),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF5D67D).withOpacity(0.05), 
+            blurRadius: 30, 
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4), 
+            blurRadius: 20, 
+            offset: const Offset(0, 10),
+          )
+        ],
+        border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3), width: 1.5),
+        image: const DecorationImage(
+          image: AssetImage('assets/images/tarot/tarot_back.jpg'),
+          fit: BoxFit.cover,
         ),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.r),
+              color: Colors.black.withOpacity(0.4), // Darken the background image slightly so text is readable
+            ),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 36.h),
+              Text(
+                positionName.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  color: Colors.white, 
+                  fontWeight: FontWeight.w600, 
+                  fontSize: 22.sp,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              SizedBox(height: 20.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5D67D).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(30.r),
+                  border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3)),
+                ),
+                child: Text(
+                  'Tap to Reveal', 
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFFF5D67D), 
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRevealedCard(Map<String, dynamic> pos, Map<String, dynamic> card) {
-    final astroContext = pos['astro_context'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          pos['position_name'],
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).primaryColor),
-        ),
-        Divider(),
-        Text(
-          '${card['name']} (${card['orientation']})',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        SizedBox(height: 8),
-        Wrap(
-          spacing: 4,
-          children: (card['keywords'] as List<dynamic>).map((k) => Chip(label: Text(k.toString()))).toList(),
-        ),
-        SizedBox(height: 12),
-        Text('Core Meaning', style: TextStyle(fontWeight: FontWeight.w600)),
-        Text(card['core_meaning']),
-        SizedBox(height: 12),
-        Text('Contextual Reading', style: TextStyle(fontWeight: FontWeight.w600)),
-        Text(card['context_meaning']),
-        
-        if (astroContext != null) ...[
-          SizedBox(height: 16),
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+  Widget _buildRevealedCard(Map<String, dynamic> pos, Map<String, dynamic> card, {Key? key}) {
+    final isReversed = card['orientation'] == 'Reversed';
+    
+    return Container(
+      key: key,
+      height: 400.h,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B1E38),
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3), 
+            blurRadius: 20, 
+            offset: const Offset(0, 10),
+          ),
+        ]
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFF14172B),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(23.r)),
+                border: Border(bottom: BorderSide(color: const Color(0xFFF5D67D).withOpacity(0.2))),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Opacity(
+                    opacity: 0.1,
+                    child: Image.network(
+                      'https://www.transparenttextures.com/patterns/stardust.png',
+                      repeat: ImageRepeat.repeat,
+                    ),
+                  ),
+                  if (card['image'] != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(23.r)),
+                      child: Transform.rotate(
+                        angle: isReversed ? 3.14159 : 0,
+                        child: Image.asset(
+                          'assets/images/tarot/cards/${card['id']}.jpg',
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
+                              if (isReversed) ...[
+                                SizedBox(height: 12.h),
+                                Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
+                              ]
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Transform.rotate(
+                      angle: isReversed ? 3.14159 : 0,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
+                          if (isReversed) ...[
+                            SizedBox(height: 12.h),
+                            Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
+                          ]
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Astro-Tarot Alignment', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
-                SizedBox(height: 8),
-                Text('Correspondence: ${astroContext['correspondence']}'),
-                if (astroContext['current_transit'] != null)
-                  Text('Current Transit: ${astroContext['current_transit']['planet']} in ${astroContext['current_transit']['sign']} at ${astroContext['current_transit']['degree']}°'),
-                if (astroContext['natal_placement'] != null)
-                  Text('Natal Placement: ${astroContext['natal_placement']['planet']} in ${astroContext['natal_placement']['sign']} (House ${astroContext['natal_placement']['house']})'),
-              ],
+          ),
+          Expanded(
+            flex: 4,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    pos['position_name'].toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w500, 
+                      fontSize: 12.sp, 
+                      color: const Color(0xFFF5D67D),
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    '${card['name']}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w600, 
+                      fontSize: 22.sp, 
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    isReversed ? 'Reversed' : 'Upright',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp, 
+                      color: Colors.white60, 
+                      fontStyle: FontStyle.italic
+                    ),
+                  ),
+                  Spacer(),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5D67D).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View Details',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.sp, 
+                            color: const Color(0xFFF5D67D), 
+                            fontWeight: FontWeight.w500
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Icon(Icons.arrow_forward_rounded, size: 14.sp, color: const Color(0xFFF5D67D)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
-        ]
-      ],
+        ],
+      ),
     );
   }
 }
