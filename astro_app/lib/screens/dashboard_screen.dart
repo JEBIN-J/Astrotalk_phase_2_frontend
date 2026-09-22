@@ -894,12 +894,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             Positioned(
               right: -20,
               top: -20,
-              child: Opacity(
-                opacity: 0.15,
-                child: RotationTransition(
-                  turns: const AlwaysStoppedAnimation(45 / 360),
-                  child: Icon(Icons.wb_sunny_rounded, size: 100, color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)),
-                ),
+              child: RotationTransition(
+                turns: const AlwaysStoppedAnimation(45 / 360),
+                child: Icon(Icons.wb_sunny_rounded, size: 100, color: (isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)).withValues(alpha: 0.15)),
               ),
             ),
             Column(

@@ -1342,9 +1342,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 // Left Dropdown (House System)
                 Expanded(
                   flex: 11,
-                  child: Opacity(
-                    opacity: 1.0,
-                    child: Row(
+                  child: Row(
                       children: [
                       Text('Bhava', style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87, fontSize: 15.sp, fontWeight: FontWeight.bold)),
                       SizedBox(width: 8.w),
@@ -1384,7 +1382,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ),
                     ],
                   ),
-                ),
                 ),
                 SizedBox(width: 8.w),
                 // Right Dropdown (Reference Chart)

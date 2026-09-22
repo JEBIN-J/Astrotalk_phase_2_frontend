@@ -10,11 +10,11 @@ class TarotReadingScreen extends StatefulWidget {
   const TarotReadingScreen({Key? key, required this.spreadData}) : super(key: key);
 
   @override
-  _TarotReadingScreenState createState() => _TarotReadingScreenState();
+  State<TarotReadingScreen> createState() => _TarotReadingScreenState();
 }
 
 class _TarotReadingScreenState extends State<TarotReadingScreen> {
-  Set<int> _revealedIndices = {};
+  final Set<int> _revealedIndices = {};
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +42,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0B0F19),
+          color: const Color(0xFF021B10), // Dark green background
           image: DecorationImage(
             image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              const Color(0xFF0B0515).withValues(alpha: 0.6), 
+              const Color(0xFF021B10).withValues(alpha: 0.85), // Dark green tint
               BlendMode.darken,
             ),
           ),
@@ -123,22 +123,22 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       height: 400.h,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1E38),
+        color: const Color(0xFF021B10),
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF5D67D).withOpacity(0.05), 
+            color: const Color(0xFFF5D67D).withValues(alpha: 0.05), 
             blurRadius: 30, 
             spreadRadius: 2,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.4), 
+            color: Colors.black.withValues(alpha: 0.4), 
             blurRadius: 20, 
             offset: const Offset(0, 10),
           )
         ],
-        border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3), width: 1.5),
+        border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
         image: const DecorationImage(
           image: AssetImage('assets/images/tarot/tarot_back.jpg'),
           fit: BoxFit.cover,
@@ -150,7 +150,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24.r),
-              color: Colors.black.withOpacity(0.4), // Darken the background image slightly so text is readable
+              color: Colors.black.withValues(alpha: 0.4), // Darken the background image slightly so text is readable
             ),
           ),
           Column(
@@ -171,9 +171,9 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5D67D).withOpacity(0.15),
+                  color: const Color(0xFFF5D67D).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(30.r),
-                  border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   'Tap to Reveal', 
@@ -200,12 +200,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       height: 400.h,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1E38),
+        color: const Color(0xFF021B10),
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFF5D67D).withOpacity(0.3), width: 1.5),
+        border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), 
+            color: Colors.black.withValues(alpha: 0.3), 
             blurRadius: 20, 
             offset: const Offset(0, 10),
           ),
@@ -218,31 +218,66 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFF14172B),
+                color: const Color(0xFF052B18),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(23.r)),
-                border: Border(bottom: BorderSide(color: const Color(0xFFF5D67D).withOpacity(0.2))),
+                border: Border(bottom: BorderSide(color: const Color(0xFFF5D67D).withValues(alpha: 0.2))),
               ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Opacity(
-                    opacity: 0.1,
-                    child: Image.network(
-                      'https://www.transparenttextures.com/patterns/stardust.png',
-                      repeat: ImageRepeat.repeat,
-                    ),
+                  Image.network(
+                    'https://www.transparenttextures.com/patterns/stardust.png',
+                    repeat: ImageRepeat.repeat,
+                    color: Colors.white.withValues(alpha: 0.1),
+                    colorBlendMode: BlendMode.modulate,
                   ),
-                  if (card['image'] != null)
+                  if (card['image'] != null || card['name'] != null)
                     ClipRRect(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(23.r)),
                       child: Transform.rotate(
                         angle: isReversed ? 3.14159 : 0,
-                        child: Image.asset(
-                          'assets/images/tarot/cards/${card['id']}.jpg',
+                        child: Image.network(
+                          '${AstroApiService.baseUrl.replaceAll('/api/v1', '')}/static/${card['image'] ?? 'assets/tarot/${card['name'].toString().toLowerCase().replaceAll(' ', '_')}.webp'}?v=3',
                           width: double.infinity,
                           height: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.asset(
+                                'assets/images/tarot/tarot_back.jpg',
+                                fit: BoxFit.cover,
+                                color: Colors.black.withValues(alpha: 0.5),
+                                colorBlendMode: BlendMode.darken,
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
+                                  if (isReversed) ...[
+                                    SizedBox(height: 12.h),
+                                    Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
+                                  ]
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          'assets/images/tarot/tarot_back.jpg',
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Column(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          colorBlendMode: BlendMode.darken,
+                        ),
+                        Transform.rotate(
+                          angle: isReversed ? 3.14159 : 0,
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
@@ -253,21 +288,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                             ],
                           ),
                         ),
-                      ),
-                    )
-                  else
-                    Transform.rotate(
-                      angle: isReversed ? 3.14159 : 0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
-                          if (isReversed) ...[
-                            SizedBox(height: 12.h),
-                            Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
-                          ]
-                        ],
-                      ),
+                      ],
                     ),
                 ],
               ),
@@ -291,6 +312,22 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                     ),
                   ),
                   SizedBox(height: 12.h),
+                  if (card['yes_no_meaning'] != null && widget.spreadData['spread_type'] == 'yes_no') ...[
+                    Text(
+                      '${card['yes_no_meaning']}'.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28.sp,
+                        color: '${card['yes_no_meaning']}'.toLowerCase().contains('yes') 
+                            ? const Color(0xFF4ADE80) 
+                            : ('${card['yes_no_meaning']}'.toLowerCase().contains('no') 
+                                ? const Color(0xFFF87171) 
+                                : Colors.amber),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                  ],
                   Text(
                     '${card['name']}',
                     textAlign: TextAlign.center,
@@ -316,7 +353,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5D67D).withOpacity(0.1),
+                      color: const Color(0xFFF5D67D).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Row(

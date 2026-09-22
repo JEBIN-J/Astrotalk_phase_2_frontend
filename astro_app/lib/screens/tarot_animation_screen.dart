@@ -77,7 +77,7 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: const Color(0xFF021B10), // Dark green background
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -106,7 +106,7 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        const Color(0xFF0B0F19).withValues(alpha: 0.9),
+                        const Color(0xFF021B10).withValues(alpha: 0.9), // Dark green gradient
                         Colors.transparent,
                       ],
                     ),
@@ -125,7 +125,7 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
                     "Connecting to the mystical energies...",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
-                      color: Colors.white,
+                      color: const Color(0xFFFFD700), // Gold color
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1.2,

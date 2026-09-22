@@ -195,7 +195,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: Colors.amber,
-                                  boxShadow: [BoxShadow(color: Colors.amber.withOpacity(0.5), blurRadius: 5)],
+                                  boxShadow: [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 5)],
                                 ),
                                 child: Text(
                                   '$selectOrder',
@@ -228,12 +228,12 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0B0F19),
+          color: const Color(0xFF021B10), // Dark green
           image: DecorationImage(
             image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              const Color(0xFF0B0515).withValues(alpha: 0.6), // Magical dark tint to let cards pop
+              const Color(0xFF021B10).withValues(alpha: 0.85), // Dark green tint to let cards pop
               BlendMode.darken,
             ),
           ),
@@ -263,7 +263,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp, 
-                    color: Colors.white70, 
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.8), 
                     fontStyle: FontStyle.italic,
                     shadows: [
                       Shadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 4),
@@ -285,8 +285,8 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      const Color(0xFF130B29),
-                      const Color(0xFF130B29).withValues(alpha: 0.7),
+                      const Color(0xFF021B10),
+                      const Color(0xFF021B10).withValues(alpha: 0.7),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.6, 1.0],

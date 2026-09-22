@@ -51,15 +51,12 @@ class BentoHeroCard extends StatelessWidget {
             Positioned(
               right: -30,
               bottom: -30,
-              child: Opacity(
-                opacity: 0.12,
-                child: SmoothRotatingWidget(
-                  duration: const Duration(seconds: 45),
-                  child: const VedicIcon(
-                    iconKey: 'kundli',
-                    size: 190,
-                    color: Colors.white,
-                  ),
+              child: SmoothRotatingWidget(
+                duration: const Duration(seconds: 45),
+                child: VedicIcon(
+                  iconKey: 'kundli',
+                  size: 190,
+                  color: Colors.white.withValues(alpha: 0.12),
                 ),
               ),
             ),

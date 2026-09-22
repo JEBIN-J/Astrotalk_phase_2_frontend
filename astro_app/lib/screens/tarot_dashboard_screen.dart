@@ -48,7 +48,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFFFD700).withValues(alpha: 0.2), 
-                  const Color(0xFF9370DB).withValues(alpha: 0.2)
+                  const Color(0xFF021B10).withValues(alpha: 0.8)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -177,12 +177,12 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0B0F19),
+          color: const Color(0xFF021B10),
           image: DecorationImage(
             image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withValues(alpha: 0.65), 
+              const Color(0xFF021B10).withValues(alpha: 0.85), 
               BlendMode.darken,
             ),
           ),
@@ -200,7 +200,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
-                    color: Colors.white60,
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.8),
                     letterSpacing: 1.2,
                     fontStyle: FontStyle.italic,
                   ),

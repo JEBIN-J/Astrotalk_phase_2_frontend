@@ -159,12 +159,15 @@ class _MultiKundliPainter extends CustomPainter {
   double? _getAbsoluteLongitude(dynamic item) {
     if (item == null || item is! Map) return null;
     if (item['longitude'] != null) return (item['longitude'] as num).toDouble();
-    if (item['normDegree'] != null)
+    if (item['normDegree'] != null) {
       return (item['normDegree'] as num).toDouble();
-    if (item['abs_degree'] != null)
+    }
+    if (item['abs_degree'] != null) {
       return (item['abs_degree'] as num).toDouble();
-    if (item['cusp_degree'] != null)
+    }
+    if (item['cusp_degree'] != null) {
       return (item['cusp_degree'] as num).toDouble();
+    }
 
     final signIdx = (item['sign_index'] as num?)?.toInt();
     final degStr =
@@ -655,8 +658,9 @@ class _MultiKundliPainter extends CustomPainter {
   }
 
   int _getAscendantSignIndex(Map<String, dynamic>? data) {
-    if (chartTypeKey == 'LalKitab')
+    if (chartTypeKey == 'LalKitab') {
       return 1; // Always Aries Ascendant in Lal Kitab
+    }
 
     if (data == null) return 11; // Default Aquarius (Kumbha)
 

@@ -4,6 +4,8 @@ import '../services/tarot_service.dart';
 import 'tarot_reading_screen.dart';
 
 class TarotHistoryScreen extends StatelessWidget {
+  const TarotHistoryScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
