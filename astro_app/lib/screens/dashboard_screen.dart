@@ -85,6 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       defaultChartStyle: _defaultChartStyle,
       onToggleTheme: widget.onToggleTheme,
       isDark: widget.isDark,
+      currentPalette: widget.currentPalette,
     );
   }
 

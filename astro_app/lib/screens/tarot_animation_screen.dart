@@ -3,9 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'tarot_dashboard_screen.dart';
+import '../theme/app_theme.dart';
+import '../widgets/celestial_animations.dart';
 
 class TarotAnimationScreen extends StatefulWidget {
-  const TarotAnimationScreen({Key? key}) : super(key: key);
+  final AppColorPalette currentPalette;
+  final bool isDark;
+
+  const TarotAnimationScreen({
+    super.key, 
+    this.currentPalette = AppColorPalette.midnightCosmic,
+    this.isDark = false,
+  });
 
   @override
   State<TarotAnimationScreen> createState() => _TarotAnimationScreenState();
@@ -60,7 +69,10 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => const TarotDashboardScreen(),
+              builder: (_) => TarotDashboardScreen(
+                currentPalette: widget.currentPalette,
+                isDark: widget.isDark,
+              ),
             ),
           );
         }
@@ -74,22 +86,37 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
     super.dispose();
   }
 
+  Color get _primaryColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronPrimary;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldPrimary;
+      case AppColorPalette.royalIndigo: return AppTheme.royalIndigo;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicNavy;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF021B10), // Dark green background
+      backgroundColor: _primaryColor, 
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
           return Stack(
             children: [
-              // Beautiful generated splash screen image with slow zoom-in
+              // Beautiful generated splash screen image with slow zoom-in, tinted by the theme
               Positioned.fill(
                 child: Transform.scale(
                   scale: _bgScaleAnim.value,
                   child: Image.asset(
                     'assets/images/tarot/tarot_splash_bg.jpg',
                     fit: BoxFit.cover,
+                    color: widget.currentPalette == AppColorPalette.emeraldDivine 
+                        ? Colors.black.withValues(alpha: 0.2) // Default darkening for original green
+                        : _primaryColor.withValues(alpha: 0.85),
+                    colorBlendMode: widget.currentPalette == AppColorPalette.emeraldDivine 
+                        ? BlendMode.darken
+                        : BlendMode.overlay,
                   ),
                 ),
               ),
@@ -106,7 +133,7 @@ class _TarotAnimationScreenState extends State<TarotAnimationScreen> with Single
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        const Color(0xFF021B10).withValues(alpha: 0.9), // Dark green gradient
+                        _primaryColor.withValues(alpha: 0.9), 
                         Colors.transparent,
                       ],
                     ),

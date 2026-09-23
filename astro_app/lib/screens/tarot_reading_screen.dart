@@ -4,10 +4,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'tarot_card_details_screen.dart';
 import '../services/astro_api_service.dart';
 
+import '../theme/app_theme.dart';
+import '../widgets/celestial_animations.dart';
+
 class TarotReadingScreen extends StatefulWidget {
   final Map<String, dynamic> spreadData;
+  final AppColorPalette currentPalette;
+  final bool isDark;
 
-  const TarotReadingScreen({Key? key, required this.spreadData}) : super(key: key);
+  const TarotReadingScreen({
+    Key? key, 
+    required this.spreadData,
+    this.currentPalette = AppColorPalette.emeraldDivine,
+    this.isDark = false,
+  }) : super(key: key);
 
   @override
   State<TarotReadingScreen> createState() => _TarotReadingScreenState();
@@ -15,6 +25,33 @@ class TarotReadingScreen extends StatefulWidget {
 
 class _TarotReadingScreenState extends State<TarotReadingScreen> {
   final Set<int> _revealedIndices = {};
+
+  Color get _primaryColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronPrimary;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldPrimary;
+      case AppColorPalette.royalIndigo: return AppTheme.royalIndigo;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicNavy;
+    }
+  }
+
+  Color get _surfaceColor {
+    if (widget.isDark) {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return AppTheme.saffronCard;
+        case AppColorPalette.emeraldDivine: return AppTheme.emeraldCard;
+        case AppColorPalette.royalIndigo: return AppTheme.royalCard;
+        case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicSurface;
+      }
+    } else {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return const Color(0xFFFFF7F0);
+        case AppColorPalette.emeraldDivine: return const Color(0xFFF5FBF6);
+        case AppColorPalette.royalIndigo: return const Color(0xFFF3F5FC);
+        case AppColorPalette.midnightCosmic: default: return const Color(0xFFF4F7FB);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,14 +79,13 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF021B10), // Dark green background
+          color: _primaryColor, // Fallback color
           image: DecorationImage(
             image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              const Color(0xFF021B10).withValues(alpha: 0.85), // Dark green tint
-              BlendMode.darken,
-            ),
+            colorFilter: widget.currentPalette == AppColorPalette.emeraldDivine 
+                ? ColorFilter.mode(const Color(0xFF021B10).withValues(alpha: 0.85), BlendMode.darken)
+                : ColorFilter.mode(_primaryColor.withValues(alpha: 0.85), BlendMode.darken),
           ),
         ),
         child: SafeArea(
@@ -76,6 +112,8 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                         builder: (_) => TarotCardDetailsScreen(
                           cardData: card,
                           positionName: pos['position_name'],
+                          currentPalette: widget.currentPalette,
+                          isDark: widget.isDark,
                         )
                       ));
                     }
@@ -123,7 +161,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       height: 400.h,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF021B10),
+        color: _primaryColor,
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
@@ -139,9 +177,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
           )
         ],
         border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
-        image: const DecorationImage(
-          image: AssetImage('assets/images/tarot/tarot_back.jpg'),
+        image: DecorationImage(
+          image: const AssetImage('assets/images/tarot/tarot_back.jpg'),
           fit: BoxFit.cover,
+          colorFilter: widget.currentPalette == AppColorPalette.emeraldDivine 
+              ? null
+              : ColorFilter.mode(_primaryColor, BlendMode.hue),
         ),
       ),
       child: Stack(
@@ -200,7 +241,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       height: 480.h,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF022C22), // Deep emerald background
+        color: _primaryColor.withValues(alpha: 0.8), // Dynamic background for the revealed card
         borderRadius: BorderRadius.circular(24.r),
         border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
@@ -219,7 +260,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFF021B10), // Darker green behind image
+                color: _primaryColor, // Darker color behind image
                 borderRadius: BorderRadius.vertical(top: Radius.circular(23.r)),
                 border: Border(bottom: BorderSide(color: const Color(0xFFF5D67D).withValues(alpha: 0.5))),
               ),

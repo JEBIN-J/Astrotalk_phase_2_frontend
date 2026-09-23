@@ -4,11 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/tarot_service.dart';
 import 'tarot_reading_screen.dart';
 
+import '../theme/app_theme.dart';
+
 class TarotDeckSelectionScreen extends StatefulWidget {
   final String endpoint;
   final String title;
   final String question;
   final int requiredCards;
+  final AppColorPalette currentPalette;
+  final bool isDark;
 
   const TarotDeckSelectionScreen({
     super.key,
@@ -16,6 +20,8 @@ class TarotDeckSelectionScreen extends StatefulWidget {
     required this.title,
     required this.question,
     required this.requiredCards,
+    this.currentPalette = AppColorPalette.emeraldDivine,
+    this.isDark = false,
   });
 
   @override
@@ -27,6 +33,33 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
   List<int> selectedIndices = [];
   bool isLoading = false;
   late AnimationController _animController;
+
+  Color get _primaryColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronPrimary;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldPrimary;
+      case AppColorPalette.royalIndigo: return AppTheme.royalIndigo;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicNavy;
+    }
+  }
+
+  Color get _surfaceColor {
+    if (widget.isDark) {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return AppTheme.saffronCard;
+        case AppColorPalette.emeraldDivine: return AppTheme.emeraldCard;
+        case AppColorPalette.royalIndigo: return AppTheme.royalCard;
+        case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicSurface;
+      }
+    } else {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return const Color(0xFFFFF7F0);
+        case AppColorPalette.emeraldDivine: return const Color(0xFFF5FBF6);
+        case AppColorPalette.royalIndigo: return const Color(0xFFF3F5FC);
+        case AppColorPalette.midnightCosmic: default: return const Color(0xFFF4F7FB);
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -72,7 +105,11 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       
       if (mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (_) => TarotReadingScreen(spreadData: reading)
+          builder: (_) => TarotReadingScreen(
+            spreadData: reading,
+            currentPalette: widget.currentPalette,
+            isDark: widget.isDark,
+          )
         ));
       }
     } catch (e) {
@@ -203,9 +240,12 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     height: cardHeight,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6.r),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/tarot/tarot_back.jpg'),
+                      image: DecorationImage(
+                        image: const AssetImage('assets/images/tarot/tarot_back.jpg'),
                         fit: BoxFit.cover,
+                        colorFilter: widget.currentPalette == AppColorPalette.emeraldDivine 
+                            ? null
+                            : ColorFilter.mode(_primaryColor, BlendMode.hue),
                       ),
                       border: Border.all(
                         color: const Color(0xFFD4AF37).withValues(alpha: 0.9), // Elegant gold border
@@ -235,10 +275,10 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.title, style: GoogleFonts.outfit(color: const Color(0xFF1B5E20), fontWeight: FontWeight.bold)),
+        title: Text(widget.title, style: GoogleFonts.outfit(color: _primaryColor, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF1B5E20)),
+        iconTheme: IconThemeData(color: _primaryColor),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -246,9 +286,9 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFFF5FBF6), // Very light Green
-              const Color(0xFFFFFCED), // Very light Gold
-              const Color(0xFFF9FDF9), // Very light Green
+              _surfaceColor,
+              widget.isDark ? _surfaceColor : const Color(0xFFFFFCED),
+              _surfaceColor,
             ],
           ),
         ),
@@ -283,7 +323,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                       style: GoogleFonts.outfit(
                         fontSize: 24.sp, 
                         fontWeight: FontWeight.bold, 
-                        color: const Color(0xFF1B5E20),
+                        color: _primaryColor,
                       ),
                     ),
                   ),
@@ -313,9 +353,9 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      const Color(0xFFF9FDF9),
-                      const Color(0xFFF9FDF9).withValues(alpha: 0.8),
-                      Colors.transparent,
+                      _surfaceColor,
+                      _surfaceColor.withValues(alpha: 0.8),
+                      _surfaceColor.withValues(alpha: 0.0),
                     ],
                     stops: const [0.0, 0.6, 1.0],
                   ),
@@ -327,11 +367,11 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     height: 56.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
-                        disabledBackgroundColor: const Color(0xFF1B5E20).withValues(alpha: 0.2),
+                        backgroundColor: _primaryColor,
+                        disabledBackgroundColor: _primaryColor.withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                         elevation: 5,
-                        shadowColor: const Color(0xFF1B5E20).withValues(alpha: 0.3),
+                        shadowColor: _primaryColor.withValues(alpha: 0.3),
                       ),
                       onPressed: selectedIndices.length == widget.requiredCards && !isLoading
                           ? _confirmSelection

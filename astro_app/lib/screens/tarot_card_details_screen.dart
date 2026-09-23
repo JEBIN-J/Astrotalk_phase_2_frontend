@@ -4,11 +4,48 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../services/astro_api_service.dart';
 
+import '../theme/app_theme.dart';
+
 class TarotCardDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> cardData;
   final String positionName;
+  final AppColorPalette currentPalette;
+  final bool isDark;
 
-  const TarotCardDetailsScreen({Key? key, required this.cardData, required this.positionName}) : super(key: key);
+  const TarotCardDetailsScreen({
+    Key? key, 
+    required this.cardData, 
+    required this.positionName,
+    this.currentPalette = AppColorPalette.emeraldDivine,
+    this.isDark = false,
+  }) : super(key: key);
+
+  Color get _primaryColor {
+    switch (currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronPrimary;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldPrimary;
+      case AppColorPalette.royalIndigo: return AppTheme.royalIndigo;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicNavy;
+    }
+  }
+
+  Color get _surfaceColor {
+    if (isDark) {
+      switch (currentPalette) {
+        case AppColorPalette.sacredSaffron: return AppTheme.saffronCard;
+        case AppColorPalette.emeraldDivine: return AppTheme.emeraldCard;
+        case AppColorPalette.royalIndigo: return AppTheme.royalCard;
+        case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicSurface;
+      }
+    } else {
+      switch (currentPalette) {
+        case AppColorPalette.sacredSaffron: return const Color(0xFFFFF7F0);
+        case AppColorPalette.emeraldDivine: return const Color(0xFFF5FBF6);
+        case AppColorPalette.royalIndigo: return const Color(0xFFF3F5FC);
+        case AppColorPalette.midnightCosmic: default: return const Color(0xFFF4F7FB);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +54,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
     final keywords = cardData['keywords'] as List<dynamic>? ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF022C22), // Deep emerald background
+      backgroundColor: _primaryColor, // Deep theme background
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 18.sp, letterSpacing: 1.2, color: const Color(0xFFF5D67D))),
@@ -34,10 +71,9 @@ class TarotCardDetailsScreen extends StatelessWidget {
               image: DecorationImage(
                 image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
                 fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  const Color(0xFF022C22).withValues(alpha: 0.85),
-                  BlendMode.darken,
-                ),
+                colorFilter: currentPalette == AppColorPalette.emeraldDivine 
+                    ? ColorFilter.mode(const Color(0xFF022C22).withValues(alpha: 0.85), BlendMode.darken)
+                    : ColorFilter.mode(_primaryColor.withValues(alpha: 0.85), BlendMode.darken),
               ),
             ),
           ),
@@ -86,7 +122,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                           height: 380.h,
                           width: 230.w,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF021B10),
+                            color: _primaryColor,
                             borderRadius: BorderRadius.circular(20.r),
                             border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.5), width: 2.0),
                             boxShadow: [
@@ -162,7 +198,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                             children: keywords.map((k) => Container(
                               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF064E3B).withValues(alpha: 0.6), // Deep green glass
+                                color: _primaryColor.withValues(alpha: 0.6), // Theme colored glass
                                 borderRadius: BorderRadius.circular(30.r),
                                 border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
                               ),
@@ -241,34 +277,28 @@ class TarotCardDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildGlassCard(String content) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20.r),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(24.w),
-          decoration: BoxDecoration(
-            color: const Color(0xFF022C22).withValues(alpha: 0.6), // Deep green glass
-            borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: _primaryColor.withValues(alpha: 0.6), // Solid theme glass without blur
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
-          child: Text(
-            content,
-            style: GoogleFonts.outfit(
-              fontSize: 17.sp, 
-              height: 1.6, 
-              color: Colors.white.withValues(alpha: 0.95),
-              letterSpacing: 0.3,
-            ),
-          ),
+        ],
+      ),
+      child: Text(
+        content,
+        style: GoogleFonts.outfit(
+          fontSize: 17.sp, 
+          height: 1.6, 
+          color: Colors.white.withValues(alpha: 0.95),
+          letterSpacing: 0.3,
         ),
       ),
     );

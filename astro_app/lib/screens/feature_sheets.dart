@@ -8,6 +8,7 @@ import 'muhurat_screen.dart';
 import 'daily_horoscope_screen.dart';
 import 'tarot_dashboard_screen.dart';
 import 'tarot_animation_screen.dart';
+import '../theme/app_theme.dart';
 
 class AstroFeatureDialogs {
   /// Navigates to the dedicated full-screen Page with specialized functionality
@@ -17,6 +18,7 @@ class AstroFeatureDialogs {
     KundliChartStyle defaultChartStyle = KundliChartStyle.northIndian,
     VoidCallback? onToggleTheme,
     bool isDark = false,
+    AppColorPalette currentPalette = AppColorPalette.midnightCosmic,
   }) {
     Widget targetScreen;
 
@@ -60,7 +62,10 @@ class AstroFeatureDialogs {
         targetScreen = const PrashnaScreen();
         break;
       case 'tarot':
-        targetScreen = const TarotAnimationScreen();
+        targetScreen = TarotAnimationScreen(
+          currentPalette: currentPalette,
+          isDark: isDark,
+        );
         break;
       default:
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle);

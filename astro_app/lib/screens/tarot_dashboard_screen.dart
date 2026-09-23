@@ -7,8 +7,18 @@ import 'tarot_history_screen.dart';
 import 'tarot_library_screen.dart';
 import 'tarot_deck_selection_screen.dart';
 
+import '../theme/app_theme.dart';
+import '../widgets/celestial_animations.dart';
+
 class TarotDashboardScreen extends StatefulWidget {
-  const TarotDashboardScreen({super.key});
+  final AppColorPalette currentPalette;
+  final bool isDark;
+
+  const TarotDashboardScreen({
+    super.key,
+    this.currentPalette = AppColorPalette.midnightCosmic,
+    this.isDark = false,
+  });
 
   @override
   State<TarotDashboardScreen> createState() => _TarotDashboardScreenState();
@@ -33,8 +43,64 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
         title: title,
         question: question ?? title,
         requiredCards: requiredCards,
+        currentPalette: widget.currentPalette,
+        isDark: widget.isDark,
       )
     ));
+  }
+
+  Color get _primaryColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronPrimary;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldPrimary;
+      case AppColorPalette.royalIndigo: return AppTheme.royalIndigo;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicNavy;
+    }
+  }
+
+  Color get _secondaryColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return AppTheme.saffronBorder;
+      case AppColorPalette.emeraldDivine: return AppTheme.emeraldBorder;
+      case AppColorPalette.royalIndigo: return AppTheme.royalBorder;
+      case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicBorder;
+    }
+  }
+
+  Color get _surfaceColor {
+    if (widget.isDark) {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return AppTheme.saffronCard;
+        case AppColorPalette.emeraldDivine: return AppTheme.emeraldCard;
+        case AppColorPalette.royalIndigo: return AppTheme.royalCard;
+        case AppColorPalette.midnightCosmic: default: return AppTheme.cosmicSurface;
+      }
+    } else {
+      switch (widget.currentPalette) {
+        case AppColorPalette.sacredSaffron: return const Color(0xFFFFF7F0);
+        case AppColorPalette.emeraldDivine: return const Color(0xFFF5FBF6);
+        case AppColorPalette.royalIndigo: return const Color(0xFFF3F5FC);
+        case AppColorPalette.midnightCosmic: default: return const Color(0xFFF4F7FB);
+      }
+    }
+  }
+
+  Color get _accentColor {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return const Color(0xFFFFB300); // Amber Gold
+      case AppColorPalette.emeraldDivine: return const Color(0xFFD4AF37); // Metallic Gold
+      case AppColorPalette.royalIndigo: return const Color(0xFFE5C07B); // Champagne Gold
+      case AppColorPalette.midnightCosmic: default: return const Color(0xFFF5D67D); // Soft Star Gold
+    }
+  }
+
+  Color get _accentLight {
+    switch (widget.currentPalette) {
+      case AppColorPalette.sacredSaffron: return const Color(0xFFFFE0B2); 
+      case AppColorPalette.emeraldDivine: return const Color(0xFFF9E596); 
+      case AppColorPalette.royalIndigo: return const Color(0xFFF5E6C3); 
+      case AppColorPalette.midnightCosmic: default: return const Color(0xFFFFF1BD); 
+    }
   }
 
   Widget _buildSectionHeader(String title, IconData icon) {
@@ -45,35 +111,35 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
           Container(
             padding: EdgeInsets.all(10.w),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF022C22), Color(0xFF0A3A2F)],
+              gradient: LinearGradient(
+                colors: [_primaryColor, _secondaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                  color: _accentColor.withValues(alpha: 0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                   offset: const Offset(0, 3),
                 ),
               ],
               border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.6),
+                color: _accentColor.withValues(alpha: 0.6),
                 width: 1.2,
               ),
             ),
-            child: Icon(icon, color: const Color(0xFFFFD700), size: 20.sp),
+            child: Icon(icon, color: _accentColor, size: 20.sp),
           ),
           SizedBox(width: 14.w),
           ShaderMask(
             blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) => const LinearGradient(
+            shaderCallback: (bounds) => LinearGradient(
               colors: [
-                Color(0xFF022C22), // Deep Emerald
-                Color(0xFF1B5E20), // Rich Green
-                Color(0xFF022C22), // Deep Emerald
+                _primaryColor, 
+                _secondaryColor, 
+                _primaryColor, 
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -86,7 +152,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
                 letterSpacing: 0.8,
                 shadows: [
                   Shadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                    color: _accentColor.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -118,16 +184,19 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.6),
+                color: _accentColor.withValues(alpha: 0.6),
                 width: 1.5,
               ),
               image: DecorationImage(
                 image: imgProvider,
                 fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.2), BlendMode.darken),
+                colorFilter: ColorFilter.mode(
+                  _accentColor.withValues(alpha: 0.3), 
+                  BlendMode.hue
+                ),
               ),
               boxShadow: [
-                BoxShadow(color: const Color(0xFFFFD700).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(color: _accentColor.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
               ],
             ),
             child: Stack(
@@ -140,9 +209,9 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.4),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.8), width: 1.w),
+                      border: Border.all(color: _accentColor.withValues(alpha: 0.8), width: 1.w),
                     ),
-                    child: Icon(Icons.auto_awesome, color: const Color(0xFFFFD700), size: 14.sp),
+                    child: Icon(Icons.auto_awesome, color: _accentColor, size: 14.sp),
                   ),
                 ),
                 Positioned(
@@ -198,78 +267,154 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('Tarot Mystique', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF1B5E20), fontSize: 24.sp)),
+        title: ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [
+              _accentColor, // Gold
+              _accentLight, // Light Gold
+              _accentColor, // Gold
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: Text(
+            'Tarot Mystique', 
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w700,
+              fontSize: 26.sp,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: _accentColor.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            )
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF1B5E20)),
+        iconTheme: IconThemeData(color: _accentColor),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history, color: Color(0xFF1B5E20)),
+            icon: Icon(Icons.history, color: _accentColor),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotHistoryScreen())),
           ),
           IconButton(
-            icon: const Icon(Icons.library_books, color: Color(0xFF1B5E20)),
+            icon: Icon(Icons.library_books, color: _accentColor),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotLibraryScreen())),
           )
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFF5FBF6), // Very light Green
-              const Color(0xFFFFFCED), // Very light Gold
-              const Color(0xFFF9FDF9), // Very light Green
-            ],
+      body: Stack(
+        children: [
+          // Dynamic cosmic background that matches the global app theme
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 200.h,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
+              ),
+              child: CosmicStarfieldBackground(
+                isDark: widget.isDark,
+                starCount: 36,
+                child: Stack(
+                  children: [
+                    // Cosmic dust for extra magic, no chunky icons
+                    Positioned.fill(
+                      child: CosmicDustBackground(
+                        particleCount: 60,
+                        primaryColor: _accentColor,
+                        accentColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            // Subtle gold background designs
-            Positioned(
-              top: -50.h,
-              right: -50.w,
-              child: Icon(Icons.star_outline_rounded, size: 250.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
-            ),
-            Positioned(
-              top: 200.h,
-              left: -40.w,
-              child: Icon(Icons.auto_awesome, size: 150.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
-            ),
-            Positioned(
-              bottom: 150.h,
-              right: -30.w,
-              child: Icon(Icons.brightness_4_outlined, size: 180.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
-            ),
-            Positioned(
-              bottom: 400.h,
-              left: 20.w,
-              child: Icon(Icons.flare, size: 100.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
-            ),
             SafeArea(
               bottom: false,
               child: ListView(
-                padding: EdgeInsets.only(bottom: 40.h, top: 10.h),
+                padding: EdgeInsets.only(bottom: 40.h, top: 15.h), // Greatly reduced top padding
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                    child: Text(
-                      "Seek clarity in the cards",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 16.sp,
-                        color: const Color(0xFFB8860B),
-                        letterSpacing: 1.2,
-                        fontStyle: FontStyle.italic,
+                  Center(
+                    child: Container(
+                      margin: EdgeInsets.zero, // Removed margin to pack it tightly
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            _accentColor.withValues(alpha: 0.25),
+                            _accentColor.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(30.r),
+                        border: Border.all(
+                          color: _accentColor.withValues(alpha: 0.7),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _accentColor.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            "Seek clarity in the cards",
+                            style: GoogleFonts.outfit(
+                              fontSize: 15.sp,
+                              color: _accentLight, // Softer, premium Gold
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
+                        ],
                       ),
                     ),
                   ),
-                  
-                  _buildSectionHeader('Get Answers', Icons.auto_awesome),
+                  SizedBox(height: 5.h), // Extremely reduced space below the pill
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _surfaceColor, // Dynamic surface color
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32.r),
+                        topRight: Radius.circular(32.r),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 15,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 20.h, top: 10.h),
+                      child: Column(
+                        children: [
+                          _buildSectionHeader('Get Answers', Icons.auto_awesome),
                   _buildHorizontalList([
                     _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_yes_no.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
                     _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_immediate.jpg', () => _openSpread('single', 'Immediate Question')),
@@ -289,29 +434,142 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
                   _buildHorizontalList([
                     _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love_potential.jpg', () => _openSpread('love', 'Relationship Potential')),
                     _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love_purpose.jpg', () => _openSpread('love', 'Relationship Purpose')),
-                    _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
-                    _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
-                    _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
-                  ]),
-                  
-                  _buildSectionHeader('Horoscope', Icons.calendar_month),
-                  _buildHorizontalList([
-                    _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
-                    _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
-                    _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
-                  ]),
+                          _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
+                          _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
+                          _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
+                        ]),
+                        
+                        _buildSectionHeader('Horoscope', Icons.calendar_month),
+                        _buildHorizontalList([
+                          _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
+                          _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
+                          _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
+                        ]),
 
-                  _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
-                  _buildHorizontalList([
-                    _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
-                    _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
-                    _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
-                    _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
-                  ]),
+                        _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
+                        _buildHorizontalList([
+                          _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
+                          _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
+                          _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
+                          _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
+                        ]),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      extendBody: false,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24.r),
+            topRight: Radius.circular(24.r),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _accentColor.withValues(alpha: 0.25),
+              blurRadius: 15,
+              spreadRadius: 2,
+              offset: const Offset(0, -3),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: _accentColor.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24.r),
+            topRight: Radius.circular(24.r),
+          ),
+          child: CosmicStarfieldBackground(
+            isDark: widget.isDark,
+            starCount: 20, // Add stars to the footer!
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                canvasColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+              ),
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  type: BottomNavigationBarType.fixed,
+                  selectedItemColor: _accentColor,
+                unselectedItemColor: Colors.white60,
+                selectedLabelStyle: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                unselectedLabelStyle: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w500),
+                currentIndex: 0,
+                onTap: (index) {},
+                items: [
+                  BottomNavigationBarItem(
+                    icon: Padding(padding: EdgeInsets.only(bottom: 6.h), child: const Icon(Icons.star_border, size: 24)),
+                    activeIcon: Padding(
+                      padding: EdgeInsets.only(bottom: 6.h), 
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.star, size: 30, color: _accentColor.withValues(alpha: 0.5)),
+                          const Icon(Icons.star, size: 24),
+                        ],
+                      )
+                    ),
+                    label: 'Home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Padding(padding: EdgeInsets.only(bottom: 6.h), child: const Icon(Icons.public, size: 24)),
+                    activeIcon: Padding(
+                      padding: EdgeInsets.only(bottom: 6.h), 
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.public, size: 30, color: _accentColor.withValues(alpha: 0.5)),
+                          const Icon(Icons.public, size: 24),
+                        ],
+                      )
+                    ),
+                    label: 'Readings',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Padding(padding: EdgeInsets.only(bottom: 6.h), child: const Icon(Icons.style_outlined, size: 24)),
+                    activeIcon: Padding(
+                      padding: EdgeInsets.only(bottom: 6.h), 
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.style, size: 30, color: _accentColor.withValues(alpha: 0.5)),
+                          const Icon(Icons.style, size: 24),
+                        ],
+                      )
+                    ),
+                    label: 'Learn',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Padding(padding: EdgeInsets.only(bottom: 6.h), child: const Icon(Icons.smart_toy_outlined, size: 24)),
+                    activeIcon: Padding(
+                      padding: EdgeInsets.only(bottom: 6.h), 
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(Icons.smart_toy, size: 30, color: _accentColor.withValues(alpha: 0.5)),
+                          const Icon(Icons.smart_toy, size: 24),
+                        ],
+                      )
+                    ),
+                    label: 'Chatbot',
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
