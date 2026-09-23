@@ -10,6 +10,8 @@ import 'tarot_deck_selection_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/celestial_animations.dart';
 
+import 'tarot_chatbot_screen.dart';
+
 class TarotDashboardScreen extends StatefulWidget {
   final AppColorPalette currentPalette;
   final bool isDark;
@@ -25,6 +27,8 @@ class TarotDashboardScreen extends StatefulWidget {
 }
 
 class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
+  int _currentIndex = 0;
+
   void _openSpread(String endpoint, String title, {String? question}) {
     int requiredCards = 1;
     if (endpoint == 'three-card') {
@@ -87,10 +91,10 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
 
   Color get _accentColor {
     switch (widget.currentPalette) {
-      case AppColorPalette.sacredSaffron: return const Color(0xFFFFB300); // Amber Gold
-      case AppColorPalette.emeraldDivine: return const Color(0xFFD4AF37); // Metallic Gold
-      case AppColorPalette.royalIndigo: return const Color(0xFFE5C07B); // Champagne Gold
-      case AppColorPalette.midnightCosmic: default: return const Color(0xFFF5D67D); // Soft Star Gold
+      case AppColorPalette.sacredSaffron: return const Color(0xFFFFB300); 
+      case AppColorPalette.emeraldDivine: return const Color(0xFFD4AF37); 
+      case AppColorPalette.royalIndigo: return const Color(0xFFE5C07B); 
+      case AppColorPalette.midnightCosmic: default: return const Color(0xFFF5D67D); 
     }
   }
 
@@ -262,6 +266,154 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
     );
   }
 
+  Widget _buildDashboardTab() {
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 200.h,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
+            ),
+            child: CosmicStarfieldBackground(
+              isDark: widget.isDark,
+              starCount: 36,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CosmicDustBackground(
+                      particleCount: 60,
+                      primaryColor: _accentColor,
+                      accentColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              Center(
+                child: Container(
+                  margin: EdgeInsets.zero,
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _accentColor.withValues(alpha: 0.25),
+                        _accentColor.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(30.r),
+                    border: Border.all(
+                      color: _accentColor.withValues(alpha: 0.7),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _accentColor.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Seek clarity in the cards",
+                        style: GoogleFonts.outfit(
+                          fontSize: 15.sp,
+                          color: _accentLight,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 5.h),
+              Container(
+                decoration: BoxDecoration(
+                  color: _surfaceColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.r),
+                    topRight: Radius.circular(32.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 15,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 20.h, top: 10.h),
+                  child: Column(
+                    children: [
+                      _buildSectionHeader('Get Answers', Icons.auto_awesome),
+                      _buildHorizontalList([
+                        _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_yes_no.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
+                        _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_immediate.jpg', () => _openSpread('single', 'Immediate Question')),
+                        _buildCategoryCard('Will Your Wish Be Fulfilled?', 'assets/images/tarot/tarot_wish.jpg', () => _openSpread('celtic-cross', 'Will Your Wish Be Fulfilled?')),
+                        _buildCategoryCard('Get Help in Making a Decision', 'assets/images/tarot/tarot_decision.jpg', () => _openSpread('three-card', 'Decision Spread')),
+                      ]),
+                      _buildSectionHeader('New Readings', Icons.flare),
+                      _buildHorizontalList([
+                        _buildCategoryCard('Wheel of the Year 2026', 'assets/images/tarot/tarot_wheel.jpg', () => _openSpread('year-ahead', 'Wheel of the Year 2026')),
+                        _buildCategoryCard('Is It a Good Time to Start a New Relationship?', 'assets/images/tarot/tarot_relationship.jpg', () => _openSpread('love', 'New Relationship Timing')),
+                        _buildCategoryCard('What Is My Education Horoscope 2026?', 'assets/images/tarot/tarot_education.jpg', () => _openSpread('single', 'Education 2026')),
+                        _buildCategoryCard('What Should I Do to Achieve My Dream Job?', 'assets/images/tarot/tarot_job.jpg', () => _openSpread('career', 'Dream Job 2026')),
+                      ]),
+                      _buildSectionHeader('Love & Relationship', Icons.favorite),
+                      _buildHorizontalList([
+                        _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love_potential.jpg', () => _openSpread('love', 'Relationship Potential')),
+                        _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love_purpose.jpg', () => _openSpread('love', 'Relationship Purpose')),
+                        _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
+                        _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
+                        _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
+                      ]),
+                      _buildSectionHeader('Horoscope', Icons.calendar_month),
+                      _buildHorizontalList([
+                        _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
+                        _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
+                        _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
+                      ]),
+                      _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
+                      _buildHorizontalList([
+                        _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
+                        _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
+                        _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
+                        _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
+                      ]),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,15 +423,15 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
           blendMode: BlendMode.srcIn,
           shaderCallback: (bounds) => LinearGradient(
             colors: [
-              _accentColor, // Gold
-              _accentLight, // Light Gold
-              _accentColor, // Gold
+              _accentColor, 
+              _accentLight, 
+              _accentColor, 
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(bounds),
           child: Text(
-            'Tarot Mystique', 
+            _currentIndex == 3 ? 'Ask Tarot' : 'Tarot Mystique', 
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.w700,
               fontSize: 26.sp,
@@ -300,7 +452,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         iconTheme: IconThemeData(color: _accentColor),
-        actions: [
+        actions: _currentIndex == 3 ? [] : [
           IconButton(
             icon: Icon(Icons.history, color: _accentColor),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotHistoryScreen())),
@@ -311,158 +463,16 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
           )
         ],
       ),
-      body: Stack(
+      body: IndexedStack(
+        index: _currentIndex,
         children: [
-          // Dynamic cosmic background that matches the global app theme
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 200.h,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
-              ),
-              child: CosmicStarfieldBackground(
-                isDark: widget.isDark,
-                starCount: 36,
-                child: Stack(
-                  children: [
-                    // Cosmic dust for extra magic, no chunky icons
-                    Positioned.fill(
-                      child: CosmicDustBackground(
-                        particleCount: 60,
-                        primaryColor: _accentColor,
-                        accentColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-            SafeArea(
-              bottom: false,
-              child: ListView(
-                padding: EdgeInsets.only(bottom: 40.h, top: 15.h), // Greatly reduced top padding
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  Center(
-                    child: Container(
-                      margin: EdgeInsets.zero, // Removed margin to pack it tightly
-                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            _accentColor.withValues(alpha: 0.25),
-                            _accentColor.withValues(alpha: 0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(30.r),
-                        border: Border.all(
-                          color: _accentColor.withValues(alpha: 0.7),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _accentColor.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
-                          SizedBox(width: 8.w),
-                          Text(
-                            "Seek clarity in the cards",
-                            style: GoogleFonts.outfit(
-                              fontSize: 15.sp,
-                              color: _accentLight, // Softer, premium Gold
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(Icons.auto_awesome, color: _accentColor, size: 16.sp),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 5.h), // Extremely reduced space below the pill
-                  Container(
-                    decoration: BoxDecoration(
-                      color: _surfaceColor, // Dynamic surface color
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(32.r),
-                        topRight: Radius.circular(32.r),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 15,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: 20.h, top: 10.h),
-                      child: Column(
-                        children: [
-                          _buildSectionHeader('Get Answers', Icons.auto_awesome),
-                  _buildHorizontalList([
-                    _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_yes_no.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
-                    _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_immediate.jpg', () => _openSpread('single', 'Immediate Question')),
-                    _buildCategoryCard('Will Your Wish Be Fulfilled?', 'assets/images/tarot/tarot_wish.jpg', () => _openSpread('celtic-cross', 'Will Your Wish Be Fulfilled?')),
-                    _buildCategoryCard('Get Help in Making a Decision', 'assets/images/tarot/tarot_decision.jpg', () => _openSpread('three-card', 'Decision Spread')),
-                  ]),
-
-                  _buildSectionHeader('New Readings', Icons.flare),
-                  _buildHorizontalList([
-                    _buildCategoryCard('Wheel of the Year 2026', 'assets/images/tarot/tarot_wheel.jpg', () => _openSpread('year-ahead', 'Wheel of the Year 2026')),
-                    _buildCategoryCard('Is It a Good Time to Start a New Relationship?', 'assets/images/tarot/tarot_relationship.jpg', () => _openSpread('love', 'New Relationship Timing')),
-                    _buildCategoryCard('What Is My Education Horoscope 2026?', 'assets/images/tarot/tarot_education.jpg', () => _openSpread('single', 'Education 2026')),
-                    _buildCategoryCard('What Should I Do to Achieve My Dream Job?', 'assets/images/tarot/tarot_job.jpg', () => _openSpread('career', 'Dream Job 2026')),
-                  ]),
-
-                  _buildSectionHeader('Love & Relationship', Icons.favorite),
-                  _buildHorizontalList([
-                    _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love_potential.jpg', () => _openSpread('love', 'Relationship Potential')),
-                    _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love_purpose.jpg', () => _openSpread('love', 'Relationship Purpose')),
-                          _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
-                          _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
-                          _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
-                        ]),
-                        
-                        _buildSectionHeader('Horoscope', Icons.calendar_month),
-                        _buildHorizontalList([
-                          _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
-                          _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
-                          _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
-                        ]),
-
-                        _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
-                        _buildHorizontalList([
-                          _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
-                          _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
-                          _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
-                          _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
-                        ]),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildDashboardTab(),
+          Center(child: Text("Readings - Coming Soon", style: GoogleFonts.outfit(color: _accentColor))),
+          Center(child: Text("Learn - Coming Soon", style: GoogleFonts.outfit(color: _accentColor))),
+          TarotChatbotScreen(currentPalette: widget.currentPalette, isDark: widget.isDark),
         ],
       ),
-      extendBody: false,
+      extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
@@ -492,7 +502,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
           ),
           child: CosmicStarfieldBackground(
             isDark: widget.isDark,
-            starCount: 20, // Add stars to the footer!
+            starCount: 20,
             child: Theme(
               data: Theme.of(context).copyWith(
                 canvasColor: Colors.transparent,
@@ -501,14 +511,18 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
               ),
               child: BottomNavigationBar(
                 backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  type: BottomNavigationBarType.fixed,
-                  selectedItemColor: _accentColor,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: _accentColor,
                 unselectedItemColor: Colors.white60,
                 selectedLabelStyle: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.w700, letterSpacing: 0.5),
                 unselectedLabelStyle: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w500),
-                currentIndex: 0,
-                onTap: (index) {},
+                currentIndex: _currentIndex,
+                onTap: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
                 items: [
                   BottomNavigationBarItem(
                     icon: Padding(padding: EdgeInsets.only(bottom: 6.h), child: const Icon(Icons.star_border, size: 24)),
@@ -575,3 +589,4 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
     );
   }
 }
+

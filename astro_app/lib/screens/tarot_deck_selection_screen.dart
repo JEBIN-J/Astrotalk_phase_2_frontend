@@ -13,6 +13,7 @@ class TarotDeckSelectionScreen extends StatefulWidget {
   final int requiredCards;
   final AppColorPalette currentPalette;
   final bool isDark;
+  final bool returnDataInsteadOfNavigate;
 
   const TarotDeckSelectionScreen({
     super.key,
@@ -22,6 +23,7 @@ class TarotDeckSelectionScreen extends StatefulWidget {
     required this.requiredCards,
     this.currentPalette = AppColorPalette.emeraldDivine,
     this.isDark = false,
+    this.returnDataInsteadOfNavigate = false,
   });
 
   @override
@@ -104,13 +106,17 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       final reading = await TarotService().drawSpread(widget.endpoint, question: widget.question, seed: seed);
       
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (_) => TarotReadingScreen(
-            spreadData: reading,
-            currentPalette: widget.currentPalette,
-            isDark: widget.isDark,
-          )
-        ));
+        if (widget.returnDataInsteadOfNavigate) {
+          Navigator.pop(context, reading);
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (_) => TarotReadingScreen(
+              spreadData: reading,
+              currentPalette: widget.currentPalette,
+              isDark: widget.isDark,
+            )
+          ));
+        }
       }
     } catch (e) {
       if (mounted) {

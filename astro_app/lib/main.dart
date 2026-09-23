@@ -4,8 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ScreenUtil.ensureScreenSize();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -53,7 +54,7 @@ class _AbcAppState extends State<AbcApp> {
           theme: AppTheme.getTheme(isDark: false, palette: _palette),
           darkTheme: AppTheme.getTheme(isDark: true, palette: _palette),
           themeMode: _themeMode,
-          builder: (context, child) {
+          builder: (context, widget) {
             final mediaQuery = MediaQuery.of(context);
             return MediaQuery(
               data: mediaQuery.copyWith(
@@ -62,17 +63,19 @@ class _AbcAppState extends State<AbcApp> {
                   maxScaleFactor: 1.25,
                 ),
               ),
-              child: child ?? const SizedBox.shrink(),
+              child: widget ?? const SizedBox.shrink(),
             );
           },
-          home: DashboardScreen(
-            isDark: isDark,
-            onToggleTheme: _toggleTheme,
-            currentPalette: _palette,
-            onSelectPalette: _selectPalette,
-          ),
+          home: child,
         );
       },
+      child: DashboardScreen(
+        isDark: isDark,
+        onToggleTheme: _toggleTheme,
+        currentPalette: _palette,
+        onSelectPalette: _selectPalette,
+      ),
     );
   }
 }
+

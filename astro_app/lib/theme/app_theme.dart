@@ -61,7 +61,7 @@ class AppTheme {
         );
       case AppColorPalette.midnightCosmic:
         return const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF312E81), Color(0xFF1E1B4B)],
+          colors: [Color(0xFF0B1120), Color(0xFF131D36), Color(0xFF0A0F1D)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
