@@ -325,15 +325,21 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
           top: 110.h,
           child: Container(
             decoration: BoxDecoration(
-              color: _surfaceColor, 
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: widget.isDark 
+                  ? [const Color(0xFF1E1E2E), const Color(0xFF13131A)] 
+                  : [const Color(0xFFFFFFFF), const Color(0xFFF0F4F8)],
+              ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(32.r),
                 topRight: Radius.circular(32.r),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 15,
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
               ],
@@ -484,8 +490,8 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.02), // Softer shadow for a cleaner look
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -516,15 +522,7 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 100.h),
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF1E1E2E).withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.5),
-        border: Border(
-          top: BorderSide(
-            color: widget.isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-            width: 1,
-          ),
-        ),
-      ),
+      // Removed background and top border for a seamless float effect
       child: Wrap(
         spacing: 12.w,
         runSpacing: 14.h, // Slightly more vertical spacing between chips
@@ -567,15 +565,7 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 100.h),
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF1E1E2E).withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.5),
-        border: Border(
-          top: BorderSide(
-            color: widget.isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-            width: 1,
-          ),
-        ),
-      ),
+      // Removed background and top border for a seamless float effect
       child: Center(
         child: SizedBox(
           width: 250.w,
