@@ -183,8 +183,8 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20.r),
           child: Container(
-            width: 160.w,
-            height: 180.h,
+            width: 140.w, // Reduced width so the next card peeks in from the right edge
+            height: 160.h, // Adjusted height to maintain aspect ratio
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
@@ -298,7 +298,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
         SafeArea(
           bottom: false,
           child: ListView(
-            padding: EdgeInsets.only(bottom: 40.h, top: 15.h),
+            padding: EdgeInsets.only(bottom: 120.h, top: 15.h), // Increased bottom padding to clear the floating bottom navigation bar
             physics: const BouncingScrollPhysics(),
             children: [
               Center(

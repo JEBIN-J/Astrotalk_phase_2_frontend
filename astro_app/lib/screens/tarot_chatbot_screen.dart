@@ -142,7 +142,7 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
             _currentOptions = _subCategories.keys.toList();
           });
         } else {
-          _addBotMessage("No worries. Let me know when you are ready.");
+          _addBotMessage("Have a nice day");
           setState(() {
             _currentStep = ChatStep.completed;
           });
@@ -187,8 +187,11 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
     String endpoint = 'single';
     int requiredCards = 1;
     
-    if (_selectedCategory == 'About Love and marriage' || _selectedCategory == 'About Career') {
-      endpoint = 'celtic-cross';
+    if (_selectedCategory == 'About Love and marriage') {
+      endpoint = 'love';
+      requiredCards = 3;
+    } else if (_selectedCategory == 'About Career') {
+      endpoint = 'career';
       requiredCards = 3;
     }
 
@@ -342,11 +345,15 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
                   top: false, 
                   child: Column(
                     children: [
-                      SizedBox(height: 20.h),
                       Expanded(
                         child: ListView.builder(
                           controller: _scrollController,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0.h),
+                          padding: EdgeInsets.only(
+                            left: 16.w, 
+                            right: 16.w, 
+                            top: 20.h,
+                            bottom: (_currentOptions.isEmpty && _currentStep != ChatStep.completed) ? 120.h : 20.h, 
+                          ),
                           itemCount: _messages.length,
                           itemBuilder: (context, index) {
                             final msg = _messages[index];
@@ -355,7 +362,9 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
                         ),
                       ),
                       if (_currentOptions.isNotEmpty)
-                        _buildOptionsArea(),
+                        _buildOptionsArea()
+                      else if (_currentStep == ChatStep.completed)
+                        _buildCompletedArea(),
                     ],
                   ),
                 ),
@@ -377,29 +386,37 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
       children: [
         Text(
           "You have chosen",
-          style: GoogleFonts.inter(color: widget.isDark ? Colors.white : Colors.black87, fontSize: 14.sp),
+          style: GoogleFonts.inter(
+            color: widget.isDark ? Colors.white70 : Colors.black54, 
+            fontSize: 13.sp,
+          ),
         ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 12.h),
         ClipRRect(
           borderRadius: BorderRadius.circular(8.r),
           child: Image.network(
             imageUrl,
-            height: 150.h,
+            height: 180.h, // Made the card image a bit larger and more prominent
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) => Image.asset(
               'assets/images/tarot/tarot_back.jpg',
-              height: 150.h,
+              height: 180.h,
               fit: BoxFit.cover,
             ),
           ),
         ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 12.h),
         Text(
           cardName.toString().toUpperCase(),
-          style: GoogleFonts.inter(color: widget.isDark ? Colors.white : Colors.black87, fontSize: 16.sp, fontWeight: FontWeight.bold),
+          style: GoogleFonts.inter(
+            color: widget.isDark ? Colors.white : Colors.black87, 
+            fontSize: 16.sp, 
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 10.h),
+        SizedBox(height: 12.h),
         GestureDetector(
           onTap: () {
             Navigator.push(context, MaterialPageRoute(
@@ -430,11 +447,11 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
       padding: EdgeInsets.only(bottom: 16.h),
       child: Row(
         mainAxisAlignment: msg.isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end, // Align to bottom for standard chat look
         children: [
           if (msg.isBot) ...[
             Container(
-              margin: EdgeInsets.only(right: 12.w),
+              margin: EdgeInsets.only(right: 10.w),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _accentColor,
@@ -447,27 +464,29 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
                   ),
                 ],
               ),
-              padding: EdgeInsets.all(8.w),
-              child: Icon(Icons.smart_toy, color: Colors.black87, size: 20.sp), 
+              padding: EdgeInsets.all(6.w), // Slightly smaller padding
+              child: Icon(Icons.smart_toy, color: Colors.black87, size: 18.sp), 
             ),
           ],
           
           Flexible(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h), // Better padding
               decoration: BoxDecoration(
                 color: msg.isBot 
                     ? (widget.isDark ? const Color(0xFF2A2A40) : Colors.white) 
                     : _accentColor,
-                borderRadius: BorderRadius.circular(18.r).copyWith( 
-                  topLeft: msg.isBot ? Radius.zero : Radius.circular(18.r),
-                  topRight: msg.isBot ? Radius.circular(18.r) : Radius.zero,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.r),
+                  topRight: Radius.circular(20.r),
+                  bottomLeft: msg.isBot ? Radius.zero : Radius.circular(20.r), // Standard chat tail at bottom
+                  bottomRight: msg.isBot ? Radius.circular(20.r) : Radius.zero, // Standard chat tail at bottom
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -476,41 +495,18 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
                   : Text(
                       msg.text,
                       style: GoogleFonts.inter(
-                        color: msg.isBot && widget.isDark ? Colors.white : Colors.black87,
+                        color: msg.isBot 
+                            ? (widget.isDark ? Colors.white : const Color(0xFF1E293B)) // Slate-800 for bot
+                            : const Color(0xFF451A03), // Dark brown/amber for user on gold background
                         fontSize: 15.sp,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: msg.isBot ? FontWeight.w500 : FontWeight.w600, // User text slightly bolder
                         height: 1.4, 
                       ),
                     ),
             ),
           ),
           
-          if (!msg.isBot) ...[
-            Container(
-              margin: EdgeInsets.only(left: 12.w),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _primaryColor, 
-                border: Border.all(color: _accentColor, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              padding: EdgeInsets.all(10.w),
-              child: Text(
-                "You",
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ]
+          // Removed the "You" avatar block completely!
         ],
       ),
     );
@@ -531,36 +527,82 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
       ),
       child: Wrap(
         spacing: 12.w,
-        runSpacing: 12.h,
+        runSpacing: 14.h, // Slightly more vertical spacing between chips
         alignment: WrapAlignment.center, 
         children: _currentOptions.map((option) {
           return GestureDetector(
             onTap: () => _handleOptionSelected(option),
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h), // More breathing room
               decoration: BoxDecoration(
                 color: widget.isDark ? const Color(0xFF2A2A40) : Colors.white,
-                borderRadius: BorderRadius.circular(24.r), 
+                borderRadius: BorderRadius.circular(30.r), // More pill-shaped
                 border: Border.all(color: _accentColor.withValues(alpha: 0.8), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                     color: _accentColor.withValues(alpha: 0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: Text(
                 option,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   color: widget.isDark ? Colors.white : Colors.black87,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
+                  height: 1.2, // Tighter line height for the button text
                 ),
               ),
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCompletedArea() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 100.h),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: widget.isDark ? const Color(0xFF1E1E2E).withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.5),
+        border: Border(
+          top: BorderSide(
+            color: widget.isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Center(
+        child: SizedBox(
+          width: 250.w,
+          height: 50.h,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accentColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              elevation: 4,
+              shadowColor: _accentColor.withValues(alpha: 0.4),
+            ),
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+              });
+              _startChat();
+            },
+            child: Text(
+              "Start New Session",
+              style: GoogleFonts.inter(
+                color: const Color(0xFF451A03), // Strong dark brown for high contrast against gold
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
