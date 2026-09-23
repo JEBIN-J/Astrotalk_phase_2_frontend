@@ -44,16 +44,18 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
   }
 
   void _toggleCard(int index) {
-    if (selectedIndices.contains(index)) {
-      setState(() {
-        selectedIndices.remove(index);
+    if (selectedIndices.contains(index) || selectedIndices.length >= widget.requiredCards) return;
+
+    setState(() {
+      selectedIndices.add(index);
+    });
+
+    if (selectedIndices.length == widget.requiredCards) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && !isLoading) {
+          _confirmSelection();
+        }
       });
-    } else {
-      if (selectedIndices.length < widget.requiredCards) {
-        setState(() {
-          selectedIndices.add(index);
-        });
-      }
     }
   }
 
@@ -86,82 +88,117 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
   Widget _buildCardSpread(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double cardWidth = 55.w;
+        final double cardWidth = 45.w; // Smaller cards so they don't merge
         final double cardHeight = cardWidth * 1.6;
-        final int cardsPerRow = 26;
-        final double availableWidth = constraints.maxWidth - 32.w; // 16 padding on each side
-        final double spacing = (availableWidth - cardWidth) / (cardsPerRow - 1);
+        final int cardsPerRow = 20; 
+        final int numRows = (totalCards / cardsPerRow).ceil();
+        final double availableWidth = constraints.maxWidth - 32.w; 
         
-        // Calculate the total height needed for the 3 rows.
-        // We add extra height for the arc droop at the edges.
-        final double stackHeight = (cardHeight * 3) + 60.h + 50.h;
+        // Calculate the total height needed for the rows
+        final double stackHeight = (cardHeight * numRows) + (35.h * numRows) + 30.h;
+
+        // Sort indices so selected cards are rendered last (on top) in the order they were selected
+        List<int> sortedIndices = List.generate(totalCards, (i) => i);
+        sortedIndices.sort((a, b) {
+          bool aSelected = selectedIndices.contains(a);
+          bool bSelected = selectedIndices.contains(b);
+          if (aSelected && bSelected) {
+            return selectedIndices.indexOf(a).compareTo(selectedIndices.indexOf(b));
+          } else if (aSelected) {
+            return 1; // a is selected, put it after b
+          } else if (bSelected) {
+            return -1; // b is selected, put it after a
+          }
+          return a.compareTo(b); // maintain original order for unselected
+        });
 
         return SizedBox(
           height: stackHeight,
           width: constraints.maxWidth,
           child: Stack(
-            children: List.generate(totalCards, (index) {
+            children: sortedIndices.map((index) {
               final rowIndex = index ~/ cardsPerRow;
-              final indexInRow = index % cardsPerRow;
+                final indexInRow = index % cardsPerRow;
+                
+                final int cardsInThisRow = (rowIndex == numRows - 1) ? (totalCards % cardsPerRow == 0 ? cardsPerRow : totalCards % cardsPerRow) : cardsPerRow;
+                
+                // Use fixed spacing based on the max cards per row, but center each row
+                final double spacing = (availableWidth - cardWidth) / (cardsPerRow - 1);
+                final double rowTotalWidth = cardWidth + (cardsInThisRow - 1) * spacing;
+                final double rowLeftOffset = (constraints.maxWidth - rowTotalWidth) / 2;
 
-              final isSelected = selectedIndices.contains(index);
-              final selectOrder = isSelected ? selectedIndices.indexOf(index) + 1 : null;
+                final isSelected = selectedIndices.contains(index);
+                final selectOrder = isSelected ? selectedIndices.indexOf(index) + 1 : null;
 
-              // Arc Calculation
-              final double centerIndex = (cardsPerRow - 1) / 2;
-              final double distanceFromCenter = indexInRow - centerIndex; // negative to left, positive to right
-              
-              // The ends of the row will drop lower by this amount to create a beautiful fan arc
-              final double arcDrop = (distanceFromCenter * distanceFromCenter) * 0.4.h;
-              
-              // The cards will tilt outwards for the fan effect
-              final double rotationAngle = distanceFromCenter * 0.04; // radians
+                // Arc Calculation
+                final double centerIndex = (cardsInThisRow - 1) / 2;
+                final double distanceFromCenter = indexInRow - centerIndex; 
+                
+                // Gentler arc and rotation
+                final double arcDrop = (distanceFromCenter * distanceFromCenter) * 0.25.h;
+                final double rotationAngle = distanceFromCenter * 0.035; 
 
-              // The final target position for this card
-              final double targetLeft = 16.w + (indexInRow * spacing);
-              final double targetTop = 10.h + (rowIndex * (cardHeight + 25.h)) + arcDrop;
+                final double targetLeft = rowLeftOffset + (indexInRow * spacing);
+                final double targetTop = 10.h + (rowIndex * (cardHeight + 35.h)) + arcDrop;
 
-              // Staggered animation values (each card starts a bit later)
-              final double startDelay = (index / totalCards) * 0.7;
-              final double endDelay = (startDelay + 0.3).clamp(0.0, 1.0);
-              final Curve cardCurve = Interval(startDelay, endDelay, curve: Curves.easeOutBack);
+                // Staggered animation values (each card starts a bit later)
+                final double startDelay = (index / totalCards) * 0.7;
+                final double endDelay = (startDelay + 0.3).clamp(0.0, 1.0);
+                final Curve cardCurve = Interval(startDelay, endDelay, curve: Curves.easeOutBack);
 
-              return AnimatedBuilder(
-                animation: _animController,
-                builder: (context, child) {
-                  final double animValue = cardCurve.transform(_animController.value);
-                  
-                  // Cards fly in from the bottom center of the screen
-                  final double startLeft = (constraints.maxWidth / 2) - (cardWidth / 2);
-                  final double startTop = constraints.maxHeight + 200.h;
-                  
-                  final currentLeft = startLeft + (targetLeft - startLeft) * animValue;
-                  
-                  // If selected, lift it up by 30 pixels AND remove the arc drop so it pops out straight
-                  final selectionLift = isSelected ? (30.h + arcDrop) : 0.0;
-                  final currentTop = (startTop + (targetTop - startTop) * animValue) - selectionLift;
+                return AnimatedBuilder(
+                  key: ValueKey(index), // Key ensures AnimatedPositioned tracks the exact card when list order changes
+                  animation: _animController,
+                  builder: (context, child) {
+                    final double animValue = cardCurve.transform(_animController.value);
+                    
+                    // Cards fly in from the bottom center of the screen
+                    final double startLeft = (constraints.maxWidth / 2) - (cardWidth / 2);
+                    final double startTop = constraints.maxHeight + 200.h;
+                    
+                    final double unselectedLeft = startLeft + (targetLeft - startLeft) * animValue;
+                    final double unselectedTop = (startTop + (targetTop - startTop) * animValue);
 
-                  // Selected cards face perfectly straight
-                  final currentRotation = isSelected ? 0.0 : (rotationAngle * animValue);
+                    // Button position roughly (adjusted to go fully down into the button)
+                    double buttonTargetLeft = (constraints.maxWidth / 2) - (cardWidth / 2);
+                    double buttonTargetTop = constraints.maxHeight - 40.h; 
 
-                  return Positioned(
-                    left: currentLeft,
-                    top: currentTop,
-                    child: Transform.rotate(
-                      angle: currentRotation,
-                      alignment: Alignment.bottomCenter,
-                      child: Opacity(
-                        opacity: animValue.clamp(0.0, 1.0),
-                        child: child,
+                    if (isSelected && selectOrder != null) {
+                      // Fan out the collected cards slightly so they form a visible stacked deck
+                      buttonTargetLeft += ((selectOrder - 1) * 8.w) - 20.w; 
+                      buttonTargetTop -= ((selectOrder - 1) * 1.5.h);
+                    }
+
+                    final bool shouldAnimateFlight = _animController.isCompleted;
+
+                    return AnimatedPositioned(
+                      duration: shouldAnimateFlight ? const Duration(milliseconds: 800) : Duration.zero,
+                      curve: Curves.easeInOutBack, // Jumps up high before swooshing down!
+                      left: isSelected ? buttonTargetLeft : unselectedLeft,
+                      top: isSelected ? buttonTargetTop : unselectedTop,
+                      child: AnimatedRotation(
+                        turns: (isSelected && selectOrder != null) 
+                            ? (((selectOrder - 1) * 0.015) - 0.04) // Slight rotation fan for collected cards
+                            : (rotationAngle * animValue) / (2 * 3.14159265),
+                        duration: shouldAnimateFlight ? const Duration(milliseconds: 800) : Duration.zero,
+                        curve: Curves.easeInOut,
+                        alignment: Alignment.bottomCenter,
+                        child: AnimatedScale(
+                          scale: isSelected ? 0.22 : 1.0, // Made slightly larger so the stack is visible
+                          duration: shouldAnimateFlight ? const Duration(milliseconds: 800) : Duration.zero,
+                          curve: Curves.easeInBack, // Grows larger before shrinking!
+                        child: AnimatedOpacity(
+                          opacity: animValue.clamp(0.0, 1.0), // Keeps it solid, no ghosting
+                          duration: Duration.zero,
+                          child: child,
+                        ),
                       ),
                     ),
                   );
                 },
                 child: GestureDetector(
                   onTap: () => _toggleCard(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
+                  child: Container(
                     width: cardWidth,
                     height: cardHeight,
                     decoration: BoxDecoration(
@@ -171,44 +208,21 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                         fit: BoxFit.cover,
                       ),
                       border: Border.all(
-                        color: isSelected ? Colors.amber : Colors.transparent,
-                        width: 2.w,
+                        color: const Color(0xFFD4AF37).withValues(alpha: 0.9), // Elegant gold border
+                        width: 1.w,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: isSelected ? Colors.amber.withOpacity(0.8) : Colors.black.withOpacity(0.6),
-                          blurRadius: isSelected ? 12 : 5,
-                          offset: Offset(0, isSelected ? 0 : 3),
-                          spreadRadius: isSelected ? 2 : 0,
+                          color: Colors.black.withValues(alpha: 0.4), 
+                          blurRadius: 4,
+                          offset: const Offset(-2, 2), // Subtle shadow to the left
                         )
                       ],
                     ),
-                    child: isSelected
-                        ? Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Center(
-                              child: Container(
-                                padding: EdgeInsets.all(6.w),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.amber,
-                                  boxShadow: [BoxShadow(color: Colors.amber.withValues(alpha: 0.5), blurRadius: 5)],
-                                ),
-                                child: Text(
-                                  '$selectOrder',
-                                  style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black),
-                                ),
-                              ),
-                            ),
-                          )
-                        : null,
                   ),
                 ),
               );
-            }),
+            }).toList(),
           ),
         );
       }
@@ -221,57 +235,71 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.title, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(widget.title, style: GoogleFonts.outfit(color: const Color(0xFF1B5E20), fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFF1B5E20)),
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF021B10), // Dark green
-          image: DecorationImage(
-            image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              const Color(0xFF021B10).withValues(alpha: 0.85), // Dark green tint to let cards pop
-              BlendMode.darken,
-            ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFF5FBF6), // Very light Green
+              const Color(0xFFFFFCED), // Very light Gold
+              const Color(0xFFF9FDF9), // Very light Green
+            ],
           ),
         ),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(16.h),
-                child: Text(
-                  'Select ${widget.requiredCards} Card${widget.requiredCards > 1 ? 's' : ''}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 28.sp, 
-                    fontWeight: FontWeight.bold, 
-                    color: Colors.amber,
-                    shadows: [
-                      Shadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 4),
-                    ],
+        child: Stack(
+          children: [
+            // Subtle gold background designs
+            Positioned(
+              top: -50.h,
+              right: -50.w,
+              child: Icon(Icons.star_outline_rounded, size: 250.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+            ),
+            Positioned(
+              top: 200.h,
+              left: -40.w,
+              child: Icon(Icons.auto_awesome, size: 150.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
+            ),
+            Positioned(
+              bottom: 150.h,
+              right: -30.w,
+              child: Icon(Icons.brightness_4_outlined, size: 180.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+            ),
+            SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
+                    child: Text(
+                      (widget.requiredCards - selectedIndices.length) > 0 
+                          ? 'Select ${widget.requiredCards - selectedIndices.length} More Card${(widget.requiredCards - selectedIndices.length) > 1 ? 's' : ''}'
+                          : 'Revealing Cards...',
+                      style: GoogleFonts.outfit(
+                        fontSize: 24.sp, 
+                        fontWeight: FontWeight.bold, 
+                        color: const Color(0xFF1B5E20),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Text(
-                  'Focus on your question:\n"${widget.question}"',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16.sp, 
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.8), 
-                    fontStyle: FontStyle.italic,
-                    shadows: [
-                      Shadow(color: Colors.black.withValues(alpha: 0.6), blurRadius: 4),
-                    ],
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Text(
+                      'Focus on your question:\n"${widget.question}"',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14.sp, 
+                        color: const Color(0xFFB8860B), 
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(height: 10.h),
+                  SizedBox(height: 5.h),
               
               // Spread Area
               Expanded(
@@ -285,8 +313,8 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      const Color(0xFF021B10),
-                      const Color(0xFF021B10).withValues(alpha: 0.7),
+                      const Color(0xFFF9FDF9),
+                      const Color(0xFFF9FDF9).withValues(alpha: 0.8),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.6, 1.0],
@@ -299,23 +327,23 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     height: 56.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber,
-                        disabledBackgroundColor: Colors.white.withValues(alpha: 0.1),
+                        backgroundColor: const Color(0xFF1B5E20),
+                        disabledBackgroundColor: const Color(0xFF1B5E20).withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                         elevation: 5,
-                        shadowColor: Colors.amber.withValues(alpha: 0.5),
+                        shadowColor: const Color(0xFF1B5E20).withValues(alpha: 0.3),
                       ),
                       onPressed: selectedIndices.length == widget.requiredCards && !isLoading
                           ? _confirmSelection
                           : null,
                       child: isLoading 
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
                           : Text(
                               'Reveal Reading',
                               style: GoogleFonts.outfit(
                                 fontSize: 18.sp, 
                                 fontWeight: FontWeight.bold, 
-                                color: selectedIndices.length == widget.requiredCards ? Colors.black : Colors.white54
+                                color: selectedIndices.length == widget.requiredCards ? const Color(0xFFFFD700) : Colors.white70
                               ),
                             ),
                     ),
@@ -324,6 +352,8 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
               ),
             ],
           ),
+        ),
+          ],
         ),
       ),
     );

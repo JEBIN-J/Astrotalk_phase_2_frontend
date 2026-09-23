@@ -17,27 +17,54 @@ class TarotCardDetailsScreen extends StatelessWidget {
     final keywords = cardData['keywords'] as List<dynamic>? ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF021B10), // Dark green background
+      backgroundColor: const Color(0xFF022C22), // Deep emerald background
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 18.sp, letterSpacing: 1.2)),
+        title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 18.sp, letterSpacing: 1.2, color: const Color(0xFFF5D67D))),
         backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFFF5D67D),
+        foregroundColor: const Color(0xFFF5D67D), // Bright gold
         elevation: 0,
         centerTitle: true,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              const Color(0xFF021B10).withValues(alpha: 0.85), // Dark green tint
-              BlendMode.darken,
+      body: Stack(
+        children: [
+          // 1. Cosmic Background Base with Deep Emerald Tint
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  const Color(0xFF022C22).withValues(alpha: 0.85),
+                  BlendMode.darken,
+                ),
+              ),
             ),
           ),
-        ),
-        child: SafeArea(
+          // 2. Subtle Gold Glow Overlay (Radial)
+          Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.2,
+                colors: [
+                  const Color(0xFFF5D67D).withValues(alpha: 0.15), // Subtle gold center glow
+                  Colors.transparent, // Fading out
+                ],
+              ),
+            ),
+          ),
+          // 3. Stardust Texture for extra premium feel
+          Positioned.fill(
+            child: Image.network(
+              'https://www.transparenttextures.com/patterns/stardust.png',
+              repeat: ImageRepeat.repeat,
+              color: const Color(0xFFF5D67D).withValues(alpha: 0.05), // Very subtle stardust
+              colorBlendMode: BlendMode.modulate,
+            ),
+          ),
+          // 4. Main Content
+          SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.only(bottom: 40.h),
             child: Column(
@@ -61,10 +88,10 @@ class TarotCardDetailsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFF021B10),
                             borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4), width: 2.0),
+                            border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.5), width: 2.0),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFF5D67D).withValues(alpha: 0.1), blurRadius: 30, spreadRadius: 5),
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.7), blurRadius: 20, offset: const Offset(0, 15))
+                              BoxShadow(color: const Color(0xFFF5D67D).withValues(alpha: 0.15), blurRadius: 40, spreadRadius: 5),
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 15))
                             ]
                           ),
                           child: ClipRRect(
@@ -135,9 +162,9 @@ class TarotCardDetailsScreen extends StatelessWidget {
                             children: keywords.map((k) => Container(
                               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF5D67D).withValues(alpha: 0.15),
+                                color: const Color(0xFF064E3B).withValues(alpha: 0.6), // Deep green glass
                                 borderRadius: BorderRadius.circular(30.r),
-                                border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.5)),
+                                border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
                               ),
                               child: Text(
                                 k.toString().toUpperCase(), 
@@ -158,7 +185,8 @@ class TarotCardDetailsScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -221,12 +249,12 @@ class TarotCardDetailsScreen extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(24.w),
           decoration: BoxDecoration(
-            color: const Color(0xFF021B10).withValues(alpha: 0.6),
+            color: const Color(0xFF022C22).withValues(alpha: 0.6), // Deep green glass
             borderRadius: BorderRadius.circular(20.r),
             border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
