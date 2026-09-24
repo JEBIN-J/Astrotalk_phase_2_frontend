@@ -109,7 +109,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Padding(
-      padding: EdgeInsets.only(top: 32.h, bottom: 16.h, left: 20.w, right: 20.w),
+      padding: EdgeInsets.only(top: 16.h, bottom: 16.h, left: 20.w, right: 20.w),
       child: Row(
         children: [
           Container(
@@ -255,16 +255,7 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
     );
   }
 
-  Widget _buildHorizontalList(List<Widget> cards) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Row(
-        children: cards,
-      ),
-    );
-  }
+
 
   Widget _buildDashboardTab() {
     return Stack(
@@ -369,40 +360,60 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
                   child: Column(
                     children: [
                       _buildSectionHeader('Get Answers', Icons.auto_awesome),
-                      _buildHorizontalList([
-                        _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_yes_no.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
-                        _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_immediate.jpg', () => _openSpread('single', 'Immediate Question')),
-                        _buildCategoryCard('Will Your Wish Be Fulfilled?', 'assets/images/tarot/tarot_wish.jpg', () => _openSpread('celtic-cross', 'Will Your Wish Be Fulfilled?')),
-                        _buildCategoryCard('Get Help in Making a Decision', 'assets/images/tarot/tarot_decision.jpg', () => _openSpread('three-card', 'Decision Spread')),
-                      ]),
+                      _HorizontalSection(
+                        primaryColor: _primaryColor,
+                        accentColor: _accentColor,
+                        cards: [
+                          _buildCategoryCard('Is the answer Yes or No?', 'assets/images/tarot/tarot_yes_no.jpg', () => _openSpread('yes-no', 'Is the answer Yes or No?')),
+                          _buildCategoryCard('Immediate Question on Your Mind', 'assets/images/tarot/tarot_immediate.jpg', () => _openSpread('single', 'Immediate Question')),
+                          _buildCategoryCard('Will Your Wish Be Fulfilled?', 'assets/images/tarot/tarot_wish.jpg', () => _openSpread('celtic-cross', 'Will Your Wish Be Fulfilled?')),
+                          _buildCategoryCard('Get Help in Making a Decision', 'assets/images/tarot/tarot_decision.jpg', () => _openSpread('three-card', 'Decision Spread')),
+                        ],
+                      ),
                       _buildSectionHeader('New Readings', Icons.flare),
-                      _buildHorizontalList([
-                        _buildCategoryCard('Wheel of the Year 2026', 'assets/images/tarot/tarot_wheel.jpg', () => _openSpread('year-ahead', 'Wheel of the Year 2026')),
-                        _buildCategoryCard('Is It a Good Time to Start a New Relationship?', 'assets/images/tarot/tarot_relationship.jpg', () => _openSpread('love', 'New Relationship Timing')),
-                        _buildCategoryCard('What Is My Education Horoscope 2026?', 'assets/images/tarot/tarot_education.jpg', () => _openSpread('single', 'Education 2026')),
-                        _buildCategoryCard('What Should I Do to Achieve My Dream Job?', 'assets/images/tarot/tarot_job.jpg', () => _openSpread('career', 'Dream Job 2026')),
-                      ]),
+                      _HorizontalSection(
+                        primaryColor: _primaryColor,
+                        accentColor: _accentColor,
+                        cards: [
+                          _buildCategoryCard('Wheel of the Year 2026', 'assets/images/tarot/tarot_wheel.jpg', () => _openSpread('year-ahead', 'Wheel of the Year 2026')),
+                          _buildCategoryCard('Is It a Good Time to Start a New Relationship?', 'assets/images/tarot/tarot_relationship.jpg', () => _openSpread('love', 'New Relationship Timing')),
+                          _buildCategoryCard('What Is My Education Horoscope 2026?', 'assets/images/tarot/tarot_education.jpg', () => _openSpread('single', 'Education 2026')),
+                          _buildCategoryCard('What Should I Do to Achieve My Dream Job?', 'assets/images/tarot/tarot_job.jpg', () => _openSpread('career', 'Dream Job 2026')),
+                        ],
+                      ),
                       _buildSectionHeader('Love & Relationship', Icons.favorite),
-                      _buildHorizontalList([
-                        _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love_potential.jpg', () => _openSpread('love', 'Relationship Potential')),
-                        _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love_purpose.jpg', () => _openSpread('love', 'Relationship Purpose')),
-                        _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
-                        _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
-                        _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
-                      ]),
+                      _HorizontalSection(
+                        primaryColor: _primaryColor,
+                        accentColor: _accentColor,
+                        cards: [
+                          _buildCategoryCard('Does Your Relationship Have Potential?', 'assets/images/tarot/tarot_love_potential.jpg', () => _openSpread('love', 'Relationship Potential')),
+                          _buildCategoryCard('What Is the Purpose of Your Relationship?', 'assets/images/tarot/tarot_love_purpose.jpg', () => _openSpread('love', 'Relationship Purpose')),
+                          _buildCategoryCard('Find Out About Your Love Life', 'assets/images/tarot/tarot_love_life.jpg', () => _openSpread('love', 'Love Life Overview')),
+                          _buildCategoryCard('Complete Relationship Analysis', 'assets/images/tarot/tarot_love_analysis.jpg', () => _openSpread('celtic-cross', 'Complete Relationship Analysis')),
+                          _buildCategoryCard('Sneak Peek Inside Your Dating Life', 'assets/images/tarot/tarot_love_dating.jpg', () => _openSpread('three-card', 'Dating Life')),
+                        ],
+                      ),
                       _buildSectionHeader('Horoscope', Icons.calendar_month),
-                      _buildHorizontalList([
-                        _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
-                        _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
-                        _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
-                      ]),
+                      _HorizontalSection(
+                        primaryColor: _primaryColor,
+                        accentColor: _accentColor,
+                        cards: [
+                          _buildCategoryCard('Your Monthly Tarot Reading', 'assets/images/tarot/tarot_horoscope_monthly.jpg', () => _openSpread('celtic-cross', 'Monthly Reading')),
+                          _buildCategoryCard('Your Birthday Tarot Reading', 'assets/images/tarot/tarot_horoscope_birthday.jpg', () => _openSpread('year-ahead', 'Birthday Reading')),
+                          _buildCategoryCard('Your 2026 Tarot Reading', 'assets/images/tarot/tarot_horoscope_2026.jpg', () => _openSpread('year-ahead', '2026 Reading')),
+                        ],
+                      ),
                       _buildSectionHeader('Dreams & Ambitions', Icons.cloud_outlined),
-                      _buildHorizontalList([
-                        _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
-                        _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
-                        _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
-                        _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
-                      ]),
+                      _HorizontalSection(
+                        primaryColor: _primaryColor,
+                        accentColor: _accentColor,
+                        cards: [
+                          _buildCategoryCard('What Does Life Have in Store for You?', 'assets/images/tarot/tarot_dreams_life.jpg', () => _openSpread('celtic-cross', 'Life in Store')),
+                          _buildCategoryCard('The Past, Present and Future', 'assets/images/tarot/tarot_dreams_past.jpg', () => _openSpread('three-card', 'Past, Present and Future')),
+                          _buildCategoryCard('What Is Your Life\'s Purpose?', 'assets/images/tarot/tarot_dreams_purpose.jpg', () => _openSpread('celtic-cross', 'Life Purpose')),
+                          _buildCategoryCard('Is Travel on the Cards for You?', 'assets/images/tarot/tarot_dreams_travel.jpg', () => _openSpread('three-card', 'Travel Reading')),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -590,3 +601,116 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
   }
 }
 
+class _HorizontalSection extends StatefulWidget {
+  final List<Widget> cards;
+  final Color primaryColor;
+  final Color accentColor;
+
+  const _HorizontalSection({
+    required this.cards,
+    required this.primaryColor,
+    required this.accentColor,
+  });
+
+  @override
+  State<_HorizontalSection> createState() => _HorizontalSectionState();
+}
+
+class _HorizontalSectionState extends State<_HorizontalSection> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isAtEnd = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    
+    final atEnd = currentScroll >= maxScroll - 20;
+    if (atEnd != _isAtEnd) {
+      setState(() {
+        _isAtEnd = atEnd;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleViewAllTap() {
+    if (!_scrollController.hasClients) return;
+    
+    if (_isAtEnd) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.centerRight,
+      children: [
+        SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
+            children: widget.cards,
+          ),
+        ),
+        Positioned(
+          right: 12.w,
+          child: InkWell(
+            onTap: _handleViewAllTap,
+            borderRadius: BorderRadius.circular(30.r),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30.r),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: widget.primaryColor.withValues(alpha: 0.95),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: widget.accentColor, width: 1.5.w),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _isAtEnd ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                    color: widget.accentColor,
+                    size: 22.sp,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

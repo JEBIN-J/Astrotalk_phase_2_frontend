@@ -383,7 +383,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                           ? _confirmSelection
                           : null,
                       child: isLoading 
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                          ? SizedBox(height: 24.h, width: 24.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
                           : Text(
                               'Reveal Reading',
                               style: GoogleFonts.outfit(

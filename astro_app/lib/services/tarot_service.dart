@@ -25,7 +25,7 @@ class TarotService {
         if (question != null) 'question': question,
         if (seed != null) 'seed': seed,
       }),
-    );
+    ).timeout(const Duration(seconds: 60));
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
