@@ -303,27 +303,37 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                           width: double.infinity,
                           height: double.infinity,
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.asset(
-                                'assets/images/tarot/tarot_back.jpg',
-                                fit: BoxFit.cover,
-                                color: Colors.black.withValues(alpha: 0.5),
-                                colorBlendMode: BlendMode.darken,
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to local asset if backend is unavailable
+                            final localAssetPath = 'assets/images/tarot/cards/${card['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
+                            return Image.asset(
+                              localAssetPath,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Stack(
+                                fit: StackFit.expand,
                                 children: [
-                                  Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
-                                  if (isReversed) ...[
-                                    SizedBox(height: 12.h),
-                                    Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
-                                  ]
+                                  Image.asset(
+                                    'assets/images/tarot/tarot_back.jpg',
+                                    fit: BoxFit.cover,
+                                    color: Colors.black.withValues(alpha: 0.5),
+                                    colorBlendMode: BlendMode.darken,
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
+                                      if (isReversed) ...[
+                                        SizedBox(height: 12.h),
+                                        Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFFEF4444), size: 28.sp),
+                                      ]
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       )
                   else

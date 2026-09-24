@@ -9,7 +9,10 @@ class TarotHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Reading History')),
+      appBar: AppBar(
+        title: Text('Reading History', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: TarotService().getHistory(),
         builder: (context, snapshot) {
@@ -17,11 +20,28 @@ class TarotHistoryScreen extends StatelessWidget {
             return Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Failed to connect to history server.'));
           }
           final records = snapshot.data ?? [];
           if (records.isEmpty) {
-            return Center(child: Text('No previous readings found.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: 80, color: Colors.grey.withValues(alpha: 0.5)),
+                  SizedBox(height: 16),
+                  Text(
+                    'No previous readings found.',
+                    style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Your recent readings will appear here.',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(

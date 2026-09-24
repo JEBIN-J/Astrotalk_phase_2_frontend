@@ -11,6 +11,7 @@ import '../theme/app_theme.dart';
 import '../widgets/celestial_animations.dart';
 
 import 'tarot_chatbot_screen.dart';
+import 'tarot_learn_module_screen.dart';
 
 class TarotDashboardScreen extends StatefulWidget {
   final AppColorPalette currentPalette;
@@ -255,7 +256,449 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
     );
   }
 
+  Widget _buildReadingsTab() {
+    return Stack(
+      children: [
+        // 1. Same dark starry header background as the Home tab
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 250.h,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
+            ),
+            child: CosmicStarfieldBackground(
+              isDark: widget.isDark,
+              starCount: 36,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CosmicDustBackground(
+                      particleCount: 60,
+                      primaryColor: _accentColor,
+                      accentColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        // 2. Same scrolling white/surface container as the Home tab
+        SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.only(bottom: 120.h, top: 80.h),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: _surfaceColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.r),
+                    topRight: Radius.circular(32.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 15,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 30.h, bottom: 20.h, left: 16.w, right: 16.w),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Deep Mystical Readings",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? _accentLight : _primaryColor,
+                          shadows: [
+                            Shadow(color: (widget.isDark ? _accentLight : _primaryColor).withValues(alpha: 0.2), blurRadius: 4),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        "Select a spread for your real-time guidance",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14.sp,
+                          color: widget.isDark ? Colors.white70 : _accentColor,
+                        ),
+                      ),
+                      SizedBox(height: 30.h),
+                      _buildReadingOptionTile(
+                        title: "Yes or No Reading",
+                        subtitle: "Quick, immediate answers to burning questions",
+                        icon: Icons.check_circle_outline,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('yes-no', 'Yes or No Reading'),
+                      ),
+                      _buildReadingOptionTile(
+                        title: "Daily Tarot",
+                        subtitle: "Your energy and guidance for the day",
+                        icon: Icons.wb_sunny_outlined,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('single', 'Daily Tarot'),
+                      ),
+                      _buildReadingOptionTile(
+                        title: "Past, Present, Future",
+                        subtitle: "Understand the flow of your life's journey",
+                        icon: Icons.timeline,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('three-card', 'Past, Present, Future'),
+                      ),
+                      _buildReadingOptionTile(
+                        title: "Love & Relationships",
+                        subtitle: "Deep dive into romantic connections",
+                        icon: Icons.favorite_border,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('love', 'Love Reading'),
+                      ),
+                      _buildReadingOptionTile(
+                        title: "Career & Finances",
+                        subtitle: "Pathways to success and abundance",
+                        icon: Icons.work_outline,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('career', 'Career Reading'),
+                      ),
+                      _buildReadingOptionTile(
+                        title: "Celtic Cross",
+                        subtitle: "The ultimate 10-card deep dive analysis",
+                        icon: Icons.grid_view,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openSpread('celtic-cross', 'Celtic Cross'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildReadingOptionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.black.withValues(alpha: 0.4) : Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: accentColor.withValues(alpha: widget.isDark ? 0.3 : 0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: widget.isDark ? 0.05 : 0.15),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20.r),
+          splashColor: accentColor.withValues(alpha: 0.2),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: widget.isDark ? 0.1 : 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: accentColor, size: 28.sp),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.sp,
+                          color: widget.isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: accentColor.withValues(alpha: 0.5)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLearnTab() {
+    return Stack(
+      children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 250.h,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.getHeaderGradient(widget.currentPalette, widget.isDark),
+            ),
+            child: CosmicStarfieldBackground(
+              isDark: widget.isDark,
+              starCount: 36,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CosmicDustBackground(
+                      particleCount: 60,
+                      primaryColor: _accentColor,
+                      accentColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: EdgeInsets.only(bottom: 120.h, top: 80.h),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: _surfaceColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.r),
+                    topRight: Radius.circular(32.r),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 15,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 30.h, bottom: 20.h, left: 16.w, right: 16.w),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Tarot Wisdom",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? _accentLight : _primaryColor,
+                          shadows: [
+                            Shadow(color: (widget.isDark ? _accentLight : _primaryColor).withValues(alpha: 0.2), blurRadius: 4),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Text(
+                        "Master the art and secrets of the cards",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14.sp,
+                          color: widget.isDark ? Colors.white70 : _accentColor,
+                        ),
+                      ),
+                      SizedBox(height: 30.h),
+                      _buildLearnOptionTile(
+                        title: "Tarot Basics",
+                        subtitle: "Start your journey and learn the fundamentals",
+                        icon: Icons.menu_book,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("Tarot Basics", "Start your journey and learn the fundamentals", [
+                          {"title": "What is Tarot?", "body": "Tarot is a deck of 78 cards used for divination, self-reflection, and spiritual guidance. It is not about predicting a fixed future, but rather understanding the energies present in your life and how you can navigate them."},
+                          {"title": "The Deck Structure", "body": "A standard Tarot deck consists of two main parts:\n- The Major Arcana (22 cards) representing significant life lessons and karmic influences.\n- The Minor Arcana (56 cards) reflecting the trials, tribulations, and everyday experiences."},
+                          {"title": "How to Read", "body": "Begin by relaxing and focusing your mind on a question. Shuffle the cards while holding your intention, draw the cards, and use your intuition combined with the traditional meanings to interpret the story they tell."}
+                        ]),
+                      ),
+                      _buildLearnOptionTile(
+                        title: "The Major Arcana",
+                        subtitle: "The 22 cards of life's karmic and spiritual lessons",
+                        icon: Icons.star_border,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("The Major Arcana", "The 22 cards of life's karmic and spiritual lessons", [
+                          {"title": "The Fool's Journey", "body": "The Major Arcana follows 'The Fool' (Card 0) through a journey of spiritual awakening, starting from innocent beginnings and culminating with 'The World' (Card 21), representing completion and cosmic harmony."},
+                          {"title": "Key Archetypes", "body": "Cards like The Magician, The High Priestess, The Emperor, and The Lovers represent powerful universal archetypes. When these cards appear in a reading, they point to significant, life-altering themes rather than passing daily concerns."},
+                        ]),
+                      ),
+                      _buildLearnOptionTile(
+                        title: "The Minor Arcana",
+                        subtitle: "The 56 cards reflecting the trials of daily life",
+                        icon: Icons.style_outlined,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("The Minor Arcana", "The 56 cards reflecting the trials of daily life", [
+                          {"title": "The Four Suits", "body": "The Minor Arcana is divided into four suits, each corresponding to an element and an aspect of life:\n- Cups (Water): Emotions, relationships, and intuition.\n- Wands (Fire): Passion, energy, and action.\n- Swords (Air): Intellect, thoughts, and conflict.\n- Pentacles (Earth): Material wealth, career, and physical health."},
+                          {"title": "Numerology in the Minors", "body": "Each suit contains cards numbered Ace through 10, plus four Court Cards (Page, Knight, Queen, King). The numbers have intrinsic meanings (e.g., Aces represent new beginnings, Tens represent culmination)."}
+                        ]),
+                      ),
+                      _buildLearnOptionTile(
+                        title: "Reading Spreads",
+                        subtitle: "How to lay out cards and interpret their connections",
+                        icon: Icons.auto_awesome_mosaic_outlined,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("Reading Spreads", "How to lay out cards and interpret their connections", [
+                          {"title": "One-Card Pull", "body": "The simplest spread. Great for a daily focus, a quick 'yes or no' answer, or sudden inspiration."},
+                          {"title": "Three-Card Spread", "body": "A versatile spread typically representing Past, Present, and Future, or Mind, Body, and Spirit."},
+                          {"title": "The Celtic Cross", "body": "A comprehensive 10-card spread that provides deep insight into a specific situation, covering underlying influences, past events, future outcomes, and the querent's environment."}
+                        ]),
+                      ),
+                      _buildLearnOptionTile(
+                        title: "Astrology & Tarot",
+                        subtitle: "Discover the cosmic links between planets and cards",
+                        icon: Icons.public,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("Astrology & Tarot", "Discover the cosmic links between planets and cards", [
+                          {"title": "Zodiac Correspondences", "body": "Many Tarot cards are intrinsically linked to astrological signs. For example, The Emperor is tied to Aries, The Lovers to Gemini, and Death to Scorpio."},
+                          {"title": "Planetary Influences", "body": "The planets also rule the cards. The Sun, Moon, and Star cards are obvious planetary links, but others exist as well, such as The Tower being ruled by Mars, bringing sudden, forceful change."}
+                        ]),
+                      ),
+                      _buildLearnOptionTile(
+                        title: "Intuition Mastery",
+                        subtitle: "Trust your inner voice during a reading",
+                        icon: Icons.visibility_outlined,
+                        accentColor: widget.isDark ? _accentColor : _primaryColor,
+                        onTap: () => _openLearnModule("Intuition Mastery", "Trust your inner voice during a reading", [
+                          {"title": "Look Beyond the Book", "body": "While traditional meanings are a great foundation, your personal reaction to the imagery on the card is equally valid. Notice what symbols catch your eye first."},
+                          {"title": "Connecting the Cards", "body": "True mastery comes from seeing the story between the cards. Do the figures face each other? Do the elements clash or harmonize? Let your intuition weave the narrative."}
+                        ]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLearnOptionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.black.withValues(alpha: 0.4) : Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: accentColor.withValues(alpha: widget.isDark ? 0.3 : 0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: widget.isDark ? 0.05 : 0.15),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20.r),
+          splashColor: accentColor.withValues(alpha: 0.2),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: widget.isDark ? 0.1 : 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: accentColor, size: 28.sp),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.outfit(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.sp,
+                          color: widget.isDark ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: accentColor.withValues(alpha: 0.5)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openLearnModule(String title, String subtitle, List<Map<String, String>> sections) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TarotLearnModuleScreen(
+          title: title,
+          subtitle: subtitle,
+          sections: sections,
+          currentPalette: widget.currentPalette,
+          primaryColor: _primaryColor,
+          isDark: widget.isDark,
+          accentColor: widget.isDark ? _accentColor : _primaryColor,
+        ),
+      ),
+    );
+  }
 
   Widget _buildDashboardTab() {
     return Stack(
@@ -468,18 +911,14 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
             icon: Icon(Icons.history, color: _accentColor),
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotHistoryScreen())),
           ),
-          IconButton(
-            icon: Icon(Icons.library_books, color: _accentColor),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TarotLibraryScreen())),
-          )
         ],
       ),
       body: IndexedStack(
         index: _currentIndex,
         children: [
           _buildDashboardTab(),
-          Center(child: Text("Readings - Coming Soon", style: GoogleFonts.outfit(color: _accentColor))),
-          Center(child: Text("Learn - Coming Soon", style: GoogleFonts.outfit(color: _accentColor))),
+          _buildReadingsTab(),
+          _buildLearnTab(),
           TarotChatbotScreen(currentPalette: widget.currentPalette, isDark: widget.isDark),
         ],
       ),

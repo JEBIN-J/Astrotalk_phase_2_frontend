@@ -143,18 +143,26 @@ class TarotCardDetailsScreen extends StatelessWidget {
                                     child: Image.network(
                                       '${AstroApiService.baseUrl.replaceAll('/api/v1', '')}/static/${cardData['image'] ?? 'assets/tarot/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.webp'}?v=3',
                                       fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) => Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          Image.asset(
-                                            'assets/images/tarot/tarot_back.jpg',
-                                            fit: BoxFit.cover,
-                                            color: Colors.black.withValues(alpha: 0.5),
-                                            colorBlendMode: BlendMode.darken,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        // Fallback to local asset if backend is unavailable
+                                        final localAssetPath = 'assets/images/tarot/cards/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
+                                        return Image.asset(
+                                          localAssetPath,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) => Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Image.asset(
+                                                'assets/images/tarot/tarot_back.jpg',
+                                                fit: BoxFit.cover,
+                                                color: Colors.black.withValues(alpha: 0.5),
+                                                colorBlendMode: BlendMode.darken,
+                                              ),
+                                              Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
+                                            ],
                                           ),
-                                          Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
-                                        ],
-                                      ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -228,11 +236,18 @@ class TarotCardDetailsScreen extends StatelessWidget {
     
     // 1. Base Meaning (Prioritize conversational text)
     String baseMeaning = isReversed 
-        ? (data['meaning_rev'] ?? data['reversed_meaning'] ?? data['desc'] ?? '') 
-        : (data['meaning_up'] ?? data['desc'] ?? data['upright_meaning'] ?? '');
+        ? (data['meaning_rev'] ?? data['reversed_meaning'] ?? '') 
+        : (data['meaning_up'] ?? data['upright_meaning'] ?? '');
     
     if (baseMeaning.isNotEmpty) {
       interpretation += baseMeaning;
+    }
+
+    // Include the general description if available
+    String desc = data['desc'] ?? '';
+    if (desc.isNotEmpty) {
+      if (interpretation.isNotEmpty) interpretation += "\n\n";
+      interpretation += desc;
     }
     // 2. Add Life Areas seamlessly
     String lifeAreas = "";

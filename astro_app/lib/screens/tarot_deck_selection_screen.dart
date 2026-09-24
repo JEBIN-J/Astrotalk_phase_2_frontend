@@ -123,7 +123,13 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
         setState(() {
           isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to connect to the divine realm. Please check your connection and try again.'),
+            backgroundColor: Colors.redAccent.shade700,
+            behavior: SnackBarBehavior.floating,
+          )
+        );
       }
     }
   }

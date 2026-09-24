@@ -11,7 +11,7 @@ class CosmicStarfieldBackground extends StatefulWidget {
   const CosmicStarfieldBackground({
     super.key,
     required this.child,
-    this.starCount = 45,
+    this.starCount = 120,
     this.isDark = true,
   });
 
@@ -35,8 +35,8 @@ class _CosmicStarfieldBackgroundState extends State<CosmicStarfieldBackground> w
     _stars = List.generate(widget.starCount, (index) {
       final bool isGiant = rand.nextDouble() > 0.85; // 15% chance to be a huge bubble
       final double bubbleRadius = isGiant 
-          ? (6.0.r + rand.nextDouble() * 12.0.r) // 6 to 18 radius for giants
-          : (1.0.r + rand.nextDouble() * 5.0.r); // 1 to 6 normal
+          ? (10.0.r + rand.nextDouble() * 25.0.r) // 10 to 35 radius for giants (MUCH bigger)
+          : (1.0.r + rand.nextDouble() * 8.0.r); // 1 to 9 normal
           
       return _StarParticle(
         x: rand.nextDouble(),
@@ -130,7 +130,7 @@ class _StarfieldPainter extends CustomPainter {
         
       if (star.isBlurred) {
         // Blur amount scales with radius for large out-of-focus bokeh bubbles
-        final blurSigma = star.radius > 5.0 ? star.radius * 0.5 : 2.5;
+        final blurSigma = star.radius > 5.0 ? star.radius * 0.8 : 3.0;
         paint.maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma);
       }
 
@@ -692,7 +692,7 @@ class CosmicDustBackground extends StatefulWidget {
 
   const CosmicDustBackground({
     super.key,
-    this.particleCount = 60,
+    this.particleCount = 150,
     this.primaryColor = Colors.white,
     this.accentColor = const Color(0xFFB0C4DE),
   });
@@ -729,9 +729,9 @@ class _CosmicDustBackgroundState extends State<CosmicDustBackground>
         size = rng.nextDouble() * 12 + 8;
         opacity = rng.nextDouble() * 0.25 + 0.10;
       } else {
-        // 15% are large soft glow orbs  28–55px
-        size = rng.nextDouble() * 27 + 28;
-        opacity = rng.nextDouble() * 0.08 + 0.04;
+        // 15% are large soft glow orbs  35–80px
+        size = rng.nextDouble() * 45 + 35;
+        opacity = rng.nextDouble() * 0.12 + 0.05;
       }
 
       return _DustParticle(
@@ -832,20 +832,16 @@ class _DustPainter extends CustomPainter {
         final paint = Paint()..color = color;
         canvas.drawCircle(Offset(px, py), p.size / 2, paint);
       } else if (p.size <= 22) {
-        // Medium — soft filled circle with radial fade
+        // Medium — soft filled circle with true blur
         final paint = Paint()
-          ..shader = RadialGradient(colors: [
-            color,
-            color.withValues(alpha: 0.0),
-          ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: p.size));
+          ..color = color
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.size * 0.5);
         canvas.drawCircle(Offset(px, py), p.size, paint);
       } else {
-        // Large — very soft glow orb (double layer)
+        // Large — very soft bokeh orb
         final outerPaint = Paint()
-          ..shader = RadialGradient(colors: [
-            color.withValues(alpha: alpha * 0.6),
-            color.withValues(alpha: 0.0),
-          ]).createShader(Rect.fromCircle(center: Offset(px, py), radius: p.size));
+          ..color = color.withValues(alpha: alpha * 0.8)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.size * 0.7);
         canvas.drawCircle(Offset(px, py), p.size, outerPaint);
 
         final innerPaint = Paint()

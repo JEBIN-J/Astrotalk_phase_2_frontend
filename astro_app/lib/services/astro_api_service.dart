@@ -25,7 +25,7 @@ class AstroApiService {
         return 'http://127.0.0.1:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://192.168.29.78:5000/api/v1';
+    return 'http://127.0.0.1:5000/api/v1';
   }
 
   static String get baseUrl {
