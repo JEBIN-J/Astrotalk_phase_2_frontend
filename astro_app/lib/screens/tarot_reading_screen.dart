@@ -278,7 +278,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       child: Column(
         children: [
           Expanded(
-            flex: 5,
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -362,92 +361,88 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
               ),
             ),
           ),
-          Expanded(
-            flex: 6,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 16.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+          Container(
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  pos['position_name'].toUpperCase(),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600, 
+                    fontSize: 11.sp, 
+                    color: const Color(0xFFF5D67D),
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                if (card['yes_no_meaning'] != null && widget.spreadData['spread_type'] == 'yes_no') ...[
                   Text(
-                    pos['position_name'].toUpperCase(),
+                    '${card['yes_no_meaning']}'.toUpperCase(),
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600, 
-                      fontSize: 11.sp, 
-                      color: const Color(0xFFF5D67D),
-                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24.sp,
+                      color: '${card['yes_no_meaning']}'.toLowerCase().contains('yes') 
+                          ? const Color(0xFF4ADE80) 
+                          : ('${card['yes_no_meaning']}'.toLowerCase().contains('no') 
+                              ? const Color(0xFFF87171) 
+                              : const Color(0xFFFCD34D)),
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  if (card['yes_no_meaning'] != null && widget.spreadData['spread_type'] == 'yes_no') ...[
-                    Text(
-                      '${card['yes_no_meaning']}'.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24.sp,
-                        color: '${card['yes_no_meaning']}'.toLowerCase().contains('yes') 
-                            ? const Color(0xFF4ADE80) 
-                            : ('${card['yes_no_meaning']}'.toLowerCase().contains('no') 
-                                ? const Color(0xFFF87171) 
-                                : const Color(0xFFFCD34D)),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                  ],
-                  Text(
-                    '${card['name']}'.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 18.sp, 
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 12.h),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(
-                        _getMeaning(card),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(
-                          fontSize: 14.sp, 
-                          color: Colors.white.withValues(alpha: 0.9),
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF064E3B).withValues(alpha: 0.6), 
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'View Details',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12.sp, 
-                            color: const Color(0xFFF5D67D), 
-                            fontWeight: FontWeight.w600
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Icon(Icons.arrow_forward_rounded, size: 14.sp, color: const Color(0xFFF5D67D)),
-                      ],
-                    ),
-                  ),
                 ],
-              ),
+                Text(
+                  '${card['name']}'.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 18.sp, 
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  _getMeaning(card),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14.sp, 
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.5,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 16.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF064E3B).withValues(alpha: 0.6), 
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View Details',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12.sp, 
+                          color: const Color(0xFFF5D67D), 
+                          fontWeight: FontWeight.w600
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Icon(Icons.arrow_forward_rounded, size: 14.sp, color: const Color(0xFFF5D67D)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           )
         ],

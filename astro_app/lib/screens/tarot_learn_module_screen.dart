@@ -35,11 +35,11 @@ class TarotLearnModuleScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: themeColor),
+        iconTheme: const IconThemeData(color: AppTheme.celestialGold),
         title: Text(
           title,
           style: GoogleFonts.outfit(
-            color: themeColor,
+            color: AppTheme.celestialGold,
             fontWeight: FontWeight.bold,
           ),
         ),

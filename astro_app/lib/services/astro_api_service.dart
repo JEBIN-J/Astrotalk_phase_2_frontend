@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:5000/api/v1';
+      return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://127.0.0.1:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://127.0.0.1:5000/api/v1';
+    return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1';
   }
 
   static String get baseUrl {
@@ -51,7 +51,7 @@ class AstroApiService {
     return headers;
   }
 
-  static const Duration _timeout = Duration(seconds: 7);
+  static const Duration _timeout = Duration(seconds: 30); // Increased for hosted backend (cold start + ngrok overhead)
 
   // =========================================================================
   // 1. HEALTH & CONNECTIVITY CHECK
@@ -468,7 +468,7 @@ class AstroApiService {
     });
 
     try {
-      final res = await http.post(uri, headers: _headers, body: body).timeout(const Duration(seconds: 15));
+      final res = await http.post(uri, headers: _headers, body: body).timeout(const Duration(seconds: 45));
       if (res.statusCode == 200) {
         return jsonDecode(res.body) as Map<String, dynamic>;
       } else {

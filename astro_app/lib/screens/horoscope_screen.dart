@@ -334,6 +334,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           _dynamicRunningDasha = null;
           _dashaInitialFetchDone = false;
         });
+
+        // Show error if all API responses came back empty (timeout or backend offline)
+        if (futures[0].isEmpty && futures[1].isEmpty && futures[2].isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚠️ Backend not responding. Check ngrok URL or increase timeout.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+
         // If Dasha tab is currently visible, re-fetch immediately
         if (_tabController.index == 1) {
           _fetchDynamicDasha(_selectedDashaType);
@@ -342,9 +354,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingKundli = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ API Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     }
   }
+
 
   void _stepTime(bool forward) {
     setState(() {

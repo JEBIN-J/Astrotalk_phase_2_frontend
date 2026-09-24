@@ -54,10 +54,15 @@ class TarotCardDetailsScreen extends StatelessWidget {
     final keywords = cardData['keywords'] as List<dynamic>? ?? [];
 
     return Scaffold(
-      backgroundColor: _primaryColor, // Deep theme background
+      backgroundColor: _primaryColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp, letterSpacing: 1.2, color: _primaryColor)),
+        title: Text(cardData['name'] ?? 'Card Details',
+            style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+                letterSpacing: 1.2,
+                color: _primaryColor)),
         backgroundColor: Colors.transparent,
         foregroundColor: _primaryColor,
         elevation: 0,
@@ -78,200 +83,350 @@ class TarotCardDetailsScreen extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Subtle gold background designs
             Positioned(
-              top: -50.h,
-              right: -50.w,
-              child: Icon(Icons.star_outline_rounded, size: 250.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+              top: -50.h, right: -50.w,
+              child: Icon(Icons.star_outline_rounded,
+                  size: 250.sp,
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
             ),
             Positioned(
-              top: 200.h,
-              left: -40.w,
-              child: Icon(Icons.auto_awesome, size: 150.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
+              top: 200.h, left: -40.w,
+              child: Icon(Icons.auto_awesome,
+                  size: 150.sp,
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
             ),
             Positioned(
-              bottom: 150.h,
-              right: -30.w,
-              child: Icon(Icons.brightness_4_outlined, size: 180.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+              bottom: 150.h, right: -30.w,
+              child: Icon(Icons.brightness_4_outlined,
+                  size: 180.sp,
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
             ),
-            // 4. Main Content
             SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: 40.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
-                  child: Column(
-                    children: [
-                      Text(
-                        positionName.toUpperCase(),
-                        style: GoogleFonts.outfit(fontSize: 14.sp, color: _primaryColor, fontWeight: FontWeight.bold, letterSpacing: 2.0),
-                      ),
-                      SizedBox(height: 24.h),
-                      // Image placeholder/render
-                      Hero(
-                        tag: 'card_${cardData['card_id']}',
-                        child: Container(
-                          height: 380.h,
-                          width: 230.w,
-                          decoration: BoxDecoration(
-                            color: _primaryColor,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: _primaryColor.withValues(alpha: 0.5), width: 2.0),
-                            boxShadow: [
-                              BoxShadow(color: _primaryColor.withValues(alpha: 0.15), blurRadius: 40, spreadRadius: 5),
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 15))
-                            ]
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18.r),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Image.network(
-                                  'https://www.transparenttextures.com/patterns/stardust.png',
-                                  repeat: ImageRepeat.repeat,
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  colorBlendMode: BlendMode.modulate,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(4.w),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(14.r),
-                                    child: Image.network(
-                                      '${AstroApiService.baseUrl.replaceAll('/api/v1', '')}/static/${cardData['image'] ?? 'assets/tarot/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.webp'}?v=3',
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        // Fallback to local asset if backend is unavailable
-                                        final localAssetPath = 'assets/images/tarot/cards/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
-                                        return Image.asset(
-                                          localAssetPath,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (context, error, stackTrace) => Stack(
-                                            fit: StackFit.expand,
-                                            children: [
-                                              Image.asset(
-                                                'assets/images/tarot/tarot_back.jpg',
-                                                fit: BoxFit.cover,
-                                                color: Colors.black.withValues(alpha: 0.5),
-                                                colorBlendMode: BlendMode.darken,
-                                              ),
-                                              Icon(Icons.style_outlined, size: 72.sp, color: const Color(0xFFF5D67D)),
-                                            ],
-                                          ),
-                                        );
-                                      },
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: 40.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Card image + title ──────────────────────────────────
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                          vertical: 20.h, horizontal: 16.w),
+                      child: Column(
+                        children: [
+                          Text(positionName.toUpperCase(),
+                              style: GoogleFonts.outfit(
+                                  fontSize: 14.sp,
+                                  color: _primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2.0)),
+                          SizedBox(height: 24.h),
+                          Hero(
+                            tag: 'card_${cardData['card_id']}',
+                            child: Container(
+                              height: 380.h,
+                              width: 230.w,
+                              decoration: BoxDecoration(
+                                color: _primaryColor,
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(
+                                    color: _primaryColor.withValues(alpha: 0.5),
+                                    width: 2.0),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color:
+                                          _primaryColor.withValues(alpha: 0.15),
+                                      blurRadius: 40,
+                                      spreadRadius: 5),
+                                  BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 15))
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(18.r),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Image.network(
+                                      'https://www.transparenttextures.com/patterns/stardust.png',
+                                      repeat: ImageRepeat.repeat,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.05),
+                                      colorBlendMode: BlendMode.modulate,
                                     ),
-                                  ),
+                                    Padding(
+                                      padding: EdgeInsets.all(4.w),
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(14.r),
+                                        child: Image.network(
+                                          '${AstroApiService.baseUrl.replaceAll('/api/v1', '')}/static/${cardData['image'] ?? 'assets/tarot/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.webp'}?v=3',
+                                          fit: BoxFit.contain,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            final localAssetPath =
+                                                'assets/images/tarot/cards/${cardData['name'].toString().toLowerCase().replaceAll(' ', '_')}.jpg';
+                                            return Image.asset(
+                                              localAssetPath,
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (context, error,
+                                                      stackTrace) =>
+                                                  Stack(
+                                                fit: StackFit.expand,
+                                                children: [
+                                                  Image.asset(
+                                                    'assets/images/tarot/tarot_back.jpg',
+                                                    fit: BoxFit.cover,
+                                                    color: Colors.black
+                                                        .withValues(alpha: 0.5),
+                                                    colorBlendMode:
+                                                        BlendMode.darken,
+                                                  ),
+                                                  Icon(
+                                                      Icons.style_outlined,
+                                                      size: 72.sp,
+                                                      color: const Color(
+                                                          0xFFF5D67D)),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
+                          SizedBox(height: 32.h),
+                          Text(
+                            '${cardData['name']}',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                                fontSize: 32.sp,
+                                fontWeight: FontWeight.bold,
+                                color: _primaryColor,
+                                height: 1.1),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            orientation,
+                            style: GoogleFonts.outfit(
+                                fontSize: 18.sp,
+                                color: _primaryColor.withValues(alpha: 0.8),
+                                fontStyle: FontStyle.italic),
+                          ),
+                          // arcana / suit badge row
+                          if (cardData['arcana_type'] != null ||
+                              cardData['suit'] != null) ...[
+                            SizedBox(height: 10.h),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (cardData['arcana_type'] != null)
+                                  _badge(
+                                      '${cardData['arcana_type']} Arcana'),
+                                if (cardData['suit'] != null)
+                                  _badge('${cardData['suit']}'),
+                                if (cardData['number'] != null)
+                                  _badge('Card ${cardData['number']}'),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
-                      SizedBox(height: 32.h),
-                      Text(
-                        '${cardData['name']}',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(fontSize: 32.sp, fontWeight: FontWeight.bold, color: _primaryColor, height: 1.1),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        orientation,
-                        style: GoogleFonts.outfit(fontSize: 18.sp, color: _primaryColor.withValues(alpha: 0.8), fontStyle: FontStyle.italic),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (keywords.isNotEmpty) ...[
-                        SizedBox(height: 12.h),
-                        Center(
+                    ),
+
+                    // ── Keywords ────────────────────────────────────────────
+                    if (keywords.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Center(
                           child: Wrap(
                             spacing: 10.w,
                             runSpacing: 10.h,
                             alignment: WrapAlignment.center,
-                            children: keywords.map((k) => Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                              decoration: BoxDecoration(
-                                color: _primaryColor.withValues(alpha: 0.1), // Theme colored glass
-                                borderRadius: BorderRadius.circular(30.r),
-                                border: Border.all(color: _primaryColor.withValues(alpha: 0.4)),
-                              ),
-                              child: Text(
-                                k.toString().toUpperCase(), 
-                                style: GoogleFonts.outfit(color: _primaryColor, fontWeight: FontWeight.w600, fontSize: 12.sp, letterSpacing: 1.0)
-                              ),
-                            )).toList(),
+                            children: keywords
+                                .map((k) => Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16.w, vertical: 8.h),
+                                      decoration: BoxDecoration(
+                                        color: _primaryColor
+                                            .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            BorderRadius.circular(30.r),
+                                        border: Border.all(
+                                            color: _primaryColor
+                                                .withValues(alpha: 0.4)),
+                                      ),
+                                      child: Text(
+                                        k.toString().toUpperCase(),
+                                        style: GoogleFonts.outfit(
+                                            color: _primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12.sp,
+                                            letterSpacing: 1.0),
+                                      ),
+                                    ))
+                                .toList(),
                           ),
                         ),
-                        SizedBox(height: 36.h),
-                      ],
-                      
-                      _buildSectionTitle('Detailed Interpretation'),
-                      _buildGlassCard(_generateDetailedInterpretation(cardData, isReversed)),
-                      SizedBox(height: 28.h),
-                    ],
-                  ),
+                      ),
+
+                    SizedBox(height: 28.h),
+
+                    // ── Single combined interpretation card ─────────────────
+                    Builder(builder: (context) {
+                      final combined = _buildCombinedInterpretation(cardData, isReversed);
+                      if (combined.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle('Detailed Interpretation'),
+                            _buildGlassCard(combined),
+                            SizedBox(height: 28.h),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
-  String _generateDetailedInterpretation(Map<String, dynamic> data, bool isReversed) {
+  /// Builds one info section — only renders if [value] is non-null & non-empty.
+  Widget _buildRealSection({
+    required IconData icon,
+    required String title,
+    required String? value,
+  }) {
+    if (value == null || value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(bottom: 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: _primaryColor, size: 18.sp),
+              SizedBox(width: 8.w),
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.outfit(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.bold,
+                    color: _primaryColor,
+                    letterSpacing: 1.5),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(18.w),
+            decoration: BoxDecoration(
+              color: _primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                  color: _primaryColor.withValues(alpha: 0.25), width: 1.2),
+            ),
+            child: Text(
+              value.trim(),
+              style: GoogleFonts.outfit(
+                  fontSize: 15.sp,
+                  height: 1.65,
+                  color: _primaryColor.withValues(alpha: 0.92),
+                  letterSpacing: 0.2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Small badge chip for arcana/suit/number.
+  Widget _badge(String label) => Container(
+        margin: EdgeInsets.only(right: 8.w),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+        decoration: BoxDecoration(
+          color: _primaryColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20.r),
+          border:
+              Border.all(color: _primaryColor.withValues(alpha: 0.35)),
+        ),
+        child: Text(label,
+            style: GoogleFonts.outfit(
+                fontSize: 11.sp,
+                color: _primaryColor,
+                fontWeight: FontWeight.w600)),
+      );
+
+  /// Joins non-null, non-empty strings with a newline separator.
+  String? _joinNonNull(List<String?> values) {
+    final filtered =
+        values.where((v) => v != null && v.trim().isNotEmpty).cast<String>().toList();
+    return filtered.isEmpty ? null : filtered.join('\n\n');
+  }
+
+
+
+  /// Builds one combined interpretation string from REAL backend fields only.
+  /// Ignores the repetitive auto-generated placeholders and uses the handcrafted meanings.
+  String _buildCombinedInterpretation(Map<String, dynamic> data, bool isReversed) {
     String interpretation = "";
+
+    // 1. Core Meaning (Prioritize handcrafted 'meaning_upright' over templated 'upright_meaning')
+    String coreMeaning = isReversed
+        ? (data['meaning_reversed']?.toString() ?? data['reversed_meaning']?.toString() ?? '')
+        : (data['meaning_upright']?.toString() ?? data['upright_meaning']?.toString() ?? data['core_meaning']?.toString() ?? '');
     
-    // 1. Base Meaning (Prioritize conversational text)
-    String baseMeaning = isReversed 
-        ? (data['meaning_rev'] ?? data['reversed_meaning'] ?? '') 
-        : (data['meaning_up'] ?? data['upright_meaning'] ?? '');
-    
-    if (baseMeaning.isNotEmpty) {
-      interpretation += baseMeaning;
+    if (coreMeaning.trim().isNotEmpty) {
+      interpretation += coreMeaning.trim();
     }
 
-    // Include the general description if available
-    String desc = data['desc'] ?? '';
-    if (desc.isNotEmpty) {
+    // 2. Full description (handcrafted lore/imagery)
+    String desc = data['description']?.toString() ?? data['card_description']?.toString() ?? '';
+    if (desc.trim().isNotEmpty) {
       if (interpretation.isNotEmpty) interpretation += "\n\n";
-      interpretation += desc;
+      interpretation += desc.trim();
     }
-    // 2. Add Life Areas seamlessly
-    String lifeAreas = "";
-    if (data['love_meaning'] != null) lifeAreas += "${data['love_meaning']} ";
-    if (data['career_meaning'] != null) lifeAreas += "${data['career_meaning']} ";
-    if (data['finance_meaning'] != null) lifeAreas += "${data['finance_meaning']} ";
-    if (data['spiritual_meaning'] != null) lifeAreas += "${data['spiritual_meaning']} ";
-    
-    if (lifeAreas.trim().isNotEmpty) {
-      interpretation += "\n\n" + lifeAreas.trim();
+
+    // (We intentionally skip the templated fields like love_meaning, career_meaning, 
+    // past_meaning, etc., because they are just auto-generated repetitive placeholders
+    // that repeat the same keywords over and over, ruining the readability.)
+
+    // 3. Yes/No Answer
+    String yesNo = data['yes_no_meaning']?.toString() ?? '';
+    if (yesNo.trim().isNotEmpty) {
+      if (interpretation.isNotEmpty) interpretation += "\n\n";
+      interpretation += "✦ Answer: ${yesNo.trim()}";
     }
-    
-    // 3. Add Advice
-    if (data['advice'] != null) {
-      interpretation += "\n\nGuidance: ${data['advice']}";
+
+    // 4. Advice / Guidance
+    String advice = data['advice']?.toString() ?? '';
+    if (advice.trim().isNotEmpty) {
+      if (interpretation.isNotEmpty) interpretation += "\n\n";
+      interpretation += "✦ Guidance: ${advice.trim()}";
     }
-    
-    // 4. Fallback if absolutely everything is missing
-    if (interpretation.isEmpty) {
-      interpretation = data['context_meaning'] ?? data['core_meaning'] ?? "The cosmos keeps its secrets for now.";
+
+    // Fallback if everything is somehow missing
+    if (interpretation.trim().isEmpty) {
+      return "The cosmos holds the wisdom of ${data['name'] ?? 'this card'} close for now. Sit in quiet reflection and the meaning will reveal itself.";
     }
-    
+
     return interpretation;
   }
+
 
   Widget _buildSectionTitle(String title) {
     return Padding(
