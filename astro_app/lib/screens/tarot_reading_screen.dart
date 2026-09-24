@@ -66,30 +66,50 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
         title: Text(
           '$spreadType READING', 
           style: GoogleFonts.outfit(
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFFF5D67D),
+            fontWeight: FontWeight.bold,
+            color: _primaryColor,
             fontSize: 18.sp,
             letterSpacing: 1.2,
           )
         ),
         backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFFF5D67D),
+        foregroundColor: _primaryColor,
         elevation: 0,
         centerTitle: true,
+        iconTheme: IconThemeData(color: _primaryColor),
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: _primaryColor, // Fallback color
-          image: DecorationImage(
-            image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
-            fit: BoxFit.cover,
-            colorFilter: widget.currentPalette == AppColorPalette.emeraldDivine 
-                ? ColorFilter.mode(const Color(0xFF021B10).withValues(alpha: 0.85), BlendMode.darken)
-                : ColorFilter.mode(_primaryColor.withValues(alpha: 0.85), BlendMode.darken),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              _surfaceColor,
+              widget.isDark ? _surfaceColor : const Color(0xFFFFFCED),
+              _surfaceColor,
+            ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
+        child: Stack(
+          children: [
+            // Subtle gold background designs
+            Positioned(
+              top: -50.h,
+              right: -50.w,
+              child: Icon(Icons.star_outline_rounded, size: 250.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+            ),
+            Positioned(
+              top: 200.h,
+              left: -40.w,
+              child: Icon(Icons.auto_awesome, size: 150.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
+            ),
+            Positioned(
+              bottom: 150.h,
+              right: -30.w,
+              child: Icon(Icons.brightness_4_outlined, size: 180.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+            ),
+            SafeArea(
+              child: Center(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
           child: Column(
@@ -147,7 +167,9 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
             }),
           ),
         ),
+        ),
       ),
+      ],
       ),
       ),
     );

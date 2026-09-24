@@ -85,7 +85,18 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
   void _startChat() async {
     // Initial delay for realism
     await Future.delayed(const Duration(milliseconds: 500));
-    _addBotMessage("Good Evening !");
+    
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = "Good Morning!";
+    } else if (hour < 17) {
+      greeting = "Good Afternoon!";
+    } else {
+      greeting = "Good Evening!";
+    }
+    
+    _addBotMessage(greeting);
     
     await Future.delayed(const Duration(milliseconds: 800));
     _addBotMessage("Are you ready for tarot reading?");
@@ -189,10 +200,10 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
     
     if (_selectedCategory == 'About Love and marriage') {
       endpoint = 'love';
-      requiredCards = 3;
+      requiredCards = 5;
     } else if (_selectedCategory == 'About Career') {
       endpoint = 'career';
-      requiredCards = 3;
+      requiredCards = 5;
     }
 
     final readingResult = await Navigator.push(context, MaterialPageRoute(
@@ -226,12 +237,22 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
     for (var pos in positions) {
       final card = pos['card'];
       final cardName = card['name'];
-      
-      String meaning = card['meaning_up'] ?? card['desc'] ?? 'A mysterious force surrounds this card.';
-      if (card['orientation'] == 'Reversed' && card['meaning_rev'] != null) {
-        meaning = card['meaning_rev'];
+      bool isReversed = card['orientation'] == 'Reversed';
+      String baseMeaning = isReversed 
+          ? (card['reversed_meaning'] ?? card['meaning_rev'] ?? '') 
+          : (card['upright_meaning'] ?? card['meaning_up'] ?? '');
+          
+      String specificMeaning = "";
+      if (_selectedCategory == 'About Career' && card['career_meaning'] != null) {
+        specificMeaning = card['career_meaning'] + "\n\n";
+      } else if (_selectedCategory == 'About Love and marriage' && card['love_meaning'] != null) {
+        specificMeaning = card['love_meaning'] + "\n\n";
       }
-      
+
+      String meaning = specificMeaning + baseMeaning;
+      if (meaning.trim().isEmpty) {
+        meaning = card['context_meaning'] ?? card['core_meaning'] ?? card['desc'] ?? 'A mysterious force surrounds this card.';
+      }
       _addUserMessage(cardName);
       await Future.delayed(const Duration(milliseconds: 600));
 

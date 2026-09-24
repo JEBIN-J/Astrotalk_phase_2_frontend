@@ -57,50 +57,45 @@ class TarotCardDetailsScreen extends StatelessWidget {
       backgroundColor: _primaryColor, // Deep theme background
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 18.sp, letterSpacing: 1.2, color: const Color(0xFFF5D67D))),
+        title: Text(cardData['name'] ?? 'Card Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18.sp, letterSpacing: 1.2, color: _primaryColor)),
         backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFFF5D67D), // Bright gold
+        foregroundColor: _primaryColor,
         elevation: 0,
         centerTitle: true,
+        iconTheme: IconThemeData(color: _primaryColor),
       ),
-      body: Stack(
-        children: [
-          // 1. Cosmic Background Base with Deep Emerald Tint
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: const AssetImage('assets/images/tarot/tarot_cosmic_bg.jpg'),
-                fit: BoxFit.cover,
-                colorFilter: currentPalette == AppColorPalette.emeraldDivine 
-                    ? ColorFilter.mode(const Color(0xFF022C22).withValues(alpha: 0.85), BlendMode.darken)
-                    : ColorFilter.mode(_primaryColor.withValues(alpha: 0.85), BlendMode.darken),
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              _surfaceColor,
+              isDark ? _surfaceColor : const Color(0xFFFFFCED),
+              _surfaceColor,
+            ],
           ),
-          // 2. Subtle Gold Glow Overlay (Radial)
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.2,
-                colors: [
-                  const Color(0xFFF5D67D).withValues(alpha: 0.15), // Subtle gold center glow
-                  Colors.transparent, // Fading out
-                ],
-              ),
+        ),
+        child: Stack(
+          children: [
+            // Subtle gold background designs
+            Positioned(
+              top: -50.h,
+              right: -50.w,
+              child: Icon(Icons.star_outline_rounded, size: 250.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
             ),
-          ),
-          // 3. Stardust Texture for extra premium feel
-          Positioned.fill(
-            child: Image.network(
-              'https://www.transparenttextures.com/patterns/stardust.png',
-              repeat: ImageRepeat.repeat,
-              color: const Color(0xFFF5D67D).withValues(alpha: 0.05), // Very subtle stardust
-              colorBlendMode: BlendMode.modulate,
+            Positioned(
+              top: 200.h,
+              left: -40.w,
+              child: Icon(Icons.auto_awesome, size: 150.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.12)),
             ),
-          ),
-          // 4. Main Content
-          SafeArea(
+            Positioned(
+              bottom: 150.h,
+              right: -30.w,
+              child: Icon(Icons.brightness_4_outlined, size: 180.sp, color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
+            ),
+            // 4. Main Content
+            SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.only(bottom: 40.h),
             child: Column(
@@ -112,7 +107,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                     children: [
                       Text(
                         positionName.toUpperCase(),
-                        style: GoogleFonts.outfit(fontSize: 14.sp, color: const Color(0xFFF5D67D), fontWeight: FontWeight.bold, letterSpacing: 2.0),
+                        style: GoogleFonts.outfit(fontSize: 14.sp, color: _primaryColor, fontWeight: FontWeight.bold, letterSpacing: 2.0),
                       ),
                       SizedBox(height: 24.h),
                       // Image placeholder/render
@@ -124,10 +119,10 @@ class TarotCardDetailsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: _primaryColor,
                             borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.5), width: 2.0),
+                            border: Border.all(color: _primaryColor.withValues(alpha: 0.5), width: 2.0),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFF5D67D).withValues(alpha: 0.15), blurRadius: 40, spreadRadius: 5),
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 15))
+                              BoxShadow(color: _primaryColor.withValues(alpha: 0.15), blurRadius: 40, spreadRadius: 5),
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 15))
                             ]
                           ),
                           child: ClipRRect(
@@ -172,12 +167,12 @@ class TarotCardDetailsScreen extends StatelessWidget {
                       Text(
                         '${cardData['name']}',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.outfit(fontSize: 32.sp, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
+                        style: GoogleFonts.outfit(fontSize: 32.sp, fontWeight: FontWeight.bold, color: _primaryColor, height: 1.1),
                       ),
                       SizedBox(height: 8.h),
                       Text(
                         orientation,
-                        style: GoogleFonts.outfit(fontSize: 18.sp, color: const Color(0xFFF5D67D), fontStyle: FontStyle.italic),
+                        style: GoogleFonts.outfit(fontSize: 18.sp, color: _primaryColor.withValues(alpha: 0.8), fontStyle: FontStyle.italic),
                       ),
                     ],
                   ),
@@ -198,13 +193,13 @@ class TarotCardDetailsScreen extends StatelessWidget {
                             children: keywords.map((k) => Container(
                               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                               decoration: BoxDecoration(
-                                color: _primaryColor.withValues(alpha: 0.6), // Theme colored glass
+                                color: _primaryColor.withValues(alpha: 0.1), // Theme colored glass
                                 borderRadius: BorderRadius.circular(30.r),
-                                border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
+                                border: Border.all(color: _primaryColor.withValues(alpha: 0.4)),
                               ),
                               child: Text(
                                 k.toString().toUpperCase(), 
-                                style: GoogleFonts.outfit(color: const Color(0xFFF5D67D), fontWeight: FontWeight.w600, fontSize: 12.sp, letterSpacing: 1.0)
+                                style: GoogleFonts.outfit(color: _primaryColor, fontWeight: FontWeight.w600, fontSize: 12.sp, letterSpacing: 1.0)
                               ),
                             )).toList(),
                           ),
@@ -223,6 +218,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
           ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -265,11 +261,11 @@ class TarotCardDetailsScreen extends StatelessWidget {
       padding: EdgeInsets.only(bottom: 16.h, left: 4.w),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome, color: const Color(0xFFF5D67D), size: 18.sp),
+          Icon(Icons.auto_awesome, color: _primaryColor, size: 18.sp),
           SizedBox(width: 8.w),
           Text(
             title.toUpperCase(),
-            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: const Color(0xFFF5D67D), letterSpacing: 1.5),
+            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: _primaryColor, letterSpacing: 1.5),
           ),
         ],
       ),
@@ -281,12 +277,12 @@ class TarotCardDetailsScreen extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: _primaryColor.withValues(alpha: 0.6), // Solid theme glass without blur
+        color: _primaryColor.withValues(alpha: 0.1), // Solid theme glass without blur
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -297,7 +293,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
         style: GoogleFonts.outfit(
           fontSize: 17.sp, 
           height: 1.6, 
-          color: Colors.white.withValues(alpha: 0.95),
+          color: _primaryColor.withValues(alpha: 0.95),
           letterSpacing: 0.3,
         ),
       ),
