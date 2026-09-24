@@ -425,11 +425,19 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
             imageUrl,
             height: 180.h, // Made the card image a bit larger and more prominent
             fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => Image.asset(
-              'assets/images/tarot/tarot_back.jpg',
-              height: 180.h,
-              fit: BoxFit.cover,
-            ),
+            errorBuilder: (context, error, stackTrace) {
+              final localAssetPath = 'assets/images/tarot/cards/${cardName.toString().toLowerCase().replaceAll(' ', '_')}.jpg';
+              return Image.asset(
+                localAssetPath,
+                height: 180.h,
+                fit: BoxFit.contain,
+                errorBuilder: (c, e, s) => Image.asset(
+                  'assets/images/tarot/tarot_back.jpg',
+                  height: 180.h,
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
           ),
         ),
         SizedBox(height: 12.h),

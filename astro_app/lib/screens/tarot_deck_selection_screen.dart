@@ -34,6 +34,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
   final int totalCards = 78;
   List<int> selectedIndices = [];
   bool isLoading = false;
+  late List<int> _shuffledDeck;
   late AnimationController _animController;
 
   Color get _primaryColor {
@@ -66,6 +67,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
   @override
   void initState() {
     super.initState();
+    _shuffledDeck = List.generate(totalCards, (index) => index)..shuffle();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -102,7 +104,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
     });
 
     try {
-      final seed = selectedIndices.join(',');
+      final seed = selectedIndices.map((i) => _shuffledDeck[i]).join(',');
       final reading = await TarotService().drawSpread(widget.endpoint, question: widget.question, seed: seed);
       
       if (mounted) {
