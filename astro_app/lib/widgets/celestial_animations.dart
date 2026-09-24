@@ -33,15 +33,21 @@ class _CosmicStarfieldBackgroundState extends State<CosmicStarfieldBackground> w
 
     final rand = math.Random(42);
     _stars = List.generate(widget.starCount, (index) {
+      final bool isGiant = rand.nextDouble() > 0.85; // 15% chance to be a huge bubble
+      final double bubbleRadius = isGiant 
+          ? (6.0.r + rand.nextDouble() * 12.0.r) // 6 to 18 radius for giants
+          : (1.0.r + rand.nextDouble() * 5.0.r); // 1 to 6 normal
+          
       return _StarParticle(
         x: rand.nextDouble(),
         y: rand.nextDouble(),
-        radius: 0.8.r + rand.nextDouble() * 1.8,
-        twinkleSpeed: 1.0 + rand.nextDouble() * 3.0,
+        radius: bubbleRadius,
+        twinkleSpeed: 0.3 + rand.nextDouble() * 2.5,
         phase: rand.nextDouble() * math.pi * 2,
-        color: rand.nextDouble() > 0.35
+        color: rand.nextDouble() > 0.4
             ? (rand.nextBool() ? const Color(0xFF818CF8) : const Color(0xFF38BDF8))
             : const Color(0xFFFFD54F),
+        isBlurred: rand.nextBool() || isGiant, // Giants are usually blurred to look like bokeh
       );
     });
   }
@@ -85,6 +91,7 @@ class _StarParticle {
   final double twinkleSpeed;
   final double phase;
   final Color color;
+  final bool isBlurred;
 
   _StarParticle({
     required this.x,
@@ -93,6 +100,7 @@ class _StarParticle {
     required this.twinkleSpeed,
     required this.phase,
     required this.color,
+    required this.isBlurred,
   });
 }
 
@@ -119,15 +127,21 @@ class _StarfieldPainter extends CustomPainter {
       final paint = Paint()
         ..color = star.color.withValues(alpha: opacity * alphaMultiplier)
         ..style = PaintingStyle.fill;
+        
+      if (star.isBlurred) {
+        // Blur amount scales with radius for large out-of-focus bokeh bubbles
+        final blurSigma = star.radius > 5.0 ? star.radius * 0.5 : 2.5;
+        paint.maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma);
+      }
 
       final center = Offset(star.x * size.width, star.y * size.height);
       canvas.drawCircle(center, star.radius, paint);
 
       // Subtle glow for larger stars
-      if (star.radius > 1.8 && isDark) {
+      if (star.radius > 3.0 && isDark) {
         final glowPaint = Paint()
           ..color = star.color.withValues(alpha: opacity * 0.25)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
         canvas.drawCircle(center, star.radius * 2.2, glowPaint);
       }
     }
