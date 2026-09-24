@@ -226,12 +226,14 @@ class TarotCardDetailsScreen extends StatelessWidget {
   String _generateDetailedInterpretation(Map<String, dynamic> data, bool isReversed) {
     String interpretation = "";
     
-    // 1. Base Meaning
-    String baseMeaning = isReversed ? (data['reversed_meaning'] ?? '') : (data['upright_meaning'] ?? '');
+    // 1. Base Meaning (Prioritize conversational text)
+    String baseMeaning = isReversed 
+        ? (data['meaning_rev'] ?? data['reversed_meaning'] ?? data['desc'] ?? '') 
+        : (data['meaning_up'] ?? data['desc'] ?? data['upright_meaning'] ?? '');
+    
     if (baseMeaning.isNotEmpty) {
       interpretation += baseMeaning;
     }
-    
     // 2. Add Life Areas seamlessly
     String lifeAreas = "";
     if (data['love_meaning'] != null) lifeAreas += "${data['love_meaning']} ";

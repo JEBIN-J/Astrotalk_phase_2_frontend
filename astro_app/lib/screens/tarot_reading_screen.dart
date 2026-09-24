@@ -353,30 +353,29 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 6,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     pos['position_name'].toUpperCase(),
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.w600, 
-                      fontSize: 12.sp, 
+                      fontSize: 11.sp, 
                       color: const Color(0xFFF5D67D),
                       letterSpacing: 1.5,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
                   if (card['yes_no_meaning'] != null && widget.spreadData['spread_type'] == 'yes_no') ...[
                     Text(
                       '${card['yes_no_meaning']}'.toUpperCase(),
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
-                        fontSize: 28.sp,
+                        fontSize: 24.sp,
                         color: '${card['yes_no_meaning']}'.toLowerCase().contains('yes') 
                             ? const Color(0xFF4ADE80) 
                             : ('${card['yes_no_meaning']}'.toLowerCase().contains('no') 
@@ -387,31 +386,37 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                     SizedBox(height: 8.h),
                   ],
                   Text(
-                    '${card['name']}',
+                    '${card['name']}'.toUpperCase(),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold, 
-                      fontSize: 22.sp, 
+                      fontSize: 18.sp, 
                       color: Colors.white,
+                      letterSpacing: 0.5,
                       height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    isReversed ? 'Reversed' : 'Upright',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14.sp, 
-                      color: const Color(0xFFF5D67D),
-                      fontStyle: FontStyle.italic
+                  SizedBox(height: 12.h),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Text(
+                        _getMeaning(card),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 14.sp, 
+                          color: Colors.white.withValues(alpha: 0.9),
+                          height: 1.5,
+                        ),
+                      ),
                     ),
                   ),
-                  Spacer(),
+                  SizedBox(height: 12.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF064E3B).withValues(alpha: 0.6), // Deep green glass
+                      color: const Color(0xFF064E3B).withValues(alpha: 0.6), 
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(color: const Color(0xFFF5D67D).withValues(alpha: 0.4)),
                     ),
@@ -421,12 +426,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                         Text(
                           'View Details',
                           style: GoogleFonts.outfit(
-                            fontSize: 13.sp, 
+                            fontSize: 12.sp, 
                             color: const Color(0xFFF5D67D), 
                             fontWeight: FontWeight.w600
                           ),
                         ),
-                        SizedBox(width: 6.w),
+                        SizedBox(width: 4.w),
                         Icon(Icons.arrow_forward_rounded, size: 14.sp, color: const Color(0xFFF5D67D)),
                       ],
                     ),
@@ -438,5 +443,16 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
         ],
       ),
     );
+  }
+
+  String _getMeaning(Map<String, dynamic> card) {
+    bool isReversed = card['orientation'] == 'Reversed';
+    String meaning = isReversed 
+        ? (card['meaning_rev'] ?? card['reversed_meaning'] ?? card['desc'] ?? '') 
+        : (card['meaning_up'] ?? card['desc'] ?? card['upright_meaning'] ?? '');
+    if (meaning.trim().isEmpty) {
+        meaning = card['context_meaning'] ?? card['core_meaning'] ?? 'A mysterious force surrounds this card.';
+    }
+    return meaning;
   }
 }

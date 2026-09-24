@@ -239,8 +239,8 @@ class _TarotChatbotScreenState extends State<TarotChatbotScreen> {
       final cardName = card['name'];
       bool isReversed = card['orientation'] == 'Reversed';
       String baseMeaning = isReversed 
-          ? (card['reversed_meaning'] ?? card['meaning_rev'] ?? '') 
-          : (card['upright_meaning'] ?? card['meaning_up'] ?? '');
+          ? (card['meaning_rev'] ?? card['reversed_meaning'] ?? card['desc'] ?? '') 
+          : (card['meaning_up'] ?? card['desc'] ?? card['upright_meaning'] ?? '');
           
       String specificMeaning = "";
       if (_selectedCategory == 'About Career' && card['career_meaning'] != null) {
