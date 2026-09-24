@@ -141,11 +141,9 @@ class _TarotDashboardScreenState extends State<TarotDashboardScreen> {
           ShaderMask(
             blendMode: BlendMode.srcIn,
             shaderCallback: (bounds) => LinearGradient(
-              colors: [
-                _primaryColor, 
-                _secondaryColor, 
-                _primaryColor, 
-              ],
+              colors: widget.isDark 
+                  ? [_accentColor, _accentLight, _accentColor]
+                  : [_primaryColor, _secondaryColor, _primaryColor],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ).createShader(bounds),

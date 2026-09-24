@@ -127,7 +127,10 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to connect to the divine realm. Please check your connection and try again.'),
+            content: Text(
+              'Unable to connect to the divine realm. Please check your connection and try again.',
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.redAccent.shade700,
             behavior: SnackBarBehavior.floating,
           )
@@ -289,10 +292,10 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.title, style: GoogleFonts.outfit(color: _primaryColor, fontWeight: FontWeight.bold)),
+        title: Text(widget.title, style: GoogleFonts.outfit(color: widget.isDark ? Colors.white : _primaryColor, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: _primaryColor),
+        iconTheme: IconThemeData(color: widget.isDark ? Colors.white : _primaryColor),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -337,7 +340,7 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                       style: GoogleFonts.outfit(
                         fontSize: 24.sp, 
                         fontWeight: FontWeight.bold, 
-                        color: _primaryColor,
+                        color: widget.isDark ? Colors.white : _primaryColor,
                       ),
                     ),
                   ),
@@ -381,23 +384,25 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     height: 56.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryColor,
-                        disabledBackgroundColor: _primaryColor.withValues(alpha: 0.2),
+                        backgroundColor: widget.isDark ? const Color(0xFFD4AF37) : _primaryColor,
+                        disabledBackgroundColor: (widget.isDark ? const Color(0xFFD4AF37) : _primaryColor).withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                         elevation: 5,
-                        shadowColor: _primaryColor.withValues(alpha: 0.3),
+                        shadowColor: (widget.isDark ? const Color(0xFFD4AF37) : _primaryColor).withValues(alpha: 0.3),
                       ),
                       onPressed: selectedIndices.length == widget.requiredCards && !isLoading
                           ? _confirmSelection
                           : null,
                       child: isLoading 
-                          ? SizedBox(height: 24.h, width: 24.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                          ? SizedBox(height: 24.h, width: 24.w, child: CircularProgressIndicator(color: widget.isDark ? _primaryColor : Colors.white, strokeWidth: 3))
                           : Text(
                               'Reveal Reading',
                               style: GoogleFonts.outfit(
                                 fontSize: 18.sp, 
                                 fontWeight: FontWeight.bold, 
-                                color: selectedIndices.length == widget.requiredCards ? const Color(0xFFFFD700) : Colors.white70
+                                color: selectedIndices.length == widget.requiredCards 
+                                    ? (widget.isDark ? _primaryColor : const Color(0xFFFFD700))
+                                    : (widget.isDark ? _primaryColor.withValues(alpha: 0.5) : Colors.white70)
                               ),
                             ),
                     ),

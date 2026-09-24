@@ -67,16 +67,16 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
           '$spreadType READING', 
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: _primaryColor,
+            color: widget.isDark ? const Color(0xFFD4AF37) : _primaryColor,
             fontSize: 18.sp,
             letterSpacing: 1.2,
           )
         ),
         backgroundColor: Colors.transparent,
-        foregroundColor: _primaryColor,
+        foregroundColor: widget.isDark ? const Color(0xFFD4AF37) : _primaryColor,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: _primaryColor),
+        iconTheme: IconThemeData(color: widget.isDark ? const Color(0xFFD4AF37) : _primaryColor),
       ),
       body: Container(
         decoration: BoxDecoration(

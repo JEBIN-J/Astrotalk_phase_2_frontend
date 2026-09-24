@@ -62,12 +62,12 @@ class TarotCardDetailsScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontSize: 18.sp,
                 letterSpacing: 1.2,
-                color: _primaryColor)),
+                color: isDark ? const Color(0xFFD4AF37) : _primaryColor)),
         backgroundColor: Colors.transparent,
-        foregroundColor: _primaryColor,
+        foregroundColor: isDark ? const Color(0xFFD4AF37) : _primaryColor,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: _primaryColor),
+        iconTheme: IconThemeData(color: isDark ? const Color(0xFFD4AF37) : _primaryColor),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -116,7 +116,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                           Text(positionName.toUpperCase(),
                               style: GoogleFonts.outfit(
                                   fontSize: 14.sp,
-                                  color: _primaryColor,
+                                  color: isDark ? const Color(0xFFD4AF37) : _primaryColor,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 2.0)),
                           SizedBox(height: 24.h),
@@ -208,7 +208,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                             style: GoogleFonts.outfit(
                                 fontSize: 32.sp,
                                 fontWeight: FontWeight.bold,
-                                color: _primaryColor,
+                                color: isDark ? const Color(0xFFD4AF37) : _primaryColor,
                                 height: 1.1),
                           ),
                           SizedBox(height: 8.h),
@@ -216,7 +216,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
                             orientation,
                             style: GoogleFonts.outfit(
                                 fontSize: 18.sp,
-                                color: _primaryColor.withValues(alpha: 0.8),
+                                color: isDark ? const Color(0xFFD4AF37).withValues(alpha: 0.8) : _primaryColor.withValues(alpha: 0.8),
                                 fontStyle: FontStyle.italic),
                           ),
                           // arcana / suit badge row
@@ -254,18 +254,18 @@ class TarotCardDetailsScreen extends StatelessWidget {
                                       padding: EdgeInsets.symmetric(
                                           horizontal: 16.w, vertical: 8.h),
                                       decoration: BoxDecoration(
-                                        color: _primaryColor
+                                        color: isDark ? Colors.white.withValues(alpha: 0.1) : _primaryColor
                                             .withValues(alpha: 0.1),
                                         borderRadius:
                                             BorderRadius.circular(30.r),
                                         border: Border.all(
-                                            color: _primaryColor
+                                            color: isDark ? const Color(0xFFD4AF37) : _primaryColor
                                                 .withValues(alpha: 0.4)),
                                       ),
                                       child: Text(
                                         k.toString().toUpperCase(),
                                         style: GoogleFonts.outfit(
-                                            color: _primaryColor,
+                                            color: isDark ? const Color(0xFFD4AF37) : _primaryColor,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 12.sp,
                                             letterSpacing: 1.0),
@@ -359,15 +359,15 @@ class TarotCardDetailsScreen extends StatelessWidget {
         margin: EdgeInsets.only(right: 8.w),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
         decoration: BoxDecoration(
-          color: _primaryColor.withValues(alpha: 0.12),
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : _primaryColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(20.r),
           border:
-              Border.all(color: _primaryColor.withValues(alpha: 0.35)),
+              Border.all(color: isDark ? const Color(0xFFD4AF37) : _primaryColor.withValues(alpha: 0.35)),
         ),
         child: Text(label,
             style: GoogleFonts.outfit(
                 fontSize: 11.sp,
-                color: _primaryColor,
+                color: isDark ? const Color(0xFFD4AF37) : _primaryColor,
                 fontWeight: FontWeight.w600)),
       );
 
@@ -387,15 +387,15 @@ class TarotCardDetailsScreen extends StatelessWidget {
 
     // 1. Core Meaning (Prioritize handcrafted 'meaning_upright' over templated 'upright_meaning')
     String coreMeaning = isReversed
-        ? (data['meaning_reversed']?.toString() ?? data['reversed_meaning']?.toString() ?? '')
-        : (data['meaning_upright']?.toString() ?? data['upright_meaning']?.toString() ?? data['core_meaning']?.toString() ?? '');
+        ? (data['meaning_reversed']?.toString() ?? data['reversed_meaning']?.toString() ?? data['meaning_rev']?.toString() ?? '')
+        : (data['meaning_upright']?.toString() ?? data['upright_meaning']?.toString() ?? data['core_meaning']?.toString() ?? data['meaning_up']?.toString() ?? '');
     
     if (coreMeaning.trim().isNotEmpty) {
       interpretation += coreMeaning.trim();
     }
 
     // 2. Full description (handcrafted lore/imagery)
-    String desc = data['description']?.toString() ?? data['card_description']?.toString() ?? '';
+    String desc = data['description']?.toString() ?? data['card_description']?.toString() ?? data['desc']?.toString() ?? '';
     if (desc.trim().isNotEmpty) {
       if (interpretation.isNotEmpty) interpretation += "\n\n";
       interpretation += desc.trim();
@@ -433,11 +433,11 @@ class TarotCardDetailsScreen extends StatelessWidget {
       padding: EdgeInsets.only(bottom: 16.h, left: 4.w),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome, color: _primaryColor, size: 18.sp),
+          Icon(Icons.auto_awesome, color: isDark ? const Color(0xFFD4AF37) : _primaryColor, size: 18.sp),
           SizedBox(width: 8.w),
           Text(
             title.toUpperCase(),
-            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: _primaryColor, letterSpacing: 1.5),
+            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFD4AF37) : _primaryColor, letterSpacing: 1.5),
           ),
         ],
       ),
@@ -465,7 +465,7 @@ class TarotCardDetailsScreen extends StatelessWidget {
         style: GoogleFonts.outfit(
           fontSize: 17.sp, 
           height: 1.6, 
-          color: _primaryColor.withValues(alpha: 0.95),
+          color: isDark ? Colors.white.withValues(alpha: 0.9) : _primaryColor.withValues(alpha: 0.95),
           letterSpacing: 0.3,
         ),
       ),
