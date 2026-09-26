@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1';
+      return 'http://10.51.234.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.51.234.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'https://186c-2409-40f3-200a-6272-49bf-9082-edc4-c620.ngrok-free.app/api/v1';
+    return 'http://10.51.234.136:5000/api/v1';
   }
 
   static String get baseUrl {

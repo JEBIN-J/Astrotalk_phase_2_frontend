@@ -168,11 +168,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     'Bhava': 'Bhava Chalit (Cuspal Houses)',
   };
 
+  late List<int> _activeTabIndices;
+
   @override
   void initState() {
     super.initState();
     _currentChartStyle = widget.initialChartStyle;
-    _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialTabIndex);
+    
+    if (widget.isSingleTabMode) {
+      _activeTabIndices = [widget.initialTabIndex];
+      _tabController = TabController(length: 1, vsync: this, initialIndex: 0);
+    } else {
+      _activeTabIndices = [0, 1, 6, 7, 8];
+      int mappedIndex = _activeTabIndices.indexOf(widget.initialTabIndex);
+      if (mappedIndex == -1) mappedIndex = 0;
+      _tabController = TabController(length: _activeTabIndices.length, vsync: this, initialIndex: mappedIndex);
+    }
+    
     _bottomSubTabController = TabController(length: 4, vsync: this);
     
     // Initialize from GlobalBirthProfile
@@ -197,12 +209,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     });
     // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
     _tabController.addListener(() {
-      if (_tabController.index == 1 && !_dashaInitialFetchDone && !_isLoadingDasha) {
-        _fetchDynamicDasha(_selectedDashaType);
+      if (_tabController.index >= 0 && _tabController.index < _activeTabIndices.length) {
+        if (_activeTabIndices[_tabController.index] == 1 && !_dashaInitialFetchDone && !_isLoadingDasha) {
+          _fetchDynamicDasha(_selectedDashaType);
+        }
       }
     });
     // If app opens directly on Dasha tab, fetch immediately after frame
-    if (widget.initialTabIndex == 1) {
+    if (_activeTabIndices[_tabController.index] == 1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_dashaInitialFetchDone && !_isLoadingDasha) {
           _fetchDynamicDasha(_selectedDashaType);
@@ -347,7 +361,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         }
 
         // If Dasha tab is currently visible, re-fetch immediately
-        if (_tabController.index == 1) {
+        if (_tabController.index >= 0 && _tabController.index < _activeTabIndices.length && _activeTabIndices[_tabController.index] == 1) {
           _fetchDynamicDasha(_selectedDashaType);
         }
       }
@@ -951,17 +965,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               labelPadding: EdgeInsets.symmetric(horizontal: 16.w),
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp),
               unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 13.5.sp),
-              tabs: [
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Vedic (D1)'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Dasha'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('KP System'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Lal Kitab'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('BNN'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Jamini'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Ashtakavarga'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Strength'))),
-                Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Kot Chakra'))),
-              ],
+              tabs: _activeTabIndices.map((idx) {
+                switch (idx) {
+                  case 0: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Vedic (D1)')));
+                  case 1: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Dasha')));
+                  case 2: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('KP System')));
+                  case 3: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Lal Kitab')));
+                  case 4: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('BNN')));
+                  case 5: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Jamini')));
+                  case 6: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Ashtakavarga')));
+                  case 7: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Strength')));
+                  case 8: return Tab(child: Padding(padding: EdgeInsets.symmetric(horizontal: 8.w), child: Text('Kot Chakra')));
+                  default: return Tab(child: Text(''));
+                }
+              }).toList(),
             ),
           ),
         ),
@@ -1014,17 +1031,20 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           : TabBarView(
               controller: _tabController,
               physics: widget.isSingleTabMode ? const NeverScrollableScrollPhysics() : null,
-              children: [
-                _buildLagnaAndDivisionalChartTab(context, isDark),
-                _buildDashaTab(context, isDark),
-                _buildPlanetsTab(context, isDark),
-                _buildLalKitabTab(context, isDark),
-                _buildBnnTab(context, isDark),
-                _buildJaiminiTab(context, isDark),
-                _buildAshtakvargaTab(context, isDark),
-                _buildStrengthTab(context, isDark),
-                _buildKotChakraTab(context, isDark),
-              ],
+              children: _activeTabIndices.map((idx) {
+                switch (idx) {
+                  case 0: return _buildLagnaAndDivisionalChartTab(context, isDark);
+                  case 1: return _buildDashaTab(context, isDark);
+                  case 2: return _buildPlanetsTab(context, isDark);
+                  case 3: return _buildLalKitabTab(context, isDark);
+                  case 4: return _buildBnnTab(context, isDark);
+                  case 5: return _buildJaiminiTab(context, isDark);
+                  case 6: return _buildAshtakvargaTab(context, isDark);
+                  case 7: return _buildStrengthTab(context, isDark);
+                  case 8: return _buildKotChakraTab(context, isDark);
+                  default: return const SizedBox();
+                }
+              }).toList(),
             ),
 
     );
