@@ -144,6 +144,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _bhavaReferenceChart = 'D-1'; // 'Bhava', 'D-1', 'D-9', etc.
 
 
+  String _selectedAyanamsa = 'LAHIRI';
+  double? _customAyanamsa;
+
   static const Map<String, String> _divisionalChartsInfo = {
     'D-1': 'Rashi (Natal Physical Plane)',
     'D-2': 'Hora (Wealth & Liquid Assets)',
@@ -292,6 +295,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
           daysInYear: _currentDaysInYear,
           bhavaSystem: _selectedBhavaSystem,
         ).catchError((e) => <String, dynamic>{}),
@@ -303,6 +308,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
         ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getBnn(
           name: _personName,
@@ -312,6 +319,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
         ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getJaimini(
           name: _personName,
@@ -321,6 +330,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
         ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getKotaChakra(
           name: _personName,
@@ -330,6 +341,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           latitude: _latitude,
           longitude: _longitude,
           timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
           transitDate: _transitDate,
           transitTime: _transitTime,
         ).catchError((e) => <String, dynamic>{}),
@@ -639,6 +652,95 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         }).toList(),
                       ),
                     ),
+                    SizedBox(height: 32.h),
+                    Text(
+                      'Ayanamsa',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.sp,
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(height: 14.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.5),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedAyanamsa,
+                          isExpanded: true,
+                          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          icon: Icon(Icons.arrow_drop_down_rounded, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                          items: [
+                            'LAHIRI', 'BV_RAMAN', 'KP_OLD', 'SRI_YUKTESWAR', 'DE_LUCE', 
+                            'USHA_SHASHI', 'DJWHAL_KHOOL', 'JN_BHASIN', 'FAGAN_BRADLEY', 
+                            'TROPICAL', 'CUSTOM', 'KP_NEW', 'KP_STRAIGHT_LINE', 'KHULLAR', 'CHANDRA_HARI'
+                          ].map((String val) {
+                            String label = val;
+                            if (val == 'LAHIRI') label = 'Lahiri (Chitrapaksha)';
+                            else if (val == 'BV_RAMAN') label = 'B.V. Raman';
+                            else if (val == 'KP_OLD') label = 'Krishnamurti (KP Old)';
+                            else if (val == 'SRI_YUKTESWAR') label = 'Sri Yukteswar';
+                            else if (val == 'DE_LUCE') label = 'De Luce';
+                            else if (val == 'USHA_SHASHI') label = 'Usha-Shashi (Revati)';
+                            else if (val == 'DJWHAL_KHOOL') label = 'Djwhal Khool';
+                            else if (val == 'JN_BHASIN') label = 'J.N. Bhasin';
+                            else if (val == 'FAGAN_BRADLEY') label = 'Fagan-Bradley';
+                            else if (val == 'TROPICAL') label = 'Tropical (Sayana)';
+                            else if (val == 'CUSTOM') label = 'Custom';
+                            else if (val == 'KP_NEW') label = 'Krishnamurti (KP New)';
+                            else if (val == 'KP_STRAIGHT_LINE') label = 'KP Straight Line';
+                            else if (val == 'KHULLAR') label = 'Khullar';
+                            else if (val == 'CHANDRA_HARI') label = 'Chandra Hari';
+
+                            return DropdownMenuItem(
+                              value: val,
+                              child: Text(
+                                label,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setModalState(() => _selectedAyanamsa = val);
+                              setState(() => _selectedAyanamsa = val);
+                              if (val != 'CUSTOM') {
+                                _fetchKundliData();
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    if (_selectedAyanamsa == 'CUSTOM') ...[
+                      SizedBox(height: 14.h),
+                      TextField(
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black),
+                        decoration: InputDecoration(
+                          labelText: 'Custom Ayanamsa Degrees (e.g. 24.123)',
+                          labelStyle: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                        ),
+                        onChanged: (val) {
+                          final parsed = double.tryParse(val);
+                          if (parsed != null) {
+                            setState(() => _customAyanamsa = parsed);
+                          }
+                        },
+                        onSubmitted: (_) => _fetchKundliData(),
+                      ),
+                    ],
                     SizedBox(height: 32.h),
                     Container(
                       padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -1096,7 +1198,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     }
 
     final ascDisplay = ascDeg.isNotEmpty ? '$ascLagna ($ascDeg)' : ascLagna;
-    final ayanamsa = _kundliData?['ayanamsa_formatted']?.toString() ?? "Lahiri 23° 50' 32\"";
+    final ayanamsa = _kundliData?['ayanamsa_formatted']?.toString() ?? _selectedAyanamsa;
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
@@ -3837,6 +3939,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         latitude: _latitude,
         longitude: _longitude,
         timezone: _timezone,
+          ayanamsa: _selectedAyanamsa,
+          customAyanamsa: _customAyanamsa,
         targetDateStr: '$_bnnTargetYear-01-01',
       );
       if (mounted) {
@@ -5401,6 +5505,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         longitude: _longitude,
         timezone: _timezone,
         daysInYear: _currentDaysInYear,
+        ayanamsa: _selectedAyanamsa,
+        customAyanamsa: _customAyanamsa,
       );
       if (mounted) {
         setState(() {

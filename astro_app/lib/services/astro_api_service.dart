@@ -146,6 +146,8 @@ class AstroApiService {
     double? timezone,
     double? daysInYear,
     String? bhavaSystem,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kundli');
     final Map<String, dynamic> bodyMap = {
@@ -155,6 +157,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
@@ -184,6 +189,8 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     double? daysInYear,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/dasha');
     final Map<String, dynamic> bodyMap = {
@@ -194,6 +201,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
@@ -220,6 +230,7 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     required String ayanamsa,
+  double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kp');
     final Map<String, dynamic> bodyMap = {
@@ -230,6 +241,9 @@ class AstroApiService {
       'ayanamsa': ayanamsa,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
 
@@ -269,6 +283,8 @@ class AstroApiService {
     double? latitude,
     double? longitude,
     double? timezone,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/lal-kitab');
     final Map<String, dynamic> bodyMap = {
@@ -278,6 +294,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
 
@@ -303,6 +322,8 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     String? targetDateStr,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/bnn');
     final Map<String, dynamic> bodyMap = {
@@ -312,6 +333,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (targetDateStr != null) bodyMap['target_date_str'] = targetDateStr;
@@ -356,6 +380,8 @@ class AstroApiService {
     double? latitude,
     double? longitude,
     double? timezone,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/jaimini');
     final Map<String, dynamic> bodyMap = {
@@ -365,6 +391,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
 
@@ -391,6 +420,8 @@ class AstroApiService {
     double? timezone,
     String? transitDate,
     String? transitTime,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kota-chakra');
     final Map<String, dynamic> bodyMap = {
@@ -400,6 +431,9 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (transitDate != null) bodyMap['transit_date'] = transitDate;
@@ -426,6 +460,8 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     double? daysInYear,
+  String? ayanamsa,
+    double? customAyanamsa,
   }) async {
     final uri = Uri.parse('$baseUrl/prashna/chart');
     final Map<String, dynamic> bodyMap = {
@@ -434,6 +470,9 @@ class AstroApiService {
       'place': placeOfQuestion,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (daysInYear != null) bodyMap['days_in_year'] = daysInYear;
