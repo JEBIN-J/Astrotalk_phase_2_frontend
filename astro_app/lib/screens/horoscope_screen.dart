@@ -147,6 +147,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   String _selectedAyanamsa = 'LAHIRI';
   double? _customAyanamsa;
 
+  // Ayanamsa degree values fetched live from the backend (not hardcoded)
+  Map<String, double> _ayanamsaDegrees = {};
+
   static const Map<String, String> _divisionalChartsInfo = {
     'D-1': 'Rashi (Natal Physical Plane)',
     'D-2': 'Hora (Wealth & Liquid Assets)',
@@ -284,6 +287,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   Future<void> _fetchKundliData() async {
     if (_kundliData == null) {
       setState(() => _isLoadingKundli = true);
+    }
+    // Fetch live ayanamsa degree values from backend based on the current birth date/time
+    final degrees = await AstroApiService.getAyanamsaDegrees(
+      dateOfBirth: _dobFormattedForApi,
+      timeOfBirth: _tobFormattedForApi,
+      latitude: _latitude,
+      longitude: _longitude,
+      timezone: _timezone,
+    );
+    if (mounted && degrees.isNotEmpty) {
+      setState(() => _ayanamsaDegrees = degrees);
     }
     try {
       final futures = await Future.wait([
@@ -698,15 +712,37 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             else if (val == 'KHULLAR') label = 'Khullar';
                             else if (val == 'CHANDRA_HARI') label = 'Chandra Hari';
 
+                            final double? deg = _ayanamsaDegrees[val];
+                            final String degStr = (val == 'CUSTOM')
+                                ? ''
+                                : (deg != null ? '  ${deg.toStringAsFixed(3)}°' : '');
+
                             return DropdownMenuItem(
                               value: val,
-                              child: Text(
-                                label,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.white : const Color(0xFF1E293B),
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      label,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (degStr.isNotEmpty)
+                                    Text(
+                                      degStr,
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA),
+                                      ),
+                                    ),
+                                ],
                               ),
                             );
                           }).toList(),

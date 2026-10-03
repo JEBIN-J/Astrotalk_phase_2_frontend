@@ -421,26 +421,22 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16, 2, 16, 14),
-                child: StaggeredAnimatedItem(
-                  index: 0,
-                  child: BentoHeroCard(
-                    isDark: isDark,
-                    currentPalette: widget.currentPalette,
-                    onTapKundli: () => AstroFeatureDialogs.openFeature(
-                      context,
-                      AstroItem.items.firstWhere((i) => i.id == 'horoscope'),
-                      defaultChartStyle: _defaultChartStyle,
-                    ),
-                    onTapAiCalling: () => AstroFeatureDialogs.openFeature(
-                      context,
-                      AstroItem.items.firstWhere((i) => i.id == 'ai_calling'),
-                      defaultChartStyle: _defaultChartStyle,
-                    ),
+                child: BentoHeroCard(
+                  isDark: isDark,
+                  currentPalette: widget.currentPalette,
+                  onTapKundli: () => AstroFeatureDialogs.openFeature(
+                    context,
+                    AstroItem.items.firstWhere((i) => i.id == 'horoscope'),
+                    defaultChartStyle: _defaultChartStyle,
+                  ),
+                  onTapAiCalling: () => AstroFeatureDialogs.openFeature(
+                    context,
+                    AstroItem.items.firstWhere((i) => i.id == 'ai_calling'),
+                    defaultChartStyle: _defaultChartStyle,
                   ),
                 ),
               ),
             ),
-
           // 6.5. Daily Horoscope Personalized Banner
           if (_searchQuery.isEmpty && _selectedCategory == AstroCategory.all)
             SliverToBoxAdapter(
@@ -997,12 +993,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final item = items[index];
-                return StaggeredAnimatedItem(
-                  index: index,
-                  child: AstroDetailedListTile(
-                    item: item,
-                    onTap: () => _openItem(item),
-                  ),
+                return AstroDetailedListTile(
+                  item: item,
+                  onTap: () => _openItem(item),
                 );
               },
               childCount: items.length,
@@ -1065,10 +1058,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   );
                   break;
               }
-              return StaggeredAnimatedItem(
-                index: index,
-                child: cardWidget,
-              );
+              return cardWidget;
             },
             childCount: items.length,
           ),

@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.51.234.136:5000/api/v1';
+      return 'http://127.0.0.1:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.51.234.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.242.235.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://10.51.234.136:5000/api/v1';
+    return 'http://127.0.0.1:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -133,7 +133,46 @@ class AstroApiService {
   }
 
   // =========================================================================
-  // 3. HOROSCOPE / KUNDLI
+  // 3. AYANAMSA DEGREES (fetched live from backend)
+  // =========================================================================
+
+  /// Fetches the live ayanamsa degree values for the given birth details.
+  /// Backend endpoint: GET /astro/ayanamsa_degrees
+  /// Returns e.g. { 'LAHIRI': 24.107, 'BV_RAMAN': 23.023, ... }
+  static Future<Map<String, double>> getAyanamsaDegrees({
+    required String dateOfBirth,
+    required String timeOfBirth,
+    double? latitude,
+    double? longitude,
+    double? timezone,
+  }) async {
+    final params = <String, String>{
+      'date': dateOfBirth,
+      'time': timeOfBirth,
+      if (latitude != null) 'lat': latitude.toString(),
+      if (longitude != null) 'lon': longitude.toString(),
+      if (timezone != null) 'tz': timezone.toString(),
+    };
+    final uri = Uri.parse('$baseUrl/horoscope/ayanamsa_degrees').replace(queryParameters: params);
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final raw = (data is Map && data.containsKey('ayanamsa_degrees'))
+            ? data['ayanamsa_degrees'] as Map
+            : data as Map;
+        return raw.map<String, double>(
+          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
+        );
+      }
+    } catch (e) {
+      debugPrint('AstroApiService getAyanamsaDegrees error: $e');
+    }
+    return {};
+  }
+
+  // =========================================================================
+  // 4. HOROSCOPE / KUNDLI
   // =========================================================================
 
   static Future<Map<String, dynamic>> getKundli({
