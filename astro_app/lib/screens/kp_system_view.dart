@@ -16,6 +16,8 @@ class KpSystemView extends StatefulWidget {
   final KundliChartStyle chartStyle;
   final bool isDark;
   final VoidCallback? onEditProfile;
+  final bool showUpagrahas;
+  final bool showDegrees;
 
   const KpSystemView({
     super.key,
@@ -29,6 +31,8 @@ class KpSystemView extends StatefulWidget {
     this.chartStyle = KundliChartStyle.southIndian,
     this.isDark = false,
     this.onEditProfile,
+    this.showUpagrahas = false,
+    this.showDegrees = true,
   });
 
   @override
@@ -61,6 +65,7 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   // KP Chart specific state
   String _activeChartType = 'D-1'; // 'Bhava', 'D-1', 'D-9'
+  late KundliChartStyle _activeChartStyle;
 
   // Significators specific state
   int _significatorSubTabIndex = 0; // 0: Planet, 1: House
@@ -82,6 +87,7 @@ class _KpSystemViewState extends State<KpSystemView> {
   @override
   void initState() {
     super.initState();
+    _activeChartStyle = widget.chartStyle;
     _fetchKpData();
   }
 
@@ -384,6 +390,54 @@ class _KpSystemViewState extends State<KpSystemView> {
         ],
         SizedBox(height: 14.h),
 
+        // Chart System Model Dropdown Card
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.dashboard_customize_rounded, size: 18.sp, color: const Color(0xFF4338CA)),
+              SizedBox(width: 8.w),
+              Text(
+                'Chart System Model:',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<KundliChartStyle>(
+                    value: _activeChartStyle,
+                    isExpanded: true,
+                    icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF4338CA)),
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.5.sp,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                    items: KundliChartStyle.values.map((style) {
+                      return DropdownMenuItem<KundliChartStyle>(
+                        value: style,
+                        child: Text(style.title, overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: (newStyle) {
+                      if (newStyle != null && newStyle != _activeChartStyle) {
+                        setState(() => _activeChartStyle = newStyle);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 14.h),
+
         // Chart Type Selector: Rashi, Navamsa, Bhava
         Row(
           children: [
@@ -427,11 +481,11 @@ class _KpSystemViewState extends State<KpSystemView> {
               ),
               SizedBox(height: 12.h),
               KundliInteractiveChart(
-                chartStyle: widget.chartStyle,
+                chartStyle: _activeChartStyle,
                 isDark: isDark,
                 chartTypeKey: _activeChartType,
-                showUpagrahas: false,
-                showDegrees: true,
+                showUpagrahas: widget.showUpagrahas,
+                showDegrees: widget.showDegrees,
                 showKpCusps: _activeChartType != 'D-9',
                 kundliData: _kpData,
               ),

@@ -424,6 +424,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   void _showSettingsModal() {
+    bool isKpSystemFocused = false;
+    if (widget.isSingleTabMode) {
+      isKpSystemFocused = widget.appBarTitle == 'KP System';
+    } else {
+      if (_activeTabIndices.isNotEmpty && _tabController.index >= 0 && _tabController.index < _activeTabIndices.length) {
+        isKpSystemFocused = _activeTabIndices[_tabController.index] == 2;
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -666,10 +675,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         }).toList(),
                       ),
                     ),
-                    SizedBox(height: 32.h),
-                    Text(
-                      'Ayanamsa',
-                      style: GoogleFonts.outfit(
+                    if (!isKpSystemFocused) ...[
+                      SizedBox(height: 32.h),
+                      Text(
+                        'Ayanamsa',
+                        style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w700,
                         fontSize: 14.sp,
                         color: isDark ? Colors.white70 : const Color(0xFF64748B),
@@ -777,8 +787,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         onSubmitted: (_) => _fetchKundliData(),
                       ),
                     ],
-                    SizedBox(height: 32.h),
-                    Container(
+                    ],
+                    if (!isKpSystemFocused) ...[
+                      SizedBox(height: 32.h),
+                      Container(
                       padding: EdgeInsets.symmetric(vertical: 8.h),
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -825,6 +837,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         ],
                       ),
                     ),
+                    ],
                   ],
                 ),
               ),
@@ -1075,30 +1088,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ],
         bottom: widget.isSingleTabMode ? null : PreferredSize(
-          preferredSize: const Size.fromHeight(54),
+          preferredSize: const Size.fromHeight(58),
           child: Container(
-            margin: EdgeInsets.only(bottom: 6.h),
+            height: 46.h,
+            margin: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
+              dividerColor: Colors.transparent,
               labelColor: Colors.white,
               unselectedLabelColor: isDark ? Colors.white54 : const Color(0xFF64748B),
-              indicatorSize: TabBarIndicatorSize.label,
+              indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4338CA), Color(0xFF312E81)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4338CA).withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                color: const Color(0xFF4F46E5),
+                borderRadius: BorderRadius.circular(10.r),
               ),
               labelPadding: EdgeInsets.symmetric(horizontal: 16.w),
               labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp),
@@ -5734,6 +5743,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       chartStyle: _currentChartStyle,
       isDark: isDark,
       onEditProfile: _showEditProfileDialog,
+      showUpagrahas: _showUpagrahasOnChart,
+      showDegrees: _showDegreesOnChart,
     );
   }
 

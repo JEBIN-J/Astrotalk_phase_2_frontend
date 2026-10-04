@@ -481,24 +481,37 @@ class _MultiKundliPainter extends CustomPainter {
       }
     }
 
-    // Upagrahas — only show on D-1 Rashi chart, not on divisional charts
-    if (showUpagrahas && chartTypeKey == 'D-1' && data['upagrahas'] != null) {
-      final upagrahasList = data['upagrahas'] as List<dynamic>;
-      for (final u in upagrahasList) {
-        final code = u['short_code']?.toString() ?? 'Up';
-        if (code == 'Md') {
-          final sIdx = (u['sign_index'] as num?)?.toInt() ?? 1;
-          final hNum = (u['house'] as num?)?.toInt() ?? 1;
-          final degStr = u['degree_formatted']?.toString() ?? '';
-          String label = code;
-          if (showDegrees && degStr.isNotEmpty) {
-            final parts = degStr.split(':');
-            if (parts.length >= 2) {
-              label += ' ${parts[0]}:${parts[1]}';
+    // Upagrahas — support D-1 and Divisional charts
+    if (showUpagrahas) {
+      List<dynamic>? upagrahasList;
+      if (chartTypeKey == 'D-1' && data['upagrahas'] != null) {
+        upagrahasList = data['upagrahas'] as List<dynamic>;
+      } else if (chartTypeKey != 'D-1' && chartTypeKey != 'Bhava' &&
+                 data['divisional_charts'] != null &&
+                 data['divisional_charts'][chartTypeKey] != null &&
+                 data['divisional_charts'][chartTypeKey]['upagrahas'] != null) {
+        upagrahasList = data['divisional_charts'][chartTypeKey]['upagrahas'] as List<dynamic>;
+      } else if (chartTypeKey == 'Bhava' && data['upagrahas'] != null) {
+        upagrahasList = data['upagrahas'] as List<dynamic>;
+      }
+
+      if (upagrahasList != null) {
+        for (final u in upagrahasList) {
+          final code = u['short_code']?.toString() ?? 'Up';
+          if (code == 'Md' || code == 'Gk') {
+            final sIdx = (u['sign_index'] as num?)?.toInt() ?? 1;
+            final hNum = (u['house'] as num?)?.toInt() ?? 1;
+            final degStr = u['degree_formatted']?.toString() ?? '';
+            String label = code;
+            if (showDegrees && degStr.isNotEmpty) {
+              final parts = degStr.split(':');
+              if (parts.length >= 2) {
+                label += ' ${parts[0]}:${parts[1]}';
+              }
             }
+            planetsInSign.putIfAbsent(sIdx, () => []).add(label);
+            planetsInHouse.putIfAbsent(hNum, () => []).add(label);
           }
-          planetsInSign.putIfAbsent(sIdx, () => []).add(label);
-          planetsInHouse.putIfAbsent(hNum, () => []).add(label);
         }
       }
     }
