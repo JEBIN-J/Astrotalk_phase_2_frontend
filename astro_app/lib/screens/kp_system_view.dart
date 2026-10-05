@@ -40,16 +40,22 @@ class KpSystemView extends StatefulWidget {
 }
 
 class _KpSystemViewState extends State<KpSystemView> {
-  static const List<String> ayanamsaOptions = [
-    'Krishnamurti (KP New)',
-    'Krishnamurti (KP Old)',
-    'KP Straight Line',
-    'Khullar',
-    'Tropical (Sayana)',
-    'Lahiri (Chitapaksha)',
-    'B.V. Raman',
-    'Sri Yukteswar',
-  ];
+  static const Map<String, String> _ayanamsaNames = {
+    'LAHIRI': 'Lahiri (Chitrapaksha)',
+    'BV_RAMAN': 'B.V. Raman',
+    'KP_OLD': 'Krishnamurti (KP Old)',
+    'SRI_YUKTESWAR': 'Sri Yukteswar',
+    'DE_LUCE': 'De Luce',
+    'USHA_SHASHI': 'Usha-Shashi',
+    'DJWHAL_KHOOL': 'Djwhal Khool',
+    'JN_BHASIN': 'J.N. Bhasin',
+    'FAGAN_BRADLEY': 'Fagan-Bradley',
+    'TROPICAL': 'Tropical (Sayana)',
+    'KP_NEW': 'Krishnamurti (KP New)',
+    'KP_STRAIGHT_LINE': 'KP Straight Line',
+    'KHULLAR': 'Khullar',
+    'CHANDRA_HARI': 'Chandra Hari',
+  };
 
   static const List<String> subSections = [
     'KP Chart',
@@ -60,7 +66,24 @@ class _KpSystemViewState extends State<KpSystemView> {
     '4-Step',
   ];
 
-  String _selectedAyanamsa = 'Krishnamurti (KP New)';
+  Map<String, double> _ayanamsaOptions = {
+    'KP_NEW': 0.0,
+    'LAHIRI': 0.0,
+    'BV_RAMAN': 0.0,
+    'KP_OLD': 0.0,
+    'SRI_YUKTESWAR': 0.0,
+    'DE_LUCE': 0.0,
+    'USHA_SHASHI': 0.0,
+    'DJWHAL_KHOOL': 0.0,
+    'JN_BHASIN': 0.0,
+    'FAGAN_BRADLEY': 0.0,
+    'TROPICAL': 0.0,
+    'KP_STRAIGHT_LINE': 0.0,
+    'KHULLAR': 0.0,
+    'CHANDRA_HARI': 0.0,
+  };
+
+  String _selectedAyanamsa = 'KP_NEW';
   int _activeSectionIndex = 0;
 
   // KP Chart specific state
@@ -88,12 +111,29 @@ class _KpSystemViewState extends State<KpSystemView> {
   void initState() {
     super.initState();
     _activeChartStyle = widget.chartStyle;
+    _fetchAyanamsas();
     _fetchKpData();
+  }
+
+  Future<void> _fetchAyanamsas() async {
+    final opts = await AstroApiService.getAyanamsaDegrees(
+      dateOfBirth: widget.dateOfBirth,
+      timeOfBirth: widget.timeOfBirth,
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+      timezone: widget.timezone,
+    );
+    if (mounted && opts.isNotEmpty) {
+      setState(() {
+        _ayanamsaOptions = opts;
+      });
+    }
   }
 
   @override
   void didUpdateWidget(covariant KpSystemView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    bool needsFetch = false;
     if (oldWidget.personName != widget.personName ||
         oldWidget.dateOfBirth != widget.dateOfBirth ||
         oldWidget.timeOfBirth != widget.timeOfBirth ||
@@ -101,6 +141,14 @@ class _KpSystemViewState extends State<KpSystemView> {
         oldWidget.latitude != widget.latitude ||
         oldWidget.longitude != widget.longitude ||
         oldWidget.timezone != widget.timezone) {
+      needsFetch = true;
+    }
+    
+    if (widget.showUpagrahas && _kpData != null && _kpData!['upagrahas'] == null) {
+      needsFetch = true;
+    }
+
+    if (needsFetch) {
       _fetchKpData();
     }
   }
@@ -363,10 +411,13 @@ class _KpSystemViewState extends State<KpSystemView> {
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : const Color(0xFF1E293B),
                     ),
-                    items: ayanamsaOptions.map((ayan) {
+                    items: _ayanamsaOptions.keys.map((ayanKey) {
+                      final name = _ayanamsaNames[ayanKey] ?? ayanKey;
+                      final val = _ayanamsaOptions[ayanKey] ?? 0.0;
+                      final valStr = val > 0.0 || val < 0.0 ? ' (${val.toStringAsFixed(4)}°)' : '';
                       return DropdownMenuItem<String>(
-                        value: ayan,
-                        child: Text(ayan, overflow: TextOverflow.ellipsis),
+                        value: ayanKey,
+                        child: Text('$name$valStr', overflow: TextOverflow.ellipsis),
                       );
                     }).toList(),
                     onChanged: (newAyan) {
@@ -636,7 +687,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                 DataColumn(label: Text('NL', style: _headerStyle(isDark))),
                 DataColumn(label: Text('SL', style: _headerStyle(isDark))),
                 DataColumn(label: Text('SSL', style: _headerStyle(isDark))),
-                DataColumn(label: Text('Degree', style: _headerStyle(isDark))),
+                if (widget.showDegrees) DataColumn(label: Text('Degree', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Rashi', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Nakshatra', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Paada', style: _headerStyle(isDark))),
@@ -654,7 +705,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                     DataCell(Text(p['nl'] ?? '-', style: _cellStyle(isDark))),
                     DataCell(Text(p['sl'] ?? '-', style: _cellBadgeStyle(const Color(0xFF059669)))),
                     DataCell(Text(p['ssl'] ?? '-', style: _cellBadgeStyle(const Color(0xFF7C3AED)))),
-                    DataCell(Text(p['degree_formatted'] ?? '', style: _cellStyle(isDark))),
+                    if (widget.showDegrees) DataCell(Text(p['degree_formatted'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(p['sign'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(p['nakshatra'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(p['pada']?.toString() ?? '', style: _cellStyle(isDark))),
@@ -692,7 +743,7 @@ class _KpSystemViewState extends State<KpSystemView> {
               horizontalMargin: 12.w,
               columns: [
                 DataColumn(label: Text('House', style: _headerStyle(isDark))),
-                DataColumn(label: Text('Cusp Deg', style: _headerStyle(isDark))),
+                if (widget.showDegrees) DataColumn(label: Text('Cusp Deg', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Rashi', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Nakshatra', style: _headerStyle(isDark))),
                 DataColumn(label: Text('Pada', style: _headerStyle(isDark))),
@@ -706,7 +757,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                 return DataRow(
                   cells: [
                     DataCell(Text('H${c['house']}', style: _cellBoldStyle(isDark))),
-                    DataCell(Text(c['degree_formatted'] ?? '', style: _cellStyle(isDark))),
+                    if (widget.showDegrees) DataCell(Text(c['degree_formatted'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(c['sign'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(c['nakshatra'] ?? '', style: _cellStyle(isDark))),
                     DataCell(Text(c['pada']?.toString() ?? '', style: _cellStyle(isDark))),

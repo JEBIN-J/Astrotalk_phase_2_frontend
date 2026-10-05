@@ -5732,7 +5732,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
     return KpSystemView(
-      key: ValueKey('$_dobFormattedForApi-$_tobFormattedForApi-$_latitude-$_longitude-$_timezone-$_personName'),
+      key: ValueKey('$_dobFormattedForApi-$_tobFormattedForApi-$_latitude-$_longitude-$_timezone-$_personName-$_showUpagrahasOnChart-$_showDegreesOnChart'),
       personName: _personName,
       dateOfBirth: _dobFormattedForApi,
       timeOfBirth: _tobFormattedForApi,
