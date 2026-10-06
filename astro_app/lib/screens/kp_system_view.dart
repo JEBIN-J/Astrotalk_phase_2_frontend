@@ -1194,33 +1194,13 @@ class _KpSystemViewState extends State<KpSystemView> {
   }
 
   Widget _buildAspectsSection(bool isDark) {
-    if (_kpData == null) return const Center(child: CircularProgressIndicator());
-    final aspects = _kpData!['aspects'] as Map<String, dynamic>? ?? {};
-    final planetAspects = (aspects['planet_aspects'] as List<dynamic>?) ?? [];
-    final cuspAspects = (aspects['cusp_aspects'] as List<dynamic>?) ?? [];
-    final planets = (_kpData!['planets'] as List<dynamic>?) ?? [];
-    final cusps = (_kpData!['bhava_cusps'] as List<dynamic>?) ?? [];
-
-    // Precompute matrices
-    Map<String, Map<String, dynamic>> planetAspectMatrix = {};
-    for (var asp in planetAspects) {
-      String p1 = asp['planet_1']?.toString() ?? '';
-      String p2 = asp['planet_2']?.toString() ?? '';
-      if (!planetAspectMatrix.containsKey(p1)) planetAspectMatrix[p1] = {};
-      planetAspectMatrix[p1]![p2] = asp;
-      if (!planetAspectMatrix.containsKey(p2)) planetAspectMatrix[p2] = {};
-      planetAspectMatrix[p2]![p1] = asp;
-    }
+    final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
+    final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
     
-    Map<String, Map<String, dynamic>> cuspAspectMatrix = {};
-    for (var asp in cuspAspects) {
-      String p = asp['planet']?.toString() ?? '';
-      String c = asp['cusp_house']?.toString() ?? '';
-      if (!cuspAspectMatrix.containsKey(p)) cuspAspectMatrix[p] = {};
-      cuspAspectMatrix[p]![c] = asp;
-    }
+    final transitPlanets = (_kpData?['transit_planets'] as List<dynamic>?) ?? [];
+    final transitPlanetAspectsList = (_kpData?['transit_planet_aspects'] as List<dynamic>?) ?? [];
+    final transitCuspAspectsList = (_kpData?['transit_cusp_aspects'] as List<dynamic>?) ?? [];
 
-    // Longitudes
     Map<String, double> longitudes = {};
     for (var p in planets) {
       String pName = p['name']?.toString() ?? '';
@@ -1230,15 +1210,56 @@ class _KpSystemViewState extends State<KpSystemView> {
       String cName = c['house']?.toString() ?? c['cusp']?.toString() ?? '';
       longitudes[cName] = (c['longitude'] as num?)?.toDouble() ?? 0.0;
     }
+    
+    Map<String, double> transitLongitudes = {};
+    for (var tp in transitPlanets) {
+      String pName = tp['name']?.toString() ?? '';
+      transitLongitudes[pName] = (tp['longitude'] as num?)?.toDouble() ?? 0.0;
+    }
 
     final colNamesPlanet = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
     final rowNamesPlanet = ['Ascendant', 'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu', 'Uranus', 'Neptune', 'Pluto'];
-    
+    final rowNamesTransitPlanet = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu', 'Uranus', 'Neptune', 'Pluto'];
     final colNamesCusp = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
-    final rowNamesCusp = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu', 'Uranus', 'Neptune', 'Pluto'];
+    final rowNamesCusp = rowNamesPlanet;
 
-    double cellWidth = 55.w;
-    double cellHeight = 45.h;
+    final planetAspects = (_kpData?['aspects']?['planet_aspects'] as List<dynamic>?) ?? [];
+    final cuspAspects = (_kpData?['aspects']?['cusp_aspects'] as List<dynamic>?) ?? [];
+
+    Map<String, Map<String, dynamic>> planetAspectMatrix = {};
+    for (var asp in planetAspects) {
+      String p1 = asp['planet_1']?.toString() ?? '';
+      String p2 = asp['planet_2']?.toString() ?? '';
+      if (!planetAspectMatrix.containsKey(p1)) planetAspectMatrix[p1] = {};
+      if (!planetAspectMatrix.containsKey(p2)) planetAspectMatrix[p2] = {};
+      planetAspectMatrix[p1]![p2] = asp;
+      planetAspectMatrix[p2]![p1] = asp;
+    }
+
+    Map<String, Map<String, dynamic>> cuspAspectMatrix = {};
+    for (var asp in cuspAspects) {
+      String p = asp['planet']?.toString() ?? '';
+      String c = asp['cusp_house']?.toString() ?? '';
+      if (!cuspAspectMatrix.containsKey(p)) cuspAspectMatrix[p] = {};
+      cuspAspectMatrix[p]![c] = asp;
+    }
+    
+    Map<String, Map<String, dynamic>> transitPlanetMatrix = {};
+    for (var asp in transitPlanetAspectsList) {
+      String tp = asp['transit_planet']?.toString() ?? '';
+      String np = asp['natal_planet']?.toString() ?? '';
+      if (!transitPlanetMatrix.containsKey(tp)) transitPlanetMatrix[tp] = {};
+      transitPlanetMatrix[tp]![np] = asp;
+    }
+    
+    Map<String, Map<String, dynamic>> transitCuspMatrix = {};
+    for (var asp in transitCuspAspectsList) {
+      String tp = asp['transit_planet']?.toString() ?? '';
+      String c = asp['natal_cusp']?.toString() ?? '';
+      if (!transitCuspMatrix.containsKey(tp)) transitCuspMatrix[tp] = {};
+      transitCuspMatrix[tp]![c] = asp;
+    }
+
     Color headerBgColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
     Color borderColor = isDark ? Colors.white24 : Colors.black12;
 
@@ -1260,24 +1281,29 @@ class _KpSystemViewState extends State<KpSystemView> {
       }
     }
 
-    Widget buildMatrix(List<String> rNames, List<String> cNames, Map<String, Map<String, dynamic>> matrix, bool isCusp) {
+    Widget buildMatrix(List<String> rNames, List<String> cNames, Map<String, Map<String, dynamic>> matrix, bool isCusp, int mode) {
+      // mode 0 = Natal Pl -> Natal Pl
+      // mode 1 = Natal Pl -> Natal Cusp
+      // mode 2 = Transit Pl -> Natal Cusp
+      // mode 3 = Natal Pl -> Transit Pl
+      
       return Container(
         margin: EdgeInsets.only(top: 14.h),
         decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(8.r),
           border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(8.r),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left fixed column
               Column(
                 children: [
                   Container(
                     width: 60.w,
-                    height: cellHeight,
+                    height: 48.h,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: headerBgColor,
@@ -1286,12 +1312,12 @@ class _KpSystemViewState extends State<KpSystemView> {
                         bottom: BorderSide(color: borderColor),
                       ),
                     ),
-                    child: Text('Planet', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                    child: Text(mode == 2 ? 'Tr.Planet' : 'Planet', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
                   ),
                   ...rNames.map((rName) {
                     return Container(
                       width: 60.w,
-                      height: cellHeight,
+                      height: 48.h,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: headerBgColor,
@@ -1305,188 +1331,205 @@ class _KpSystemViewState extends State<KpSystemView> {
                   }).toList(),
                 ],
               ),
-              // Scrollable content
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: cNames.map((cName) {
-                          return Container(
-                            width: cellWidth,
-                            height: cellHeight,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: headerBgColor,
-                              border: Border(
-                                right: BorderSide(color: borderColor),
-                                bottom: BorderSide(color: borderColor),
-                              ),
-                            ),
-                            child: Text(isCusp ? _getCuspLabel(cName) : _getLordShort(cName), style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12.sp, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                          );
-                        }).toList(),
+              ...cNames.map((cName) {
+                return Column(
+                  children: [
+                    Container(
+                      width: 60.w,
+                      height: 48.h,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: headerBgColor,
+                        border: Border(
+                          right: BorderSide(color: borderColor),
+                          bottom: BorderSide(color: borderColor),
+                        ),
                       ),
-                      ...rNames.map((rName) {
-                        return Row(
-                          children: cNames.map((cName) {
-                            Widget content = const SizedBox();
-                            Color bgColor = Colors.transparent;
-                            bool hasText = false;
-
-                            if (!isCusp && rName == cName) {
-                              content = Text('0', style: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11.sp, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)));
-                              hasText = true;
-                            } else {
-                              if (longitudes.containsKey(rName) && longitudes.containsKey(cName)) {
-                                double colLon = longitudes[cName]!;
-                                double rowLon = longitudes[rName]!;
-                                double forwardAngle = isCusp ? (colLon - rowLon) % 360.0 : (rowLon - colLon) % 360.0;
-                                if (forwardAngle < 0) forwardAngle += 360.0;
-                                
-                                final asp = matrix[rName]?[cName];
-                                bool shouldDisplay = false;
-                                
-                                if (asp != null) {
-                                  double aspectAngle = (asp['aspect_angle'] as num?)?.toDouble() ?? 0.0;
-                                  if ((forwardAngle - aspectAngle).abs() <= 20.0) shouldDisplay = true;
-                                  else if (aspectAngle == 90.0 && (forwardAngle - 270.0).abs() <= 20.0) shouldDisplay = true;
-                                  else if (aspectAngle == 120.0 && (forwardAngle - 240.0).abs() <= 20.0) shouldDisplay = true;
-                                  else if (aspectAngle == 0.0 && (forwardAngle - 360.0).abs() <= 20.0) shouldDisplay = true;
-                                  else if (aspectAngle == 180.0 && (forwardAngle - 180.0).abs() <= 20.0) shouldDisplay = true;
-                                }
-                                
-                                if (shouldDisplay && asp != null) {
-                                  String shortAsp = asp['aspect_name']?.toString() ?? '';
-                                  if (shortAsp.length > 15) shortAsp = shortAsp.substring(0, 15);
-                                  String orbText = forwardAngle.toStringAsFixed(2);
-                                      
-                                  String nature = (asp['nature']?.toString() ?? '').toLowerCase();
-                                  Color textColor = isDark ? Colors.white : Colors.black87;
-                                  
-                                  if (nature.contains("yellow") || shortAsp.toLowerCase().contains("conj")) {
-                                    bgColor = const Color(0xFFFDE047); 
-                                  } else if (nature.contains("darkgreen") || shortAsp.toLowerCase().contains("trin") || shortAsp.toLowerCase().contains("bqui") || shortAsp.toLowerCase().contains("d126")) {
-                                    bgColor = const Color(0xFF22C55E); 
-                                    textColor = Colors.white;
-                                  } else if (nature.contains("green") || nature.contains("harmonious") || shortAsp.toLowerCase().contains("sext") || shortAsp.toLowerCase().contains("semi") || shortAsp.toLowerCase().contains("quin") || shortAsp.toLowerCase().contains("tred") || shortAsp.toLowerCase().contains("vigi")) {
-                                    bgColor = const Color(0xFF86EFAC); 
-                                  } else if (nature.contains("lightred") || shortAsp.toLowerCase().contains("ssqu") || shortAsp.toLowerCase().contains("d54")) {
-                                    bgColor = const Color(0xFFFCA5A5);
-                                  } else if (nature.contains("red") || nature.contains("adverse") || shortAsp.toLowerCase().contains("squr") || shortAsp.toLowerCase().contains("oppn")) {
-                                    bgColor = const Color(0xFFEF4444); 
-                                    textColor = Colors.white;
-                                  } else {
-                                    bgColor = const Color(0xFFE2E8F0); 
-                                  }
-
-                                  content = Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(orbText, style: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w700, color: textColor)),
-                                      SizedBox(height: 2.h),
-                                      Text(shortAsp, style: GoogleFonts.inter(fontSize: 8.5.sp, fontWeight: FontWeight.w500, color: textColor.withValues(alpha: 0.9)), textAlign: TextAlign.center),
-                                    ],
-                                  );
-                                  hasText = true;
-                                } else {
-                                  String orbText = forwardAngle.toStringAsFixed(2);
-                                  content = Text(orbText, style: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w500, color: isDark ? Colors.white54 : const Color(0xFF94A3B8)));
-                                  hasText = true;
-                                }
-                              }
-                            }
-
-                            return Container(
-                              width: cellWidth,
-                              height: cellHeight,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: bgColor,
-                                border: Border(
-                                  right: BorderSide(color: borderColor),
-                                  bottom: BorderSide(color: borderColor),
-                                ),
-                              ),
-                              child: hasText ? content : const SizedBox(),
-                            );
-                          }).toList(),
+                      child: Text(isCusp ? _getCuspLabel(cName) : _getLordShort(cName), style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12.sp, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    ),
+                    ...rNames.map((rName) {
+                      if (cName == rName && !isCusp && mode != 3) {
+                        return Container(
+                          width: 60.w,
+                          height: 48.h,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            border: Border(
+                              right: BorderSide(color: borderColor),
+                              bottom: BorderSide(color: borderColor),
+                            ),
+                          ),
+                          child: Text('0', style: GoogleFonts.inter(fontSize: 10.sp, color: Colors.grey)),
                         );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              ),
+                      }
+
+                      bool shouldDisplay = false;
+                      String shortAsp = '';
+                      Color bgColor = isDark ? const Color(0xFF0F172A) : Colors.white;
+                      Color textColor = isDark ? Colors.white54 : Colors.black45;
+                      
+                      double colLon = 0.0;
+                      double rowLon = 0.0;
+                      bool hasData = false;
+                      
+                      if (mode == 0) {
+                          if (longitudes.containsKey(cName) && longitudes.containsKey(rName)) {
+                              colLon = longitudes[cName]!;
+                              rowLon = longitudes[rName]!;
+                              hasData = true;
+                          }
+                      } else if (mode == 1) {
+                          if (longitudes.containsKey(cName) && longitudes.containsKey(rName)) {
+                              colLon = longitudes[cName]!;
+                              rowLon = longitudes[rName]!;
+                              hasData = true;
+                          }
+                      } else if (mode == 2) { // Transit Pl -> Natal Cusp
+                          if (longitudes.containsKey(cName) && transitLongitudes.containsKey(rName)) {
+                              colLon = longitudes[cName]!;
+                              rowLon = transitLongitudes[rName]!;
+                              hasData = true;
+                          }
+                      } else if (mode == 3) { // Transit Pl -> Natal Pl
+                          if (transitLongitudes.containsKey(rName) && longitudes.containsKey(cName)) {
+                              colLon = longitudes[cName]!;
+                              rowLon = transitLongitudes[rName]!;
+                              hasData = true;
+                          }
+                      }
+
+                      double forwardAngle = 0.0;
+                      if (hasData) {
+                          // mode 0: rowLon - colLon
+                          // mode 1: colLon - rowLon
+                          // mode 2: colLon - rowLon
+                          // mode 3: colLon - rowLon
+                          forwardAngle = (mode == 0 || mode == 3) ? (rowLon - colLon) % 360.0 : (colLon - rowLon) % 360.0;
+                          if (forwardAngle < 0) forwardAngle += 360.0;
+                          
+                          final asp = matrix[rName]?[cName];
+                          if (asp != null) {
+                            String nature = asp['nature']?.toString() ?? '';
+                            String aspName = asp['aspect_name']?.toString() ?? '';
+                            shouldDisplay = true;
+
+                            if (aspName == 'Conjunction') shortAsp = 'Conjunction';
+                            else if (aspName == 'Vigintile') shortAsp = 'Vigintile';
+                            else if (aspName == 'Quin-decile') shortAsp = 'Quin-decile';
+                            else if (aspName == 'Semi-Sextile') shortAsp = 'Semi-sextile';
+                            else if (aspName == 'Semi-quintile') shortAsp = 'Semi-quintile';
+                            else if (aspName == 'Semi-Square') shortAsp = 'Semi-Square';
+                            else if (aspName == 'Degrees 54') shortAsp = 'Degrees 54';
+                            else if (aspName == 'Sextile') shortAsp = 'Sextile';
+                            else if (aspName == 'Quintile') shortAsp = 'Quintile';
+                            else if (aspName == 'Square') shortAsp = 'Square';
+                            else if (aspName == 'Tredecile') shortAsp = 'Tredecile';
+                            else if (aspName == 'Trine') shortAsp = 'Trine';
+                            else if (aspName == 'Degrees 126') shortAsp = 'Degrees 126';
+                            else if (aspName == 'Sesquiquadrate') shortAsp = 'Sesquiquadrate';
+                            else if (aspName == 'Bi-quintile') shortAsp = 'Bi-quintile';
+                            else if (aspName == 'Quincunx') shortAsp = 'Quincunx';
+                            else if (aspName == 'Degree 162') shortAsp = 'Degree 162';
+                            else if (aspName == 'Opposition') shortAsp = 'Opposition';
+
+                            if (nature == 'Yellow') { bgColor = const Color(0xFFFDE047); textColor = Colors.blue[800]!; }
+                            else if (nature == 'Green') { bgColor = const Color(0xFF86EFAC); textColor = Colors.black87; }
+                            else if (nature == 'LightRed') { bgColor = const Color(0xFFFCA5A5); textColor = Colors.black87; }
+                            else if (nature == 'Red') { bgColor = const Color(0xFFEF4444); textColor = Colors.white; }
+                            else if (nature == 'DarkGreen') { bgColor = const Color(0xFF22C55E); textColor = Colors.white; }
+                          }
+                      }
+
+                      return Container(
+                        width: 60.w,
+                        height: 48.h,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          border: Border(
+                            right: BorderSide(color: borderColor),
+                            bottom: BorderSide(color: borderColor),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              hasData ? forwardAngle.toStringAsFixed(2) : '-',
+                              style: GoogleFonts.inter(fontSize: 10.sp, color: textColor.withOpacity(0.8), fontWeight: shouldDisplay ? FontWeight.bold : FontWeight.normal),
+                            ),
+                            if (shouldDisplay)
+                              Text(
+                                shortAsp,
+                                style: GoogleFonts.inter(fontSize: 7.sp, color: textColor, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                );
+              }).toList(),
             ],
           ),
         ),
       );
     }
 
-    final dropdownOptions = [
-      'Aspect Planet -> Planet',
-      'Aspect Planet -> Cusp',
-      'Aspect Transit Pl. -> Natal Cusp',
-      'Aspect Natal Vs Transit Pl.'
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Dropdown Container
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.25)),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               value: _aspectSubTabIndex,
               isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF4338CA)),
               dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              style: GoogleFonts.outfit(
-                fontSize: 13.5.sp,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
-              ),
-              items: dropdownOptions.asMap().entries.map((entry) {
-                return DropdownMenuItem<int>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                );
-              }).toList(),
-              onChanged: (newIdx) {
-                if (newIdx != null && newIdx != _aspectSubTabIndex) {
-                  setState(() => _aspectSubTabIndex = newIdx);
-                }
+              icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white70 : Colors.indigo),
+              items: [
+                DropdownMenuItem(value: 0, child: Text('Aspect Planet -> Planet', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87))),
+                DropdownMenuItem(value: 1, child: Text('Aspect Planet -> Cusp', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87))),
+                DropdownMenuItem(value: 2, child: Text('Aspect Transit Pl. -> Natal Cusp', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87))),
+                DropdownMenuItem(value: 3, child: Text('Aspect Natal Vs Transit Pl.', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87))),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _aspectSubTabIndex = val);
               },
             ),
           ),
         ),
-        
         if (_aspectSubTabIndex == 0) ...[
           if (planetAspects.isEmpty)
             _buildInfoCard('No major planetary aspects within orb.', isDark)
           else
-            buildMatrix(rowNamesPlanet, colNamesPlanet, planetAspectMatrix, false),
+            buildMatrix(rowNamesPlanet, colNamesPlanet, planetAspectMatrix, false, 0),
         ] else if (_aspectSubTabIndex == 1) ...[
           if (cuspAspects.isEmpty)
             _buildInfoCard('No cusp aspects within orb.', isDark)
           else
-            buildMatrix(rowNamesCusp, colNamesCusp, cuspAspectMatrix, true),
-        ] else ...[
-          _buildInfoCard('Coming Soon', isDark),
+            buildMatrix(rowNamesCusp, colNamesCusp, cuspAspectMatrix, true, 1),
+        ] else if (_aspectSubTabIndex == 2) ...[
+          if (transitCuspAspectsList.isEmpty)
+            _buildInfoCard('No transit cusp aspects found.', isDark)
+          else
+            buildMatrix(rowNamesTransitPlanet, colNamesCusp, transitCuspMatrix, true, 2),
+        ] else if (_aspectSubTabIndex == 3) ...[
+          if (transitPlanetAspectsList.isEmpty)
+            _buildInfoCard('No transit planet aspects found.', isDark)
+          else
+            buildMatrix(rowNamesTransitPlanet, rowNamesPlanet, transitPlanetMatrix, false, 3),
         ],
 
         // Color Legend
-        if (_aspectSubTabIndex == 0 || _aspectSubTabIndex == 1) ...[
+        if (true) ...[
           SizedBox(height: 16.h),
           Wrap(
             spacing: 8.w,
@@ -1506,7 +1549,6 @@ class _KpSystemViewState extends State<KpSystemView> {
       ],
     );
   }
-
   Widget _buildLegendItem(String text, Color bgColor, Color textColor) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
