@@ -1344,7 +1344,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                               if (longitudes.containsKey(rName) && longitudes.containsKey(cName)) {
                                 double colLon = longitudes[cName]!;
                                 double rowLon = longitudes[rName]!;
-                                double forwardAngle = (rowLon - colLon) % 360.0;
+                                double forwardAngle = isCusp ? (colLon - rowLon) % 360.0 : (rowLon - colLon) % 360.0;
                                 if (forwardAngle < 0) forwardAngle += 360.0;
                                 
                                 final asp = matrix[rName]?[cName];
@@ -1483,6 +1483,25 @@ class _KpSystemViewState extends State<KpSystemView> {
             buildMatrix(rowNamesCusp, colNamesCusp, cuspAspectMatrix, true),
         ] else ...[
           _buildInfoCard('Coming Soon', isDark),
+        ],
+
+        // Color Legend
+        if (_aspectSubTabIndex == 0 || _aspectSubTabIndex == 1) ...[
+          SizedBox(height: 16.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            alignment: WrapAlignment.center,
+            children: [
+              _buildLegendItem('Very Good', const Color(0xFF22C55E), Colors.white),
+              _buildLegendItem('Good', const Color(0xFF86EFAC), Colors.black87),
+              _buildLegendItem('Mild Good', const Color(0xFFD1FAE5), Colors.black87),
+              _buildLegendItem('Conjunction', const Color(0xFFFDE047), Colors.blue[800]!),
+              _buildLegendItem('Very Evil', const Color(0xFFEF4444), Colors.white),
+              _buildLegendItem('Mild Evil', const Color(0xFFFCA5A5), Colors.black87),
+            ],
+          ),
+          SizedBox(height: 16.h),
         ],
       ],
     );
