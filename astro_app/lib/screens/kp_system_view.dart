@@ -73,6 +73,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     'KP Aspects',
     'Nakshatra Nadi',
     '4-Step',
+    'Angular Distance',
   ];
 
   Map<String, double> _ayanamsaOptions = {
@@ -107,6 +108,9 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   // 4-Step specific state
   int _fourStepSubTabIndex = 0; // 0: Planets, 1: Cusps
+
+  // Angular Distance specific state
+  int _angularDistanceSubTabIndex = 0; // 0: Natal->Natal, 1: Natal->Transit
 
   // Expanded Dasha state
   final Set<String> _expandedMahadashas = {};
@@ -393,6 +397,8 @@ class _KpSystemViewState extends State<KpSystemView> {
         return _buildNakshatraNadiSection(isDark);
       case 5:
         return _buildFourStepSection(isDark);
+      case 6:
+        return _buildAngularDistanceSection(isDark);
       default:
         return _buildKpChartSection(isDark);
     }
@@ -1746,7 +1752,7 @@ class _KpSystemViewState extends State<KpSystemView> {
       '11',
       '12',
     ];
-    final rowNamesCusp = rowNamesPlanet;
+    final rowNamesCusp = rowNamesPlanet.where((p) => p != 'Ascendant').toList();
 
     final planetAspects =
         (_kpData?['aspects']?['planet_aspects'] as List<dynamic>?) ?? [];
@@ -1795,7 +1801,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     String _getCuspLabel(String c) {
       switch (c) {
         case '1':
-          return 'I';
+          return 'ASC';
         case '2':
           return 'II';
         case '3':
@@ -1919,7 +1925,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                           child: Text(
                             isCusp
                                 ? _getCuspLabel(cName)
-                                : _getLordShort(cName),
+                                : (cName == 'Ascendant' ? 'Lagna' : _getLordShort(cName)),
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w700,
                               fontSize: 12.sp,
@@ -1990,11 +1996,11 @@ class _KpSystemViewState extends State<KpSystemView> {
                               hasData = true;
                             }
                           } else if (mode == 3) {
-                            // Transit Pl -> Natal Pl
-                            if (transitLongitudes.containsKey(rName) &&
-                                longitudes.containsKey(cName)) {
-                              colLon = longitudes[cName]!;
-                              rowLon = transitLongitudes[rName]!;
+                            // Natal Pl -> Transit Pl (swapped)
+                            if (longitudes.containsKey(rName) &&
+                                transitLongitudes.containsKey(cName)) {
+                              rowLon = longitudes[rName]!;
+                              colLon = transitLongitudes[cName]!;
                               hasData = true;
                             }
                           }
@@ -2010,7 +2016,12 @@ class _KpSystemViewState extends State<KpSystemView> {
                                 : (colLon - rowLon) % 360.0;
                             if (forwardAngle < 0) forwardAngle += 360.0;
 
-                            final asp = matrix[rName]?[cName];
+                            Map<String, dynamic>? asp;
+                            if (mode == 3) {
+                              asp = matrix[cName]?[rName];
+                            } else {
+                              asp = matrix[rName]?[cName];
+                            }
                             if (asp != null) {
                               String nature = asp['nature']?.toString() ?? '';
                               String aspName =
@@ -2227,8 +2238,8 @@ class _KpSystemViewState extends State<KpSystemView> {
             _buildInfoCard('No transit planet aspects found.', isDark)
           else
             buildMatrix(
-              rowNamesTransitPlanet,
               rowNamesPlanet,
+              rowNamesTransitPlanet,
               transitPlanetMatrix,
               false,
               3,
@@ -2917,5 +2928,278 @@ class _KpSystemViewState extends State<KpSystemView> {
     if (l.contains('rahu')) return 'Ra';
     if (l.contains('ketu')) return 'Ke';
     return lord.isNotEmpty ? lord.substring(0, 2.clamp(0, lord.length)) : '';
+  }
+
+  // =========================================================================
+  // SECTION 7: ANGULAR DISTANCE
+  // =========================================================================
+  Widget _buildAngularDistanceSection(bool isDark) {
+    final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
+    final transitPlanets = (_kpData?['transit_planets'] as List<dynamic>?) ?? [];
+    
+    Map<String, double> longitudes = {};
+    for (var p in planets) {
+      String pName = p['name']?.toString() ?? '';
+      longitudes[pName] = (p['longitude'] as num?)?.toDouble() ?? 0.0;
+    }
+    
+    Map<String, double> transitLongitudes = {};
+    for (var tp in transitPlanets) {
+      String pName = tp['name']?.toString() ?? '';
+      transitLongitudes[pName] = (tp['longitude'] as num?)?.toDouble() ?? 0.0;
+    }
+
+    final rowNamesPlanet = [
+      'Ascendant',
+      'Sun',
+      'Moon',
+      'Mars',
+      'Mercury',
+      'Jupiter',
+      'Venus',
+      'Saturn',
+      'Rahu',
+      'Ketu',
+      'Uranus',
+      'Neptune',
+      'Pluto',
+    ];
+
+    final rowNamesTransitPlanet = [
+      'Sun',
+      'Moon',
+      'Mars',
+      'Mercury',
+      'Jupiter',
+      'Venus',
+      'Saturn',
+      'Rahu',
+      'Ketu',
+      'Uranus',
+      'Neptune',
+      'Pluto',
+    ];
+
+    double _getDistance(double l1, double l2) {
+      double diff = (l1 - l2).abs();
+      if (diff > 180.0) diff = 360.0 - diff;
+      return diff;
+    }
+
+    String _getShort(String n) {
+      if (n == 'Ascendant') return 'ASC';
+      if (n.length >= 3) return n.substring(0, 3).toUpperCase();
+      return n.toUpperCase();
+    }
+
+    Widget buildAngMatrix(
+      List<String> rNames,
+      List<String> cNames,
+      Map<String, double> rLons,
+      Map<String, double> cLons,
+      bool isNatalNatal,
+    ) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                children: [
+                  Container(
+                    width: 70.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF9C3),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      isNatalNatal ? 'Natal\nPlanets' : 'Transit\nPlanets',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10.sp,
+                        color: const Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                  ...cNames.map((cName) => Container(
+                        width: 65.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF9C3),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _getShort(cName),
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11.sp,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                      )),
+                ],
+              ),
+              // Data Rows
+              ...rNames.map((rName) {
+                return Row(
+                  children: [
+                    Container(
+                      width: 70.w,
+                      height: 40.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF9C3),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _getShort(rName),
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11.sp,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                    ...cNames.map((cName) {
+                      bool hasData = rLons.containsKey(rName) && cLons.containsKey(cName);
+                      double dist = 0.0;
+                      if (hasData) {
+                        dist = _getDistance(rLons[rName]!, cLons[cName]!);
+                      }
+                      
+                      int rIdx = rNames.indexOf(rName);
+                      int cIdx = cNames.indexOf(cName);
+                      bool isEmpty = (isNatalNatal && cIdx > rIdx);
+
+                      return Container(
+                        width: 65.w,
+                        height: 40.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                        ),
+                        alignment: Alignment.center,
+                        child: (hasData && !isEmpty)
+                            ? Text(
+                                dist.toStringAsFixed(4),
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11.sp,
+                                  color: Colors.blue[600],
+                                ),
+                              )
+                            : (isEmpty ? const SizedBox() : Text('-', style: TextStyle(color: isDark ? Colors.white : Colors.black))),
+                      );
+                    }),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _angularDistanceSubTabIndex = 0),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: _angularDistanceSubTabIndex == 0
+                          ? (isDark ? const Color(0xFF334155) : Colors.white)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                      boxShadow: _angularDistanceSubTabIndex == 0
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Natal -> Natal',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.sp,
+                        color: _angularDistanceSubTabIndex == 0
+                            ? const Color(0xFF4338CA)
+                            : (isDark ? Colors.white60 : Colors.black54),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _angularDistanceSubTabIndex = 1),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    decoration: BoxDecoration(
+                      color: _angularDistanceSubTabIndex == 1
+                          ? (isDark ? const Color(0xFF334155) : Colors.white)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                      boxShadow: _angularDistanceSubTabIndex == 1
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Natal -> Transit',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.sp,
+                        color: _angularDistanceSubTabIndex == 1
+                            ? const Color(0xFF4338CA)
+                            : (isDark ? Colors.white60 : Colors.black54),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Matrix
+        if (_angularDistanceSubTabIndex == 0)
+          buildAngMatrix(rowNamesPlanet, rowNamesPlanet, longitudes, longitudes, true)
+        else
+          buildAngMatrix(rowNamesTransitPlanet, rowNamesPlanet, transitLongitudes, longitudes, false),
+      ],
+    );
   }
 }
