@@ -3261,7 +3261,7 @@ Widget _buildVedicElementsSection(bool isDark) {
     final bavMatrix = ashtaka['bav_matrix'] as Map<String, dynamic>? ?? {};
     final savPoints = ashtaka['sav_points'] as List<dynamic>? ?? [];
 
-    List<DataColumn> columns = [
+    List<DataColumn> fixedColumns = [
       DataColumn(
         label: Text(
           'Rasi =>>',
@@ -3270,8 +3270,9 @@ Widget _buildVedicElementsSection(bool isDark) {
       )
     ];
 
+    List<DataColumn> scrollableColumns = [];
     for (var sign in signs) {
-      columns.add(
+      scrollableColumns.add(
         DataColumn(
           label: Text(
             sign,
@@ -3281,7 +3282,8 @@ Widget _buildVedicElementsSection(bool isDark) {
       );
     }
 
-    List<DataRow> dataRows = [];
+    List<DataRow> fixedRows = [];
+    List<DataRow> scrollableRows = [];
 
     final keyMap = {
       'ASC': 'Lagna',
@@ -3298,21 +3300,24 @@ Widget _buildVedicElementsSection(bool isDark) {
       final key = keyMap[r]!;
       final points = bavMatrix[key] as List<dynamic>? ?? List.filled(12, 0);
 
-      List<DataCell> cells = [
-        DataCell(Text(r, style: _cellStyle(isDark)))
-      ];
+      fixedRows.add(DataRow(cells: [DataCell(Text(r, style: _cellStyle(isDark)))]));
 
+      List<DataCell> scrollableCells = [];
       for (var i = 0; i < 12; i++) {
-        cells.add(DataCell(Text(points[i].toString(), style: _cellStyle(isDark))));
+        scrollableCells.add(DataCell(Text(points[i].toString(), style: _cellStyle(isDark))));
       }
-
-      dataRows.add(DataRow(cells: cells));
+      scrollableRows.add(DataRow(cells: scrollableCells));
     }
 
     // Sarvashtak Row
-    List<DataCell> savCells = [
-      DataCell(Text('Sarvashtak', style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.bold)))
-    ];
+    fixedRows.add(
+      DataRow(
+        color: WidgetStateProperty.all(const Color(0xFF67E8F9).withValues(alpha: isDark ? 0.3 : 0.8)),
+        cells: [DataCell(Text('Sarvashtak', style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.bold)))],
+      ),
+    );
+
+    List<DataCell> savCells = [];
     for (var i = 0; i < 12; i++) {
       int p = 0;
       if (i < savPoints.length) {
@@ -3321,7 +3326,7 @@ Widget _buildVedicElementsSection(bool isDark) {
       savCells.add(DataCell(Text(p.toString(), style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.bold))));
     }
 
-    dataRows.add(
+    scrollableRows.add(
       DataRow(
         color: WidgetStateProperty.all(const Color(0xFF67E8F9).withValues(alpha: isDark ? 0.3 : 0.8)),
         cells: savCells,
@@ -3347,20 +3352,51 @@ Widget _buildVedicElementsSection(bool isDark) {
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(
-                const Color(0xFFFEF08A).withValues(alpha: isDark ? 0.3 : 1.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fixed Column
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(
+                    const Color(0xFFFEF08A).withValues(alpha: isDark ? 0.3 : 1.0),
+                  ),
+                  dividerThickness: 0.5,
+                  dataRowMinHeight: 35.h,
+                  dataRowMaxHeight: 35.h,
+                  columnSpacing: 18.w,
+                  horizontalMargin: 12.w,
+                  columns: fixedColumns,
+                  rows: fixedRows,
+                ),
               ),
-              dividerThickness: 0.5,
-              dataRowMinHeight: 35.h,
-              dataRowMaxHeight: 35.h,
-              columnSpacing: 18.w,
-              horizontalMargin: 12.w,
-              columns: columns,
-              rows: dataRows,
-            ),
+              // Scrollable Columns
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: WidgetStateProperty.all(
+                      const Color(0xFFFEF08A).withValues(alpha: isDark ? 0.3 : 1.0),
+                    ),
+                    dividerThickness: 0.5,
+                    dataRowMinHeight: 35.h,
+                    dataRowMaxHeight: 35.h,
+                    columnSpacing: 18.w,
+                    horizontalMargin: 12.w,
+                    columns: scrollableColumns,
+                    rows: scrollableRows,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
