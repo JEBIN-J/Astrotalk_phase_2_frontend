@@ -2378,163 +2378,162 @@ class _KpSystemViewState extends State<KpSystemView> {
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(
-                const Color(0xFF4338CA).withValues(alpha: 0.1),
-              ),
-              dividerThickness: 0.3,
-              dataRowMinHeight: 60.h,
-              dataRowMaxHeight: 120.h,
-              headingTextStyle: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                fontSize: 13.sp,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
-              ),
-              columnSpacing: 24.w,
-              horizontalMargin: 16.w,
-              columns: [
-                DataColumn(label: Text('Planet', style: _headerStyle(isDark))),
-                DataColumn(
-                  label: Text('Position', style: _headerStyle(isDark)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.r),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(
+                  isDark ? const Color(0xFF3730A3).withValues(alpha: 0.4) : const Color(0xFFEEF2FF),
                 ),
-                DataColumn(
-                  label: Text('Planet (Source)', style: _headerStyle(isDark)),
+                dividerThickness: 0.5,
+                dataRowMinHeight: 50.h,
+                dataRowMaxHeight: double.infinity,
+                headingTextStyle: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                  color: isDark ? Colors.white : const Color(0xFF312E81),
                 ),
-                DataColumn(
-                  label: Text('Nakshatra Lord', style: _headerStyle(isDark)),
-                ),
-                DataColumn(
-                  label: Text('Sub Lord', style: _headerStyle(isDark)),
-                ),
-                DataColumn(
-                  label: Text('Active Links', style: _headerStyle(isDark)),
-                ),
-              ],
-              rows: nadiList.map((nadi) {
-                final pName = nadi['planet'] ?? '';
-                final script = nadi['nadi_script'] ?? '';
-                final links = (nadi['nadi_links'] as List<dynamic>?) ?? [];
+                columnSpacing: 28.w,
+                horizontalMargin: 20.w,
+                columns: [
+                  DataColumn(label: Text('Planet')),
+                  DataColumn(label: Text('Position')),
+                  DataColumn(label: Text('Planet (Source)')),
+                  DataColumn(label: Text('Nakshatra Lord')),
+                  DataColumn(label: Text('Sub Lord')),
+                  DataColumn(label: Text('Active Links')),
+                ],
+                rows: nadiList.map((nadi) {
+                  final pName = nadi['planet'] ?? '';
+                  final script = nadi['nadi_script'] ?? '';
+                  final links = (nadi['nadi_links'] as List<dynamic>?) ?? [];
 
-                final scriptParts = script.split(RegExp(r'\s*(?:->|→|➔)\s*'));
-                final source = scriptParts.isNotEmpty ? scriptParts[0] : '--';
-                final nLord = scriptParts.length > 1 ? scriptParts[1] : '--';
-                final sLord = scriptParts.length > 2 ? scriptParts[2] : '--';
+                  final scriptParts = script.split(RegExp(r'\s*(?:->|→|➔)\s*'));
+                  final source = scriptParts.isNotEmpty ? scriptParts[0] : '--';
+                  final nLord = scriptParts.length > 1 ? scriptParts[1] : '--';
+                  final sLord = scriptParts.length > 2 ? scriptParts[2] : '--';
 
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 12.r,
-                            backgroundColor: const Color(0xFF4338CA),
-                            child: Text(
-                              _getLordShort(pName),
-                              style: GoogleFonts.outfit(
-                                color: isDark ? Colors.white : const Color(0xFF713F12),
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.bold,
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 14.r,
+                                backgroundColor: isDark ? const Color(0xFF6366F1) : const Color(0xFF4F46E5),
+                                child: Text(
+                                  _getLordShort(pName),
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
+                              SizedBox(width: 10.w),
+                              Text(pName, style: _cellBoldStyle(isDark)),
+                            ],
                           ),
-                          SizedBox(width: 8.w),
-                          Text(pName, style: _cellBoldStyle(isDark)),
-                        ],
+                        ),
                       ),
-                    ),
-                    DataCell(
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(nadi['rashi'] ?? '', style: _cellStyle(isDark)),
-                          Text(
-                            '${nadi['nakshatra']} (P${nadi['pada']})',
-                            style: GoogleFonts.outfit(
-                              fontSize: 10.sp,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
+                      DataCell(
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(nadi['rashi'] ?? '', style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.w600)),
+                              SizedBox(height: 2.h),
+                              Text(
+                                '${nadi['nakshatra']} (P${nadi['pada']})',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10.sp,
+                                  color: isDark ? Colors.white60 : Colors.black54,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    DataCell(
-                      Text(
-                        source,
-                        style: GoogleFonts.outfit(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF312E81),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Text(
-                        nLord,
-                        style: GoogleFonts.outfit(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF312E81),
+                      DataCell(
+                        Text(
+                          source,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA),
+                          ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Text(
-                        sLord,
-                        style: GoogleFonts.outfit(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF312E81),
+                      DataCell(
+                        Text(
+                          nLord,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA),
+                          ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        width: 250.w,
-                        child: links.isEmpty
-                            ? Text('--', style: _cellStyle(isDark))
-                            : Wrap(
-                                spacing: 4.w,
-                                runSpacing: 4.h,
-                                children: links.map((link) {
-                                  return Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 6.w,
-                                      vertical: 2.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF059669,
-                                      ).withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(4.r),
-                                    ),
-                                    child: Text(
-                                      '${link['type']}: ${link['nature']}',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF059669),
+                      DataCell(
+                        Text(
+                          sLord,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA),
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Container(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          width: 220.w,
+                          child: links.isEmpty
+                              ? Text('--', style: _cellStyle(isDark))
+                              : Wrap(
+                                  spacing: 6.w,
+                                  runSpacing: 6.h,
+                                  children: links.map((link) {
+                                    return Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF059669).withValues(alpha: 0.2) : const Color(0xFFD1FAE5),
+                                        borderRadius: BorderRadius.circular(6.r),
+                                        border: Border.all(
+                                          color: isDark ? const Color(0xFF059669).withValues(alpha: 0.5) : const Color(0xFF34D399).withValues(alpha: 0.3),
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
+                                      child: Text(
+                                        '${link['type']}: ${link['nature']}',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? const Color(0xFF34D399) : const Color(0xFF065F46),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ),
