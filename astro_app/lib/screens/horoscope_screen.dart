@@ -335,6 +335,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           timezone: _timezone,
           ayanamsa: _selectedAyanamsa,
           customAyanamsa: _customAyanamsa,
+          targetDateStr: '$_bnnTargetYear-01-01',
         ).catchError((e) => <String, dynamic>{}),
         AstroApiService.getJaimini(
           name: _personName,
@@ -3367,7 +3368,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             final p = entry.value as Map<String, dynamic>;
                             final house = p['house']?.toString() ?? '';
                             final sign = p['sign']?.toString() ?? '';
-                            final degree = p['longitude_formatted']?.toString() ?? '';
+                            final degree = p['longitude_formatted']?.toString() ?? p['degree_formatted']?.toString() ?? p['degree']?.toString() ?? '';
                             final dignity = p['dignity']?.toString() ?? 'Neutral';
                             final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
                             final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];

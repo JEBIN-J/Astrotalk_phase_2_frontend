@@ -245,14 +245,10 @@ class _MultiKundliPainter extends CustomPainter {
         planetsInSign.putIfAbsent(sIdx, () => []).add(formatted);
         planetsInHouse.putIfAbsent(hNum, () => []).add(formatted);
       }
-      if (showKpCusps) {
-        _addKpCusps(planetsInSign, planetsInHouse, data, ascSignIdx);
-      }
-      return;
     }
 
     // Bhava Chalit placements - First try to use bhava_chalit object if provided by backend
-    if (chartTypeKey == 'Bhava' && data['bhava_chalit'] != null) {
+    else if (chartTypeKey == 'Bhava' && data['bhava_chalit'] != null) {
       final bData = data['bhava_chalit'];
       final pList = bData['planets'] as List<dynamic>? ?? [];
 
@@ -282,14 +278,10 @@ class _MultiKundliPainter extends CustomPainter {
         planetsInHouse.putIfAbsent(bhavaHouse, () => []).add(formatted);
         planetsInSign.putIfAbsent(actualSignIdx, () => []).add(formatted);
       }
-      if (showKpCusps) {
-        _addKpCusps(planetsInSign, planetsInHouse, data, ascSignIdx);
-      }
-      return;
     }
 
     // KP Bhava Chalit Full Calculation Logic (if backend only gives cusps & planets)
-    if (chartTypeKey == 'Bhava' &&
+    else if (chartTypeKey == 'Bhava' &&
         data['bhava_chalit'] == null &&
         (data['bhava_cusps'] != null || data['cusps'] != null) &&
         data['planets'] != null) {
@@ -379,15 +371,10 @@ class _MultiKundliPainter extends CustomPainter {
         planetsInHouse.putIfAbsent(bhavaHouse, () => []).add(formatted);
         planetsInSign.putIfAbsent(actualSignIdx, () => []).add(formatted);
       }
-
-      if (showKpCusps) {
-        _addKpCusps(planetsInSign, planetsInHouse, data, ascSignIdx);
-      }
-      return;
     }
 
     // Lal Kitab Chart (Fixed Aries Lagna)
-    if (chartTypeKey == 'LalKitab' && data['planets'] != null) {
+    else if (chartTypeKey == 'LalKitab' && data['planets'] != null) {
       final pList = data['planets'] as List<dynamic>? ?? [];
       for (final p in pList) {
         final pName =
@@ -411,15 +398,16 @@ class _MultiKundliPainter extends CustomPainter {
           null,
         );
 
-        // In Lal Kitab, House 1 = Aries (Sign 1), House 2 = Taurus (Sign 2), etc.
+        // Use backend values instead of hardcoding
+        final signIndex = (p['sign_index'] as num?)?.toInt() ?? house;
         planetsInHouse.putIfAbsent(house, () => []).add(formatted);
-        planetsInSign.putIfAbsent(house, () => []).add(formatted);
+        planetsInSign.putIfAbsent(signIndex, () => []).add(formatted);
       }
-      return;
+      return; // Lal Kitab doesn't need Ascendant or Upagrahas added at the end
     }
 
     // Default D-1 Rashi, BNN, Jaimini (D-9 now handled in divisional charts branch above)
-    if (data['planets'] != null) {
+    else if (data['planets'] != null) {
       final planetsList = data['planets'] as List<dynamic>;
 
       for (final p in planetsList) {
