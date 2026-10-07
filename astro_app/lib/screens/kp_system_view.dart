@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/astro_models.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/kundli_chart_painter.dart';
-
+import 'planetary_transit_view.dart';
 class KpSystemView extends StatefulWidget {
   final String personName;
   final String dateOfBirth; // YYYY-MM-DD
@@ -74,6 +74,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     'Nakshatra Nadi',
     '4-Step',
     'Angular Distance',
+    'Planetary Transit',
   ];
 
   Map<String, double> _ayanamsaOptions = {
@@ -399,9 +400,41 @@ class _KpSystemViewState extends State<KpSystemView> {
         return _buildFourStepSection(isDark);
       case 6:
         return _buildAngularDistanceSection(isDark);
+      case 7:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildPlanetaryTransitSection(isDark),
+            SizedBox(height: 24.h),
+            _buildKpChartSection(isDark),
+          ],
+        );
       default:
         return _buildKpChartSection(isDark);
     }
+  }
+
+  Widget _buildPlanetaryTransitSection(bool isDark) {
+    return KpPlanetaryTransitSection(
+      isDark: isDark,
+      originalDateOfBirth: widget.dateOfBirth,
+      originalTimeOfBirth: widget.timeOfBirth,
+      originalPlaceOfBirth: widget.placeOfBirth,
+      originalLatitude: widget.latitude,
+      originalLongitude: widget.longitude,
+      originalTimezone: widget.timezone,
+      selectedAyanamsa: _selectedAyanamsa,
+      onKpDataChanged: (newData) {
+        if (mounted) {
+          setState(() {
+            _kpData = newData;
+          });
+        }
+      },
+      onResetKpData: () {
+        _fetchKpData();
+      },
+    );
   }
 
   // =========================================================================
@@ -599,7 +632,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                     ? 'KP Bhava Chalit Chart (Placidus Cusps)'
                     : _activeChartType == 'D-9'
                     ? 'Navamsa Chart (D9)'
-                    : 'Rashi Natal Chart (D1)',
+                    : (_kpData?['is_transit'] == true ? 'Rashi Transit Chart (D1)' : 'Rashi Natal Chart (D1)'),
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 14.sp,
@@ -791,7 +824,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   Widget _buildPlanetaryTable(List<dynamic> planets, bool isDark) {
     String title = 'Planetary Coordinates & KP Lords';
     if (_activeChartType == 'D-1') {
-      title = 'Planetary Positions for Rashi (D-1)';
+      title = _kpData?['is_transit'] == true 
+          ? 'Planetary Positions for Transit (D-1)' 
+          : 'Planetary Positions for Rashi (D-1)';
     } else if (_activeChartType == 'D-9') {
       title = 'Planetary Positions for Navamsha (D-9)';
     }
