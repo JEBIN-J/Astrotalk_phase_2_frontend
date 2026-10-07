@@ -817,43 +817,7 @@ class _MultiKundliPainter extends CustomPainter {
     canvas.drawRect(centerRect, centerPaint);
     canvas.drawRect(centerRect, linePaint);
 
-    // Center Chart Title
-    const chartNames = {
-      'D-1': 'Rashi (D-1)',
-      'D-2': 'Hora (D-2)',
-      'D-3': 'Drekkana (D-3)',
-      'D-4': 'Chaturthamsha (D-4)',
-      'D-5': 'Panchamsha (D-5)',
-      'D-6': 'Shashtamsha (D-6)',
-      'D-7': 'Saptamsha (D-7)',
-      'D-8': 'Ashtamsha (D-8)',
-      'D-9': 'Navamsha (D-9)',
-      'D-10': 'Dasamsha (D-10)',
-      'D-11': 'Ekadashamsha (D-11)',
-      'D-12': 'Dwadasamsha (D-12)',
-      'D-16': 'Shodashamsha (D-16)',
-      'D-20': 'Vimsamsha (D-20)',
-      'D-24': 'Chaturvimsamsha (D-24)',
-      'D-27': 'Saptavimsamsha (D-27)',
-      'D-30': 'Trimshamsha (D-30)',
-      'D-40': 'Khavedamsha (D-40)',
-      'D-45': 'Akshavedamsha (D-45)',
-      'D-60': 'Shashtiamsha (D-60)',
-      'Bhava': 'Bhava Chalit',
-      'LalKitab': 'Lal Kitab',
-      'BNN': 'Progressive (BNN)',
-      'Jaimini': 'Jaimini Rasi',
-    };
-    final centerTitle = chartNames[chartTypeKey] ?? chartTypeKey;
 
-    _drawText(
-      canvas,
-      centerTitle,
-      Offset(w * 0.5, h * 0.50),
-      isDark ? const Color(0xFF38BDF8) : const Color(0xFF0F172A),
-      true,
-      14.0,
-    );
 
     // Fixed 12 Signs in South Indian System Layout (Clockwise from Pisces):
     final gridPositions = [
