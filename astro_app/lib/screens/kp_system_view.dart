@@ -75,6 +75,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     '4-Step',
     'Angular Distance',
     'Planetary Transit',
+    'Vedic Elements',
   ];
 
   Map<String, double> _ayanamsaOptions = {
@@ -116,6 +117,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   // Expanded Dasha state
   final Set<String> _expandedMahadashas = {};
   final Set<String> _expandedAntardashas = {};
+
+  int _vedicElementsSubTabIndex = 0; // 0: Table, 1: D1-D5, 2: D6-D12, 3: D16-D60, 4: Higher, 5: Ashtak Varga
+  KundliChartStyle _vedicChartStyle = KundliChartStyle.southIndian;
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -409,6 +413,8 @@ class _KpSystemViewState extends State<KpSystemView> {
             _buildKpChartSection(isDark),
           ],
         );
+      case 8:
+        return _buildVedicElementsSection(isDark);
       default:
         return _buildKpChartSection(isDark);
     }
@@ -2933,6 +2939,434 @@ class _KpSystemViewState extends State<KpSystemView> {
     fontWeight: FontWeight.bold,
     color: isDark ? Colors.white70 : const Color(0xFF334155),
   );
+
+Widget _buildVedicElementsSection(bool isDark) {
+    final divCharts = _kpData?['divisional_charts'] as Map<String, dynamic>? ?? {};
+    if (divCharts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.h),
+          child: Text(
+            'Divisional Charts Data Not Available',
+            style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black54),
+          ),
+        ),
+      );
+    }
+
+    final sortedKeys = divCharts.keys.toList()..sort((a, b) {
+      final vA = divCharts[a]?['varga_number'] as int? ?? 999;
+      final vB = divCharts[b]?['varga_number'] as int? ?? 999;
+      return vA.compareTo(vB);
+    });
+
+    Widget buildTabs() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildVedicTab('Table', 0, isDark),
+            _buildVedicTab('D1-D5', 1, isDark),
+            _buildVedicTab('D6-D12', 2, isDark),
+            _buildVedicTab('D16-D60', 3, isDark),
+            _buildVedicTab('Higher', 4, isDark),
+            _buildVedicTab('Ashtak Varga', 5, isDark),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildTabs(),
+        SizedBox(height: 16.h),
+        if (_vedicElementsSubTabIndex == 0)
+          _buildVedicTable(sortedKeys, divCharts, isDark)
+        else if (_vedicElementsSubTabIndex == 5)
+          _buildAshtakavargaTable(isDark)
+        else
+          _buildVedicGraphical(sortedKeys, divCharts, isDark),
+      ],
+    );
+  }
+
+  Widget _buildVedicTab(String label, int index, bool isDark) {
+    bool isSelected = _vedicElementsSubTabIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _vedicElementsSubTabIndex = index;
+        });
+      },
+      child: Container(
+        margin: EdgeInsets.only(right: 8.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? (isDark ? Colors.white : const Color(0xFF4F46E5)) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : (isDark ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVedicGraphical(List<String> sortedKeys, Map<String, dynamic> divCharts, bool isDark) {
+    List<String> activeKeys = [];
+    for (var key in sortedKeys) {
+      final vNum = divCharts[key]?['varga_number'] as int? ?? 0;
+      if (_vedicElementsSubTabIndex == 1 && vNum >= 1 && vNum <= 5) {
+        activeKeys.add(key);
+      } else if (_vedicElementsSubTabIndex == 2 && vNum >= 6 && vNum <= 12) {
+        activeKeys.add(key);
+      } else if (_vedicElementsSubTabIndex == 3 && vNum >= 16 && vNum <= 60) {
+        activeKeys.add(key);
+      } else if (_vedicElementsSubTabIndex == 4 && vNum > 60) {
+        activeKeys.add(key);
+      }
+    }
+
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildChartStyleRadio(KundliChartStyle.southIndian, 'South Indian', isDark),
+              _buildChartStyleRadio(KundliChartStyle.northIndian, 'North Indian', isDark),
+              _buildChartStyleRadio(KundliChartStyle.eastIndian, 'East Indian', isDark),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+        if (activeKeys.isEmpty)
+          Padding(
+            padding: EdgeInsets.all(20.h),
+            child: Text('No charts in this category.', style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54)),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+              childAspectRatio: 0.85,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 16.h,
+            ),
+            itemCount: activeKeys.length,
+            itemBuilder: (context, index) {
+              final key = activeKeys[index];
+              final chart = divCharts[key] as Map<String, dynamic>? ?? {};
+              final name = chart['name']?.toString() ?? key;
+              final title = '$name ($key)';
+              
+              return Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8.h),
+                    Expanded(
+                      child: KundliInteractiveChart(
+                        chartStyle: _vedicChartStyle,
+                        isDark: isDark,
+                        chartTypeKey: key,
+                        showUpagrahas: widget.showUpagrahas,
+                        showDegrees: false,
+                        showKpCusps: false,
+                        kundliData: _kpData,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildChartStyleRadio(KundliChartStyle style, String label, bool isDark) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _vedicChartStyle = style;
+        });
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+        child: Row(
+          children: [
+            Radio<KundliChartStyle>(
+              value: style,
+              groupValue: _vedicChartStyle,
+              onChanged: (KundliChartStyle? value) {
+                if (value != null) {
+                  setState(() {
+                    _vedicChartStyle = value;
+                  });
+                }
+              },
+              activeColor: isDark ? Colors.white : const Color(0xFF4F46E5),
+            ),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 13.sp,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVedicTable(List<String> sortedKeys, Map<String, dynamic> divCharts, bool isDark) {
+    final columns = ['Division', 'ASC', 'SU', 'MO', 'MA', 'ME', 'JU', 'VE', 'SA', 'RA', 'KE', 'UR', 'NE', 'PL'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Divisional Charts Table / VargaChart Table',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(
+                const Color(0xFFEAB308).withValues(alpha: isDark ? 0.3 : 0.2),
+              ),
+              dividerThickness: 0.5,
+              dataRowMinHeight: 40.h,
+              dataRowMaxHeight: 40.h,
+              columnSpacing: 18.w,
+              horizontalMargin: 12.w,
+              columns: columns.map((col) {
+                return DataColumn(
+                  label: Text(
+                    col,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.sp,
+                      color: isDark ? Colors.white : const Color(0xFF713F12),
+                    ),
+                  ),
+                );
+              }).toList(),
+              rows: sortedKeys.map((key) {
+                final chart = divCharts[key] as Map<String, dynamic>? ?? {};
+                final name = chart['name']?.toString() ?? key;
+                final title = '$name Chart($key)';
+                final ascIdx = chart['ascendant_sign_index'] as int? ?? 1;
+                final planets = chart['planets'] as List<dynamic>? ?? [];
+                
+                int getSignIdx(String pName) {
+                  final p = planets.firstWhere(
+                    (el) => el['planet_name_simple']?.toString().toLowerCase() == pName.toLowerCase() || el['name']?.toString().toLowerCase() == pName.toLowerCase(),
+                    orElse: () => null,
+                  );
+                  return p != null ? (p['sign_index'] as int? ?? 1) : 0;
+                }
+
+                return DataRow(
+                  cells: [
+                    DataCell(Text(title, style: _cellStyle(isDark))),
+                    DataCell(Text(ascIdx.toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Sun').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Moon').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Mars').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Mercury').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Jupiter').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Venus').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Saturn').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Rahu').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Ketu').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Uranus').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Neptune').toString(), style: _cellStyle(isDark))),
+                    DataCell(Text(getSignIdx('Pluto').toString(), style: _cellStyle(isDark))),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAshtakavargaTable(bool isDark) {
+    final ashtaka = _kpData?['ashtakavarga'] as Map<String, dynamic>?;
+    if (ashtaka == null) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.h),
+          child: Text(
+            'Ashtakavarga Data Not Available',
+            style: GoogleFonts.outfit(color: isDark ? Colors.white70 : Colors.black54),
+          ),
+        ),
+      );
+    }
+
+    final signs = ['ARI', 'TAU', 'GEM', 'CAN', 'LEO', 'VIR', 'LIB', 'SCO', 'SAG', 'CAP', 'AQU', 'PIS'];
+    final rows = ['ASC', 'SUN', 'MON', 'MAR', 'MER', 'JUP', 'VEN', 'SAT'];
+
+    final bavMatrix = ashtaka['bav_matrix'] as Map<String, dynamic>? ?? {};
+    final savPoints = ashtaka['sav_points'] as List<dynamic>? ?? [];
+
+    List<DataColumn> columns = [
+      DataColumn(
+        label: Text(
+          'Rasi =>>',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF713F12)),
+        ),
+      )
+    ];
+
+    for (var sign in signs) {
+      columns.add(
+        DataColumn(
+          label: Text(
+            sign,
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF713F12)),
+          ),
+        ),
+      );
+    }
+
+    List<DataRow> dataRows = [];
+
+    final keyMap = {
+      'ASC': 'Lagna',
+      'SUN': 'Sun',
+      'MON': 'Moon',
+      'MAR': 'Mars',
+      'MER': 'Mercury',
+      'JUP': 'Jupiter',
+      'VEN': 'Venus',
+      'SAT': 'Saturn'
+    };
+
+    for (var r in rows) {
+      final key = keyMap[r]!;
+      final points = bavMatrix[key] as List<dynamic>? ?? List.filled(12, 0);
+
+      List<DataCell> cells = [
+        DataCell(Text(r, style: _cellStyle(isDark)))
+      ];
+
+      for (var i = 0; i < 12; i++) {
+        cells.add(DataCell(Text(points[i].toString(), style: _cellStyle(isDark))));
+      }
+
+      dataRows.add(DataRow(cells: cells));
+    }
+
+    // Sarvashtak Row
+    List<DataCell> savCells = [
+      DataCell(Text('Sarvashtak', style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.bold)))
+    ];
+    for (var i = 0; i < 12; i++) {
+      int p = 0;
+      if (i < savPoints.length) {
+        p = (savPoints[i] as num).toInt();
+      }
+      savCells.add(DataCell(Text(p.toString(), style: _cellStyle(isDark).copyWith(fontWeight: FontWeight.bold))));
+    }
+
+    dataRows.add(
+      DataRow(
+        color: WidgetStateProperty.all(const Color(0xFF67E8F9).withValues(alpha: isDark ? 0.3 : 0.8)),
+        cells: savCells,
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Ashtakavarg Table',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 18.sp,
+            color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(
+                const Color(0xFFFEF08A).withValues(alpha: isDark ? 0.3 : 1.0),
+              ),
+              dividerThickness: 0.5,
+              dataRowMinHeight: 35.h,
+              dataRowMaxHeight: 35.h,
+              columnSpacing: 18.w,
+              horizontalMargin: 12.w,
+              columns: columns,
+              rows: dataRows,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   TextStyle _cellStyle(bool isDark) => GoogleFonts.outfit(
     fontSize: 11.5.sp,
