@@ -125,6 +125,16 @@ class AstroItem {
       secondaryColor: Color(0xFF94A3B8),
     ),
     const AstroItem(
+      id: 'horary',
+      title: 'Horary',
+      subtitle: 'Real-Time Horary Engine',
+      iconKey: 'horoscope',
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFF0F172A),
+      secondaryColor: Color(0xFF334155),
+      badge: 'New',
+    ),
+    const AstroItem(
       id: 'daily_horoscope',
       title: 'Daily Horoscope',
       subtitle: 'Daily Sun Sign Predictions',

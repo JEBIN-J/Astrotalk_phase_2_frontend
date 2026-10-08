@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://192.168.29.77:5000/api/v1';
+      return 'http://10.242.235.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.242.235.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://192.168.29.77:5000/api/v1';
+    return 'http://10.242.235.136:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -540,6 +540,74 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getPrashnaChart: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getHoraryChart({
+    required String question,
+    required String questionDate,
+    required String questionTime,
+    double? latitude,
+    double? longitude,
+    double? timezone,
+    String? ayanamsa,
+    int? horaryNumber,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horary/chart');
+    final Map<String, dynamic> bodyMap = {
+      'question': question,
+      'date': questionDate,
+      'time': questionTime,
+    };
+    if (latitude != null) bodyMap['latitude'] = latitude;
+    if (longitude != null) bodyMap['longitude'] = longitude;
+    if (timezone != null) bodyMap['timezone'] = timezone;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
+    if (horaryNumber != null) bodyMap['horary_number'] = horaryNumber;
+
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Horary Chart: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getHoraryChart: $e');
+      rethrow;
+    }
+  }
+
+  
+  static Future<int> getHoraryRandomNumber() async {
+    final uri = Uri.parse('$baseUrl/horary/generate_number');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['data']['kp_number'] as int;
+      } else {
+        throw Exception('Failed to generate KP Number');
+      }
+    } catch (e) {
+      debugPrint('API Error getHoraryRandomNumber: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<dynamic>> getHoraryQuestions() async {
+    final uri = Uri.parse('$baseUrl/horary/questions');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['data'] as List<dynamic>;
+      } else {
+        throw Exception('Failed to load Horary Questions: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getHoraryQuestions: $e');
       rethrow;
     }
   }

@@ -3,6 +3,7 @@ import '../models/astro_item.dart';
 import '../models/astro_models.dart';
 import 'horoscope_screen.dart';
 import 'prashna_screen.dart';
+import 'horary_screen.dart';
 import 'coming_soon_screen.dart';
 import 'muhurat_screen.dart';
 import 'daily_horoscope_screen.dart';
@@ -60,6 +61,9 @@ class AstroFeatureDialogs {
         return;
       case 'prashna':
         targetScreen = const PrashnaScreen();
+        break;
+      case 'horary':
+        targetScreen = const HoraryScreen();
         break;
       case 'tarot':
         targetScreen = TarotAnimationScreen(
