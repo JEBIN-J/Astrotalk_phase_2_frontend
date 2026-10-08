@@ -629,6 +629,102 @@ class _KpSystemViewState extends State<KpSystemView> {
       );
     }
 
+    if (tabName == 'Houses Signifying Events') {
+      final eventsList = _cueCardsData?['houses_events'] as List<dynamic>? ?? [];
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fixed Columns (Sl & Event)
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  border: Border(right: BorderSide(color: isDark ? Colors.white24 : Colors.black12)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(2, 0))
+                  ]
+                ),
+                child: Column(
+                  children: [
+                    // Header
+                    Container(
+                      height: 56.h,
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                      child: Row(
+                        children: [
+                          Container(width: 40.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text('Sl.', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                          Container(width: 140.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.centerLeft, child: Text('Event', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                        ],
+                      ),
+                    ),
+                    // Cells
+                    ...eventsList.map((e) {
+                      return Container(
+                        height: 90.h,
+                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                        child: Row(
+                          children: [
+                            Container(width: 40.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text(e['sl']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                            Container(width: 140.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.centerLeft, child: Text(e['event']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black), maxLines: 3, overflow: TextOverflow.ellipsis)),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+              // Scrollable Columns (Cusps & Remarks)
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Container(
+                        height: 56.h,
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                        child: Row(
+                          children: [
+                            Container(width: 90.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text('Signifyin\nCusps', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                            Container(width: 70.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text('Prime\nCusp', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                            Container(width: 320.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text('Remarks', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                          ],
+                        ),
+                      ),
+                      // Cells
+                      ...eventsList.map((e) {
+                        return Container(
+                          height: 90.h,
+                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Row(
+                            children: [
+                              Container(width: 90.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text(e['signifying']?.toString() ?? '', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                              Container(width: 70.w, padding: EdgeInsets.symmetric(horizontal: 8.w), alignment: Alignment.center, child: Text(e['prime']?.toString() ?? '', textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                              Container(width: 320.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text(e['remarks']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87), maxLines: 4, overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Default placeholder for other tabs
     return Container(
       width: double.infinity,
