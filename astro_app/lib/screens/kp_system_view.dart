@@ -76,6 +76,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     'Angular Distance',
     'Planetary Transit',
     'Vedic Elements',
+    'Cue Cards',
   ];
 
   Map<String, double> _ayanamsaOptions = {
@@ -114,6 +115,18 @@ class _KpSystemViewState extends State<KpSystemView> {
   // Angular Distance specific state
   int _angularDistanceSubTabIndex = 0; // 0: Natal->Natal, 1: Natal->Transit
 
+  // Cue Cards specific state
+  int _cueCardsSubTabIndex = 0;
+  static const List<String> _cueCardsTabs = [
+    'Parts of Body',
+    'Houses Signifying Events',
+    'Nakshatra - Pada',
+    'Rasi-Properties',
+    'Planet - Properties',
+    'Planet exalted/debilitated',
+    'Diseases by Zodiac Sign',
+  ];
+
   // Expanded Dasha state
   final Set<String> _expandedMahadashas = {};
   final Set<String> _expandedAntardashas = {};
@@ -124,6 +137,7 @@ class _KpSystemViewState extends State<KpSystemView> {
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _kpData;
+  Map<String, dynamic>? _cueCardsData;
 
   @override
   void initState() {
@@ -131,6 +145,20 @@ class _KpSystemViewState extends State<KpSystemView> {
     _activeChartStyle = widget.chartStyle;
     _fetchAyanamsas();
     _fetchKpData();
+    _fetchCueCardsData();
+  }
+
+  Future<void> _fetchCueCardsData() async {
+    try {
+      final res = await AstroApiService.getCueCards();
+      if (mounted) {
+        setState(() {
+          _cueCardsData = res['data'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load cue cards: $e');
+    }
   }
 
   Future<void> _fetchAyanamsas() async {
@@ -415,9 +443,214 @@ class _KpSystemViewState extends State<KpSystemView> {
         );
       case 8:
         return _buildVedicElementsSection(isDark);
+      case 9:
+        return _buildCueCardsSection(isDark);
       default:
         return _buildKpChartSection(isDark);
     }
+  }
+
+  Widget _buildCueCardsSection(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Horizontal Tabs
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: _cueCardsTabs.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final title = entry.value;
+              final isSelected = _cueCardsSubTabIndex == idx;
+
+              return Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: InkWell(
+                  onTap: () => setState(() => _cueCardsSubTabIndex = idx),
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF4338CA)
+                          : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF4338CA)
+                            : (isDark ? Colors.white12 : Colors.black12),
+                      ),
+                    ),
+                    child: Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12.5.sp,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(height: 24.h),
+        // Content Area
+        if (_cueCardsData == null)
+          Container(
+            height: 200.h,
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(color: const Color(0xFF4338CA)),
+          )
+        else
+          _buildCueCardContent(isDark),
+      ],
+    );
+  }
+
+  Widget _buildCueCardContent(bool isDark) {
+    final tabName = _cueCardsTabs[_cueCardsSubTabIndex];
+    if (tabName == 'Parts of Body' || tabName == 'Rasi-Properties') {
+      final dataKey = tabName == 'Parts of Body' ? 'parts_of_body' : 'rasi_properties';
+      final dataMap = _cueCardsData?[dataKey] as Map<String, dynamic>? ?? {};
+
+      Widget cell(String rasi) {
+        final content = dataMap[rasi.toUpperCase()]?.toString() ?? '';
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: isDark ? Colors.white24 : Colors.black26, width: 0.5),
+          ),
+          padding: EdgeInsets.all(4.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                rasi.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? const Color(0xFFEF4444) : const Color(0xFFDC2626),
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Expanded(
+                child: Text(
+                  content,
+                  style: GoogleFonts.outfit(
+                    fontSize: 8.5.sp,
+                    color: isDark ? Colors.white : Colors.black,
+                    height: 1.1,
+                  ),
+                  overflow: TextOverflow.fade,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return Container(
+        width: double.infinity,
+        height: 400.h,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: Border.all(color: isDark ? Colors.white24 : Colors.black26),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 1,
+              child: Row(
+                children: [
+                  Expanded(child: cell('Pisces')),
+                  Expanded(child: cell('Aries')),
+                  Expanded(child: cell('Taurus')),
+                  Expanded(child: cell('Gemini')),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        Expanded(child: cell('Aquarius')),
+                        Expanded(child: cell('Capricorn')),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                      child: Text(
+                        tabName,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF4338CA),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        Expanded(child: cell('Cancer')),
+                        Expanded(child: cell('Leo')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Row(
+                children: [
+                  Expanded(child: cell('Sagittarius')),
+                  Expanded(child: cell('Scorpio')),
+                  Expanded(child: cell('Libra')),
+                  Expanded(child: cell('Virgo')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Default placeholder for other tabs
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 48.sp, color: const Color(0xFF4338CA).withValues(alpha: 0.5)),
+          SizedBox(height: 16.h),
+          Text(
+            'Data for $tabName will be available soon.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : const Color(0xFF475569)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPlanetaryTransitSection(bool isDark) {

@@ -411,6 +411,21 @@ class AstroApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getCueCards() async {
+    final uri = Uri.parse('$baseUrl/horoscope/cue_cards');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Cue Cards: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getCueCards: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> getJaimini({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
