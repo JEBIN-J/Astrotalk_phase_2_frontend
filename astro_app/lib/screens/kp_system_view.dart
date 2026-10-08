@@ -148,15 +148,23 @@ class _KpSystemViewState extends State<KpSystemView> {
     _fetchCueCardsData();
   }
 
+  String? _cueCardsError;
+
   Future<void> _fetchCueCardsData() async {
     try {
       final res = await AstroApiService.getCueCards();
       if (mounted) {
         setState(() {
           _cueCardsData = res['data'];
+          _cueCardsError = null;
         });
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _cueCardsError = e.toString();
+        });
+      }
       debugPrint('Failed to load cue cards: $e');
     }
   }
@@ -501,7 +509,18 @@ class _KpSystemViewState extends State<KpSystemView> {
         ),
         SizedBox(height: 24.h),
         // Content Area
-        if (_cueCardsData == null)
+        if (_cueCardsError != null)
+          Container(
+            height: 200.h,
+            alignment: Alignment.center,
+            padding: EdgeInsets.all(16.w),
+            child: Text(
+              'Error loading data:\n$_cueCardsError',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          )
+        else if (_cueCardsData == null)
           Container(
             height: 200.h,
             alignment: Alignment.center,
@@ -515,8 +534,8 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   Widget _buildCueCardContent(bool isDark) {
     final tabName = _cueCardsTabs[_cueCardsSubTabIndex];
-    if (tabName == 'Parts of Body' || tabName == 'Rasi-Properties') {
-      final dataKey = tabName == 'Parts of Body' ? 'parts_of_body' : 'rasi_properties';
+    if (tabName == 'Parts of Body' || tabName == 'Rasi-Properties' || tabName == 'Diseases by Zodiac Sign') {
+      final dataKey = tabName == 'Parts of Body' ? 'parts_of_body' : (tabName == 'Rasi-Properties' ? 'rasi_properties' : 'diseases_by_zodiac');
       final dataMap = _cueCardsData?[dataKey] as Map<String, dynamic>? ?? {};
 
       Widget cell(String rasi) {
@@ -954,6 +973,76 @@ class _KpSystemViewState extends State<KpSystemView> {
                           padding: EdgeInsets.symmetric(horizontal: 12.w),
                           alignment: Alignment.centerLeft,
                           child: Text(e['enemies']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.red[400] : Colors.red[700])),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (tabName == 'Planet exalted/debilitated') {
+      final list = _cueCardsData?['planet_exalted_debilitated'] as List<dynamic>? ?? [];
+
+      if (list.isEmpty) return const SizedBox.shrink();
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  height: 50.h,
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                  child: Row(
+                    children: [
+                      Container(width: 120.w, padding: EdgeInsets.symmetric(horizontal: 16.w), alignment: Alignment.centerLeft, child: Text('Planet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                      Container(width: 180.w, padding: EdgeInsets.symmetric(horizontal: 16.w), alignment: Alignment.centerLeft, child: Text('Exalted', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                      Container(width: 180.w, padding: EdgeInsets.symmetric(horizontal: 16.w), alignment: Alignment.centerLeft, child: Text('Debilitated', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                    ],
+                  ),
+                ),
+                // Cells
+                ...List.generate(list.length, (index) {
+                  final e = list[index];
+                  return Container(
+                    height: 50.h,
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 120.w,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Text(e['planet']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))),
+                        ),
+                        Container(
+                          width: 180.w,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Text(e['exalted']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black)),
+                        ),
+                        Container(
+                          width: 180.w,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text(e['debilitated']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.red[400] : Colors.red[700])),
                         ),
                       ],
                     ),
@@ -3452,7 +3541,10 @@ class _KpSystemViewState extends State<KpSystemView> {
           ),
           SizedBox(height: 14.h),
           ElevatedButton(
-            onPressed: _fetchKpData,
+            onPressed: () {
+              _fetchKpData();
+              _fetchCueCardsData();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
             ),
