@@ -724,9 +724,19 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             else if (val == 'CHANDRA_HARI') label = 'Chandra Hari';
 
                             final double? deg = _ayanamsaDegrees[val];
+                            
+                            String formatDMS(double decimalDegrees) {
+                              if (decimalDegrees == 0.0) return '';
+                              int d = decimalDegrees.floor();
+                              double minDouble = (decimalDegrees - d) * 60;
+                              int m = minDouble.floor();
+                              double s = (minDouble - m) * 60;
+                              return '$d°$m\'${s.toStringAsFixed(2)}"';
+                            }
+                            
                             final String degStr = (val == 'CUSTOM')
                                 ? ''
-                                : (deg != null ? '  ${deg.toStringAsFixed(3)}°' : '');
+                                : (deg != null && deg != 0.0 ? '  ${formatDMS(deg)}' : '');
 
                             return DropdownMenuItem(
                               value: val,
