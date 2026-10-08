@@ -888,6 +888,84 @@ class _KpSystemViewState extends State<KpSystemView> {
       );
     }
 
+    if (tabName == 'Planet - Properties') {
+      final planetList = _cueCardsData?['planet_properties'] as List<dynamic>? ?? [];
+
+      if (planetList.isEmpty) return const SizedBox.shrink();
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  height: 50.h,
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                  child: Row(
+                    children: [
+                      Container(width: 90.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text('Planet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                      Container(width: 150.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text('Friends', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                      Container(width: 180.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text('Neutrals', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                      Container(width: 150.w, padding: EdgeInsets.symmetric(horizontal: 12.w), alignment: Alignment.centerLeft, child: Text('Enemies', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                    ],
+                  ),
+                ),
+                // Cells
+                ...List.generate(planetList.length, (index) {
+                  final e = planetList[index];
+                  return Container(
+                    height: 50.h,
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 90.w,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Text(e['planet']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB))),
+                        ),
+                        Container(
+                          width: 150.w,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Text(e['friends']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.green[400] : Colors.green[700])),
+                        ),
+                        Container(
+                          width: 180.w,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          alignment: Alignment.centerLeft,
+                          decoration: BoxDecoration(border: Border(right: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Text(e['neutrals']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white : Colors.black)),
+                        ),
+                        Container(
+                          width: 150.w,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          alignment: Alignment.centerLeft,
+                          child: Text(e['enemies']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.red[400] : Colors.red[700])),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Default placeholder for other tabs
     return Container(
       width: double.infinity,
