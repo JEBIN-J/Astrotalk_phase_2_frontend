@@ -724,6 +724,169 @@ class _KpSystemViewState extends State<KpSystemView> {
         ),
       );
     }
+    if (tabName == 'Nakshatra - Pada') {
+      final padasList = _cueCardsData?['nakshatra_padas'] as List<dynamic>? ?? [];
+
+      if (padasList.isEmpty) return const SizedBox.shrink();
+
+      // Build Rasi Column widgets
+      List<Widget> rasiWidgets = [];
+      int currentRasiSpan = 0;
+      String currentRasi = padasList[0]['rasi']?.toString() ?? '';
+      for (int i = 0; i < padasList.length; i++) {
+        final rasi = padasList[i]['rasi']?.toString() ?? '';
+        if (rasi == currentRasi) {
+          currentRasiSpan++;
+        } else {
+          rasiWidgets.add(Container(
+            height: currentRasiSpan * 42.h,
+            width: 75.w,
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+            alignment: Alignment.center,
+            child: Text(currentRasi, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: isDark ? Colors.white : Colors.black)),
+          ));
+          currentRasi = rasi;
+          currentRasiSpan = 1;
+        }
+      }
+      rasiWidgets.add(Container(
+        height: currentRasiSpan * 42.h,
+        width: 75.w,
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+        alignment: Alignment.center,
+        child: Text(currentRasi, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: isDark ? Colors.white : Colors.black)),
+      ));
+
+      // Build Nakshatra Column widgets
+      List<Widget> nakWidgets = [];
+      int currentNakSpan = 0;
+      String currentNak = padasList[0]['nakshatra']?.toString() ?? '';
+      String currentNakRasi = padasList[0]['rasi']?.toString() ?? '';
+      for (int i = 0; i < padasList.length; i++) {
+        final nak = padasList[i]['nakshatra']?.toString() ?? '';
+        final rasi = padasList[i]['rasi']?.toString() ?? '';
+        if (nak == currentNak && rasi == currentNakRasi) {
+          currentNakSpan++;
+        } else {
+          nakWidgets.add(Container(
+            height: currentNakSpan * 42.h,
+            width: 85.w,
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+            alignment: Alignment.center,
+            child: Text(currentNak, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+          ));
+          currentNak = nak;
+          currentNakRasi = rasi;
+          currentNakSpan = 1;
+        }
+      }
+      nakWidgets.add(Container(
+        height: currentNakSpan * 42.h,
+        width: 85.w,
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+        alignment: Alignment.center,
+        child: Text(currentNak, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black87)),
+      ));
+
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12.r),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fixed Columns (Rasi & Nakshatra)
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  border: Border(right: BorderSide(color: isDark ? Colors.white24 : Colors.black12)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(2, 0))
+                  ]
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Rasi Column
+                    Column(
+                      children: [
+                        Container(
+                          height: 50.h,
+                          width: 75.w,
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                          alignment: Alignment.center,
+                          child: Text('Rasi', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black)),
+                        ),
+                        ...rasiWidgets,
+                      ],
+                    ),
+                    // Nakshatra Column
+                    Container(
+                      decoration: BoxDecoration(border: Border(left: BorderSide(color: isDark ? Colors.white24 : Colors.black12))),
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 50.h,
+                            width: 85.w,
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                            alignment: Alignment.center,
+                            child: Text('Nakshatra', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black)),
+                          ),
+                          ...nakWidgets,
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Scrollable Columns (Pada, Degrees, Syllable)
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Container(
+                        height: 50.h,
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                        child: Row(
+                          children: [
+                            Container(width: 50.w, alignment: Alignment.center, child: Text('Pada', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                            Container(width: 120.w, alignment: Alignment.center, child: Text('Degrees-Rasi', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                            Container(width: 80.w, alignment: Alignment.center, child: Text('Syllable', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isDark ? Colors.white : Colors.black))),
+                          ],
+                        ),
+                      ),
+                      // Cells
+                      ...List.generate(padasList.length, (index) {
+                        final e = padasList[index];
+                        return Container(
+                          height: 42.h,
+                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                          child: Row(
+                            children: [
+                              Container(width: 50.w, alignment: Alignment.center, decoration: BoxDecoration(border: Border(left: BorderSide(color: isDark ? Colors.white12 : Colors.black12))), child: Text(e['pada']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                              Container(width: 120.w, alignment: Alignment.center, decoration: BoxDecoration(border: Border(left: BorderSide(color: isDark ? Colors.white12 : Colors.black12))), child: Text(e['degrees']?.toString() ?? '', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                              Container(width: 80.w, alignment: Alignment.center, decoration: BoxDecoration(border: Border(left: BorderSide(color: isDark ? Colors.white12 : Colors.black12))), child: Text(e['syllable']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87))),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     // Default placeholder for other tabs
     return Container(
