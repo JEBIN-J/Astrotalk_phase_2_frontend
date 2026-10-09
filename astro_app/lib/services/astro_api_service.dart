@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.242.235.136:5000/api/v1';
+      return 'https://jebinj.pythonanywhere.com/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.242.235.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'https://jebinj.pythonanywhere.com/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://10.242.235.136:5000/api/v1';
+    return 'https://jebinj.pythonanywhere.com/api/v1';
   }
 
   static String get baseUrl {

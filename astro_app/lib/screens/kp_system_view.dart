@@ -3720,8 +3720,8 @@ Widget _buildVedicElementsSection(bool isDark) {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-              childAspectRatio: 0.85,
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+              childAspectRatio: MediaQuery.of(context).size.width > 600 ? 0.85 : 1.1,
               crossAxisSpacing: 12.w,
               mainAxisSpacing: 16.h,
             ),
