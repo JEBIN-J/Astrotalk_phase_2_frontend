@@ -335,7 +335,9 @@ class _TarotDeckSelectionScreenState extends State<TarotDeckSelectionScreen> wit
                     padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
                     child: Text(
                       (widget.requiredCards - selectedIndices.length) > 0 
-                          ? 'Select ${widget.requiredCards - selectedIndices.length} More Card${(widget.requiredCards - selectedIndices.length) > 1 ? 's' : ''}'
+                          ? (selectedIndices.isEmpty 
+                              ? 'Select ${widget.requiredCards} Card${widget.requiredCards > 1 ? 's' : ''}'
+                              : 'Select ${widget.requiredCards - selectedIndices.length} More Card${(widget.requiredCards - selectedIndices.length) > 1 ? 's' : ''}')
                           : 'Revealing Cards...',
                       style: GoogleFonts.outfit(
                         fontSize: 24.sp, 
