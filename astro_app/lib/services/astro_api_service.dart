@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'https://jebinj.pythonanywhere.com/api/v1';
+      return 'http://10.242.235.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'https://jebinj.pythonanywhere.com/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.242.235.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'https://jebinj.pythonanywhere.com/api/v1';
+    return 'http://10.242.235.136:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -310,6 +310,33 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getSampleKundli: $e');
+      rethrow;
+    }
+  }
+
+  // =========================================================================
+  // 4.5 NUMEROLOGY
+  // =========================================================================
+  static Future<Map<String, dynamic>> getNumerologyProfile({
+    required String name,
+    required String dateOfBirth,
+    String system = 'pythagorean',
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/profile');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'dob': dateOfBirth,
+      'system': system,
+    };
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Numerology: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getNumerologyProfile: $e');
       rethrow;
     }
   }

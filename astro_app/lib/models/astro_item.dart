@@ -106,6 +106,16 @@ class AstroItem {
       secondaryColor: Color(0xFFFBBF24),
     ),
     const AstroItem(
+      id: 'numerology',
+      title: 'Numerology',
+      subtitle: 'Life Path & Numbers',
+      iconKey: 'ephemeris',
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFF10B981),
+      secondaryColor: Color(0xFF34D399),
+      badge: 'New',
+    ),
+    const AstroItem(
       id: 'tarot',
       title: 'Tarot',
       subtitle: 'Readings, Astro-Tarot & Spreads',
