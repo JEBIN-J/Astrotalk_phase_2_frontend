@@ -568,13 +568,10 @@ class _KpSystemViewState extends State<KpSystemView> {
       case 6:
         return _buildAngularDistanceSection(isDark);
       case 7:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPlanetaryTransitSection(isDark),
-            SizedBox(height: 24.h),
-            _buildKpChartSection(isDark),
-          ],
+        return _buildPlanetaryTransitSection(
+          isDark,
+          chartChildBuilder: (context, stepIntervalWidget) =>
+              _buildKpChartSection(isDark, stepIntervalWidget: stepIntervalWidget),
         );
       case 8:
         return _buildVedicElementsSection(isDark);
@@ -1211,9 +1208,15 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
-  Widget _buildPlanetaryTransitSection(bool isDark) {
+  Widget _buildPlanetaryTransitSection(
+    bool isDark, {
+    Widget? chartChild,
+    Widget Function(BuildContext context, Widget stepIntervalWidget)? chartChildBuilder,
+  }) {
     return KpPlanetaryTransitSection(
       isDark: isDark,
+      chartChild: chartChild,
+      chartChildBuilder: chartChildBuilder,
       originalDateOfBirth: widget.dateOfBirth,
       originalTimeOfBirth: widget.timeOfBirth,
       originalPlaceOfBirth: widget.placeOfBirth,
@@ -1271,7 +1274,7 @@ class _KpSystemViewState extends State<KpSystemView> {
   // =========================================================================
   // SECTION 1: KP CHART
   // =========================================================================
-  Widget _buildKpChartSection(bool isDark) {
+  Widget _buildKpChartSection(bool isDark, {Widget? stepIntervalWidget}) {
     final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
     final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
     final ayanFormatted = _kpData?['ayanamsa_formatted']?.toString() ?? '';
@@ -1425,6 +1428,10 @@ class _KpSystemViewState extends State<KpSystemView> {
             ],
           ),
         ),
+        if (stepIntervalWidget != null) ...[
+          SizedBox(height: 14.h),
+          stepIntervalWidget,
+        ],
         SizedBox(height: 14.h),
 
         // Chart Type Selector: Rashi, Navamsa, Bhava

@@ -19,6 +19,8 @@ class KpPlanetaryTransitSection extends StatefulWidget {
   final ValueChanged<String>? onCuspsTypeChanged;
   final ValueChanged<DateTime>? onTransitDateChanged;
   final ValueChanged<bool>? onRealTimeToggled;
+  final Widget? chartChild;
+  final Widget Function(BuildContext context, Widget stepIntervalWidget)? chartChildBuilder;
 
   const KpPlanetaryTransitSection({
     super.key,
@@ -35,6 +37,8 @@ class KpPlanetaryTransitSection extends StatefulWidget {
     this.onCuspsTypeChanged,
     this.onTransitDateChanged,
     this.onRealTimeToggled,
+    this.chartChild,
+    this.chartChildBuilder,
   });
 
   @override
@@ -216,9 +220,10 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
   void _accelerate() {
     setState(() {
       _currentTransitDate = _addTime(_currentTransitDate, _stepValue, _stepUnit);
+      _isSwapped = true;
     });
     widget.onTransitDateChanged?.call(_currentTransitDate);
-    if (_isSwapped && !_isRealTimeEnabled) {
+    if (!_isRealTimeEnabled) {
       _fetchTransitData();
     }
   }
@@ -226,9 +231,10 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
   void _deaccelerate() {
     setState(() {
       _currentTransitDate = _addTime(_currentTransitDate, -_stepValue, _stepUnit);
+      _isSwapped = true;
     });
     widget.onTransitDateChanged?.call(_currentTransitDate);
-    if (_isSwapped && !_isRealTimeEnabled) {
+    if (!_isRealTimeEnabled) {
       _fetchTransitData();
     }
   }
@@ -333,108 +339,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         ),
         SizedBox(height: 12.h),
 
-        // 3. Time Controls Card
-        _buildSectionCard(
-          isDark: isDark,
-          cardColor: cardColor,
-          borderColor: borderColor,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.timer_outlined, size: 16.sp, color: mutedTextColor),
-                  SizedBox(width: 8.w),
-                  Text('Step Interval', style: TextStyle(color: mutedTextColor, fontSize: 13.sp)),
-                  const Spacer(),
-                  // Dropdown for Step Value
-                  Container(
-                    height: 32.h,
-                    padding: EdgeInsets.symmetric(horizontal: 12.w),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[800] : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _stepValue,
-                        icon: Icon(Icons.arrow_drop_down, color: const Color(0xFF4338CA), size: 18.sp),
-                        dropdownColor: cardColor,
-                        items: _stepValues.map((val) => DropdownMenuItem(
-                          value: val,
-                          child: Text('$val', style: GoogleFonts.outfit(color: textColor, fontWeight: FontWeight.w600)),
-                        )).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _stepValue = val);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              // Unit Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _units.map((unit) {
-                    final isSelected = _stepUnit == unit;
-                    return Padding(
-                      padding: EdgeInsets.only(right: 8.w),
-                      child: InkWell(
-                        onTap: () => setState(() => _stepUnit = unit),
-                        borderRadius: BorderRadius.circular(20.r),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF4338CA) : (isDark ? Colors.grey[800] : const Color(0xFFF1F5F9)),
-                            borderRadius: BorderRadius.circular(20.r),
-                          ),
-                          child: Text(
-                            unit,
-                            style: GoogleFonts.outfit(
-                              color: isSelected ? Colors.white : textColor,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              SizedBox(height: 16.h),
-              // Accelerate / De-accelerate Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildControlButton(
-                      icon: Icons.fast_rewind_rounded,
-                      label: 'Rewind',
-                      color: Colors.orange,
-                      onPressed: _isRealTimeEnabled ? null : _deaccelerate,
-                      isDark: isDark,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: _buildControlButton(
-                      icon: Icons.fast_forward_rounded,
-                      label: 'Forward',
-                      color: Colors.blue,
-                      onPressed: _isRealTimeEnabled ? null : _accelerate,
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        
-        // 4. Cusps Segmented Control Card
+        // 3. Cusps Segmented Control Card
         _buildSectionCard(
           isDark: isDark,
           cardColor: cardColor,
@@ -475,7 +380,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         ),
         SizedBox(height: 16.h),
 
-        // 5. Main Actions
+        // 4. Main Actions
         Row(
           children: [
             // Primary Action (Swap)
@@ -602,7 +507,138 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
             ),
           ),
         ),
+
+        // 5. Embedded Chart Section with Step Interval Controls
+        if (widget.chartChildBuilder != null) ...[
+          widget.chartChildBuilder!(
+            context,
+            _buildStepIntervalCard(
+              isDark: isDark,
+              cardColor: cardColor,
+              borderColor: borderColor,
+              textColor: textColor,
+              mutedTextColor: mutedTextColor,
+            ),
+          ),
+        ] else ...[
+          _buildStepIntervalCard(
+            isDark: isDark,
+            cardColor: cardColor,
+            borderColor: borderColor,
+            textColor: textColor,
+            mutedTextColor: mutedTextColor,
+          ),
+          SizedBox(height: 16.h),
+          if (widget.chartChild != null) widget.chartChild!,
+        ],
       ],
+    );
+  }
+
+  Widget _buildStepIntervalCard({
+    required bool isDark,
+    required Color cardColor,
+    required Color borderColor,
+    required Color textColor,
+    required Color mutedTextColor,
+  }) {
+    return _buildSectionCard(
+      isDark: isDark,
+      cardColor: cardColor,
+      borderColor: borderColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.timer_outlined, size: 16.sp, color: mutedTextColor),
+              SizedBox(width: 8.w),
+              Text('Step Interval', style: TextStyle(color: mutedTextColor, fontSize: 13.sp)),
+              const Spacer(),
+              // Dropdown for Step Value
+              Container(
+                height: 32.h,
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[800] : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _stepValue,
+                    icon: Icon(Icons.arrow_drop_down, color: const Color(0xFF4338CA), size: 18.sp),
+                    dropdownColor: cardColor,
+                    items: _stepValues.map((val) => DropdownMenuItem(
+                      value: val,
+                      child: Text('$val', style: GoogleFonts.outfit(color: textColor, fontWeight: FontWeight.w600)),
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _stepValue = val);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          // Unit Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _units.map((unit) {
+                final isSelected = _stepUnit == unit;
+                return Padding(
+                  padding: EdgeInsets.only(right: 8.w),
+                  child: InkWell(
+                    onTap: () => setState(() => _stepUnit = unit),
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF4338CA) : (isDark ? Colors.grey[800] : const Color(0xFFF1F5F9)),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        unit,
+                        style: GoogleFonts.outfit(
+                          color: isSelected ? Colors.white : textColor,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 13.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          // Accelerate / De-accelerate Buttons
+          Row(
+            children: [
+              Expanded(
+                child: _buildControlButton(
+                  icon: Icons.fast_rewind_rounded,
+                  label: 'Rewind',
+                  color: Colors.orange,
+                  onPressed: _isRealTimeEnabled ? null : _deaccelerate,
+                  isDark: isDark,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _buildControlButton(
+                  icon: Icons.fast_forward_rounded,
+                  label: 'Forward',
+                  color: Colors.blue,
+                  onPressed: _isRealTimeEnabled ? null : _accelerate,
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
