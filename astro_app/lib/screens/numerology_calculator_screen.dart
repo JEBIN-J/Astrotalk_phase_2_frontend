@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
 import 'life_path_detail_screen.dart';
 import 'birth_day_detail_screen.dart';
+import 'personal_year_detail_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -177,8 +178,9 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
           'calculation': '$birthDay + $birthMonth + $birthYear = $lifePath',
         },
         'birthday': {
+          'original': birthDay,
           'reduced': dayReduced,
-          'calculation': 'Day of birth reduced to $dayReduced',
+          'calculation': 'Day of birth $birthDay (Root $dayReduced)',
         },
         'personal_year': {
           'reduced': personalYear,
@@ -709,7 +711,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
         arrowColor: const Color(0xFF059669),
         watermarkType: _WatermarkType.remedies,
         valueBadge: pyVal != null ? 'Year $pyVal' : null,
-        onTap: () => _showExplanationSheet('Personal Year', _profileData!['personal_year'], false),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PersonalYearDetailScreen(
+                dateOfBirth: _dobController.text,
+                userName: _nameController.text,
+                system: _system,
+              ),
+            ),
+          );
+        },
       ));
     }
 

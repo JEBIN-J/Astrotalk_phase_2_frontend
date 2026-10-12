@@ -734,6 +734,71 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
 
   // --- "TODAY FOR YOU" Card with Sacred Lotus Mandala ---
   Widget _buildTodayForYouCard(BuildContext context) {
+    // Dynamically calculate today's personal/universal day vibration
+    final now = DateTime.now();
+    int dayVal = now.day;
+    int monthVal = now.month;
+    int yearVal = now.year;
+
+    // If user has a valid DOB, calculate their Personal Day for today:
+    // Personal Day = reduce(Personal Year + Current Month + Current Day)
+    int personalDayNumber = 1;
+    if (_userDob.isNotEmpty) {
+      try {
+        final parts = _userDob.split('-');
+        if (parts.length == 3) {
+          final bMonth = int.tryParse(parts[1]) ?? 1;
+          final bDay = int.tryParse(parts[2]) ?? 1;
+
+          int reduceN(int n) {
+            while (n > 9) {
+              int s = 0;
+              for (final c in n.toString().split('')) {
+                s += int.parse(c);
+              }
+              n = s;
+            }
+            return n;
+          }
+
+          final mRed = reduceN(bMonth);
+          final dRed = reduceN(bDay);
+          final yRed = reduceN(yearVal);
+          final personalYear = reduceN(mRed + dRed + yRed);
+          personalDayNumber = reduceN(personalYear + reduceN(monthVal) + reduceN(dayVal));
+        }
+      } catch (_) {
+        personalDayNumber = 1;
+      }
+    } else {
+      // Universal Day = reduce(current year + current month + current day)
+      int reduceN(int n) {
+        while (n > 9) {
+          int s = 0;
+          for (final c in n.toString().split('')) {
+            s += int.parse(c);
+          }
+          n = s;
+        }
+        return n;
+      }
+      personalDayNumber = reduceN(reduceN(yearVal) + reduceN(monthVal) + reduceN(dayVal));
+    }
+
+    final dayThemes = {
+      1: {"title": "A day to begin...", "desc": "A pioneering energy to plant new seeds and take the first bold step."},
+      2: {"title": "A day for cooperation...", "desc": "Cultivate harmonious partnerships, quiet patience, and thoughtful listening."},
+      3: {"title": "A day for creative joy...", "desc": "Express your ideas with vitality, communicate openly, and share inspiration."},
+      4: {"title": "A day for grounded focus...", "desc": "Structure your goals, attend to practical foundations, and organize details."},
+      5: {"title": "A day for exploration...", "desc": "Welcome dynamic movement, embrace versatility, and pivot as opportunities arise."},
+      6: {"title": "A day for home & care...", "desc": "Nurture loved ones, restore domestic harmony, and extend supportive warmth."},
+      7: {"title": "A day for quiet insight...", "desc": "Step back for mindful contemplation, study, and restorative inner reflection."},
+      8: {"title": "A day for executive drive...", "desc": "Take decisive charge of practical benchmarks and manifest tangible progress."},
+      9: {"title": "A day for completion...", "desc": "Release what has run its course and extend compassionate understanding."}
+    };
+
+    final dayTheme = dayThemes[personalDayNumber] ?? dayThemes[1]!;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -774,7 +839,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Big 3D/Gradient Number "1"
+                // Big 3D/Gradient Calculated Day Number
                 ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
                     begin: Alignment.topCenter,
@@ -782,7 +847,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                     colors: [Color(0xFF5B50EC), Color(0xFF3B82F6)],
                   ).createShader(bounds),
                   child: Text(
-                    '1',
+                    '$personalDayNumber',
                     style: GoogleFonts.outfit(
                       fontSize: 66.sp,
                       fontWeight: FontWeight.w900,
@@ -802,10 +867,10 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'TODAY FOR YOU',
+                            _userDob.isNotEmpty ? 'PERSONAL DAY $personalDayNumber' : 'UNIVERSAL DAY $personalDayNumber',
                             style: GoogleFonts.outfit(
                               fontSize: 10.sp,
-                              letterSpacing: 2.0,
+                              letterSpacing: 1.5,
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFF64748B),
                             ),
@@ -830,7 +895,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       ),
                       SizedBox(height: 5.h),
                       Text(
-                        'A day to begin...',
+                        dayTheme['title']!,
                         style: GoogleFonts.outfit(
                           fontSize: 17.5.sp,
                           fontWeight: FontWeight.w800,
@@ -841,7 +906,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       Padding(
                         padding: EdgeInsets.only(right: 64.w),
                         child: Text(
-                          'A positive start to take the first step towards your goals.',
+                          dayTheme['desc']!,
                           style: GoogleFonts.inter(
                             fontSize: 11.sp,
                             color: const Color(0xFF64748B),

@@ -633,6 +633,47 @@ class AstroApiService {
     };
   }
 
+  // =========================================================================
+  // 4.7 PERSONAL YEAR NUMBER
+  // =========================================================================
+  static Future<Map<String, dynamic>> getPersonalYearReport({
+    required String dateOfBirth,
+    int? year,
+    String? name,
+    String system = 'pythagorean',
+  }) async {
+    final candidateHosts = [
+      baseUrl,
+      'http://10.0.2.2:5000/api/v1',
+      'http://127.0.0.1:5000/api/v1',
+      'http://10.242.54.136:5000/api/v1',
+    ];
+
+    final queryParams = {
+      'dob': dateOfBirth,
+      'system': system,
+      if (year != null) 'year': year.toString(),
+      if (name != null && name.isNotEmpty) 'name': name,
+    };
+
+    for (final host in candidateHosts) {
+      try {
+        final uri = Uri.parse('$host/numerology/personal-year').replace(queryParameters: queryParams);
+        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            return data;
+          }
+        }
+      } catch (e) {
+        debugPrint('PersonalYear host attempt failed for $host: $e');
+      }
+    }
+
+    throw Exception('Failed to connect to backend server for Personal Year calculation.');
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
