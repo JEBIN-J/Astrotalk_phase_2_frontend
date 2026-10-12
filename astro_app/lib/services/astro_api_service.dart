@@ -487,6 +487,152 @@ class AstroApiService {
     };
   }
 
+  // =========================================================================
+  // 4.6 BIRTH DAY NUMBER
+  // =========================================================================
+  static Future<Map<String, dynamic>> getBirthDayReport({
+    required String dateOfBirth,
+    String? name,
+    String system = 'pythagorean',
+  }) async {
+    final candidateHosts = [
+      baseUrl,
+      'http://10.0.2.2:5000/api/v1',
+      'http://127.0.0.1:5000/api/v1',
+      'http://10.242.54.136:5000/api/v1',
+    ];
+
+    for (final host in candidateHosts) {
+      try {
+        final queryParams = {
+          'dob': dateOfBirth,
+          'system': system,
+          if (name != null && name.isNotEmpty) 'name': name,
+        };
+        final uri = Uri.parse('$host/numerology/birth-day').replace(queryParameters: queryParams);
+        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            return data;
+          }
+        }
+      } catch (e) {
+        debugPrint('BirthDay host attempt failed for $host: $e');
+      }
+    }
+
+    return _generateLocalBirthDayReport(dateOfBirth: dateOfBirth, name: name ?? 'Seeker', system: system);
+  }
+
+  static Map<String, dynamic> _generateLocalBirthDayReport({
+    required String dateOfBirth,
+    required String name,
+    String system = 'pythagorean',
+  }) {
+    final parts = dateOfBirth.split('-');
+    int d = parts.length > 2 ? int.tryParse(parts[2]) ?? 16 : 16;
+    int root = d;
+    if (d == 11 || d == 22) {
+      root = d;
+    } else {
+      while (root > 9) {
+        root = root.toString().split('').map(int.parse).reduce((a, b) => a + b);
+        if (root == 11 || root == 22) break;
+      }
+    }
+
+    final titles = {
+      1: "The Independent Trailblazer",
+      2: "The Sensitive Empath & Partner",
+      3: "The Creative Enthusiast",
+      4: "The Methodical Foundation-Builder",
+      5: "The Adventurous Free Spirit",
+      6: "The Compassionate Nurturer",
+      7: "The Analytical Truth-Seeker",
+      8: "The Executive Manifestor",
+      9: "The Universal Humanitarian",
+      10: "The Resolute Pioneer of New Beginnings",
+      11: "The Master Intuitive & Visionary",
+      12: "The Expressive Synthesizer",
+      13: "The Disciplined Transformer",
+      14: "The Adaptable Change Agent",
+      15: "The Magnetic Harmonizer",
+      16: "The Discerning Mystic & Philosopher",
+      17: "The Insightful Financial Strategist",
+      18: "The Compassionate Leader of Change",
+      19: "The Radiant Sovereign Achiever",
+      20: "The Intuitive Peacemaker",
+      21: "The Inspired Social Catalyst",
+      22: "The Master Builder & Structural Architect",
+      23: "The Eloquent Quick-Minded Explorer",
+      24: "The Loyal Family Pillar & Devoted Guardian",
+      25: "The Observant Inward Explorer",
+      26: "The Practical Visionary & Philanthropic Leader",
+      27: "The Wise Counselor & Empathetic Teacher",
+      28: "The Collaborative Diplomatic Pioneer",
+      29: "The Inspired Conduit of Deep Insight",
+      30: "The Charismatic Optimistic Artist",
+      31: "The Steadfast Creative Architect"
+    };
+
+    final title = titles[d] ?? "Day $d Native";
+    final theme = "Innate gifts, personal expression, and everyday demeanor associated with day $d.";
+
+    return {
+      "status": "success",
+      "calculation_status": "completed",
+      "user_name": name,
+      "birth_day_number": d,
+      "reduced_root": root,
+      "number_title": title,
+      "core_theme": theme,
+      "is_master_day": d == 11 || d == 22,
+      "date_of_birth_used": dateOfBirth,
+      "calculation_system": system,
+      "method_version": "1.0.0",
+      "content_version": "1.0.0",
+      "calculation_trace": {
+        "date_of_birth": dateOfBirth,
+        "calendar_day": d,
+        "primary_rule": "Calendar day extracted as authoritative primary Birth Day Number: $d",
+        "secondary_reduced_root": root,
+        "root_reduction_steps": ["Day $d -> Root $root"]
+      },
+      "interpretation": {
+        "overview": "Born on the ${d}th, your primary Birth Day Number is $d. In traditional numerology, your Birth Day Number represents your natural talents, spontaneous approach to challenges, and foundational toolkit.",
+        "strengths": [
+          "Authentic personal clarity and innate confidence",
+          "Distinctive intuitive or analytical perception",
+          "Reliable follow-through when inspired",
+          "Charismatic and motivating demeanor"
+        ],
+        "challenges": [
+          "Patience when working with slower-moving projects",
+          "Remembering to take regular breaks to recharge energy",
+          "Avoiding over-extending personal commitments"
+        ],
+        "personality": "Day $d natives demonstrate focused determination and reflective discernment, communicating clearly and authentically in social circles.",
+        "relationships": "In romantic and close partnerships, you value loyalty, intellectual resonance, and mutual respect.",
+        "career": "You thrive in roles providing autonomy, creative exploration, and clear goals.",
+        "personal_growth": "Daily practice: Take five minutes each morning to center yourself and set clear, balanced intentions.",
+        "quick_summary": {
+          "key_traits": ["Focused Energy", "Authentic Demeanor", "Natural Capability"],
+          "potential_challenge": "Pacing personal energy",
+          "growth_suggestion": "Prioritize restorative balance alongside goals"
+        },
+        "sections": [
+          {
+            "section_type": "overview",
+            "heading": "The Day's Core Archetype",
+            "content": "Born on the ${d}th, you carry the distinctive vibration of $d, guiding your everyday decisions and natural reactions."
+          }
+        ]
+      },
+      "timestamp": DateTime.now().toIso8601String()
+    };
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',

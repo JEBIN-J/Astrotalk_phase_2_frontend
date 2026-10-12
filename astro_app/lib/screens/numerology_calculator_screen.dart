@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
 import 'life_path_detail_screen.dart';
+import 'birth_day_detail_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -642,7 +643,8 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       ));
     } else {
       final lpVal = _profileData!['life_path']?['reduced']?.toString();
-      final bdVal = _profileData!['birthday']?['reduced']?.toString();
+      final bdVal = _profileData!['birthday']?['original']?.toString() ?? 
+                    _profileData!['birthday']?['reduced']?.toString();
       final pyVal = _profileData!['personal_year']?['reduced']?.toString();
 
       gridItems.add(_buildCosmicCard(
@@ -682,7 +684,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
         arrowColor: const Color(0xFFDB2777),
         watermarkType: _WatermarkType.letters,
         valueBadge: bdVal != null ? 'No. $bdVal' : null,
-        onTap: () => _showExplanationSheet('Birthday', _profileData!['birthday'], false),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BirthDayDetailScreen(
+                dateOfBirth: _dobController.text,
+                userName: _nameController.text,
+                system: _system,
+              ),
+            ),
+          );
+        },
       ));
       gridItems.add(_buildCosmicCard(
         context: context,
