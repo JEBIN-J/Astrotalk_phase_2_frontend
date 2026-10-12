@@ -341,6 +341,152 @@ class AstroApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getLifePathReport({
+    required String dateOfBirth,
+    String? name,
+    String system = 'pythagorean',
+  }) async {
+    final candidateHosts = [
+      baseUrl,
+      'http://10.0.2.2:5000/api/v1',
+      'http://127.0.0.1:5000/api/v1',
+      'http://10.242.54.136:5000/api/v1',
+    ];
+
+    for (final host in candidateHosts) {
+      try {
+        final queryParams = {
+          'dob': dateOfBirth,
+          'system': system,
+          if (name != null && name.isNotEmpty) 'name': name,
+        };
+        final uri = Uri.parse('$host/numerology/life-path').replace(queryParameters: queryParams);
+        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            return data;
+          }
+        }
+      } catch (e) {
+        debugPrint('LifePath host attempt failed for $host: $e');
+      }
+    }
+
+    // Fallback: If network is offline, perform deterministic Pythagorean reduction locally
+    return _generateLocalLifePathReport(dateOfBirth: dateOfBirth, name: name ?? 'Seeker', system: system);
+  }
+
+  static Map<String, dynamic> _generateLocalLifePathReport({
+    required String dateOfBirth,
+    required String name,
+    String system = 'pythagorean',
+  }) {
+    final parts = dateOfBirth.split('-');
+    int y = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 1998 : 1998;
+    int m = parts.length > 1 ? int.tryParse(parts[1]) ?? 12 : 12;
+    int d = parts.length > 2 ? int.tryParse(parts[2]) ?? 16 : 16;
+
+    int reduce(int n, bool keepMasters) {
+      if (keepMasters && (n == 11 || n == 22 || n == 33)) return n;
+      while (n > 9) {
+        n = n.toString().split('').map(int.parse).reduce((a, b) => a + b);
+        if (keepMasters && (n == 11 || n == 22 || n == 33)) return n;
+      }
+      return n;
+    }
+
+    final redM = reduce(m, true);
+    final redD = reduce(d, true);
+    final ySum = y.toString().split('').map(int.parse).reduce((a, b) => a + b);
+    final redY = reduce(ySum, true);
+    final combined = redM + redD + redY;
+    final lp = reduce(combined, true);
+
+    final titles = {
+      1: "The Innovative Pioneer & Trailblazer",
+      2: "The Harmonious Peacemaker & Intuitive Diplomat",
+      3: "The Expressive Creator & Radiant Communicator",
+      4: "The Master Builder & Systematic Strategist",
+      5: "The Free-Spirited Catalyst & Dynamic Explorer",
+      6: "The Nurturing Guardian & Compassionate Pillar",
+      7: "The Analytical Seeker & Contemplative Mystic",
+      8: "The Sovereign Achiever & Executive Manifestor",
+      9: "The Compassionate Humanitarian & Universal Visionary",
+      11: "The Illuminator & Master Intuitive Teacher",
+      22: "The Master Architect & Visionary Builder",
+      33: "The Master Healer & Universal Teacher",
+    };
+
+    final themes = {
+      1: "Independence, authentic leadership, original thinking, and courageous initiative.",
+      2: "Cooperation, emotional intelligence, peacemaking, and deep partnership.",
+      3: "Creative self-expression, joyful vitality, communication, and optimism.",
+      4: "Stability, structural integrity, steadfast discipline, and lasting foundations.",
+      5: "Freedom, progressive change, versatility, and experiential wisdom.",
+      6: "Loving service, family harmony, protective responsibility, and community care.",
+      7: "Wisdom, analytical depth, philosophical inquiry, and spiritual truth.",
+      8: "Material mastery, executive authority, abundance, and ethical power.",
+      9: "Universal empathy, philanthropy, artistic wisdom, and selfless service.",
+      11: "Spiritual illumination, heightened intuition, visionary inspiration, and guidance.",
+      22: "Monumental achievements, practical idealism, and global structural impact.",
+      33: "Selfless compassion, universal healing, spiritual teaching, and devotional love.",
+    };
+
+    return {
+      "status": "success",
+      "calculation_status": "completed",
+      "user_name": name,
+      "life_path_number": lp,
+      "number_title": titles[lp] ?? "Life Path $lp",
+      "core_theme": themes[lp] ?? "Destiny and personal vibration.",
+      "is_master_number": lp == 11 || lp == 22 || lp == 33,
+      "date_of_birth_used": dateOfBirth,
+      "calculation_system": system,
+      "method_version": "1.0.0",
+      "content_version": "1.0.0",
+      "calculation_trace": {
+        "date_of_birth": dateOfBirth,
+        "month": {"original": m, "reduced": redM, "steps": ["Month $m -> $redM"]},
+        "day": {"original": d, "reduced": redD, "steps": ["Day $d -> $redD"]},
+        "year": {"original": y, "reduced": redY, "steps": ["Year $y -> $redY"]},
+        "combined_sum": combined,
+        "reduction_steps": ["$redM (Month) + $redD (Day) + $redY (Year) = $combined", "$combined -> $lp"],
+        "final_number": lp
+      },
+      "interpretation": {
+        "overview": "Life Path $lp embodies ${themes[lp] ?? 'a unique path of purpose'}. People on this vibration are endowed with distinctive gifts designed to navigate opportunities and overcome challenges with grace.",
+        "strengths": [
+          "Natural initiative and authentic personal clarity",
+          "Resilience in the face of complex transitions",
+          "Visionary perspective and dependable integrity",
+          "Charisma and motivational presence"
+        ],
+        "challenges": [
+          "Impatience when others operate at a different tempo",
+          "Reluctance to ask for assistance when overwhelmed",
+          "Balancing personal independence with shared commitments"
+        ],
+        "relationships": "In partnerships, you value mutual respect, open communication, and shared values. Cultivating patience and active listening creates deeply fulfilling connections.",
+        "career": "Excels in environments offering creative discretion, leadership opportunities, and clear strategic goals. Bureaucracy without purpose stifles your greatest output.",
+        "personal_growth": "Practice daily mindfulness: anchor your energy each morning, celebrate collective achievements, and align actions with your core values.",
+        "sections": [
+          {
+            "section_type": "overview",
+            "heading": "The Core Archetype",
+            "content": "Your life path represents your central trajectory. It acts as a compass guiding choices, learning milestones, and personal evolution."
+          },
+          {
+            "section_type": "traditional",
+            "heading": "Personality & Cognitive Flow",
+            "content": "You process experiences with focus and intuition, naturally finding innovative ways through complicated situations."
+          }
+        ]
+      },
+      "timestamp": DateTime.now().toIso8601String()
+    };
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
