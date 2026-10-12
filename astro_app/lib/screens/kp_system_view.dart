@@ -18,6 +18,7 @@ class KpSystemView extends StatefulWidget {
   final VoidCallback? onEditProfile;
   final bool showUpagrahas;
   final bool showDegrees;
+  final int initialSectionIndex;
 
   const KpSystemView({
     super.key,
@@ -33,6 +34,7 @@ class KpSystemView extends StatefulWidget {
     this.onEditProfile,
     this.showUpagrahas = false,
     this.showDegrees = true,
+    this.initialSectionIndex = 0,
   });
 
   @override
@@ -99,6 +101,75 @@ class _KpSystemViewState extends State<KpSystemView> {
   String _selectedAyanamsa = 'KP_NEW';
   int _activeSectionIndex = 0;
 
+  final ScrollController _subSectionScrollController = ScrollController();
+  late final List<GlobalKey> _subSectionKeys =
+      List.generate(subSections.length, (_) => GlobalKey());
+
+  final ScrollController _cueCardsScrollController = ScrollController();
+  late final List<GlobalKey> _cueCardsKeys =
+      List.generate(_cueCardsTabs.length, (_) => GlobalKey());
+
+  final ScrollController _vedicScrollController = ScrollController();
+  late final List<GlobalKey> _vedicKeys =
+      List.generate(6, (_) => GlobalKey());
+
+  void _scrollToSelectedSection(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_subSectionScrollController.hasClients) return;
+      if (index < 0 || index >= _subSectionKeys.length) return;
+      final keyContext = _subSectionKeys[index].currentContext;
+      if (keyContext != null) {
+        final renderObject = keyContext.findRenderObject();
+        if (renderObject != null) {
+          _subSectionScrollController.position.ensureVisible(
+            renderObject,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+          );
+        }
+      }
+    });
+  }
+
+  void _scrollToSelectedCueCard(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_cueCardsScrollController.hasClients) return;
+      if (index < 0 || index >= _cueCardsKeys.length) return;
+      final keyContext = _cueCardsKeys[index].currentContext;
+      if (keyContext != null) {
+        final renderObject = keyContext.findRenderObject();
+        if (renderObject != null) {
+          _cueCardsScrollController.position.ensureVisible(
+            renderObject,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+          );
+        }
+      }
+    });
+  }
+
+  void _scrollToSelectedVedicTab(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_vedicScrollController.hasClients) return;
+      if (index < 0 || index >= _vedicKeys.length) return;
+      final keyContext = _vedicKeys[index].currentContext;
+      if (keyContext != null) {
+        final renderObject = keyContext.findRenderObject();
+        if (renderObject != null) {
+          _vedicScrollController.position.ensureVisible(
+            renderObject,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+          );
+        }
+      }
+    });
+  }
+
   // KP Chart specific state
   String _activeChartType = 'D-1'; // 'Bhava', 'D-1', 'D-9'
   late KundliChartStyle _activeChartStyle;
@@ -142,10 +213,25 @@ class _KpSystemViewState extends State<KpSystemView> {
   @override
   void initState() {
     super.initState();
+    _activeSectionIndex = widget.initialSectionIndex;
     _activeChartStyle = widget.chartStyle;
     _fetchAyanamsas();
     _fetchKpData();
     _fetchCueCardsData();
+
+    if (_activeSectionIndex > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedSection(_activeSectionIndex);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _subSectionScrollController.dispose();
+    _cueCardsScrollController.dispose();
+    _vedicScrollController.dispose();
+    super.dispose();
   }
 
   String? _cueCardsError;
@@ -202,6 +288,11 @@ class _KpSystemViewState extends State<KpSystemView> {
         _kpData != null &&
         _kpData!['upagrahas'] == null) {
       needsFetch = true;
+    }
+
+    if (oldWidget.initialSectionIndex != widget.initialSectionIndex) {
+      _activeSectionIndex = widget.initialSectionIndex;
+      _scrollToSelectedSection(_activeSectionIndex);
     }
 
     if (needsFetch) {
@@ -356,6 +447,7 @@ class _KpSystemViewState extends State<KpSystemView> {
   // =========================================================================
   Widget _buildSubSectionSelector(bool isDark) {
     return SingleChildScrollView(
+      controller: _subSectionScrollController,
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
@@ -365,9 +457,13 @@ class _KpSystemViewState extends State<KpSystemView> {
           final isSelected = _activeSectionIndex == idx;
 
           return Padding(
+            key: _subSectionKeys[idx],
             padding: EdgeInsets.only(right: 8.w),
             child: InkWell(
-              onTap: () => setState(() => _activeSectionIndex = idx),
+              onTap: () {
+                setState(() => _activeSectionIndex = idx);
+                _scrollToSelectedSection(idx);
+              },
               borderRadius: BorderRadius.circular(20.r),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -464,6 +560,7 @@ class _KpSystemViewState extends State<KpSystemView> {
       children: [
         // Horizontal Tabs
         SingleChildScrollView(
+          controller: _cueCardsScrollController,
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           child: Row(
@@ -473,9 +570,13 @@ class _KpSystemViewState extends State<KpSystemView> {
               final isSelected = _cueCardsSubTabIndex == idx;
 
               return Padding(
+                key: _cueCardsKeys[idx],
                 padding: EdgeInsets.only(right: 8.w),
                 child: InkWell(
-                  onTap: () => setState(() => _cueCardsSubTabIndex = idx),
+                  onTap: () {
+                    setState(() => _cueCardsSubTabIndex = idx);
+                    _scrollToSelectedCueCard(idx);
+                  },
                   borderRadius: BorderRadius.circular(12.r),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -3623,7 +3724,9 @@ Widget _buildVedicElementsSection(bool isDark) {
 
     Widget buildTabs() {
       return SingleChildScrollView(
+        controller: _vedicScrollController,
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
             _buildVedicTab('Table', 0, isDark),
@@ -3655,10 +3758,12 @@ Widget _buildVedicElementsSection(bool isDark) {
   Widget _buildVedicTab(String label, int index, bool isDark) {
     bool isSelected = _vedicElementsSubTabIndex == index;
     return GestureDetector(
+      key: _vedicKeys[index],
       onTap: () {
         setState(() {
           _vedicElementsSubTabIndex = index;
         });
+        _scrollToSelectedVedicTab(index);
       },
       child: Container(
         margin: EdgeInsets.only(right: 8.w),
