@@ -16,6 +16,9 @@ class KpPlanetaryTransitSection extends StatefulWidget {
   final String selectedAyanamsa;
   final ValueChanged<Map<String, dynamic>> onKpDataChanged;
   final VoidCallback onResetKpData;
+  final ValueChanged<String>? onCuspsTypeChanged;
+  final ValueChanged<DateTime>? onTransitDateChanged;
+  final ValueChanged<bool>? onRealTimeToggled;
 
   const KpPlanetaryTransitSection({
     super.key,
@@ -29,6 +32,9 @@ class KpPlanetaryTransitSection extends StatefulWidget {
     required this.selectedAyanamsa,
     required this.onKpDataChanged,
     required this.onResetKpData,
+    this.onCuspsTypeChanged,
+    this.onTransitDateChanged,
+    this.onRealTimeToggled,
   });
 
   @override
@@ -41,6 +47,8 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
   
   bool _isRealTimeEnabled = false;
   Timer? _realTimeTimer;
+  DateTime? _lastTransitFetchTime;
+  bool _isBackgroundRefreshing = false;
 
   int _stepValue = 1;
   String _stepUnit = 'Min.'; 
@@ -62,8 +70,25 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onTransitDateChanged?.call(_currentTransitDate);
+        widget.onCuspsTypeChanged?.call(_cuspsType);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant KpPlanetaryTransitSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedAyanamsa != widget.selectedAyanamsa) {
+      if (_isSwapped || _isRealTimeEnabled) {
+        _fetchTransitData(isSilent: _isRealTimeEnabled);
+      }
+    }
   }
 
   @override
@@ -73,10 +98,16 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     super.dispose();
   }
 
-  void _fetchTransitData() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void _fetchTransitData({bool isSilent = false}) async {
+    if (_isLoading) return;
+
+    if (isSilent) {
+      _isBackgroundRefreshing = true;
+    } else {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final String formattedDate = DateFormat('yyyy-MM-dd').format(_currentTransitDate);
@@ -95,17 +126,20 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         ayanamsa: widget.selectedAyanamsa,
       );
 
+      _lastTransitFetchTime = DateTime.now();
+
       if (mounted) {
         final Map<String, dynamic> transitRes = Map<String, dynamic>.from(res);
         transitRes['is_transit'] = true;
         widget.onKpDataChanged(transitRes);
+        widget.onTransitDateChanged?.call(_currentTransitDate);
         setState(() {
           _isSwapped = true;
         });
       }
     } catch (e) {
       debugPrint('Error fetching transit data: $e');
-      if (mounted) {
+      if (mounted && !isSilent) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update chart: $e'),
@@ -118,6 +152,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _isBackgroundRefreshing = false;
         });
       }
     }
@@ -129,34 +164,52 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
       setState(() {
         _isRealTimeEnabled = false;
       });
+      widget.onRealTimeToggled?.call(false);
     } else {
+      final now = DateTime.now();
       setState(() {
         _isRealTimeEnabled = true;
         _isSwapped = true;
+        _currentTransitDate = now;
       });
-      _currentTransitDate = DateTime.now();
-      _fetchTransitData();
+      widget.onRealTimeToggled?.call(true);
+      widget.onTransitDateChanged?.call(now);
       
+      // Fetch fresh transit calculation for the live current moment
+      _fetchTransitData(isSilent: false);
+      
+      // Live clock updates smoothly every 1 second
+      _realTimeTimer?.cancel();
       _realTimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (!mounted) return;
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        final tickTime = DateTime.now();
         setState(() {
-          _currentTransitDate = DateTime.now();
+          _currentTransitDate = tickTime;
         });
+        widget.onTransitDateChanged?.call(tickTime);
         
-        if (!_isLoading) {
-          _fetchTransitData();
+        // Throttled background calculation (every 30s) so backend isn't hammered
+        final lastFetch = _lastTransitFetchTime;
+        if (!_isLoading && !_isBackgroundRefreshing &&
+            (lastFetch == null || tickTime.difference(lastFetch).inSeconds >= 30)) {
+          _fetchTransitData(isSilent: true);
         }
       });
     }
   }
 
   void _resetChart() {
+    _realTimeTimer?.cancel();
     setState(() {
       _isSwapped = false;
       _isRealTimeEnabled = false;
-      _realTimeTimer?.cancel();
       _currentTransitDate = DateTime.now();
     });
+    widget.onRealTimeToggled?.call(false);
+    widget.onTransitDateChanged?.call(_currentTransitDate);
     widget.onResetKpData();
   }
 
@@ -164,6 +217,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     setState(() {
       _currentTransitDate = _addTime(_currentTransitDate, _stepValue, _stepUnit);
     });
+    widget.onTransitDateChanged?.call(_currentTransitDate);
     if (_isSwapped && !_isRealTimeEnabled) {
       _fetchTransitData();
     }
@@ -173,6 +227,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     setState(() {
       _currentTransitDate = _addTime(_currentTransitDate, -_stepValue, _stepUnit);
     });
+    widget.onTransitDateChanged?.call(_currentTransitDate);
     if (_isSwapped && !_isRealTimeEnabled) {
       _fetchTransitData();
     }
@@ -391,7 +446,8 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                 child: GestureDetector(
                   onTap: () {
                     setState(() => _cuspsType = type);
-                    if (_isSwapped && !_isRealTimeEnabled) {
+                    widget.onCuspsTypeChanged?.call(type);
+                    if (!_isLoading) {
                       _fetchTransitData();
                     }
                   },
@@ -489,33 +545,59 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
             padding: EdgeInsets.symmetric(vertical: 14.h),
             decoration: BoxDecoration(
               color: _isRealTimeEnabled 
-                  ? Colors.redAccent.withOpacity(0.1) 
+                  ? Colors.redAccent.withOpacity(0.12) 
                   : Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
                 color: _isRealTimeEnabled 
-                    ? Colors.redAccent.withOpacity(0.5) 
-                    : Colors.green.withOpacity(0.5)
+                    ? Colors.redAccent 
+                    : Colors.green.withOpacity(0.5),
+                width: _isRealTimeEnabled ? 1.5 : 1,
               ),
             ),
             alignment: Alignment.center,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  _isRealTimeEnabled ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
-                  color: _isRealTimeEnabled ? Colors.redAccent : Colors.green,
-                  size: 20.sp,
-                ),
-                SizedBox(width: 8.w),
+                if (_isRealTimeEnabled)
+                  FadeTransition(
+                    opacity: _pulseController,
+                    child: Container(
+                      width: 10.w,
+                      height: 10.w,
+                      margin: EdgeInsets.only(right: 8.w),
+                      decoration: const BoxDecoration(
+                        color: Colors.redAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.green,
+                    size: 20.sp,
+                  ),
+                if (!_isRealTimeEnabled) SizedBox(width: 8.w),
                 Text(
-                  _isRealTimeEnabled ? 'Stop Real-Time Display' : 'Enable Real-Time Display',
+                  _isRealTimeEnabled ? 'Stop Real-Time Display (LIVE)' : 'Enable Real-Time Display',
                   style: GoogleFonts.outfit(
                     color: _isRealTimeEnabled ? Colors.redAccent : Colors.green,
                     fontWeight: FontWeight.bold,
                     fontSize: 14.sp,
                   ),
                 ),
+                if (_isRealTimeEnabled && (_isLoading || _isBackgroundRefreshing)) ...[
+                  SizedBox(width: 10.w),
+                  SizedBox(
+                    width: 13.w,
+                    height: 13.w,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

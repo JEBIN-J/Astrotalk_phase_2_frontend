@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../models/astro_models.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/kundli_chart_painter.dart';
+import '../widgets/nested_transit_chart_widget.dart';
 import 'planetary_transit_view.dart';
 class KpSystemView extends StatefulWidget {
   final String personName;
@@ -208,6 +210,11 @@ class _KpSystemViewState extends State<KpSystemView> {
   bool _isLoading = false;
   String? _errorMessage;
   Map<String, dynamic>? _kpData;
+  Map<String, dynamic>? _natalKpData;
+  Map<String, dynamic>? _transitKpData;
+  String _transitCuspsType = 'Use Transit Cusps';
+  DateTime? _transitDate;
+  bool _isRealTimeTransit = false;
   Map<String, dynamic>? _cueCardsData;
 
   @override
@@ -217,6 +224,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     _activeChartStyle = widget.chartStyle;
     _fetchAyanamsas();
     _fetchKpData();
+    _fetchNatalKpData();
     _fetchCueCardsData();
 
     if (_activeSectionIndex > 0) {
@@ -322,6 +330,7 @@ class _KpSystemViewState extends State<KpSystemView> {
       if (mounted) {
         setState(() {
           _kpData = res;
+          _natalKpData = Map<String, dynamic>.from(res);
           _isLoading = false;
         });
       }
@@ -333,6 +342,28 @@ class _KpSystemViewState extends State<KpSystemView> {
               'Unable to calculate the chart for the selected birth details. Please verify the birth time and location.';
         });
       }
+    }
+  }
+
+  Future<void> _fetchNatalKpData() async {
+    try {
+      final res = await AstroApiService.getKpSystemData(
+        name: widget.personName.isNotEmpty ? widget.personName : 'User',
+        dateOfBirth: widget.dateOfBirth,
+        timeOfBirth: widget.timeOfBirth,
+        placeOfBirth: widget.placeOfBirth,
+        latitude: widget.latitude,
+        longitude: widget.longitude,
+        timezone: widget.timezone,
+        ayanamsa: _selectedAyanamsa,
+      );
+      if (mounted) {
+        setState(() {
+          _natalKpData = Map<String, dynamic>.from(res);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching natal kp data: $e');
     }
   }
 
@@ -1194,11 +1225,45 @@ class _KpSystemViewState extends State<KpSystemView> {
         if (mounted) {
           setState(() {
             _kpData = newData;
+            _transitKpData = newData;
+            if (_natalKpData == null || _natalKpData?['is_transit'] == true) {
+              _fetchNatalKpData();
+            }
           });
         }
       },
       onResetKpData: () {
+        setState(() {
+          _transitKpData = null;
+          _transitCuspsType = 'Use Transit Cusps';
+          _isRealTimeTransit = false;
+        });
         _fetchKpData();
+        _fetchNatalKpData();
+      },
+      onCuspsTypeChanged: (type) {
+        if (mounted) {
+          setState(() {
+            _transitCuspsType = type;
+            if (_natalKpData == null || _natalKpData?['is_transit'] == true) {
+              _fetchNatalKpData();
+            }
+          });
+        }
+      },
+      onTransitDateChanged: (date) {
+        if (mounted) {
+          setState(() {
+            _transitDate = date;
+          });
+        }
+      },
+      onRealTimeToggled: (enabled) {
+        if (mounted) {
+          setState(() {
+            _isRealTimeTransit = enabled;
+          });
+        }
       },
     );
   }
@@ -1375,49 +1440,60 @@ class _KpSystemViewState extends State<KpSystemView> {
         SizedBox(height: 14.h),
 
         // Interactive Chart Canvas
-        Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: const Color(0xFF4338CA).withValues(alpha: 0.25),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        if (_activeSectionIndex == 7 && _transitCuspsType == 'Use Natal Cusps')
+          NestedNorthIndianTransitChart(
+            natalData: _natalKpData ?? _kpData,
+            transitData: _transitKpData ?? _kpData,
+            isDark: isDark,
+            showDegrees: widget.showDegrees,
+            chartTypeKey: _activeChartType,
+            isRealTime: _isRealTimeTransit,
+            title: 'Transit Chart  ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI'}]',
+          )
+        else
+          Container(
+            padding: EdgeInsets.all(14.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(
+                color: const Color(0xFF4338CA).withValues(alpha: 0.25),
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Text(
-                _activeChartType == 'Bhava'
-                    ? 'KP Bhava Chalit Chart (Placidus Cusps)'
-                    : _activeChartType == 'D-9'
-                    ? 'Navamsa Chart (D9)'
-                    : (_kpData?['is_transit'] == true ? 'Rashi Transit Chart (D1)' : 'Rashi Natal Chart (D1)'),
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                  color: isDark ? Colors.white : const Color(0xFF713F12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-              SizedBox(height: 12.h),
-              KundliInteractiveChart(
-                chartStyle: _activeChartStyle,
-                isDark: isDark,
-                chartTypeKey: _activeChartType,
-                showUpagrahas: widget.showUpagrahas,
-                showDegrees: widget.showDegrees,
-                showKpCusps: _activeChartType != 'D-9',
-                kundliData: _kpData,
-              ),
-            ],
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  _activeChartType == 'Bhava'
+                      ? 'KP Bhava Chalit Chart (Placidus Cusps)'
+                      : _activeChartType == 'D-9'
+                      ? 'Navamsa Chart (D9)'
+                      : (_kpData?['is_transit'] == true ? 'Rashi Transit Chart (D1)' : 'Rashi Natal Chart (D1)'),
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                    color: isDark ? Colors.white : const Color(0xFF713F12),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                KundliInteractiveChart(
+                  chartStyle: _activeChartStyle,
+                  isDark: isDark,
+                  chartTypeKey: _activeChartType,
+                  showUpagrahas: widget.showUpagrahas,
+                  showDegrees: widget.showDegrees,
+                  showKpCusps: _activeChartType != 'D-9',
+                  kundliData: _kpData,
+                ),
+              ],
+            ),
           ),
-        ),
         SizedBox(height: 20.h),
 
         // Lower Table: Switches between Bhava Table and Planetary Table
