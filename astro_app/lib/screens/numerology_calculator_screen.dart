@@ -9,6 +9,7 @@ import 'birth_day_detail_screen.dart';
 import 'personal_year_detail_screen.dart';
 import 'name_analysis_screen.dart';
 import 'personality_soul_screen.dart';
+import 'missing_numbers_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -789,7 +790,16 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       arrowBg: const Color(0xFFFFEDD5),
       arrowColor: const Color(0xFFEA580C),
       watermarkType: _WatermarkType.numbers,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Missing numbers module'))),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MissingNumbersScreen(
+              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+            ),
+          ),
+        );
+      },
     ));
 
     gridItems.add(_buildCosmicCard(
