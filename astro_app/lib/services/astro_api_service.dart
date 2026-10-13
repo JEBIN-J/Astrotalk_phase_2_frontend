@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.242.54.136:5000/api/v1';
+      return 'http://192.168.29.77:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.242.54.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://10.242.54.136:5000/api/v1';
+    return 'http://192.168.29.77:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -672,6 +672,68 @@ class AstroApiService {
     }
 
     throw Exception('Failed to connect to backend server for Personal Year calculation.');
+  }
+
+  // =========================================================================
+  // 4.8 NAME ANALYSIS
+  // =========================================================================
+  static Future<Map<String, dynamic>> getNameAnalysisReport({
+    required String birthName,
+    String? currentName,
+    String system = 'pythagorean',
+    String? dateOfBirth,
+  }) async {
+    final candidateHosts = [
+      baseUrl,
+      'http://10.0.2.2:5000/api/v1',
+      'http://127.0.0.1:5000/api/v1',
+      'http://10.242.54.136:5000/api/v1',
+    ];
+
+    final bodyData = {
+      'birth_name': birthName,
+      'system': system,
+      if (currentName != null && currentName.isNotEmpty) 'current_name': currentName,
+      if (dateOfBirth != null && dateOfBirth.isNotEmpty) 'dob': dateOfBirth,
+    };
+
+    for (final host in candidateHosts) {
+      try {
+        final uri = Uri.parse('$host/numerology/name-analysis');
+        final res = await http.post(
+          uri,
+          headers: _headers,
+          body: jsonEncode(bodyData),
+        ).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            return data;
+          }
+        } else if (res.statusCode >= 400 && res.statusCode < 500) {
+          try {
+            final errData = jsonDecode(res.body) as Map<String, dynamic>;
+            if (errData.containsKey('message')) {
+              throw Exception(errData['message']);
+            }
+          } on Exception catch (e) {
+            if (!e.toString().contains('FormatException')) {
+              rethrow;
+            }
+          }
+        }
+      } on Exception catch (e) {
+        if (!e.toString().contains('Connection refused') &&
+            !e.toString().contains('SocketException') &&
+            !e.toString().contains('TimeoutException') &&
+            !e.toString().contains('ClientException')) {
+          rethrow;
+        }
+        debugPrint('NameAnalysis host attempt failed for $host: $e');
+      }
+    }
+
+    throw Exception('Failed to connect to backend server for Name Analysis. Ensure server is active on port 5000.');
   }
 
   static Future<Map<String, dynamic>> getLalKitab({

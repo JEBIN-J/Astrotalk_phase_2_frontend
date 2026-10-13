@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'numerology_calculator_screen.dart';
+import 'name_analysis_screen.dart';
 
 class NumerologyDashboardScreen extends StatefulWidget {
   const NumerologyDashboardScreen({super.key});
@@ -528,16 +529,28 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                           ),
                           _buildExploreCard(
                             context: context,
-                            title: 'Name\nCorrection',
-                            subtitle: 'Find the spelling that suits your numbers.',
-                            icon: Icons.edit_note_rounded,
-                            cardBg: const Color(0xFFFDF2F8),
-                            borderColor: const Color(0xFFFCE7F3),
-                            iconBg: const Color(0xFFD946EF),
-                            arrowBg: const Color(0xFFFCE7F3),
-                            arrowColor: const Color(0xFFD946EF),
+                            title: 'Name\nAnalysis',
+                            subtitle: 'Deep Pythagorean & Chaldean name vibrations.',
+                            icon: Icons.format_color_text_rounded,
+                            cardBg: const Color(0xFFFEFCE8),
+                            borderColor: const Color(0xFFFEF3C7),
+                            iconBg: const Color(0xFFF59E0B),
+                            arrowBg: const Color(0xFFFEF3C7),
+                            arrowColor: const Color(0xFFD97706),
                             watermarkType: _WatermarkType.letters,
                             isNew: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NameAnalysisScreen(
+                                    initialBirthName: _userName,
+                                    initialSystem: _userSystem,
+                                    dateOfBirth: _userDob,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _buildExploreCard(
                             context: context,

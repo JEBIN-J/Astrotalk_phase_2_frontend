@@ -7,6 +7,7 @@ import '../services/astro_api_service.dart';
 import 'life_path_detail_screen.dart';
 import 'birth_day_detail_screen.dart';
 import 'personal_year_detail_screen.dart';
+import 'name_analysis_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -739,7 +740,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       arrowColor: const Color(0xFFD97706),
       watermarkType: _WatermarkType.letters,
       valueBadge: nameVal != null ? 'No. $nameVal' : null,
-      onTap: () => _showExplanationSheet('Name', _profileData!['namank'] ?? _profileData!['expression'], true),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NameAnalysisScreen(
+              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+              initialSystem: _system,
+              dateOfBirth: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
+            ),
+          ),
+        );
+      },
     ));
 
     gridItems.add(_buildCosmicCard(
