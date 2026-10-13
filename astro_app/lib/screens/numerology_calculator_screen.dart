@@ -8,6 +8,7 @@ import 'life_path_detail_screen.dart';
 import 'birth_day_detail_screen.dart';
 import 'personal_year_detail_screen.dart';
 import 'name_analysis_screen.dart';
+import 'personality_soul_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -765,7 +766,16 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       arrowBg: const Color(0xFFF3E8FF),
       arrowColor: const Color(0xFF7C3AED),
       watermarkType: _WatermarkType.soul,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Personality details module'))),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PersonalitySoulScreen(
+              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+            ),
+          ),
+        );
+      },
     ));
 
     gridItems.add(_buildCosmicCard(

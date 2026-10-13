@@ -736,6 +736,64 @@ class AstroApiService {
     throw Exception('Failed to connect to backend server for Name Analysis. Ensure server is active on port 5000.');
   }
 
+  // =========================================================================
+  // 4.9 PERSONALITY & SOUL URGE NUMEROLOGY
+  // =========================================================================
+  static Future<Map<String, dynamic>> getPersonalitySoulReport({
+    required String birthName,
+    String yPolicy = 'always_consonant',
+  }) async {
+    final candidateHosts = [
+      baseUrl,
+      'http://10.0.2.2:5000/api/v1',
+      'http://127.0.0.1:5000/api/v1',
+      'http://10.242.54.136:5000/api/v1',
+    ];
+
+    final bodyData = {
+      'birth_name': birthName,
+      'y_policy': yPolicy,
+    };
+
+    for (final host in candidateHosts) {
+      try {
+        final uri = Uri.parse('$host/numerology/personality-soul');
+        final res = await http.post(
+          uri,
+          headers: _headers,
+          body: jsonEncode(bodyData),
+        ).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            return data;
+          }
+        } else if (res.statusCode >= 400 && res.statusCode < 500) {
+          try {
+            final errData = jsonDecode(res.body) as Map<String, dynamic>;
+            if (errData.containsKey('message')) {
+              throw Exception(errData['message']);
+            }
+          } on Exception catch (e) {
+            if (!e.toString().contains('FormatException')) {
+              rethrow;
+            }
+          }
+        }
+      } on Exception catch (e) {
+        if (!e.toString().contains('Connection refused') &&
+            !e.toString().contains('SocketException') &&
+            !e.toString().contains('TimeoutException') &&
+            !e.toString().contains('ClientException')) {
+          rethrow;
+        }
+        debugPrint('PersonalitySoul host attempt failed for $host: $e');
+      }
+    }
+
+    throw Exception('Failed to connect to backend server for Personality & Soul calculation. Ensure server is active on port 5000.');
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
