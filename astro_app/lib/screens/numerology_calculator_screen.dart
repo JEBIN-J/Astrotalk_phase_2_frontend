@@ -10,6 +10,7 @@ import 'personal_year_detail_screen.dart';
 import 'name_analysis_screen.dart';
 import 'personality_soul_screen.dart';
 import 'missing_numbers_screen.dart';
+import 'numerology_remedies_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -813,7 +814,17 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       arrowBg: const Color(0xFFCCFBF1),
       arrowColor: const Color(0xFF0D9488),
       watermarkType: _WatermarkType.remedies,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Remedies module'))),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NumerologyRemediesScreen(
+              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+              initialDob: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
+            ),
+          ),
+        );
+      },
     ));
 
     gridItems.add(_buildCosmicCard(

@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://192.168.29.77:5000/api/v1';
+      return 'http://10.242.54.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.242.54.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://192.168.29.77:5000/api/v1';
+    return 'http://10.242.54.136:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -281,8 +281,6 @@ class AstroApiService {
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
     if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
-    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
-    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
 
@@ -346,31 +344,22 @@ class AstroApiService {
     String? name,
     String system = 'pythagorean',
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
-    for (final host in candidateHosts) {
-      try {
-        final queryParams = {
-          'dob': dateOfBirth,
-          'system': system,
-          if (name != null && name.isNotEmpty) 'name': name,
-        };
-        final uri = Uri.parse('$host/numerology/life-path').replace(queryParameters: queryParams);
-        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
-          }
+    try {
+      final queryParams = {
+        'dob': dateOfBirth,
+        'system': system,
+        if (name != null && name.isNotEmpty) 'name': name,
+      };
+      final uri = Uri.parse('$baseUrl/numerology/life-path').replace(queryParameters: queryParams);
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
         }
-      } catch (e) {
-        debugPrint('LifePath host attempt failed for $host: $e');
       }
+    } catch (e) {
+      debugPrint('LifePath request failed for $baseUrl: $e');
     }
 
     // Fallback: If network is offline, perform deterministic Pythagorean reduction locally
@@ -495,31 +484,22 @@ class AstroApiService {
     String? name,
     String system = 'pythagorean',
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
-    for (final host in candidateHosts) {
-      try {
-        final queryParams = {
-          'dob': dateOfBirth,
-          'system': system,
-          if (name != null && name.isNotEmpty) 'name': name,
-        };
-        final uri = Uri.parse('$host/numerology/birth-day').replace(queryParameters: queryParams);
-        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
-          }
+    try {
+      final queryParams = {
+        'dob': dateOfBirth,
+        'system': system,
+        if (name != null && name.isNotEmpty) 'name': name,
+      };
+      final uri = Uri.parse('$baseUrl/numerology/birth-day').replace(queryParameters: queryParams);
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
         }
-      } catch (e) {
-        debugPrint('BirthDay host attempt failed for $host: $e');
       }
+    } catch (e) {
+      debugPrint('BirthDay request failed for $baseUrl: $e');
     }
 
     return _generateLocalBirthDayReport(dateOfBirth: dateOfBirth, name: name ?? 'Seeker', system: system);
@@ -642,13 +622,6 @@ class AstroApiService {
     String? name,
     String system = 'pythagorean',
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
     final queryParams = {
       'dob': dateOfBirth,
       'system': system,
@@ -656,19 +629,17 @@ class AstroApiService {
       if (name != null && name.isNotEmpty) 'name': name,
     };
 
-    for (final host in candidateHosts) {
-      try {
-        final uri = Uri.parse('$host/numerology/personal-year').replace(queryParameters: queryParams);
-        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
-          }
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/personal-year').replace(queryParameters: queryParams);
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
         }
-      } catch (e) {
-        debugPrint('PersonalYear host attempt failed for $host: $e');
       }
+    } catch (e) {
+      debugPrint('PersonalYear request failed for $baseUrl: $e');
     }
 
     throw Exception('Failed to connect to backend server for Personal Year calculation.');
@@ -683,13 +654,6 @@ class AstroApiService {
     String system = 'pythagorean',
     String? dateOfBirth,
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
     final bodyData = {
       'birth_name': birthName,
       'system': system,
@@ -697,40 +661,38 @@ class AstroApiService {
       if (dateOfBirth != null && dateOfBirth.isNotEmpty) 'dob': dateOfBirth,
     };
 
-    for (final host in candidateHosts) {
-      try {
-        final uri = Uri.parse('$host/numerology/name-analysis');
-        final res = await http.post(
-          uri,
-          headers: _headers,
-          body: jsonEncode(bodyData),
-        ).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/name-analysis');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        try {
+          final errData = jsonDecode(res.body) as Map<String, dynamic>;
+          if (errData.containsKey('message')) {
+            throw Exception(errData['message']);
           }
-        } else if (res.statusCode >= 400 && res.statusCode < 500) {
-          try {
-            final errData = jsonDecode(res.body) as Map<String, dynamic>;
-            if (errData.containsKey('message')) {
-              throw Exception(errData['message']);
-            }
-          } on Exception catch (e) {
-            if (!e.toString().contains('FormatException')) {
-              rethrow;
-            }
+        } on Exception catch (e) {
+          if (!e.toString().contains('FormatException')) {
+            rethrow;
           }
         }
-      } on Exception catch (e) {
-        if (!e.toString().contains('Connection refused') &&
-            !e.toString().contains('SocketException') &&
-            !e.toString().contains('TimeoutException') &&
-            !e.toString().contains('ClientException')) {
-          rethrow;
-        }
-        debugPrint('NameAnalysis host attempt failed for $host: $e');
       }
+    } on Exception catch (e) {
+      if (!e.toString().contains('Connection refused') &&
+          !e.toString().contains('SocketException') &&
+          !e.toString().contains('TimeoutException') &&
+          !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      debugPrint('NameAnalysis request failed for $baseUrl: $e');
     }
 
     throw Exception('Failed to connect to backend server for Name Analysis. Ensure server is active on port 5000.');
@@ -743,52 +705,43 @@ class AstroApiService {
     required String birthName,
     String yPolicy = 'always_consonant',
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
     final bodyData = {
       'birth_name': birthName,
       'y_policy': yPolicy,
     };
 
-    for (final host in candidateHosts) {
-      try {
-        final uri = Uri.parse('$host/numerology/personality-soul');
-        final res = await http.post(
-          uri,
-          headers: _headers,
-          body: jsonEncode(bodyData),
-        ).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/personality-soul');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        try {
+          final errData = jsonDecode(res.body) as Map<String, dynamic>;
+          if (errData.containsKey('message')) {
+            throw Exception(errData['message']);
           }
-        } else if (res.statusCode >= 400 && res.statusCode < 500) {
-          try {
-            final errData = jsonDecode(res.body) as Map<String, dynamic>;
-            if (errData.containsKey('message')) {
-              throw Exception(errData['message']);
-            }
-          } on Exception catch (e) {
-            if (!e.toString().contains('FormatException')) {
-              rethrow;
-            }
+        } on Exception catch (e) {
+          if (!e.toString().contains('FormatException')) {
+            rethrow;
           }
         }
-      } on Exception catch (e) {
-        if (!e.toString().contains('Connection refused') &&
-            !e.toString().contains('SocketException') &&
-            !e.toString().contains('TimeoutException') &&
-            !e.toString().contains('ClientException')) {
-          rethrow;
-        }
-        debugPrint('PersonalitySoul host attempt failed for $host: $e');
       }
+    } on Exception catch (e) {
+      if (!e.toString().contains('Connection refused') &&
+          !e.toString().contains('SocketException') &&
+          !e.toString().contains('TimeoutException') &&
+          !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      debugPrint('PersonalitySoul request failed for $baseUrl: $e');
     }
 
     throw Exception('Failed to connect to backend server for Personality & Soul calculation. Ensure server is active on port 5000.');
@@ -800,55 +753,108 @@ class AstroApiService {
   static Future<Map<String, dynamic>> getMissingNumbersReport({
     required String birthName,
   }) async {
-    final candidateHosts = [
-      baseUrl,
-      'http://10.0.2.2:5000/api/v1',
-      'http://127.0.0.1:5000/api/v1',
-      'http://10.242.54.136:5000/api/v1',
-    ];
-
     final bodyData = {
       'birth_name': birthName,
     };
 
-    for (final host in candidateHosts) {
-      try {
-        final uri = Uri.parse('$host/numerology/missing-numbers');
-        final res = await http.post(
-          uri,
-          headers: _headers,
-          body: jsonEncode(bodyData),
-        ).timeout(const Duration(seconds: 4));
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body) as Map<String, dynamic>;
-          if (data['status'] == 'success') {
-            return data;
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/missing-numbers');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        try {
+          final errData = jsonDecode(res.body) as Map<String, dynamic>;
+          if (errData.containsKey('message')) {
+            throw Exception(errData['message']);
           }
-        } else if (res.statusCode >= 400 && res.statusCode < 500) {
-          try {
-            final errData = jsonDecode(res.body) as Map<String, dynamic>;
-            if (errData.containsKey('message')) {
-              throw Exception(errData['message']);
-            }
-          } on Exception catch (e) {
-            if (!e.toString().contains('FormatException')) {
-              rethrow;
-            }
+        } on Exception catch (e) {
+          if (!e.toString().contains('FormatException')) {
+            rethrow;
           }
         }
-      } on Exception catch (e) {
-        if (!e.toString().contains('Connection refused') &&
-            !e.toString().contains('SocketException') &&
-            !e.toString().contains('TimeoutException') &&
-            !e.toString().contains('ClientException')) {
-          rethrow;
-        }
-        debugPrint('MissingNumbers host attempt failed for $host: $e');
       }
+    } on Exception catch (e) {
+      if (!e.toString().contains('Connection refused') &&
+          !e.toString().contains('SocketException') &&
+          !e.toString().contains('TimeoutException') &&
+          !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      debugPrint('MissingNumbers request failed for $baseUrl: $e');
     }
 
     throw Exception('Failed to connect to backend server for Missing Numbers calculation. Ensure server is active on port 5000.');
   }
+
+  // =========================================================================
+  // REMEDIES & FIXES NUMEROLOGY (RULE ENGINE & DATABASE-DRIVEN GUIDANCE)
+  // =========================================================================
+  static Future<Map<String, dynamic>> getNumerologyRemedies({
+    required String dateOfBirth,
+    String? birthName,
+    String system = 'pythagorean',
+    String category = 'all',
+    String focusArea = 'all',
+    int? targetYear,
+  }) async {
+    final bodyData = <String, dynamic>{
+      'dob': dateOfBirth,
+      'system': system,
+      'category': category,
+      'focus_area': focusArea,
+    };
+    if (birthName != null && birthName.trim().isNotEmpty) {
+      bodyData['birth_name'] = birthName.trim();
+    }
+    if (targetYear != null) {
+      bodyData['year'] = targetYear;
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/remedies');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        try {
+          final errData = jsonDecode(res.body) as Map<String, dynamic>;
+          if (errData.containsKey('message')) {
+            throw Exception(errData['message']);
+          }
+        } on Exception catch (e) {
+          if (!e.toString().contains('FormatException')) {
+            rethrow;
+          }
+        }
+      }
+    } on Exception catch (e) {
+      if (!e.toString().contains('Connection refused') &&
+          !e.toString().contains('SocketException') &&
+          !e.toString().contains('TimeoutException') &&
+          !e.toString().contains('ClientException')) {
+        rethrow;
+      }
+      debugPrint('Remedies request failed for $baseUrl: $e');
+    }
+
+    throw Exception('Failed to connect to backend server for Remedies & Fixes. Ensure backend is running on port 5000.');
+  }
+
 
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',

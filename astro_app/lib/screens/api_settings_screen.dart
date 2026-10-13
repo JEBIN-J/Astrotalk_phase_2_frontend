@@ -205,9 +205,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      _buildPresetChip('Localhost :5000', 'http://127.0.0.1:5000/api/v1', isDark),
-                      _buildPresetChip('Android Emulator :5000', 'http://10.0.2.2:5000/api/v1', isDark),
-                      _buildPresetChip('Localhost :8000', 'http://127.0.0.1:8000/api/v1', isDark),
+                      _buildPresetChip('Default Backend', AstroApiService.defaultBaseUrl, isDark),
                     ],
                   ),
                   SizedBox(height: 12.h),
@@ -215,7 +213,7 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                     controller: _urlController,
                     style: GoogleFonts.firaCode(fontSize: 13.sp, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
-                      hintText: 'http://127.0.0.1:5000/api/v1',
+                      hintText: AstroApiService.defaultBaseUrl,
                       prefixIcon: Icon(Icons.lan_rounded, size: 18),
                       filled: true,
                       fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
