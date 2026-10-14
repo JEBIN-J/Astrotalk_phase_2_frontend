@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://192.168.29.77:5000/api/v1';
+      return 'http://10.242.54.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://10.242.54.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://192.168.29.77:5000/api/v1';
+    return 'http://10.242.54.136:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -1061,6 +1061,91 @@ class AstroApiService {
     }
   }
 
+  // =========================================================================
+  // ADVANCED NUMEROLOGY COMPATIBILITY MODULE
+  // =========================================================================
+  static Future<Map<String, dynamic>> calculateAdvancedCompatibility({
+    required String personAName,
+    required String personBName,
+    String? personADob,
+    String? personBDob,
+    String relationshipType = 'romantic',
+    String system = 'pythagorean',
+  }) async {
+    final bodyData = <String, dynamic>{
+      'person_a_name': personAName.trim(),
+      'person_b_name': personBName.trim(),
+      'relationship_type': relationshipType.trim().toLowerCase(),
+      'system': system.trim().toLowerCase(),
+    };
+    if (personADob != null && personADob.trim().isNotEmpty) {
+      bodyData['person_a_dob'] = personADob.trim();
+    }
+    if (personBDob != null && personBDob.trim().isNotEmpty) {
+      bodyData['person_b_dob'] = personBDob.trim();
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/advanced-compatibility');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success' && data.containsKey('data')) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        final errData = jsonDecode(res.body) as Map<String, dynamic>;
+        if (errData.containsKey('message')) {
+          throw Exception(errData['message']);
+        }
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend advanced-compatibility error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> saveCompatibilityReport({
+    String? userId,
+    required String relationshipType,
+    required String system,
+    required String personALabel,
+    required String personBLabel,
+    required Map<String, dynamic> calculatedData,
+  }) async {
+    final bodyData = <String, dynamic>{
+      'user_id': userId ?? 'guest',
+      'relationship_type': relationshipType,
+      'system': system,
+      'person_a_label': personALabel,
+      'person_b_label': personBLabel,
+      'calculated_data': calculatedData,
+    };
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/compatibility/save-report');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend save-report error: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
@@ -1583,6 +1668,192 @@ class AstroApiService {
         'isDefault': 'false',
       };
     }).toList();
+  }
+
+  // =========================================================================
+  // 10. ANGEL NUMBERS MODULE API
+  // =========================================================================
+
+  static Future<Map<String, dynamic>> lookupAngelNumber(String sequence) async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/lookup');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({'sequence': sequence}),
+      ).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to lookup angel number');
+      }
+    } catch (e) {
+      debugPrint('API Error lookupAngelNumber: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> calculatePersonalAngelNumber({
+    required String method,
+    String? dob,
+    String? name,
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/personal-number');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({
+          'method': method,
+          if (dob != null) 'dob': dob,
+          if (name != null) 'name': name,
+        }),
+      ).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to calculate personal angel number');
+      }
+    } catch (e) {
+      debugPrint('API Error calculatePersonalAngelNumber: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getAngelNumberPatterns() async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/patterns');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        final list = data['data'] as List<dynamic>?;
+        return list?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('API Error getAngelNumberPatterns: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getPopularAngelNumbers() async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/popular');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        final list = data['data'] as List<dynamic>?;
+        return list?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('API Error getPopularAngelNumbers: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getMirrorHours() async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/mirror-hours');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        final list = data['data'] as List<dynamic>?;
+        return list?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('API Error getMirrorHours: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getDailyAngelReflection({String? date, String? timezone}) async {
+    final queryParams = <String, String>{};
+    if (date != null) queryParams['date'] = date;
+    if (timezone != null) queryParams['timezone'] = timezone;
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/daily').replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('API Error getDailyAngelReflection: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getAngelSightings({String? userId, String? search}) async {
+    final queryParams = <String, String>{};
+    if (userId != null) queryParams['user_id'] = userId;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/journal').replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to get angel sightings');
+      }
+    } catch (e) {
+      debugPrint('API Error getAngelSightings: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> addAngelSighting({
+    required String observedSequence,
+    String? userId,
+    String? observedAt,
+    String? timezone,
+    String? contextCategory,
+    String? personalNote,
+    String? mood,
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/journal');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({
+          'observed_sequence': observedSequence,
+          if (userId != null) 'user_id': userId,
+          if (observedAt != null) 'observed_at': observedAt,
+          if (timezone != null) 'timezone': timezone,
+          if (contextCategory != null) 'context_category': contextCategory,
+          if (personalNote != null) 'personal_note': personalNote,
+          if (mood != null) 'mood': mood,
+        }),
+      ).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if ((res.statusCode == 200 || res.statusCode == 201) && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to record sighting');
+      }
+    } catch (e) {
+      debugPrint('API Error addAngelSighting: $e');
+      rethrow;
+    }
+  }
+
+  static Future<bool> deleteAngelSighting(int sightingId, {String? userId}) async {
+    final queryParams = <String, String>{};
+    if (userId != null) queryParams['user_id'] = userId;
+    final uri = Uri.parse('$baseUrl/numerology/angel-numbers/journal/$sightingId').replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+    try {
+      final res = await http.delete(uri, headers: _headers).timeout(_timeout);
+      return res.statusCode == 200;
+    } catch (e) {
+      debugPrint('API Error deleteAngelSighting: $e');
+      return false;
+    }
   }
 
   // =========================================================================

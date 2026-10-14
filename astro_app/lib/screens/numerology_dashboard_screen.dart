@@ -8,6 +8,8 @@ import 'numerology_calculator_screen.dart';
 import 'name_analysis_screen.dart';
 import 'mobile_number_analysis_screen.dart';
 import 'child_numerology_screen.dart';
+import 'advanced_compatibility_screen.dart';
+import 'angel_numbers_dashboard_screen.dart';
 
 class NumerologyDashboardScreen extends StatefulWidget {
   const NumerologyDashboardScreen({super.key});
@@ -614,18 +616,18 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             arrowBg: const Color(0xFFF3E8FF),
                             arrowColor: const Color(0xFF9333EA),
                             watermarkType: _WatermarkType.heart,
-                          ),
-                          _buildExploreCard(
-                            context: context,
-                            title: 'Learn\nNumerology',
-                            subtitle: 'Unlock and read expert guides to master numbers.',
-                            icon: Icons.auto_stories_rounded,
-                            cardBg: const Color(0xFFFFF7ED),
-                            borderColor: const Color(0xFFFFEDD5),
-                            iconBg: const Color(0xFFF97316),
-                            arrowBg: const Color(0xFFFFEDD5),
-                            arrowColor: const Color(0xFFEA580C),
-                            watermarkType: _WatermarkType.book,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AdvancedCompatibilityScreen(
+                                    initialPersonAName: _userName,
+                                    initialPersonADob: _userDob,
+                                    initialSystem: _userSystem,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _buildExploreCard(
                             context: context,
@@ -638,6 +640,17 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             arrowBg: const Color(0xFFEDE9FE),
                             arrowColor: const Color(0xFF4F46E5),
                             watermarkType: _WatermarkType.angel,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AngelNumbersDashboardScreen(
+                                    initialUserName: _userName,
+                                    initialUserDob: _userDob,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
