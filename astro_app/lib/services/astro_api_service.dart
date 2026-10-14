@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.242.54.136:5000/api/v1';
+      return 'http://192.168.29.77:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.242.54.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://10.242.54.136:5000/api/v1';
+    return 'http://192.168.29.77:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -855,6 +855,83 @@ class AstroApiService {
     throw Exception('Failed to connect to backend server for Remedies & Fixes. Ensure backend is running on port 5000.');
   }
 
+  // =========================================================================
+  // CRYSTAL MATCH NUMEROLOGY MODULE (DETERMINISTIC & DATABASE-DRIVEN)
+  // =========================================================================
+  static Future<Map<String, dynamic>> getCrystalMatchReport({
+    required String dateOfBirth,
+    String? birthName,
+    String system = 'pythagorean',
+    String intention = 'all',
+  }) async {
+    final bodyData = <String, dynamic>{
+      'dob': dateOfBirth,
+      'system': system,
+      'intention': intention,
+    };
+    if (birthName != null && birthName.trim().isNotEmpty) {
+      bodyData['birth_name'] = birthName.trim();
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/crystal-match');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        final errData = jsonDecode(res.body) as Map<String, dynamic>;
+        if (errData.containsKey('message')) {
+          throw Exception(errData['message']);
+        }
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend crystal-match error: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetches complete published crystal catalog directly from backend SQLite database.
+  static Future<List<Map<String, dynamic>>> getCrystalCatalog() async {
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/crystal-catalog');
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success' && data['catalog'] is List) {
+          return List<Map<String, dynamic>>.from(data['catalog']);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching crystal catalog from backend: $e');
+    }
+    return [];
+  }
+
+  /// Fetches all intention filters dynamically from backend SQLite database.
+  static Future<List<Map<String, dynamic>>> getCrystalIntentions() async {
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/crystal-intentions');
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success' && data['intentions'] is List) {
+          return List<Map<String, dynamic>>.from(data['intentions']);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching crystal intentions from backend: $e');
+    }
+    return [];
+  }
+
 
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
@@ -1342,7 +1419,7 @@ class AstroApiService {
   }
 
   // =========================================================================
-  // 8. PLACES GEOCODING
+  // 9. PLACES GEOCODING
   // =========================================================================
 
   static Future<List<Map<String, dynamic>>> searchPlaces(String query) async {

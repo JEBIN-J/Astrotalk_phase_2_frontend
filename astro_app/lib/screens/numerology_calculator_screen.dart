@@ -11,6 +11,7 @@ import 'name_analysis_screen.dart';
 import 'personality_soul_screen.dart';
 import 'missing_numbers_screen.dart';
 import 'numerology_remedies_screen.dart';
+import 'crystal_match_screen.dart';
 
 class NumerologyCalculatorScreen extends StatefulWidget {
   final String? initialName;
@@ -839,7 +840,17 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       arrowColor: const Color(0xFF4F46E5),
       watermarkType: _WatermarkType.gem,
       isNew: true,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Crystal match module'))),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CrystalMatchScreen(
+              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+              initialDob: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
+            ),
+          ),
+        );
+      },
     ));
 
     gridItems.add(_buildCosmicCard(
