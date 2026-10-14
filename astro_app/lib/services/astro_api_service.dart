@@ -932,6 +932,49 @@ class AstroApiService {
     return [];
   }
 
+  // =========================================================================
+  // PHONE NUMBER / MOBILE NUMEROLOGY MODULE
+  // =========================================================================
+  static Future<Map<String, dynamic>> analyzePhoneNumber({
+    required String phoneNumber,
+    String countryCode = 'IN',
+    String? dob,
+    String system = 'pythagorean',
+  }) async {
+    final bodyData = <String, dynamic>{
+      'phone_number': phoneNumber,
+      'country_code': countryCode,
+      'system': system,
+    };
+    if (dob != null && dob.trim().isNotEmpty) {
+      bodyData['dob'] = dob.trim();
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/phone-analysis');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success') {
+          return data;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        final errData = jsonDecode(res.body) as Map<String, dynamic>;
+        if (errData.containsKey('message')) {
+          throw Exception(errData['message']);
+        }
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend phone-analysis error: $e');
+      rethrow;
+    }
+  }
 
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',

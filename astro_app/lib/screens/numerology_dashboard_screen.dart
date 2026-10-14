@@ -6,6 +6,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'numerology_calculator_screen.dart';
 import 'name_analysis_screen.dart';
+import 'mobile_number_analysis_screen.dart';
 
 class NumerologyDashboardScreen extends StatefulWidget {
   const NumerologyDashboardScreen({super.key});
@@ -563,6 +564,18 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             arrowBg: const Color(0xFFDCFCE7),
                             arrowColor: const Color(0xFF16A34A),
                             watermarkType: _WatermarkType.phone,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MobileNumberAnalysisScreen(
+                                    initialDob: _userDob,
+                                    initialSystem: _userSystem,
+                                    initialName: _userName,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _buildExploreCard(
                             context: context,
