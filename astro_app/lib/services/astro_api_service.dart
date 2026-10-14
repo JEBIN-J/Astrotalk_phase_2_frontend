@@ -976,6 +976,91 @@ class AstroApiService {
     }
   }
 
+  // =========================================================================
+  // CHILD NUMEROLOGY & BABY NAME MODULE
+  // =========================================================================
+  static Future<Map<String, dynamic>> analyzeChildNumerology({
+    required String childName,
+    required String dob,
+    String system = 'pythagorean',
+    String? parentName,
+    String? parentDob,
+  }) async {
+    final bodyData = <String, dynamic>{
+      'child_name': childName,
+      'dob': dob,
+      'system': system,
+    };
+    if (parentName != null && parentName.trim().isNotEmpty) {
+      bodyData['parent_name'] = parentName.trim();
+    }
+    if (parentDob != null && parentDob.trim().isNotEmpty) {
+      bodyData['parent_dob'] = parentDob.trim();
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/child-analysis');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success' && data.containsKey('data')) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        final errData = jsonDecode(res.body) as Map<String, dynamic>;
+        if (errData.containsKey('message')) {
+          throw Exception(errData['message']);
+        }
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend child-analysis error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> compareChildCandidateNames({
+    required List<String> candidateNames,
+    required String dob,
+    String system = 'pythagorean',
+  }) async {
+    final bodyData = <String, dynamic>{
+      'candidate_names': candidateNames,
+      'dob': dob,
+      'system': system,
+    };
+
+    try {
+      final uri = Uri.parse('$baseUrl/numerology/child-name-comparison');
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(bodyData),
+      ).timeout(_timeout);
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        if (data['status'] == 'success' && data.containsKey('data')) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      } else if (res.statusCode >= 400 && res.statusCode < 500) {
+        final errData = jsonDecode(res.body) as Map<String, dynamic>;
+        if (errData.containsKey('message')) {
+          throw Exception(errData['message']);
+        }
+      }
+      throw Exception('Server returned status code: ${res.statusCode}');
+    } catch (e) {
+      debugPrint('Backend child-name-comparison error: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> getLalKitab({
     String name = 'User',
     String dateOfBirth = '1998-12-13',

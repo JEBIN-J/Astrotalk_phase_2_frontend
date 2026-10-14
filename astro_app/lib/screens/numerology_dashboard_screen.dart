@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'numerology_calculator_screen.dart';
 import 'name_analysis_screen.dart';
 import 'mobile_number_analysis_screen.dart';
+import 'child_numerology_screen.dart';
 
 class NumerologyDashboardScreen extends StatefulWidget {
   const NumerologyDashboardScreen({super.key});
@@ -588,6 +589,19 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             arrowBg: const Color(0xFFFEF3C7),
                             arrowColor: const Color(0xFFD97706),
                             watermarkType: _WatermarkType.baby,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChildNumerologyScreen(
+                                    initialDob: _userDob,
+                                    initialSystem: _userSystem,
+                                    initialParentName: _userName,
+                                    initialParentDob: _userDob,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           _buildExploreCard(
                             context: context,
