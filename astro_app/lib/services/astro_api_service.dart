@@ -1857,6 +1857,80 @@ class AstroApiService {
   }
 
   // =========================================================================
+  // MATCH MAKING (VEDIC KUNDLI MILAN & PORUTHAM)
+  // =========================================================================
+
+  static Future<Map<String, dynamic>> calculateMatchMaking({
+    required Map<String, dynamic> boy,
+    required Map<String, dynamic> girl,
+    String tradition = 'both',
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/match-making');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({
+          'boy': boy,
+          'girl': girl,
+          'tradition': tradition,
+        }),
+      ).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data['data'] as Map<String, dynamic>;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to calculate match making');
+      }
+    } catch (e) {
+      debugPrint('API Error calculateMatchMaking: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMatchMakingMethods() async {
+    final uri = Uri.parse('$baseUrl/horoscope/match-making/methods');
+    try {
+      final res = await http.get(uri, headers: _headers).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return data;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to get match making methods');
+      }
+    } catch (e) {
+      debugPrint('API Error getMatchMakingMethods: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> saveMatchMakingReport({
+    required Map<String, dynamic> reportData,
+    String? userId,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/match-making/save-report');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({
+          'report_data': reportData,
+          if (userId != null) 'user_id': userId,
+        }),
+      ).timeout(_timeout);
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (res.statusCode == 201 && data['status'] == 'success') {
+        return data;
+      } else {
+        throw Exception(data['message'] ?? 'Failed to save report');
+      }
+    } catch (e) {
+      debugPrint('API Error saveMatchMakingReport: $e');
+      rethrow;
+    }
+  }
+
+  // =========================================================================
   // LOCAL FALLBACK DATA
   // =========================================================================
 

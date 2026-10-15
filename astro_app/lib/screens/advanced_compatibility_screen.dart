@@ -9,12 +9,16 @@ class AdvancedCompatibilityScreen extends StatefulWidget {
   final String? initialPersonAName;
   final String? initialPersonADob;
   final String? initialSystem;
+  final String? appBarTitle;
+  final String? initialRelationshipType;
 
   const AdvancedCompatibilityScreen({
     super.key,
     this.initialPersonAName,
     this.initialPersonADob,
     this.initialSystem,
+    this.appBarTitle,
+    this.initialRelationshipType,
   });
 
   @override
@@ -70,6 +74,9 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
     }
     if (widget.initialSystem != null && widget.initialSystem!.isNotEmpty) {
       _selectedSystem = widget.initialSystem!.toLowerCase();
+    }
+    if (widget.initialRelationshipType != null && widget.initialRelationshipType!.isNotEmpty) {
+      _selectedRelationshipType = widget.initialRelationshipType!.toLowerCase();
     }
 
     // Auto-calculate if initial inputs exist for both
@@ -287,7 +294,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           SizedBox(width: 8.w),
           Flexible(
             child: Text(
-              'Advanced Compatibility',
+              widget.appBarTitle ?? 'Advanced Compatibility',
               style: GoogleFonts.outfit(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w800,

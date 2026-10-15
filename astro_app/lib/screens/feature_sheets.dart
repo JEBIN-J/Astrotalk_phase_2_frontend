@@ -7,9 +7,9 @@ import 'horary_screen.dart';
 import 'coming_soon_screen.dart';
 import 'muhurat_screen.dart';
 import 'daily_horoscope_screen.dart';
-import 'tarot_dashboard_screen.dart';
 import 'tarot_animation_screen.dart';
 import 'numerology_dashboard_screen.dart';
+import 'kundli_match_making_screen.dart';
 import '../theme/app_theme.dart';
 
 class AstroFeatureDialogs {
@@ -27,6 +27,9 @@ class AstroFeatureDialogs {
     switch (item.id) {
       case 'horoscope':
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 0);
+        break;
+      case 'match_making':
+        targetScreen = const KundliMatchMakingScreen();
         break;
       case 'kp_system':
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 2, isSingleTabMode: true, appBarTitle: 'KP System');

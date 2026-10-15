@@ -70,6 +70,16 @@ class AstroItem {
       badge: 'Popular',
     ),
     const AstroItem(
+      id: 'match_making',
+      title: 'Match Making',
+      subtitle: 'Kundli Milan & Gun Milan',
+      iconKey: 'matching',
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFFE11D48),
+      secondaryColor: Color(0xFFFB7185),
+      badge: 'Popular',
+    ),
+    const AstroItem(
       id: 'kp_system',
       title: 'KP System',
       subtitle: 'Krishnamurti Paddhati Astrology',
