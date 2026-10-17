@@ -65,6 +65,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
   }
 
   void _showProfileDialog({required bool isFirstTime}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final nameController = TextEditingController(
       text: _userName.isNotEmpty ? _userName : (isFirstTime ? 'Steve Jobs' : ''),
     );
@@ -91,11 +92,11 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                 bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF131D36) : Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
                     blurRadius: 24,
                     offset: const Offset(0, -6),
                   ),
@@ -113,7 +114,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         height: 4.h,
                         margin: EdgeInsets.only(bottom: 14.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCBD5E1),
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
                           borderRadius: BorderRadius.circular(2.r),
                         ),
                       ),
@@ -130,14 +131,14 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                               Container(
                                 width: 40.w,
                                 height: 40.w,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFDBEAFE),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFDBEAFE),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Icon(
                                     isFirstTime ? Icons.auto_awesome_rounded : Icons.edit_rounded,
-                                    color: const Color(0xFF2563EB),
+                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                                     size: 20.sp,
                                   ),
                                 ),
@@ -152,14 +153,14 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                                       style: GoogleFonts.outfit(
                                         fontSize: 16.5.sp,
                                         fontWeight: FontWeight.w800,
-                                        color: const Color(0xFF1E293B),
+                                        color: isDark ? Colors.white : const Color(0xFF1E293B),
                                       ),
                                     ),
                                     Text(
                                       'Personalize your numerological blueprint',
                                       style: GoogleFonts.inter(
                                         fontSize: 11.5.sp,
-                                        color: const Color(0xFF64748B),
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                                       ),
                                     ),
                                   ],
@@ -177,11 +178,11 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             child: Container(
                               width: 36.w,
                               height: 36.w,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFF1F5F9),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.close_rounded, size: 20.sp, color: const Color(0xFF64748B)),
+                              child: Icon(Icons.close_rounded, size: 20.sp, color: isDark ? Colors.white70 : const Color(0xFF64748B)),
                             ),
                           ),
                         ),
@@ -196,21 +197,21 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
-                        color: const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                     ),
                     SizedBox(height: 6.h),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFD),
+                        color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFD),
                         borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                       ),
                       child: TextField(
                         controller: nameController,
-                        style: GoogleFonts.inter(fontSize: 14.sp, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500),
+                        style: GoogleFonts.inter(fontSize: 14.sp, color: isDark ? Colors.white : const Color(0xFF1E293B), fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.person_outline_rounded, color: const Color(0xFF2563EB), size: 20.sp),
+                          prefixIcon: Icon(Icons.person_outline_rounded, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), size: 20.sp),
                           hintText: 'e.g. Steve Jobs',
                           hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
                           border: InputBorder.none,
@@ -227,12 +228,12 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
-                        color: const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                     ),
                     SizedBox(height: 6.h),
                     Material(
-                      color: const Color(0xFFF8FAFD),
+                      color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFD),
                       borderRadius: BorderRadius.circular(14.r),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(14.r),
@@ -252,13 +253,22 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                             lastDate: DateTime.now(),
                             builder: (dateCtx, child) {
                               return Theme(
-                                data: Theme.of(dateCtx).copyWith(
-                                  colorScheme: const ColorScheme.light(
-                                    primary: Color(0xFF2563EB),
-                                    onPrimary: Colors.white,
-                                    onSurface: Color(0xFF1E293B),
-                                  ),
-                                ),
+                                data: isDark
+                                    ? ThemeData.dark().copyWith(
+                                        colorScheme: const ColorScheme.dark(
+                                          primary: Color(0xFF3B82F6),
+                                          onPrimary: Colors.white,
+                                          surface: Color(0xFF131D36),
+                                          onSurface: Colors.white,
+                                        ),
+                                      )
+                                    : ThemeData.light().copyWith(
+                                        colorScheme: const ColorScheme.light(
+                                          primary: Color(0xFF2563EB),
+                                          onPrimary: Colors.white,
+                                          onSurface: Color(0xFF1E293B),
+                                        ),
+                                      ),
                                 child: child!,
                               );
                             },
@@ -274,22 +284,22 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_month_rounded, color: const Color(0xFF2563EB), size: 20.sp),
+                              Icon(Icons.calendar_month_rounded, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), size: 20.sp),
                               SizedBox(width: 12.w),
                               Text(
                                 dobController.text.isNotEmpty ? dobController.text : 'Select Date of Birth',
                                 style: GoogleFonts.inter(
                                   fontSize: 14.sp,
-                                  color: dobController.text.isNotEmpty ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+                                  color: dobController.text.isNotEmpty ? (isDark ? Colors.white : const Color(0xFF1E293B)) : const Color(0xFF94A3B8),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                               const Spacer(),
-                              Icon(Icons.arrow_drop_down_rounded, color: const Color(0xFF64748B), size: 24.sp),
+                              Icon(Icons.arrow_drop_down_rounded, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 24.sp),
                             ],
                           ),
                         ),
@@ -304,30 +314,31 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
-                        color: const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                     ),
                     SizedBox(height: 6.h),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFD),
+                        color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFD),
                         borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
+                          dropdownColor: isDark ? const Color(0xFF131D36) : Colors.white,
                           value: selectedSystem,
                           isExpanded: true,
-                          icon: Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFF2563EB), size: 22.sp),
-                          items: const [
+                          icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), size: 22.sp),
+                          items: [
                             DropdownMenuItem(
                               value: 'pythagorean',
-                              child: Text('Pythagorean Numerology (Modern)'),
+                              child: Text('Pythagorean Numerology (Modern)', style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF1E293B))),
                             ),
                             DropdownMenuItem(
                               value: 'chaldean',
-                              child: Text('Chaldean Numerology (Ancient Vedic)'),
+                              child: Text('Chaldean Numerology (Ancient Vedic)', style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF1E293B))),
                             ),
                           ],
                           onChanged: (val) {
@@ -441,8 +452,10 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFD),
+      backgroundColor: isDark ? const Color(0xFF080D1A) : const Color(0xFFF8FAFD),
       body: SafeArea(
         child: Column(
           children: [
@@ -472,7 +485,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                               fontSize: 12.sp,
                               letterSpacing: 2.0,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF64748B),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             ),
                           ),
                           GestureDetector(
@@ -484,11 +497,11 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 12.5.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF2563EB),
+                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                                   ),
                                 ),
                                 SizedBox(width: 3.w),
-                                Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: const Color(0xFF2563EB)),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
                               ],
                             ),
                           ),
@@ -668,6 +681,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
 
   // --- Fully Responsive Top Bar (Cannot Overflow) ---
   Widget _buildTopBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPop = Navigator.canPop(context);
 
     final displayName = _userName.isNotEmpty ? _userName : 'Welcome Back!';
@@ -685,18 +699,18 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                 width: 36.w,
                 height: 36.w,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF131D36) : Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
                   ],
                 ),
-                child: Icon(Icons.arrow_back_rounded, color: const Color(0xFF1E293B), size: 18.sp),
+                child: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : const Color(0xFF1E293B), size: 18.sp),
               ),
             ),
             SizedBox(width: 8.w),
@@ -708,12 +722,12 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
             child: Container(
               width: 40.w,
               height: 40.w,
-              decoration: const BoxDecoration(
-                color: Color(0xFFDBEAFE),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFDBEAFE),
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Icon(Icons.person, color: const Color(0xFF2563EB), size: 22.sp),
+                child: Icon(Icons.person, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB), size: 22.sp),
               ),
             ),
           ),
@@ -732,7 +746,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -742,7 +756,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF64748B),
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -765,18 +779,18 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                 width: 38.w,
                 height: 38.w,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF131D36) : Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Icon(Icons.menu_rounded, color: const Color(0xFF334155), size: 20.sp),
+                child: Icon(Icons.menu_rounded, color: isDark ? Colors.white : const Color(0xFF334155), size: 20.sp),
               ),
             ),
           ),
@@ -851,24 +865,38 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
     };
 
     final dayTheme = dayThemes[personalDayNumber] ?? dayThemes[1]!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEAF5FE),
-            Color(0xFFF9FBFE),
-            Color(0xFFEEF6FE),
-          ],
-        ),
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF131D36),
+                  Color(0xFF1A2644),
+                  Color(0xFF0F172A),
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFEAF5FE),
+                  Color(0xFFF9FBFE),
+                  Color(0xFFEEF6FE),
+                ],
+              ),
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFDCE8F5), width: 1.2),
+        border: Border.all(
+          color: isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.35) : const Color(0xFFDCE8F5),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF93C5FD).withValues(alpha: 0.16),
+            color: (isDark ? const Color(0xFF1E40AF) : const Color(0xFF93C5FD)).withValues(alpha: isDark ? 0.22 : 0.16),
             blurRadius: 18,
             offset: const Offset(0, 4),
           ),
@@ -881,7 +909,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24.r),
               child: CustomPaint(
-                painter: _BloomingLotusMandalaPainter(),
+                painter: _BloomingLotusMandalaPainter(isDark: isDark),
               ),
             ),
           ),
@@ -925,24 +953,24 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                               fontSize: 10.sp,
                               letterSpacing: 1.5,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF64748B),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             ),
                           ),
                           Container(
                             width: 28.w,
                             height: 28.w,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
+                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                            child: Icon(Icons.arrow_forward_ios_rounded, size: 12.sp, color: const Color(0xFF2563EB)),
+                            child: Icon(Icons.arrow_forward_ios_rounded, size: 12.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
                           ),
                         ],
                       ),
@@ -952,7 +980,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 17.5.sp,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       SizedBox(height: 4.h),
@@ -962,7 +990,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                           dayTheme['desc']!,
                           style: GoogleFonts.inter(
                             fontSize: 11.sp,
-                            color: const Color(0xFF64748B),
+                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
                             height: 1.3,
                           ),
                         ),
@@ -971,12 +999,12 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
                           borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                               blurRadius: 4,
                               offset: const Offset(0, 1),
                             ),
@@ -993,7 +1021,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                                 fontSize: 9.5.sp,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.8,
-                                color: const Color(0xFF2563EB),
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                               ),
                             ),
                           ],
@@ -1025,16 +1053,21 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
     bool isNew = false,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: cardBg,
+          color: isDark ? const Color(0xFF131D36) : cardBg,
           borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: borderColor, width: 1.2),
+          border: Border.all(
+            color: isDark ? iconBg.withValues(alpha: 0.35) : borderColor,
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1084,7 +1117,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 14.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
                         height: 1.15,
                       ),
                     ),
@@ -1096,7 +1129,7 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         height: 1.25,
                       ),
                       maxLines: 2,
@@ -1112,14 +1145,14 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3E8FF),
+                              color: isDark ? const Color(0xFF3B0764) : const Color(0xFFF3E8FF),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
                               'NEW',
                               style: GoogleFonts.outfit(
                                 fontSize: 9.sp,
-                                color: const Color(0xFF9333EA),
+                                color: isDark ? const Color(0xFFD8B4FE) : const Color(0xFF9333EA),
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
                               ),
@@ -1131,13 +1164,13 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                           width: 28.w,
                           height: 28.w,
                           decoration: BoxDecoration(
-                            color: arrowBg,
+                            color: isDark ? iconBg.withValues(alpha: 0.22) : arrowBg,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.arrow_forward_rounded,
                             size: 15.sp,
-                            color: arrowColor,
+                            color: isDark ? iconBg : arrowColor,
                           ),
                         ),
                       ],
@@ -1257,13 +1290,16 @@ enum _WatermarkType { numbers, letters, phone, baby, heart, book, angel }
 
 // --- Genuine Blooming Lotus Mandala Painter ---
 class _BloomingLotusMandalaPainter extends CustomPainter {
+  final bool isDark;
+  const _BloomingLotusMandalaPainter({this.isDark = false});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width - 46.w, size.height * 0.55);
 
     // 1. Concentric Sacred Geometry Rings
     final ringPaint = Paint()
-      ..color = const Color(0xFF93C5FD).withValues(alpha: 0.25)
+      ..color = (isDark ? const Color(0xFF60A5FA) : const Color(0xFF93C5FD)).withValues(alpha: isDark ? 0.18 : 0.25)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -1272,7 +1308,7 @@ class _BloomingLotusMandalaPainter extends CustomPainter {
     canvas.drawCircle(center, 82.r, ringPaint);
 
     // Radiating Sacred Dots
-    final dotPaint = Paint()..color = const Color(0xFF818CF8).withValues(alpha: 0.35);
+    final dotPaint = Paint()..color = (isDark ? const Color(0xFFA5B4FC) : const Color(0xFF818CF8)).withValues(alpha: isDark ? 0.28 : 0.35);
     for (int i = 0; i < 24; i++) {
       final angle = (i * 2 * math.pi) / 24;
       final dx = center.dx + 74.r * math.cos(angle);

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class BirthDayDetailScreen extends StatefulWidget {
   final String dateOfBirth;
@@ -29,6 +30,18 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
   late String _currentDob;
   late String _currentName;
   late String _currentSystem;
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFFDF4F8);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : Colors.white;
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC);
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0);
+  Color get heroBg => isDark ? const Color(0xFF1F1226) : const Color(0xFFFDF2F8);
+  Color get heroBorder => isDark ? const Color(0xFFEC4899).withValues(alpha: 0.3) : const Color(0xFFFCE7F3);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF0F172A);
+  Color get textSecondary => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get subCardBg => isDark ? const Color(0xFF18233C) : const Color(0xFFFDF2F8);
+  Color get subCardBorder => isDark ? const Color(0xFFEC4899).withValues(alpha: 0.25) : const Color(0xFFFCE7F3);
 
   final List<String> _tabTitles = [
     'Overview',
@@ -107,10 +120,11 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFEC4899),
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFFEC4899),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF0F172A),
+              onSurface: textPrimary,
+              surface: cardBg,
             ),
           ),
           child: child!,
@@ -132,19 +146,19 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF4F8),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Container(
             padding: EdgeInsets.all(6.w),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFDF2F8),
+            decoration: BoxDecoration(
+              color: NumerologyTheme.circleBtnBg(isDark),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: const Color(0xFF1E293B)),
+            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: NumerologyTheme.circleBtnIcon(isDark)),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -156,14 +170,14 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: textPrimary,
               ),
             ),
             Text(
               '$_currentName • ${_currentDob.isNotEmpty ? _currentDob : 'No DOB'}',
               style: GoogleFonts.inter(
                 fontSize: 11.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -203,14 +217,14 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 6.h),
               Text(
                 'Extracting calendar day & querying database interpretations',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary),
               ),
             ],
           ),
@@ -227,8 +241,8 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(20.w),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFDF2F8),
+                decoration: BoxDecoration(
+                  color: heroBg,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.calendar_month_rounded, size: 48.sp, color: const Color(0xFFEC4899)),
@@ -239,7 +253,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -248,7 +262,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 13.sp,
-                  color: const Color(0xFF64748B),
+                  color: textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -287,14 +301,14 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
               Text(
                 _errorMessage ?? 'Unable to retrieve Birth Day report.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary),
               ),
               SizedBox(height: 20.h),
               ElevatedButton.icon(
@@ -357,12 +371,12 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDF2F8),
+        color: heroBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFCE7F3), width: 1.2),
+        border: Border.all(color: heroBorder, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC4899).withValues(alpha: 0.08),
+            color: const Color(0xFFEC4899).withValues(alpha: isDark ? 0.15 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -415,7 +429,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                             margin: EdgeInsets.only(right: 6.w),
                             padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
+                              color: isDark ? const Color(0xFF332008) : const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
@@ -431,7 +445,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFCE7F3),
+                            color: isDark ? const Color(0xFF831843).withValues(alpha: 0.4) : const Color(0xFFFCE7F3),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
@@ -439,7 +453,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 9.5.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFDB2777),
+                              color: isDark ? const Color(0xFFF472B6) : const Color(0xFFDB2777),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -452,7 +466,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: textPrimary,
                         height: 1.25,
                       ),
                     ),
@@ -461,7 +475,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                       'Day of Month (1–31) • Distinct from Life Path',
                       style: GoogleFonts.inter(
                         fontSize: 10.5.sp,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -474,9 +488,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFFCE7F3)),
+              border: Border.all(color: heroBorder),
             ),
             child: Row(
               children: [
@@ -488,7 +502,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1E293B),
+                      color: textPrimary,
                       height: 1.3,
                     ),
                   ),
@@ -513,12 +527,12 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -537,7 +551,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF334155),
+                    color: textPrimary,
                     letterSpacing: 0.6,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -547,14 +561,14 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDF2F8),
+                  color: isDark ? const Color(0xFF831843).withValues(alpha: 0.3) : const Color(0xFFFDF2F8),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   'DOB: $_currentDob',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 9.sp,
-                    color: const Color(0xFFBE185D),
+                    color: isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -587,8 +601,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFFDF2F8),
+              color: subCardBg,
               borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: subCardBorder),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,7 +616,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 10.5.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF831843),
+                      color: isDark ? const Color(0xFFFBCFE8) : const Color(0xFF831843),
                       height: 1.35,
                     ),
                   ),
@@ -618,9 +633,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,7 +645,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 9.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
           ),
           SizedBox(height: 2.h),
@@ -646,7 +661,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
             subtitle,
             style: GoogleFonts.inter(
               fontSize: 9.sp,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -672,10 +687,10 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFEC4899) : Colors.white,
+                  color: isSelected ? const Color(0xFFEC4899) : cardBg,
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFEC4899) : const Color(0xFFE2E8F0),
+                    color: isSelected ? const Color(0xFFEC4899) : cardBorder,
                     width: 1,
                   ),
                   boxShadow: isSelected
@@ -693,7 +708,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : textSecondary,
                   ),
                 ),
               ),
@@ -858,9 +873,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -874,7 +889,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
             ],
@@ -885,7 +900,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 10.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
               letterSpacing: 0.6,
             ),
           ),
@@ -897,16 +912,16 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDF2F8),
+                  color: isDark ? const Color(0xFF831843).withValues(alpha: 0.3) : const Color(0xFFFDF2F8),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: const Color(0xFFFCE7F3)),
+                  border: Border.all(color: subCardBorder),
                 ),
                 child: Text(
                   t,
                   style: GoogleFonts.inter(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFBE185D),
+                    color: isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D),
                   ),
                 ),
               );
@@ -930,7 +945,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
           style: GoogleFonts.outfit(
             fontSize: 10.sp,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF64748B),
+            color: textSecondary,
             letterSpacing: 0.6,
           ),
         ),
@@ -939,7 +954,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
           text,
           style: GoogleFonts.inter(
             fontSize: 12.sp,
-            color: const Color(0xFF334155),
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
             height: 1.4,
             fontWeight: FontWeight.w500,
           ),
@@ -958,12 +973,12 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -982,7 +997,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -993,7 +1008,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
             content,
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF334155),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
               height: 1.5,
               fontWeight: FontWeight.w400,
             ),
@@ -1013,9 +1028,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1029,7 +1044,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
             ],
@@ -1056,7 +1071,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
                       item,
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
-                        color: const Color(0xFF334155),
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                         height: 1.4,
                       ),
                     ),
@@ -1075,9 +1090,9 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
       margin: EdgeInsets.symmetric(vertical: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1089,7 +1104,7 @@ class _BirthDayDetailScreenState extends State<BirthDayDetailScreen> {
               'Numerology is a traditional philosophical and archetypal practice intended for personal reflection and self-discovery. It does not provide deterministic scientific predictions of future events, health, financial earnings, or legal outcomes.',
               style: GoogleFonts.inter(
                 fontSize: 10.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 height: 1.35,
               ),
             ),

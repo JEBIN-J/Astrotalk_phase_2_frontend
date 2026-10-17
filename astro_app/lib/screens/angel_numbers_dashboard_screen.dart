@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 import 'angel_number_detail_screen.dart';
 
 class AngelNumbersDashboardScreen extends StatefulWidget {
@@ -26,15 +27,17 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
-  // Exact Theme Palette from the Angel Numbers Card
+  // Exact Theme Palette from the Angel Numbers Card (Responsive to dark mode)
   static const Color primaryIndigo = Color(0xFF6366F1);
   static const Color darkIndigo = Color(0xFF4F46E5);
-  static const Color softCardBg = Color(0xFFF5F3FF);
-  static const Color cardBorder = Color(0xFFEDE9FE);
-  static const Color darkText = Color(0xFF1E1B4B);
-  static const Color mutedText = Color(0xFF64748B);
-  static const Color badgeBg = Color(0xFFEDE9FE);
-  static const Color badgeText = Color(0xFF4338CA);
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get softCardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF5F3FF);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? primaryIndigo.withValues(alpha: 0.35) : const Color(0xFFEDE9FE);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF1E1B4B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get badgeBg => isDark ? NumerologyTheme.darkButtonBg : const Color(0xFFEDE9FE);
+  Color get badgeText => isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA);
 
   bool _isDecoding = false;
   bool _isLoadingContent = true;
@@ -199,7 +202,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
             bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24.h,
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkScaffoldBg : Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: SingleChildScrollView(
@@ -236,8 +239,8 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                     hintText: 'Enter digits or HH:MM',
                     filled: true,
                     fillColor: softCardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                   ),
                 ),
                 SizedBox(height: 14.h),
@@ -271,8 +274,8 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                     hintText: 'Your thoughts, feelings or setting...',
                     filled: true,
                     fillColor: softCardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                   ),
                 ),
                 SizedBox(height: 20.h),
@@ -322,8 +325,8 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
       preferredSize: Size.fromHeight(116.h),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: const Border(
+          color: NumerologyTheme.appBarBg(isDark),
+          border: Border(
             bottom: BorderSide(color: cardBorder, width: 1.0),
           ),
           boxShadow: [
@@ -352,14 +355,14 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                         width: 38.w,
                         height: 38.w,
                         decoration: BoxDecoration(
-                          color: softCardBg,
+                          color: NumerologyTheme.circleBtnBg(isDark),
                           shape: BoxShape.circle,
                           border: Border.all(color: cardBorder),
                         ),
                         child: Center(
                           child: Icon(
                             Icons.arrow_back_ios_new_rounded,
-                            color: darkText,
+                            color: NumerologyTheme.circleBtnIcon(isDark),
                             size: 15.sp,
                           ),
                         ),
@@ -541,7 +544,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF9FF),
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: _buildCustomAppBar(context),
       body: _isLoadingContent
           ? const Center(child: CircularProgressIndicator(color: primaryIndigo))
@@ -622,7 +625,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: cardBorder, width: 1.5),
         boxShadow: [
@@ -641,7 +644,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
               Container(
                 width: 36.w,
                 height: 36.w,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: softCardBg,
                   shape: BoxShape.circle,
                 ),
@@ -680,11 +683,11 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                     contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: cardBorder),
+                      borderSide: BorderSide(color: cardBorder),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: cardBorder),
+                      borderSide: BorderSide(color: cardBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -725,7 +728,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                   child: ActionChip(
                     label: Text(seq, style: GoogleFonts.spaceMono(fontSize: 12.sp, fontWeight: FontWeight.w600, color: darkIndigo)),
                     backgroundColor: softCardBg,
-                    side: const BorderSide(color: cardBorder),
+                    side: BorderSide(color: cardBorder),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                     onPressed: () {
                       _sequenceController.text = seq;
@@ -855,7 +858,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
           child: Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: cardBorder),
             ),
@@ -925,7 +928,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
           margin: EdgeInsets.only(bottom: 10.h),
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(14.r),
             border: Border.all(color: cardBorder),
           ),
@@ -934,7 +937,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
             children: [
               Container(
                 padding: EdgeInsets.all(8.w),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: softCardBg,
                   shape: BoxShape.circle,
                 ),
@@ -976,7 +979,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
           Container(
             padding: EdgeInsets.all(18.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(20.r),
               border: Border.all(color: cardBorder, width: 1.5),
             ),
@@ -987,7 +990,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                   children: [
                     Container(
                       padding: EdgeInsets.all(8.w),
-                      decoration: const BoxDecoration(color: softCardBg, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: softCardBg, shape: BoxShape.circle),
                       child: Icon(Icons.person_pin_rounded, color: primaryIndigo, size: 22.sp),
                     ),
                     SizedBox(width: 12.w),
@@ -1047,8 +1050,8 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                       hintText: '1995-05-15',
                       filled: true,
                       fillColor: softCardBg,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                     ),
                   ),
                 ] else ...[
@@ -1060,8 +1063,8 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                       hintText: 'Your Birth Name',
                       filled: true,
                       fillColor: softCardBg,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                     ),
                   ),
                 ],
@@ -1140,7 +1143,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: cardBorder),
             ),
@@ -1236,7 +1239,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                 child: Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: surfaceBg,
                     borderRadius: BorderRadius.circular(16.r),
                     border: Border.all(color: cardBorder),
                   ),
@@ -1315,7 +1318,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                 child: Container(
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: surfaceBg,
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(color: cardBorder),
                   ),
@@ -1362,7 +1365,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
               width: double.infinity,
               padding: EdgeInsets.all(28.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: surfaceBg,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(color: cardBorder),
               ),
@@ -1400,7 +1403,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                 return Container(
                   padding: EdgeInsets.all(14.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: surfaceBg,
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(color: cardBorder),
                   ),

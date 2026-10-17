@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 import 'life_path_detail_screen.dart';
 import 'birth_day_detail_screen.dart';
 import 'personal_year_detail_screen.dart';
@@ -213,9 +214,11 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
   }
 
   void _showExplanationSheet(String title, Map<String, dynamic> data, bool isName) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF131D36) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
       builder: (context) {
         return Padding(
@@ -224,46 +227,46 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('$title Details', style: GoogleFonts.outfit(fontSize: 22.sp, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+              Text('$title Details', style: GoogleFonts.outfit(fontSize: 22.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A))),
               SizedBox(height: 16.h),
               if (isName && data['breakdown'] != null) ...[
-                Text('Letter Breakdown:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                Text('Letter Breakdown:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B))),
                 SizedBox(height: 8.h),
                 Container(
                   padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
+                  decoration: BoxDecoration(color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: (data['breakdown'] as List).map<Widget>((wordData) {
                       final letters = (wordData['letters'] as List).map((l) => '${l['char']}(${l['value']})').join(' + ');
                       return Padding(
                         padding: EdgeInsets.only(bottom: 8.h),
-                        child: Text('${wordData['word'].toUpperCase()}: $letters = ${wordData['subtotal']}', style: GoogleFonts.inter(fontSize: 14.sp)),
+                        child: Text('${wordData['word'].toUpperCase()}: $letters = ${wordData['subtotal']}', style: GoogleFonts.inter(fontSize: 14.sp, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                       );
                     }).toList(),
                   ),
                 ),
                 SizedBox(height: 12.h),
-                Text('Compound Total: ${data['compound_total']}', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                Text('Compound Total: ${data['compound_total']}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : const Color(0xFF0F172A))),
               ] else if (data['calculation'] != null) ...[
-                Text('Formula Breakdown:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                Text('Formula Breakdown:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B))),
                 SizedBox(height: 8.h),
                 Container(
                   padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
-                  child: Text('${data['calculation']}', style: GoogleFonts.inter(fontSize: 16.sp)),
+                  decoration: BoxDecoration(color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
+                  child: Text('${data['calculation']}', style: GoogleFonts.inter(fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF0F172A))),
                 ),
               ] else ...[
-                Text('Raw Backend Data:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                Text('Raw Backend Data:', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B))),
                 SizedBox(height: 8.h),
                 Container(
                   padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
-                  child: Text(data.toString(), style: GoogleFonts.inter(fontSize: 14.sp)),
+                  decoration: BoxDecoration(color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(12.r)),
+                  child: Text(data.toString(), style: GoogleFonts.inter(fontSize: 14.sp, color: isDark ? Colors.white70 : const Color(0xFF0F172A))),
                 ),
               ],
               SizedBox(height: 16.h),
-              Text('Final Reduced Number: ${data['reduced'] ?? 'N/A'}', style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+              Text('Final Reduced Number: ${data['reduced'] ?? 'N/A'}', style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA))),
               SizedBox(height: 30.h),
             ],
           ),
@@ -287,16 +290,21 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
     bool isNew = false,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: cardBg,
+          color: isDark ? const Color(0xFF131D36) : cardBg,
           borderRadius: BorderRadius.circular(22.r),
-          border: Border.all(color: borderColor, width: 1.2),
+          border: Border.all(
+            color: isDark ? iconBg.withValues(alpha: 0.35) : borderColor,
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -341,9 +349,12 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
                               borderRadius: BorderRadius.circular(14.r),
-                              border: Border.all(color: borderColor, width: 1.2),
+                              border: Border.all(
+                                color: isDark ? iconBg.withValues(alpha: 0.5) : borderColor,
+                                width: 1.2,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: iconBg.withValues(alpha: 0.1),
@@ -357,7 +368,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                               style: GoogleFonts.outfit(
                                 fontSize: 13.5.sp,
                                 fontWeight: FontWeight.w800,
-                                color: iconBg,
+                                color: isDark ? Colors.white : iconBg,
                               ),
                             ),
                           ),
@@ -369,7 +380,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       style: GoogleFonts.outfit(
                         fontSize: 14.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
                         height: 1.15,
                       ),
                     ),
@@ -379,7 +390,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         height: 1.25,
                       ),
                       maxLines: 2,
@@ -393,14 +404,14 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3E8FF),
+                              color: isDark ? const Color(0xFF3B0764) : const Color(0xFFF3E8FF),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
                               'NEW',
                               style: GoogleFonts.outfit(
                                 fontSize: 9.sp,
-                                color: const Color(0xFF9333EA),
+                                color: isDark ? const Color(0xFFD8B4FE) : const Color(0xFF9333EA),
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
                               ),
@@ -412,13 +423,13 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           width: 28.w,
                           height: 28.w,
                           decoration: BoxDecoration(
-                            color: arrowBg,
+                            color: isDark ? iconBg.withValues(alpha: 0.22) : arrowBg,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.arrow_forward_rounded,
                             size: 15.sp,
-                            color: arrowColor,
+                            color: isDark ? iconBg : arrowColor,
                           ),
                         ),
                       ],
@@ -481,6 +492,8 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
   }
 
   Widget _buildWideReportCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating Full Report... (Coming Soon)')));
@@ -491,15 +504,24 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
         padding: EdgeInsets.all(18.w),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22.r),
-          gradient: const LinearGradient(
-            colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          gradient: isDark
+              ? const LinearGradient(
+                  colors: [Color(0xFF131D36), Color(0xFF1A2644)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.35) : const Color(0xFFBFDBFE),
+            width: 1.2,
           ),
-          border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF93C5FD).withValues(alpha: 0.25),
+              color: (isDark ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD)).withValues(alpha: isDark ? 0.2 : 0.25),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -513,15 +535,15 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFBFDBFE)),
                   ),
                   child: Text(
                     'COMPLETE REPORT',
                     style: GoogleFonts.outfit(
                       fontSize: 11.sp,
-                      color: const Color(0xFF1D4ED8),
+                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
                     ),
@@ -533,7 +555,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                 Text(
                   '4.6',
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF1E293B),
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
                     fontWeight: FontWeight.bold,
                     fontSize: 12.5.sp,
                   ),
@@ -546,7 +568,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
               style: GoogleFonts.outfit(
                 fontSize: 17.5.sp,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             SizedBox(height: 4.h),
@@ -554,7 +576,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
               'Name fixes, remedies, a 5-year forecast & more — all in one report.',
               style: GoogleFonts.inter(
                 fontSize: 12.sp,
-                color: const Color(0xFF475569),
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
                 height: 1.3,
               ),
             ),
@@ -880,33 +902,38 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header matching Explore Section from Image 1
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'YOUR COSMIC PROFILE',
-                    style: GoogleFonts.outfit(
-                      fontSize: 12.sp,
-                      letterSpacing: 2.0,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  Row(
+              Builder(
+                builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'See All',
+                        'YOUR COSMIC PROFILE',
                         style: GoogleFonts.outfit(
-                          fontSize: 12.5.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF2563EB),
+                          fontSize: 12.sp,
+                          letterSpacing: 2.0,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                         ),
                       ),
-                      SizedBox(width: 3.w),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: const Color(0xFF2563EB)),
+                      Row(
+                        children: [
+                          Text(
+                            'See All',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.5.sp,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                            ),
+                          ),
+                          SizedBox(width: 3.w),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
+                        ],
+                      ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
               SizedBox(height: 14.h),
 
@@ -948,6 +975,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
   }
 
   Widget _buildProfileHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Seeker';
     final dob = _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : '1998-12-13';
     final String systemTitle = _system == 'vedic'
@@ -974,20 +1002,33 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       child: Container(
         margin: EdgeInsets.fromLTRB(14.w, 6.h, 14.w, 14.h),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFEAF5FE),
-              Color(0xFFF9FBFE),
-              Color(0xFFEEF6FE),
-            ],
-          ),
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF131D36),
+                    Color(0xFF1A2644),
+                    Color(0xFF0F172A),
+                  ],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFEAF5FE),
+                    Color(0xFFF9FBFE),
+                    Color(0xFFEEF6FE),
+                  ],
+                ),
           borderRadius: BorderRadius.circular(24.r),
-          border: Border.all(color: const Color(0xFFDCE8F5), width: 1.2),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.35) : const Color(0xFFDCE8F5),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF93C5FD).withValues(alpha: 0.20),
+              color: (isDark ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD)).withValues(alpha: isDark ? 0.22 : 0.20),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -1002,7 +1043,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                 right: -10.w,
                 top: -10.h,
                 child: Opacity(
-                  opacity: 0.35,
+                  opacity: isDark ? 0.2 : 0.35,
                   child: SizedBox(
                     width: 140.w,
                     height: 140.w,
@@ -1083,7 +1124,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                               fontSize: 9.5.sp,
                               letterSpacing: 1.8,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF64748B),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             ),
                           ),
                           SizedBox(height: 3.h),
@@ -1092,7 +1133,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                             style: GoogleFonts.outfit(
                               fontSize: 17.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0F172A),
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1102,7 +1143,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                             'DOB: $dob • $systemTitle',
                             style: GoogleFonts.inter(
                               fontSize: 11.sp,
-                              color: const Color(0xFF64748B),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -1112,12 +1153,12 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDark ? const Color(0xFF1E293B) : Colors.white,
                               borderRadius: BorderRadius.circular(14.r),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                                   blurRadius: 4,
                                   offset: const Offset(0, 1),
                                 ),
@@ -1134,7 +1175,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                                     fontSize: 9.sp,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.6,
-                                    color: const Color(0xFF2563EB),
+                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                                   ),
                                 ),
                               ],
@@ -1149,17 +1190,17 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       width: 30.w,
                       height: 30.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(Icons.arrow_forward_ios_rounded, size: 12.sp, color: const Color(0xFF2563EB)),
+                      child: Icon(Icons.arrow_forward_ios_rounded, size: 12.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
                     ),
                   ],
                 ),
@@ -1172,6 +1213,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
   }
 
   void _showEditProfileSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final editNameCtrl = TextEditingController(text: _nameController.text);
     final editDobCtrl = TextEditingController(text: _dobController.text);
     String editSystem = _system;
@@ -1191,7 +1233,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                 bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? const Color(0xFF131D36) : Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
               ),
               child: SingleChildScrollView(
@@ -1207,22 +1249,25 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           style: GoogleFonts.outfit(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(sheetContext),
-                          icon: const Icon(Icons.close_rounded),
+                          icon: Icon(Icons.close_rounded, color: isDark ? Colors.white70 : Colors.black87),
                         ),
                       ],
                     ),
                     SizedBox(height: 14.h),
                     TextField(
                       controller: editNameCtrl,
+                      style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                       decoration: InputDecoration(
                         labelText: 'Full Name',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                        labelStyle: GoogleFonts.inter(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        prefixIcon: Icon(Icons.person_outline, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFCBD5E1))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: Color(0xFF2563EB))),
                       ),
                     ),
                     SizedBox(height: 14.h),
@@ -1238,6 +1283,27 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                           initialDate: initialDate,
                           firstDate: DateTime(1900),
                           lastDate: DateTime.now(),
+                          builder: (dateCtx, child) {
+                            return Theme(
+                              data: isDark
+                                  ? ThemeData.dark().copyWith(
+                                      colorScheme: const ColorScheme.dark(
+                                        primary: Color(0xFF3B82F6),
+                                        onPrimary: Colors.white,
+                                        surface: Color(0xFF131D36),
+                                        onSurface: Colors.white,
+                                      ),
+                                    )
+                                  : ThemeData.light().copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: Color(0xFF2563EB),
+                                        onPrimary: Colors.white,
+                                        onSurface: Color(0xFF1E293B),
+                                      ),
+                                    ),
+                              child: child!,
+                            );
+                          },
                         );
                         if (picked != null) {
                           setModalState(() {
@@ -1248,16 +1314,16 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          border: Border.all(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFCBD5E1)),
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_month_outlined, color: Color(0xFF64748B)),
+                            Icon(Icons.calendar_month_outlined, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF64748B)),
                             SizedBox(width: 12.w),
                             Text(
                               editDobCtrl.text.isNotEmpty ? editDobCtrl.text : 'Select Date of Birth',
-                              style: GoogleFonts.inter(fontSize: 14.sp, color: const Color(0xFF1E293B)),
+                              style: GoogleFonts.inter(fontSize: 14.sp, color: isDark ? Colors.white : const Color(0xFF1E293B)),
                             ),
                           ],
                         ),
@@ -1266,14 +1332,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                     SizedBox(height: 14.h),
                     DropdownButtonFormField<String>(
                       initialValue: editSystem,
+                      dropdownColor: isDark ? const Color(0xFF131D36) : Colors.white,
+                      style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                       decoration: InputDecoration(
                         labelText: 'Numerology System',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                        labelStyle: GoogleFonts.inter(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFCBD5E1))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: Color(0xFF2563EB))),
                       ),
-                      items: const [
-                        DropdownMenuItem(value: 'pythagorean', child: Text('Pythagorean Numerology')),
-                        DropdownMenuItem(value: 'vedic', child: Text('Vedic Numerology')),
-                        DropdownMenuItem(value: 'chaldean', child: Text('Chaldean Numerology')),
+                      items: [
+                        DropdownMenuItem(value: 'pythagorean', child: Text('Pythagorean Numerology', style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+                        DropdownMenuItem(value: 'vedic', child: Text('Vedic Numerology', style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF0F172A)))),
+                        DropdownMenuItem(value: 'chaldean', child: Text('Chaldean Numerology', style: GoogleFonts.inter(color: isDark ? Colors.white : const Color(0xFF0F172A)))),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -1328,8 +1398,10 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(56.h),
         child: SafeArea(
@@ -1347,18 +1419,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(Icons.arrow_back_rounded, color: const Color(0xFF1E293B), size: 19.sp),
+                      child: Icon(Icons.arrow_back_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 19.sp),
                     ),
                   ),
                 ),
@@ -1367,7 +1439,7 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                   style: GoogleFonts.outfit(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E293B),
+                    color: NumerologyTheme.textPrimary(isDark),
                   ),
                 ),
                 Material(
@@ -1379,18 +1451,18 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(Icons.tune_rounded, color: const Color(0xFF334155), size: 18.sp),
+                      child: Icon(Icons.tune_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 18.sp),
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class NameAnalysisScreen extends StatefulWidget {
   final String? initialBirthName;
@@ -136,25 +137,30 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   void _showSystemInfoDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
+        backgroundColor: NumerologyTheme.cardBg(isDark),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22.r),
+          side: BorderSide(color: NumerologyTheme.cardBorder(isDark)),
+        ),
         title: Row(
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(10.r),
               ),
-              child: Icon(Icons.auto_stories_rounded, color: const Color(0xFF2563EB), size: 22.sp),
+              child: Icon(Icons.auto_stories_rounded, color: const Color(0xFF38BDF8), size: 22.sp),
             ),
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 'Numerology Systems',
-                style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.w700, color: NumerologyTheme.textPrimary(isDark)),
               ),
             ),
           ],
@@ -166,22 +172,22 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             children: [
               Text(
                 'Pythagorean System (Modern Western):',
-                style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF2563EB)),
+                style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF38BDF8)),
               ),
               SizedBox(height: 4.h),
               Text(
                 'Assigns letters A through Z sequentially to numbers 1 to 9. Analyzes the full name for Expression/Destiny, vowels for Soul Urge, consonants for Personality, and identifies foundational Cornerstone and Capstone letters.',
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF475569), height: 1.4),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: NumerologyTheme.textSecondary(isDark), height: 1.4),
               ),
               SizedBox(height: 14.h),
               Text(
                 'Chaldean System (Ancient Vibrational):',
-                style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFFD97706)),
+                style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFFF59E0B)),
               ),
               SizedBox(height: 4.h),
               Text(
                 'Rooted in ancient Babylonian astrology. Letters are assigned numbers 1 to 8 based on planetary sound vibrations (9 is considered sacred and omitted from letter mapping). Preserves a compound total whose mystical archetype reveals deep karmic patterns.',
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF475569), height: 1.4),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: NumerologyTheme.textSecondary(isDark), height: 1.4),
               ),
             ],
           ),
@@ -191,7 +197,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Understood',
-              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF2563EB)),
+              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF38BDF8)),
             ),
           ),
         ],
@@ -202,10 +208,12 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: NumerologyTheme.scaffoldBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         leadingWidth: 54.w,
@@ -221,18 +229,18 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_rounded, color: const Color(0xFF1E293B), size: 19.sp),
+                  child: Icon(Icons.arrow_back_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 19.sp),
                 ),
               ),
             ),
@@ -247,7 +255,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 17.sp,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF1E293B),
+                color: NumerologyTheme.textPrimary(isDark),
               ),
             ),
             Text(
@@ -255,7 +263,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               style: GoogleFonts.inter(
                 fontSize: 10.5.sp,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
+                color: NumerologyTheme.textSecondary(isDark),
               ),
             ),
           ],
@@ -273,12 +281,12 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     width: 38.w,
                     height: 38.w,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: NumerologyTheme.circleBtnBg(isDark),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -286,7 +294,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     ),
                     child: Icon(
                       _isFormExpanded ? Icons.close_rounded : Icons.edit_outlined,
-                      color: const Color(0xFFD97706),
+                      color: const Color(0xFFF59E0B),
                       size: 18.sp,
                     ),
                   ),
@@ -305,18 +313,18 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.info_outline_rounded, color: const Color(0xFFD97706), size: 19.sp),
+                  child: Icon(Icons.info_outline_rounded, color: const Color(0xFFF59E0B), size: 19.sp),
                 ),
               ),
             ),
@@ -351,14 +359,16 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 1. INPUT FORM CARD (Pastel Soft Luxury Style)
   // =========================================================================
   Widget _buildInputFormCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
             blurRadius: 14,
             offset: const Offset(0, 3),
           ),
@@ -384,11 +394,11 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     width: 36.w,
                     height: 36.w,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
+                      color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFDE68A)),
+                      border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.4) : const Color(0xFFFDE68A)),
                     ),
-                    child: Icon(Icons.badge_rounded, color: const Color(0xFFD97706), size: 19.sp),
+                    child: Icon(Icons.badge_rounded, color: const Color(0xFFF59E0B), size: 19.sp),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -400,7 +410,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
+                            color: NumerologyTheme.textPrimary(isDark),
                           ),
                         ),
                         Text(
@@ -409,7 +419,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                               : 'Enter your birth name and select calculation system',
                           style: GoogleFonts.inter(
                             fontSize: 11.5.sp,
-                            color: const Color(0xFF64748B),
+                            color: NumerologyTheme.textSecondary(isDark),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -421,13 +431,13 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     Container(
                       width: 28.w,
                       height: 28.w,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
+                      decoration: BoxDecoration(
+                        color: isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF1F5F9),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         _isFormExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                        color: const Color(0xFF64748B),
+                        color: NumerologyTheme.textSecondary(isDark),
                         size: 20.sp,
                       ),
                     ),
@@ -436,7 +446,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             ),
           ),
           if (_isFormExpanded) ...[
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            Divider(height: 1, color: NumerologyTheme.divider(isDark)),
             Padding(
               padding: EdgeInsets.all(18.w),
               child: Form(
@@ -450,7 +460,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     SizedBox(height: 8.h),
@@ -483,7 +493,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     SizedBox(height: 6.h),
@@ -491,21 +501,22 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       controller: _birthNameController,
                       textCapitalization: TextCapitalization.words,
                       maxLength: 100,
+                      style: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.inputText(isDark)),
                       decoration: InputDecoration(
                         hintText: 'e.g. John Ronald Reuel Tolkien',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.textMuted(isDark)),
                         prefixIcon: Icon(Icons.person_outline_rounded, size: 19.sp, color: const Color(0xFFF59E0B)),
                         counterText: '',
                         filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
+                        fillColor: NumerologyTheme.inputBg(isDark),
                         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
@@ -522,7 +533,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     SizedBox(height: 4.h),
                     Text(
                       'Traditionally used for core life destiny and spiritual purpose analysis.',
-                      style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: NumerologyTheme.textSecondary(isDark)),
                     ),
                     SizedBox(height: 14.h),
 
@@ -532,7 +543,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     SizedBox(height: 6.h),
@@ -540,21 +551,22 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       controller: _currentNameController,
                       textCapitalization: TextCapitalization.words,
                       maxLength: 100,
+                      style: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.inputText(isDark)),
                       decoration: InputDecoration(
                         hintText: 'e.g. J.R.R. Tolkien or Johnny',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
-                        prefixIcon: Icon(Icons.edit_note_rounded, size: 19.sp, color: const Color(0xFF94A3B8)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.textMuted(isDark)),
+                        prefixIcon: Icon(Icons.edit_note_rounded, size: 19.sp, color: NumerologyTheme.textMuted(isDark)),
                         counterText: '',
                         filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
+                        fillColor: NumerologyTheme.inputBg(isDark),
                         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
@@ -565,7 +577,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     SizedBox(height: 4.h),
                     Text(
                       'Analyzed separately to evaluate vibrational harmony with your birth name.',
-                      style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: NumerologyTheme.textSecondary(isDark)),
                     ),
                     SizedBox(height: 14.h),
 
@@ -575,7 +587,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     SizedBox(height: 6.h),
@@ -583,26 +595,27 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       controller: _dobController,
                       readOnly: true,
                       onTap: _pickDateOfBirth,
+                      style: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.inputText(isDark)),
                       decoration: InputDecoration(
                         hintText: 'YYYY-MM-DD (e.g. 1995-05-15)',
-                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
-                        prefixIcon: Icon(Icons.calendar_today_rounded, size: 18.sp, color: const Color(0xFF94A3B8)),
+                        hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: NumerologyTheme.textMuted(isDark)),
+                        prefixIcon: Icon(Icons.calendar_today_rounded, size: 18.sp, color: NumerologyTheme.textMuted(isDark)),
                         suffixIcon: _dobController.text.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear_rounded, size: 16.sp, color: const Color(0xFF94A3B8)),
+                                icon: Icon(Icons.clear_rounded, size: 16.sp, color: NumerologyTheme.textMuted(isDark)),
                                 onPressed: () => setState(() => _dobController.clear()),
                               )
                             : null,
                         filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
+                        fillColor: NumerologyTheme.inputBg(isDark),
                         contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: BorderSide(color: NumerologyTheme.inputBorder(isDark)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.r),
@@ -613,7 +626,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     SizedBox(height: 4.h),
                     Text(
                       'Not required for name analysis, but reveals harmony with your Life Path.',
-                      style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: NumerologyTheme.textSecondary(isDark)),
                     ),
                     SizedBox(height: 14.h),
 
@@ -621,21 +634,21 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     Container(
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
+                        color: isDark ? const Color(0xFF042017) : const Color(0xFFF0FDF4),
                         borderRadius: BorderRadius.circular(14.r),
-                        border: Border.all(color: const Color(0xFFDCFCE7)),
+                        border: Border.all(color: isDark ? const Color(0xFF065F46) : const Color(0xFFDCFCE7)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.translate_rounded, size: 18.sp, color: const Color(0xFF10B981)),
+                          Icon(Icons.translate_rounded, size: 18.sp, color: isDark ? const Color(0xFF34D399) : const Color(0xFF10B981)),
                           SizedBox(width: 10.w),
                           Expanded(
                             child: Text(
                               'Supported Alphabet: Standard Latin (A-Z) & common accented characters. For non-Latin scripts (e.g., Devanagari, Arabic, Cyrillic), please enter an English/Latin transliteration.',
                               style: GoogleFonts.inter(
                                 fontSize: 11.sp,
-                                color: const Color(0xFF065F46),
+                                color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF065F46),
                                 height: 1.35,
                               ),
                             ),
@@ -716,6 +729,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     required String subtitle,
     required IconData icon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedSystem == id;
     return InkWell(
       onTap: () {
@@ -727,10 +741,12 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFEF3C7) : const Color(0xFFF8FAFC),
+          color: isSelected
+              ? (isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7))
+              : (isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF8FAFC)),
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0),
+            color: isSelected ? const Color(0xFFF59E0B) : NumerologyTheme.inputBorder(isDark),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -740,13 +756,13 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               width: 30.w,
               height: 30.w,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0),
+                color: isSelected ? const Color(0xFFF59E0B) : (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 16.sp,
-                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                color: isSelected ? Colors.white : NumerologyTheme.textSecondary(isDark),
               ),
             ),
             SizedBox(width: 8.w),
@@ -759,14 +775,18 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
-                      color: isSelected ? const Color(0xFFB45309) : const Color(0xFF0F172A),
+                      color: isSelected
+                          ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309))
+                          : NumerologyTheme.textPrimary(isDark),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 10.5.sp,
-                      color: isSelected ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                      color: isSelected
+                          ? (isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706))
+                          : NumerologyTheme.textSecondary(isDark),
                     ),
                   ),
                 ],
@@ -779,6 +799,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Future<void> _pickDateOfBirth() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
     DateTime initial = DateTime(1995, 5, 15);
     if (_dobController.text.isNotEmpty) {
@@ -795,11 +816,17 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFF59E0B),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF0F172A),
-            ),
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: Color(0xFFF59E0B),
+                    surface: Color(0xFF131D36),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: Color(0xFFF59E0B),
+                    onPrimary: Colors.white,
+                    onSurface: Color(0xFF0F172A),
+                  ),
           ),
           child: child!,
         );
@@ -904,6 +931,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 3. RESULTS VIEW
   // =========================================================================
   Widget _buildResultsView() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final analysis = _reportData!['analysis'] as Map<String, dynamic>;
     final isPythagorean = _reportData!['system'] == 'pythagorean';
     final comparison = _reportData!['name_comparison'] as Map<String, dynamic>?;
@@ -927,7 +955,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       fontSize: 11.5.sp,
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF64748B),
+                      color: NumerologyTheme.textSecondary(isDark),
                     ),
                   ),
                   if (name.toString().isNotEmpty) ...[
@@ -937,7 +965,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -950,16 +978,16 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
+                color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFFFBEB),
                 borderRadius: BorderRadius.circular(10.r),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.4) : const Color(0xFFFDE68A)),
               ),
               child: Text(
                 isPythagorean ? 'Pythagorean' : 'Chaldean',
                 style: GoogleFonts.outfit(
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFD97706),
+                  color: const Color(0xFFF59E0B),
                 ),
               ),
             ),
@@ -1075,6 +1103,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     required Color color,
     required bool isMaster,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedCoreTab == index;
     return Material(
       color: Colors.transparent,
@@ -1085,15 +1114,15 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 6.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: NumerologyTheme.cardBg(isDark),
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(
-              color: isSelected ? color : color.withValues(alpha: 0.45),
+              color: isSelected ? color : color.withValues(alpha: isDark ? 0.35 : 0.45),
               width: isSelected ? 2.0 : 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: isSelected ? color.withValues(alpha: 0.18) : Colors.black.withValues(alpha: 0.03),
+                color: isSelected ? color.withValues(alpha: 0.18) : Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                 blurRadius: isSelected ? 8 : 4,
                 offset: const Offset(0, 2),
               ),
@@ -1136,7 +1165,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: NumerologyTheme.textPrimary(isDark),
                 ),
               ),
               SizedBox(height: 2.h),
@@ -1145,7 +1174,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 10.sp,
-                  color: const Color(0xFF64748B),
+                  color: NumerologyTheme.textSecondary(isDark),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1161,16 +1190,19 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 6. COMPARISON & DOB HARMONY CARDS (Pastel Soft Luxury Style)
   // =========================================================================
   Widget _buildNameComparisonCard(Map<String, dynamic> comparison, bool isPythagorean) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHarmonized = comparison['is_harmonized'] == true;
     final summary = comparison['summary'] ?? '';
 
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: isHarmonized ? const Color(0xFFF0FDF4) : const Color(0xFFFEFCE8),
+        color: isDark ? NumerologyTheme.darkCardBg : (isHarmonized ? const Color(0xFFF0FDF4) : const Color(0xFFFEFCE8)),
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(
-          color: isHarmonized ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+          color: isDark
+              ? (isHarmonized ? const Color(0xFF10B981).withValues(alpha: 0.35) : const Color(0xFFF59E0B).withValues(alpha: 0.35))
+              : (isHarmonized ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7)),
           width: 1.2,
         ),
       ),
@@ -1202,7 +1234,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     Text(
@@ -1210,7 +1242,9 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 11.5.sp,
                         fontWeight: FontWeight.w600,
-                        color: isHarmonized ? const Color(0xFF059669) : const Color(0xFFD97706),
+                        color: isHarmonized
+                            ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                            : (isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706)),
                       ),
                     ),
                   ],
@@ -1223,7 +1257,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             summary,
             style: GoogleFonts.inter(
               fontSize: 12.5.sp,
-              color: const Color(0xFF475569),
+              color: NumerologyTheme.textSecondary(isDark),
               height: 1.45,
             ),
           ),
@@ -1233,15 +1267,19 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Widget _buildDobHarmonyCard(Map<String, dynamic> dobHarmony, bool isPythagorean) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isAligned = dobHarmony['is_aligned'] == true;
     final summary = dobHarmony['summary'] ?? '';
 
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: isDark ? NumerologyTheme.darkCardBg : const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFFEF3C7), width: 1.2),
+        border: Border.all(
+          color: isDark ? const Color(0xFFF59E0B).withValues(alpha: 0.35) : const Color(0xFFFEF3C7),
+          width: 1.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1267,7 +1305,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                     Text(
@@ -1275,7 +1313,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 11.5.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFD97706),
+                        color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
                       ),
                     ),
                   ],
@@ -1288,7 +1326,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             summary,
             style: GoogleFonts.inter(
               fontSize: 12.5.sp,
-              color: const Color(0xFF475569),
+              color: NumerologyTheme.textSecondary(isDark),
               height: 1.45,
             ),
           ),
@@ -1301,6 +1339,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 7. FOUNDATIONAL PILLARS (Pythagorean)
   // =========================================================================
   Widget _buildFoundationalPillarsCard(Map<String, dynamic> analysis) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cornerstone = analysis['cornerstone'] as Map<String, dynamic>?;
     final capstone = analysis['capstone'] as Map<String, dynamic>?;
     final firstVowel = analysis['first_vowel'] as Map<String, dynamic>?;
@@ -1308,9 +1347,9 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1320,11 +1359,11 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               Container(
                 width: 32.w,
                 height: 32.w,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.account_tree_rounded, color: const Color(0xFFD97706), size: 17.sp),
+                child: Icon(Icons.account_tree_rounded, color: const Color(0xFFF59E0B), size: 17.sp),
               ),
               SizedBox(width: 10.w),
               Expanded(
@@ -1333,7 +1372,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: NumerologyTheme.textPrimary(isDark),
                   ),
                 ),
               ),
@@ -1342,7 +1381,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
           SizedBox(height: 6.h),
           Text(
             'The structural keystones of your first name determine how you approach beginnings, endings, and instinctive impulses.',
-            style: GoogleFonts.inter(fontSize: 11.5.sp, color: const Color(0xFF64748B)),
+            style: GoogleFonts.inter(fontSize: 11.5.sp, color: NumerologyTheme.textSecondary(isDark)),
           ),
           SizedBox(height: 14.h),
 
@@ -1402,12 +1441,14 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     required Color borderColor,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: isDark ? NumerologyTheme.darkInputBg : cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: isDark ? color.withValues(alpha: 0.35) : borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1446,7 +1487,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF0F172A),
+                        color: NumerologyTheme.textPrimary(isDark),
                       ),
                     ),
                   ],
@@ -1457,7 +1498,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
           SizedBox(height: 6.h),
           Text(
             meaning,
-            style: GoogleFonts.inter(fontSize: 11.5.sp, color: const Color(0xFF475569), height: 1.4),
+            style: GoogleFonts.inter(fontSize: 11.5.sp, color: NumerologyTheme.textSecondary(isDark), height: 1.4),
           ),
         ],
       ),
@@ -1468,6 +1509,8 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 8. HORIZONTAL PILL TAB BAR & DYNAMIC ACTIVE SECTION CONTENT
   // =========================================================================
   Widget _buildTabChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -1484,10 +1527,10 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFD97706) : Colors.white,
+                  color: isSelected ? const Color(0xFFD97706) : (isDark ? NumerologyTheme.darkCardBg : Colors.white),
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFD97706) : const Color(0xFFE2E8F0),
+                    color: isSelected ? const Color(0xFFD97706) : (isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
                     width: 1,
                   ),
                   boxShadow: isSelected
@@ -1505,7 +1548,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : NumerologyTheme.textSecondary(isDark),
                   ),
                 ),
               ),
@@ -1581,12 +1624,14 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Widget _buildCoreNumberSwitcher(bool isPythagorean) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (!isPythagorean) {
       return Container(
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(4.w),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -1601,7 +1646,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -1615,6 +1660,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Widget _buildMiniCoreTab(String label, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedCoreTab == index;
     return Expanded(
       child: InkWell(
@@ -1623,12 +1669,12 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 6.h),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? (isDark ? NumerologyTheme.darkCardBg : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(9.r),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -1641,7 +1687,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             style: GoogleFonts.outfit(
               fontSize: 11.5.sp,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? const Color(0xFFD97706) : const Color(0xFF64748B),
+              color: isSelected ? const Color(0xFFF59E0B) : NumerologyTheme.textSecondary(isDark),
             ),
           ),
         ),
@@ -1815,13 +1861,15 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Widget _buildChaldeanFoundationNote() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1831,23 +1879,23 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               Container(
                 width: 32.w,
                 height: 32.w,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.info_outline_rounded, size: 17.sp, color: const Color(0xFFD97706)),
+                child: Icon(Icons.info_outline_rounded, size: 17.sp, color: const Color(0xFFF59E0B)),
               ),
               SizedBox(width: 10.w),
               Text(
                 'Chaldean Vibrational Keystones',
-                style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w700, color: NumerologyTheme.textPrimary(isDark)),
               ),
             ],
           ),
           SizedBox(height: 10.h),
           Text(
             'In the Chaldean metaphysical tradition, energetic harmonics are governed by sacred compound sums (10 to 52) and planetary root archetypes (1 to 8). First/last letter cornerstone keystones are specific to Pythagorean numerology.',
-            style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF475569), height: 1.45),
+            style: GoogleFonts.inter(fontSize: 12.sp, color: NumerologyTheme.textSecondary(isDark), height: 1.45),
           ),
         ],
       ),
@@ -1861,16 +1909,18 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     String? theme,
     required String content,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1897,7 +1947,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: NumerologyTheme.textPrimary(isDark),
                   ),
                 ),
               ),
@@ -1908,16 +1958,16 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
+                color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.4) : const Color(0xFFFDE68A)),
               ),
               child: Text(
                 theme,
                 style: GoogleFonts.inter(
                   fontSize: 11.5.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFD97706),
+                  color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
                 ),
               ),
             ),
@@ -1927,7 +1977,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             content,
             style: GoogleFonts.inter(
               fontSize: 12.5.sp,
-              color: const Color(0xFF334155),
+              color: NumerologyTheme.textSecondary(isDark),
               height: 1.5,
             ),
           ),
@@ -1944,20 +1994,27 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
     required String emptyMessage,
     bool isNegative = false,
   }) {
-    final chipBg = isNegative ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4);
-    final chipBorder = isNegative ? const Color(0xFFFECACA) : const Color(0xFFDCFCE7);
-    final chipText = isNegative ? const Color(0xFFB91C1C) : const Color(0xFF059669);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final chipBg = isDark
+        ? (isNegative ? const Color(0xFF2D1214) : const Color(0xFF042017))
+        : (isNegative ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4));
+    final chipBorder = isDark
+        ? (isNegative ? const Color(0xFF7F1D1D) : const Color(0xFF065F46))
+        : (isNegative ? const Color(0xFFFECACA) : const Color(0xFFDCFCE7));
+    final chipText = isDark
+        ? (isNegative ? const Color(0xFFF87171) : const Color(0xFF34D399))
+        : (isNegative ? const Color(0xFFB91C1C) : const Color(0xFF059669));
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -1984,7 +2041,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: NumerologyTheme.textPrimary(isDark),
                   ),
                 ),
               ),
@@ -2019,7 +2076,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               emptyMessage,
               style: GoogleFonts.inter(
                 fontSize: 12.sp,
-                color: const Color(0xFF64748B),
+                color: NumerologyTheme.textMuted(isDark),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -2031,13 +2088,19 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
 
 
   Widget _buildInfoRow(IconData icon, String label, String text, {bool isHighlight = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isHighlight ? const Color(0xFFFFFBEB) : const Color(0xFFF8FAFC),
+        color: isHighlight
+            ? (isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFFFBEB))
+            : (isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF8FAFC)),
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
-          color: isHighlight ? const Color(0xFFFEF3C7) : const Color(0xFFE2E8F0),
+          color: isHighlight
+              ? (isDark ? const Color(0xFFD97706).withValues(alpha: 0.4) : const Color(0xFFFEF3C7))
+              : (isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
         ),
       ),
       child: Column(
@@ -2045,14 +2108,14 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16.sp, color: isHighlight ? const Color(0xFFD97706) : const Color(0xFF64748B)),
+              Icon(icon, size: 16.sp, color: isHighlight ? const Color(0xFFF59E0B) : NumerologyTheme.textSecondary(isDark)),
               SizedBox(width: 6.w),
               Text(
                 label,
                 style: GoogleFonts.outfit(
                   fontSize: 12.5.sp,
                   fontWeight: FontWeight.w700,
-                  color: isHighlight ? const Color(0xFFB45309) : const Color(0xFF0F172A),
+                  color: isHighlight ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309)) : NumerologyTheme.textPrimary(isDark),
                 ),
               ),
             ],
@@ -2062,7 +2125,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
             text,
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF334155),
+              color: NumerologyTheme.textSecondary(isDark),
               height: 1.4,
             ),
           ),
@@ -2075,14 +2138,15 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 9. CALCULATION TRANSPARENCY CARD (Letter-by-Letter breakdown)
   // =========================================================================
   Widget _buildCalculationTransparencyCard(Map<String, dynamic> analysis, bool isPythagorean) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final words = analysis['words'] as List<dynamic>? ?? [];
 
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NumerologyTheme.cardBg(isDark),
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+        border: Border.all(color: NumerologyTheme.cardBorder(isDark), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2092,11 +2156,11 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               Container(
                 width: 32.w,
                 height: 32.w,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF3C7),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEF3C7),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.visibility_rounded, color: const Color(0xFFD97706), size: 17.sp),
+                child: Icon(Icons.visibility_rounded, color: const Color(0xFFF59E0B), size: 17.sp),
               ),
               SizedBox(width: 10.w),
               Expanded(
@@ -2105,7 +2169,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: NumerologyTheme.textPrimary(isDark),
                   ),
                 ),
               ),
@@ -2114,7 +2178,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
           SizedBox(height: 4.h),
           Text(
             'Every calculation step is verifiable. Letter values are mapped directly from the authoritative table.',
-            style: GoogleFonts.inter(fontSize: 11.5.sp, color: const Color(0xFF64748B)),
+            style: GoogleFonts.inter(fontSize: 11.5.sp, color: NumerologyTheme.textSecondary(isDark)),
           ),
           SizedBox(height: 14.h),
 
@@ -2127,9 +2191,9 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
               margin: EdgeInsets.only(bottom: 12.h),
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: isDark ? NumerologyTheme.darkInputBg : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: NumerologyTheme.cardBorder(isDark)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2143,7 +2207,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
+                            color: NumerologyTheme.textPrimary(isDark),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2158,7 +2222,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 11.5.sp,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2563EB),
+                            color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2179,10 +2243,14 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                       return Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: isVowel ? const Color(0xFFFEFCE8) : Colors.white,
+                          color: isVowel
+                              ? (isDark ? const Color(0xFF2A1E0B) : const Color(0xFFFEFCE8))
+                              : (isDark ? NumerologyTheme.darkCardBg : Colors.white),
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(
-                            color: isVowel ? const Color(0xFFFEF3C7) : const Color(0xFFE2E8F0),
+                            color: isVowel
+                                ? (isDark ? const Color(0xFFD97706).withValues(alpha: 0.4) : const Color(0xFFFEF3C7))
+                                : (isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
                           ),
                         ),
                         child: Row(
@@ -2193,7 +2261,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF0F172A),
+                                color: NumerologyTheme.textPrimary(isDark),
                               ),
                             ),
                             SizedBox(width: 4.w),
@@ -2202,7 +2270,7 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 11.sp,
                                 fontWeight: FontWeight.w600,
-                                color: isVowel ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                                color: isVowel ? const Color(0xFFF59E0B) : NumerologyTheme.textSecondary(isDark),
                               ),
                             ),
                           ],
@@ -2232,26 +2300,28 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   }
 
   Widget _buildReductionStepBox(String label, dynamic stepsRaw) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final steps = stepsRaw as List<dynamic>? ?? [];
+
     return Container(
       padding: EdgeInsets.all(10.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: isDark ? const Color(0xFF0F1E36) : const Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFDBEAFE)),
+        border: Border.all(color: isDark ? const Color(0xFF1D4ED8).withValues(alpha: 0.4) : const Color(0xFFDBEAFE)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+            style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8)),
           ),
           SizedBox(height: 2.h),
           ...steps.map(
             (s) => Text(
               '• $s',
-              style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF1E40AF)),
+              style: GoogleFonts.inter(fontSize: 11.sp, color: isDark ? const Color(0xFFBFDBFE) : const Color(0xFF1E40AF)),
             ),
           ),
         ],
@@ -2263,22 +2333,24 @@ class _NameAnalysisScreenState extends State<NameAnalysisScreen> {
   // 10. METAPHYSICAL DISCLAIMER
   // =========================================================================
   Widget _buildDisclaimerCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, size: 16.sp, color: const Color(0xFF64748B)),
+          Icon(Icons.shield_outlined, size: 16.sp, color: NumerologyTheme.textSecondary(isDark)),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
               _reportData?['disclaimer'] ??
                   'Name Analysis calculations are rooted in traditional Pythagorean and Chaldean numerology traditions. Interpretations are intended for self-reflection and personal inquiry, not deterministic scientific predictions.',
-              style: GoogleFonts.inter(fontSize: 10.5.sp, color: const Color(0xFF64748B), height: 1.35),
+              style: GoogleFonts.inter(fontSize: 10.5.sp, color: NumerologyTheme.textSecondary(isDark), height: 1.35),
             ),
           ),
         ],

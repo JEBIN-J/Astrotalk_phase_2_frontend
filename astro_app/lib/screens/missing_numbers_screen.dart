@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class MissingNumbersScreen extends StatefulWidget {
   final String? initialBirthName;
@@ -27,6 +28,19 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
   Map<String, dynamic>? _reportData;
   int _selectedTabIndex = 0;
   int? _selectedNumberDetail; // For focusing on a specific missing number
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFFDFCFB);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : Colors.white;
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC);
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFFED7AA);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF1E293B);
+  Color get textSecondary => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get heroBg => isDark ? const Color(0xFF26180B) : const Color(0xFFFFF7ED);
+  Color get heroBorder => isDark ? const Color(0xFFEA580C).withValues(alpha: 0.35) : const Color(0xFFFED7AA);
+  Color get subCardBg => isDark ? const Color(0xFF18233C) : const Color(0xFFFFFBFB);
+  Color get subCardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFFED7AA);
+  Color get inputFill => isDark ? const Color(0xFF131D36) : Colors.white;
 
   final List<String> _tabs = [
     'Overview',
@@ -115,14 +129,14 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
         title: Row(
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF7ED),
+                color: heroBg,
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(Icons.edit_rounded, color: const Color(0xFFEA580C), size: 20.sp),
@@ -134,7 +148,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                 ),
               ),
             ),
@@ -146,23 +160,23 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
           children: [
             Text(
               'Enter your full name as recorded on your birth certificate for authoritative Pythagorean frequency analysis.',
-              style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B), height: 1.4),
+              style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary, height: 1.4),
             ),
             SizedBox(height: 14.h),
             TextField(
               controller: editController,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
-              style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+              style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w600, color: textPrimary),
               decoration: InputDecoration(
                 hintText: 'e.g. Mary Ann Jones',
-                hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+                hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: textSecondary),
                 filled: true,
-                fillColor: const Color(0xFFFFFBFB),
+                fillColor: inputFill,
                 contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFFED7AA)),
+                  borderSide: BorderSide(color: cardBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -177,7 +191,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Cancel',
-              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600, color: textSecondary),
             ),
           ),
           ElevatedButton(
@@ -211,9 +225,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFCFB),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFDFCFB),
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -230,18 +244,18 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFED7AA), width: 1.w),
+                    border: Border.all(color: cardBorder, width: 1.w),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEA580C).withValues(alpha: 0.06),
+                        color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: const Color(0xFF1E293B), size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -256,7 +270,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF1E293B),
+                color: textPrimary,
               ),
             ),
             Text(
@@ -284,12 +298,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFED7AA), width: 1.w),
+                        border: Border.all(color: cardBorder, width: 1.w),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEA580C).withValues(alpha: 0.06),
+                            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.06),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -342,11 +356,11 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
+              color: heroBg,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEA580C).withValues(alpha: 0.12),
+                  color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.2 : 0.12),
                   blurRadius: 20,
                   spreadRadius: 4,
                 ),
@@ -363,7 +377,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             style: GoogleFonts.outfit(
               fontSize: 16.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: textPrimary,
             ),
           ),
           SizedBox(height: 6.h),
@@ -371,7 +385,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             'Calculating zero-count Karmic Lessons from full birth name',
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
           ),
         ],
@@ -386,12 +400,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         child: Container(
           padding: EdgeInsets.all(22.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: cardBorder),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFEA580C).withValues(alpha: 0.06),
+                color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -402,8 +416,8 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(12.w),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF2F2),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF3B1212) : const Color(0xFFFEF2F2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.error_outline_rounded, color: const Color(0xFFEF4444), size: 32.sp),
@@ -414,7 +428,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 6.h),
@@ -423,7 +437,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 12.5.sp,
-                  color: const Color(0xFF64748B),
+                  color: textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -455,16 +469,18 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
           Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF26180B), const Color(0xFF1B1107)]
+                    : [const Color(0xFFFFF7ED), const Color(0xFFFFEDD5)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(color: const Color(0xFFFED7AA), width: 1.2),
+              border: Border.all(color: heroBorder, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEA580C).withValues(alpha: 0.08),
+                  color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.08),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
@@ -493,7 +509,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
+                              color: textPrimary,
                             ),
                           ),
                           Text(
@@ -514,7 +530,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   'Missing Numbers (Karmic Lessons) reflect the vibrations absent from your full birth name. Enter your complete birth certificate name to calculate your exact 1–9 frequency table and zero-count numbers.',
                   style: GoogleFonts.inter(
                     fontSize: 12.5.sp,
-                    color: const Color(0xFF475569),
+                    color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                     height: 1.45,
                   ),
                 ),
@@ -525,18 +541,18 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B),
+                    color: textPrimary,
                   ),
                   decoration: InputDecoration(
                     labelText: 'Full Birth Name',
                     hintText: 'e.g. Mary Ann Jones',
                     labelStyle: GoogleFonts.inter(color: const Color(0xFFEA580C)),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: inputFill,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: const BorderSide(color: Color(0xFFFED7AA)),
+                      borderSide: BorderSide(color: cardBorder),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
@@ -582,22 +598,21 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
       margin: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 10.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFF7ED), // Soft Peach
-            Color(0xFFFFEDD5), // Warm Amber Glow
-          ],
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF26180B), const Color(0xFF1B1107)]
+              : [const Color(0xFFFFF7ED), const Color(0xFFFFEDD5)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color(0xFFFED7AA),
+          color: heroBorder,
           width: 1.2.w,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.07),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.07),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -643,9 +658,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: isDark ? const Color(0xFF18233C) : Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(6.r),
-                        border: Border.all(color: const Color(0xFFFED7AA), width: 0.8.w),
+                        border: Border.all(color: heroBorder, width: 0.8.w),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -676,7 +691,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E293B),
+                    color: textPrimary,
                     letterSpacing: 0.3,
                   ),
                   maxLines: 1,
@@ -694,12 +709,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF18233C) : Colors.white,
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: const Color(0xFFFED7AA), width: 1.2.w),
+                  border: Border.all(color: heroBorder, width: 1.2.w),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEA580C).withValues(alpha: 0.08),
+                      color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.08),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -738,7 +753,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
   Widget _buildTabNavigation() {
     return Container(
       height: 48.h,
-      color: const Color(0xFFFDFCFB),
+      color: scaffoldBg,
       child: ListView.separated(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
         scrollDirection: Axis.horizontal,
@@ -757,10 +772,10 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFEA580C) : const Color(0xFFFFF7ED),
+                color: isSelected ? const Color(0xFFEA580C) : (isDark ? const Color(0xFF18233C) : const Color(0xFFFFF7ED)),
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFFEA580C) : const Color(0xFFFED7AA),
+                  color: isSelected ? const Color(0xFFEA580C) : cardBorder,
                   width: 1,
                 ),
               ),
@@ -770,7 +785,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 13.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : const Color(0xFF9A3412),
+                    color: isSelected ? Colors.white : (isDark ? const Color(0xFFFDBA74) : const Color(0xFF9A3412)),
                   ),
                 ),
               ),
@@ -840,7 +855,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
-                  color: const Color(0xFF64748B),
+                  color: textSecondary,
                 ),
               ),
               GestureDetector(
@@ -875,7 +890,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         borderRadius: BorderRadius.circular(22.r),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.28),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.35 : 0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -994,12 +1009,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.05),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -1016,7 +1031,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -1066,10 +1081,10 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                   decoration: BoxDecoration(
-                    color: isMissing ? const Color(0xFFFFF7ED) : const Color(0xFFF8FAFC),
+                    color: isMissing ? (isDark ? const Color(0xFF26180B) : const Color(0xFFFFF7ED)) : surfaceBg,
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(
-                      color: isMissing ? const Color(0xFFF97316) : const Color(0xFFE2E8F0),
+                      color: isMissing ? const Color(0xFFF97316) : cardBorder,
                       width: isMissing ? 1.5 : 1.0,
                     ),
                   ),
@@ -1086,7 +1101,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.w800,
-                              color: isMissing ? const Color(0xFFEA580C) : const Color(0xFF1E293B),
+                              color: isMissing ? const Color(0xFFEA580C) : textPrimary,
                             ),
                           ),
                           SizedBox(width: 4.w),
@@ -1095,7 +1110,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
-                              color: isMissing ? const Color(0xFFEA580C) : const Color(0xFF64748B),
+                              color: isMissing ? const Color(0xFFEA580C) : textSecondary,
                             ),
                           ),
                         ],
@@ -1104,7 +1119,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: isMissing ? const Color(0xFFEA580C) : const Color(0xFFE2E8F0),
+                          color: isMissing ? const Color(0xFFEA580C) : (isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
@@ -1112,7 +1127,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 8.5.sp,
                             fontWeight: FontWeight.w700,
-                            color: isMissing ? Colors.white : const Color(0xFF475569),
+                            color: isMissing ? Colors.white : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
                           ),
                         ),
                       ),
@@ -1134,9 +1149,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7),
+        color: isDark ? const Color(0xFF332008) : const Color(0xFFFEF3C7),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.3) : const Color(0xFFFDE68A)),
       ),
       child: Row(
         children: [
@@ -1158,7 +1173,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF92400E),
+                    color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -1166,7 +1181,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   'Most frequent vibration in your birth name with $maxFreq occurrence${maxFreq == 1 ? '' : 's'}.',
                   style: GoogleFonts.inter(
                     fontSize: 11.5.sp,
-                    color: const Color(0xFFB45309),
+                    color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
                   ),
                 ),
               ],
@@ -1181,12 +1196,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.06),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -1196,8 +1211,8 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         children: [
           Container(
             padding: EdgeInsets.all(16.w),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF7ED),
+            decoration: BoxDecoration(
+              color: heroBg,
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.verified_rounded, color: const Color(0xFFEA580C), size: 36.sp),
@@ -1208,7 +1223,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             style: GoogleFonts.outfit(
               fontSize: 18.sp,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF1E293B),
+              color: textPrimary,
             ),
           ),
           SizedBox(height: 6.h),
@@ -1217,7 +1232,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 12.5.sp,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
               height: 1.45,
             ),
           ),
@@ -1235,12 +1250,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.05),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1279,7 +1294,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1305,9 +1320,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 child: Container(
                   padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
+                    color: heroBg,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFED7AA)),
+                    border: Border.all(color: heroBorder),
                   ),
                   child: Icon(Icons.arrow_forward_ios_rounded, color: const Color(0xFFEA580C), size: 12.sp),
                 ),
@@ -1319,7 +1334,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             theme,
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF475569),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
               height: 1.4,
             ),
             maxLines: 2,
@@ -1343,9 +1358,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF7ED),
+            color: heroBg,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: heroBorder),
           ),
           child: Row(
             children: [
@@ -1354,7 +1369,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               Expanded(
                 child: Text(
                   'Frequency Matrix counts how many times each Pythagorean number (1–9) appears in your full birth name ($totalLetters total letters evaluated).',
-                  style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF7C2D12), height: 1.35),
+                  style: GoogleFonts.inter(fontSize: 12.sp, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFF7C2D12), height: 1.35),
                 ),
               ),
             ],
@@ -1371,15 +1386,15 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(
-                color: isMissing ? const Color(0xFFF97316) : const Color(0xFFE2E8F0),
+                color: isMissing ? const Color(0xFFF97316) : cardBorder,
                 width: isMissing ? 1.4 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isMissing ? const Color(0xFFEA580C).withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02),
+                  color: isMissing ? const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.05) : Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -1391,7 +1406,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   width: 42.w,
                   height: 42.w,
                   decoration: BoxDecoration(
-                    color: isMissing ? const Color(0xFFEA580C) : const Color(0xFFF1F5F9),
+                    color: isMissing ? const Color(0xFFEA580C) : surfaceBg,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Center(
@@ -1400,7 +1415,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w800,
-                        color: isMissing ? Colors.white : const Color(0xFF1E293B),
+                        color: isMissing ? Colors.white : textPrimary,
                       ),
                     ),
                   ),
@@ -1419,7 +1434,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 13.5.sp,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1E293B),
+                                color: textPrimary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1429,10 +1444,10 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                             decoration: BoxDecoration(
-                              color: isMissing ? const Color(0xFFFFF7ED) : const Color(0xFFF0FDF4),
+                              color: isMissing ? heroBg : (isDark ? const Color(0xFF0F241C) : const Color(0xFFF0FDF4)),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
-                                color: isMissing ? const Color(0xFFFED7AA) : const Color(0xFFBBF7D0),
+                                color: isMissing ? heroBorder : (isDark ? const Color(0xFF16A34A).withValues(alpha: 0.3) : const Color(0xFFBBF7D0)),
                               ),
                             ),
                             child: Text(
@@ -1449,7 +1464,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       SizedBox(height: 4.h),
                       Text(
                         _getLettersForNumber(num),
-                        style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(fontSize: 11.sp, color: textSecondary),
                       ),
                     ],
                   ),
@@ -1499,10 +1514,10 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFEA580C) : Colors.white,
+                      color: isSelected ? const Color(0xFFEA580C) : cardBg,
                       borderRadius: BorderRadius.circular(14.r),
                       border: Border.all(
-                        color: isSelected ? const Color(0xFFEA580C) : const Color(0xFFFED7AA),
+                        color: isSelected ? const Color(0xFFEA580C) : cardBorder,
                         width: 1.2,
                       ),
                     ),
@@ -1512,7 +1527,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 13.sp,
                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                          color: isSelected ? Colors.white : textPrimary,
                         ),
                       ),
                     ),
@@ -1529,13 +1544,13 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(color: const Color(0xFFFED7AA)),
+              border: Border.all(color: cardBorder),
             ),
             child: Text(
               'Interpretation for Missing Number $activeNum is being verified.',
-              style: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(fontSize: 13.sp, color: textSecondary),
             ),
           ),
         ],
@@ -1561,13 +1576,15 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         Container(
           padding: EdgeInsets.all(18.w),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [const Color(0xFF26180B), const Color(0xFF1B1107)]
+                  : [const Color(0xFFFFF7ED), const Color(0xFFFFEDD5)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(22.r),
-            border: Border.all(color: const Color(0xFFFED7AA), width: 1.2),
+            border: Border.all(color: heroBorder, width: 1.2),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1611,7 +1628,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 16.5.sp,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1E293B),
+                            color: textPrimary,
                           ),
                         ),
                         SizedBox(height: 2.h),
@@ -1634,7 +1651,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 12.5.sp,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF475569),
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                   height: 1.4,
                 ),
               ),
@@ -1725,12 +1742,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.04),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.12 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1756,7 +1773,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -1767,7 +1784,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             content,
             style: GoogleFonts.inter(
               fontSize: 12.5.sp,
-              color: const Color(0xFF475569),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
               height: 1.5,
             ),
           ),
@@ -1785,12 +1802,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEA580C).withValues(alpha: 0.04),
+            color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.12 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1816,7 +1833,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -1843,7 +1860,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                         item,
                         style: GoogleFonts.inter(
                           fontSize: 12.sp,
-                          color: const Color(0xFF475569),
+                          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                           height: 1.4,
                         ),
                       ),
@@ -1860,9 +1877,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
+        color: heroBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: heroBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1883,7 +1900,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                 ),
               ),
             ],
@@ -1897,9 +1914,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               margin: EdgeInsets.only(bottom: 8.h),
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(14.r),
-                border: Border.all(color: const Color(0xFFFED7AA).withValues(alpha: 0.7)),
+                border: Border.all(color: heroBorder),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1919,7 +1936,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF334155),
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                         height: 1.4,
                       ),
                     ),
@@ -1946,9 +1963,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFF0FDF4),
+            color: isDark ? const Color(0xFF0F241C) : const Color(0xFFF0FDF4),
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: const Color(0xFFBBF7D0)),
+            border: Border.all(color: isDark ? const Color(0xFF16A34A).withValues(alpha: 0.3) : const Color(0xFFBBF7D0)),
           ),
           child: Row(
             children: [
@@ -1957,7 +1974,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
               Expanded(
                 child: Text(
                   'Present numbers represent the familiar strengths and inherent energetic resources naturally active in your birth name.',
-                  style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF14532D), height: 1.35),
+                  style: GoogleFonts.inter(fontSize: 12.sp, color: isDark ? const Color(0xFFA7F3D0) : const Color(0xFF14532D), height: 1.35),
                 ),
               ),
             ],
@@ -1970,12 +1987,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(18.r),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: cardBorder),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -2011,12 +2028,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
+                          color: textPrimary,
                         ),
                       ),
                       Text(
                         _getLettersForNumber(n),
-                        style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(fontSize: 11.sp, color: textSecondary),
                       ),
                     ],
                   ),
@@ -2024,9 +2041,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
+                    color: isDark ? const Color(0xFF0F241C) : const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                    border: Border.all(color: isDark ? const Color(0xFF16A34A).withValues(alpha: 0.3) : const Color(0xFFBBF7D0)),
                   ),
                   child: Text(
                     '$count occurrence${count == 1 ? '' : 's'}',
@@ -2059,12 +2076,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(20.r),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: cardBorder),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFEA580C).withValues(alpha: 0.05),
+                color: const Color(0xFFEA580C).withValues(alpha: isDark ? 0.15 : 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -2075,7 +2092,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             children: [
               Text(
                 'Calculation Engine & Standards',
-                style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B)),
+                style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w800, color: textPrimary),
               ),
               SizedBox(height: 8.h),
               _buildTraceInfoRow('System', 'Pythagorean Name Numerology'),
@@ -2088,7 +2105,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
         SizedBox(height: 16.h),
         Text(
           'WORD BREAKDOWN & LETTER TRACE',
-          style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w800, color: const Color(0xFF64748B), letterSpacing: 1.0),
+          style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w800, color: textSecondary, letterSpacing: 1.0),
         ),
         SizedBox(height: 10.h),
         ...words.map((w) {
@@ -2099,9 +2116,9 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(18.r),
-              border: Border.all(color: const Color(0xFFFED7AA)),
+              border: Border.all(color: cardBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2122,10 +2139,10 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: isZeroMissing ? const Color(0xFFFFF7ED) : const Color(0xFFF8FAFC),
+                        color: isZeroMissing ? (isDark ? const Color(0xFF26180B) : const Color(0xFFFFF7ED)) : surfaceBg,
                         borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(
-                          color: isZeroMissing ? const Color(0xFFEA580C) : const Color(0xFFCBD5E1),
+                          color: isZeroMissing ? const Color(0xFFEA580C) : (isDark ? cardBorder : const Color(0xFFCBD5E1)),
                         ),
                       ),
                       child: Column(
@@ -2136,7 +2153,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
+                              color: textPrimary,
                             ),
                           ),
                           Text(
@@ -2144,7 +2161,7 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w700,
-                              color: isZeroMissing ? const Color(0xFFEA580C) : const Color(0xFF64748B),
+                              color: isZeroMissing ? const Color(0xFFEA580C) : textSecondary,
                             ),
                           ),
                         ],
@@ -2166,12 +2183,12 @@ class _MissingNumbersScreenState extends State<MissingNumbersScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B))),
+          Text(label, style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary)),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
+              style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
             ),
           ),
         ],

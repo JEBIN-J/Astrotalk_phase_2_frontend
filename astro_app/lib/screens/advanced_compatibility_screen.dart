@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class AdvancedCompatibilityScreen extends StatefulWidget {
   final String? initialPersonAName;
@@ -26,17 +27,19 @@ class AdvancedCompatibilityScreen extends StatefulWidget {
 }
 
 class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScreen> with SingleTickerProviderStateMixin {
-  // Theme Color Palette - Lilac & Royal Purple (Matching Dashboard Explore Card)
+  // Theme Color Palette - Lilac & Royal Purple (Responsive to dark mode)
   static const Color primaryPurple = Color(0xFFA855F7);
   static const Color deepPurple = Color(0xFF9333EA);
   static const Color darkPurple = Color(0xFF7E22CE);
-  static const Color screenBg = Color(0xFFFAF5FF);
-  static const Color cardBg = Color(0xFFFAF5FF);
-  static const Color cardBorder = Color(0xFFF3E8FF);
-  static const Color badgeBg = Color(0xFFF3E8FF);
-  static const Color badgeText = Color(0xFF7E22CE);
-  static const Color darkText = Color(0xFF1E293B);
-  static const Color mutedText = Color(0xFF64748B);
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get screenBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFFAF5FF);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFFAF5FF);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? primaryPurple.withValues(alpha: 0.35) : const Color(0xFFF3E8FF);
+  Color get badgeBg => isDark ? NumerologyTheme.darkButtonBg : const Color(0xFFF3E8FF);
+  Color get badgeText => isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF1E293B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
   // Controllers
   final TextEditingController _nameAController = TextEditingController();
@@ -231,7 +234,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: deepPurple,
               onPrimary: Colors.white,
               onSurface: darkText,
@@ -260,7 +263,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         child: Column(
           children: [
             if (_isLoading)
-              const LinearProgressIndicator(color: deepPurple, backgroundColor: badgeBg),
+              LinearProgressIndicator(color: deepPurple, backgroundColor: badgeBg),
             Expanded(
               child: _compatibilityReport == null
                   ? _buildInputFormView()
@@ -274,11 +277,11 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: NumerologyTheme.appBarBg(isDark),
       elevation: 0,
       centerTitle: false,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back_rounded, color: darkText, size: 22.sp),
+        icon: Icon(Icons.arrow_back_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 22.sp),
         onPressed: () => Navigator.pop(context),
       ),
       title: Row(
@@ -421,7 +424,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
                     if (val) setState(() => _selectedRelationshipType = rel['type'] as String);
                   },
                   selectedColor: deepPurple,
-                  backgroundColor: Colors.white,
+                  backgroundColor: isDark ? NumerologyTheme.darkCardBg : Colors.white,
                   side: BorderSide(color: isSel ? deepPurple : cardBorder),
                   labelStyle: GoogleFonts.outfit(
                     fontSize: 12.sp,
@@ -445,7 +448,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           Container(
             padding: EdgeInsets.all(4.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: cardBorder),
             ),
@@ -592,7 +595,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: cardBorder, width: 1.2.w),
         boxShadow: [
@@ -719,7 +722,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
       margin: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 4.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: cardBorder, width: 1.2.w),
         boxShadow: [
@@ -864,7 +867,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: cardBorder),
           ),
@@ -889,7 +892,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(color: cardBorder, width: 1.2.w),
             ),
@@ -943,7 +946,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(18.r),
               border: Border.all(color: cardBorder, width: 1.2.w),
             ),
@@ -1056,7 +1059,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         return Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1230,7 +1233,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: cardBorder, width: 1.2.w),
       ),
@@ -1350,7 +1353,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
           ),
@@ -1386,7 +1389,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
           ),
@@ -1498,7 +1501,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
         return Container(
           padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, MediaQuery.of(ctx).viewInsets.bottom + 16.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkScaffoldBg : Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: SingleChildScrollView(

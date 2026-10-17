@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class MobileNumberAnalysisScreen extends StatefulWidget {
   final String? initialPhoneNumber;
@@ -34,14 +35,16 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
 
   int _activeTab = 0; // 0: Overview, 1: Digit Matrix, 2: Compatibility, 3: Daily Life
 
-  // Theme Palette: Emerald Mint & Fresh Leaf (Matching the Mobile Number card)
+  // Theme Palette: Emerald Mint & Fresh Leaf (Responsive to dark mode)
   static const Color primaryGreen = Color(0xFF16A34A); // Emerald Primary
-  static const Color cardBg = Color(0xFFF0FDF4); // Soft mint background
-  static const Color cardBorder = Color(0xFFDCFCE7); // Delicate mint border
-  static const Color darkText = Color(0xFF064E3B); // Deep pine text
-  static const Color mutedText = Color(0xFF4B5563); // Slate muted text
-  static const Color badgeBg = Color(0xFFDCFCE7);
-  static const Color badgeText = Color(0xFF15803D);
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF0FDF4);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? const Color(0xFF16A34A).withValues(alpha: 0.35) : const Color(0xFFDCFCE7);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF064E3B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563);
+  Color get badgeBg => isDark ? NumerologyTheme.darkButtonBg : const Color(0xFFDCFCE7);
+  Color get badgeText => isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D);
 
   @override
   void initState() {
@@ -134,8 +137,11 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
+          backgroundColor: surfaceBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22.r),
+            side: BorderSide(color: cardBorder),
+          ),
           title: Row(
             children: [
               Container(
@@ -176,13 +182,15 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                   style: GoogleFonts.firaCode(fontSize: 15.sp, fontWeight: FontWeight.w700, color: darkText),
                   decoration: InputDecoration(
                     labelText: 'Mobile Number',
+                    labelStyle: GoogleFonts.inter(color: mutedText),
                     hintText: 'e.g. 9876543210',
+                    hintStyle: GoogleFonts.inter(color: mutedText),
                     prefixText: '+91 ',
                     prefixStyle: GoogleFonts.firaCode(fontWeight: FontWeight.w700, color: primaryGreen, fontSize: 15.sp),
                     prefixIcon: const Icon(Icons.phone_rounded, color: primaryGreen),
                     filled: true,
-                    fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    fillColor: isDark ? NumerologyTheme.darkInputBg : cardBg,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryGreen, width: 1.5.w)),
                   ),
                 ),
@@ -193,7 +201,9 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                   style: GoogleFonts.firaCode(fontSize: 14.sp, fontWeight: FontWeight.w600, color: darkText),
                   decoration: InputDecoration(
                     labelText: 'Date of Birth (For Compatibility)',
+                    labelStyle: GoogleFonts.inter(color: mutedText),
                     hintText: 'YYYY-MM-DD',
+                    hintStyle: GoogleFonts.inter(color: mutedText),
                     prefixIcon: const Icon(Icons.cake_rounded, color: primaryGreen),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.calendar_month_rounded, color: primaryGreen),
@@ -204,6 +214,24 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                           initialDate: initial,
                           firstDate: DateTime(1920),
                           lastDate: DateTime.now(),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: isDark
+                                    ? const ColorScheme.dark(
+                                        primary: primaryGreen,
+                                        surface: Color(0xFF131D36),
+                                        onSurface: Colors.white,
+                                      )
+                                    : const ColorScheme.light(
+                                        primary: primaryGreen,
+                                        onPrimary: Colors.white,
+                                        onSurface: Color(0xFF064E3B),
+                                      ),
+                              ),
+                              child: child!,
+                            );
+                          },
                         );
                         if (picked != null) {
                           setDialogState(() {
@@ -214,8 +242,8 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                       },
                     ),
                     filled: true,
-                    fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    fillColor: isDark ? NumerologyTheme.darkInputBg : cardBg,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryGreen, width: 1.5.w)),
                   ),
                 ),
@@ -253,9 +281,9 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFB),
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFBFDFB),
+        backgroundColor: NumerologyTheme.scaffoldBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -272,18 +300,18 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: cardBorder, width: 1.w),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark, primaryGreen), width: 1.w),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryGreen.withValues(alpha: 0.08),
+                        color: primaryGreen.withValues(alpha: isDark ? 0.2 : 0.08),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -298,7 +326,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               style: GoogleFonts.outfit(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
-                color: darkText,
+                color: NumerologyTheme.textPrimary(isDark),
               ),
             ),
             Text(
@@ -306,7 +334,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               style: GoogleFonts.inter(
                 fontSize: 10.5.sp,
                 fontWeight: FontWeight.w600,
-                color: primaryGreen,
+                color: isDark ? const Color(0xFF4ADE80) : primaryGreen,
               ),
             ),
           ],
@@ -326,18 +354,18 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: cardBorder, width: 1.w),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark, primaryGreen), width: 1.w),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryGreen.withValues(alpha: 0.08),
+                            color: primaryGreen.withValues(alpha: isDark ? 0.2 : 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(Icons.refresh_rounded, color: primaryGreen, size: 19.sp),
+                      child: Icon(Icons.refresh_rounded, color: isDark ? const Color(0xFF4ADE80) : primaryGreen, size: 19.sp),
                     ),
                   ),
                 ),
@@ -456,7 +484,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               prefixIcon: const Icon(Icons.phone_rounded, color: primaryGreen),
               filled: true,
               fillColor: cardBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: cardBorder)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: cardBorder)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: primaryGreen, width: 2.w)),
             ),
           ),
@@ -493,7 +521,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               ),
               filled: true,
               fillColor: cardBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: cardBorder)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: cardBorder)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: primaryGreen, width: 2.w)),
             ),
           ),
@@ -689,7 +717,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primaryGreen,
                   side: BorderSide(color: primaryGreen.withValues(alpha: 0.4)),
-                  backgroundColor: Colors.white,
+                  backgroundColor: surfaceBg,
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -703,7 +731,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: cardBorder),
             ),
@@ -795,7 +823,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryGreen : Colors.white,
+                  color: isSelected ? primaryGreen : surfaceBg,
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
                     color: isSelected ? primaryGreen : cardBorder,
@@ -878,7 +906,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1005,7 +1033,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1105,7 +1133,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1178,9 +1206,9 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: const Color(0xFFFED7AA), width: 1.2.w),
+            border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.35) : const Color(0xFFFED7AA), width: 1.2.w),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFD97706).withValues(alpha: 0.05),
@@ -1197,9 +1225,9 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                   Container(
                     padding: EdgeInsets.all(6.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF2D2012) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: isDark ? const Color(0xFFB45309) : const Color(0xFFFED7AA)),
                     ),
                     child: Icon(Icons.warning_amber_rounded, color: const Color(0xFFD97706), size: 16.sp),
                   ),
@@ -1209,7 +1237,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                     style: GoogleFonts.outfit(
                       fontSize: 14.5.sp,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF92400E),
+                      color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E),
                     ),
                   ),
                 ],
@@ -1219,9 +1247,9 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                     margin: EdgeInsets.only(bottom: 8.h),
                     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
+                      border: Border.all(color: isDark ? const Color(0xFFB45309).withValues(alpha: 0.4) : const Color(0xFFFDE68A).withValues(alpha: 0.7)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1234,7 +1262,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                             style: GoogleFonts.inter(
                               fontSize: 11.5.sp,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF78350F),
+                              color: isDark ? Colors.white : const Color(0xFF78350F),
                               height: 1.35,
                             ),
                           ),
@@ -1255,7 +1283,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
       width: 25.w,
       height: 25.w,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(7.r),
         border: Border.all(color: cardBorder, width: 1.w),
         boxShadow: [
@@ -1327,7 +1355,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1400,7 +1428,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1513,7 +1541,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                           decoration: BoxDecoration(
                             color: isRepeated
                                 ? primaryGreen
-                                : (isMissing ? const Color(0xFFE2E8F0) : Colors.white),
+                                : (isMissing ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0)) : surfaceBg),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
@@ -1555,7 +1583,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               margin: EdgeInsets.only(bottom: 10.h),
               padding: EdgeInsets.all(14.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: surfaceBg,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(color: cardBorder, width: 1.2.w),
                 boxShadow: [
@@ -1635,7 +1663,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
           Container(
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(color: cardBorder),
             ),
@@ -1659,7 +1687,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1865,7 +1893,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                     width: 58.w,
                     height: 58.w,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: surfaceBg,
                       shape: BoxShape.circle,
                       border: Border.all(color: cardBorder, width: 1.5.w),
                       boxShadow: [
@@ -1925,7 +1953,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                 borderRadius: BorderRadius.circular(6.r),
                 child: LinearProgressIndicator(
                   value: (scoreIndex / 100.0).clamp(0.0, 1.0),
-                  backgroundColor: Colors.white,
+                  backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                   color: primaryGreen,
                   minHeight: 7.h,
                 ),
@@ -1939,7 +1967,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1995,7 +2023,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -2051,7 +2079,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -2144,7 +2172,7 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: cardBorder, width: 1.2.w),
         boxShadow: [

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
 import '../services/crystal_match_service.dart';
+import '../theme/numerology_theme.dart';
 
 class CrystalMatchScreen extends StatefulWidget {
   final String? initialBirthName;
@@ -41,12 +42,16 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
 
   // Color Palette: Electric Indigo / Gemstone Lavender Theme (matching Crystal Match cosmic card)
   static const Color primaryViolet = Color(0xFF6366F1); // Indigo/Violet primary
-  static const Color cardBg = Color(0xFFF5F3FF); // Soft lavender card background
-  static const Color cardBorder = Color(0xFFEDE9FE); // Delicate border
-  static const Color darkText = Color(0xFF1E1B4B); // Deep midnight indigo text
-  static const Color mutedText = Color(0xFF6B7280); // Slate muted text
-  static const Color badgeBg = Color(0xFFEDE9FE);
-  static const Color badgeText = Color(0xFF4F46E5);
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFFBFBFE);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF5F3FF);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFEDE9FE);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF1E1B4B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+  Color get badgeBg => isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEDE9FE);
+  Color get badgeText => isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
 
   @override
   void initState() {
@@ -209,14 +214,14 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: cardBg,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
           title: Row(
             children: [
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: cardBg,
+                  color: isDark ? const Color(0xFF18233C) : cardBg,
                   borderRadius: BorderRadius.circular(10.r),
                   border: Border.all(color: cardBorder),
                 ),
@@ -253,10 +258,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                     labelText: 'Full Birth Name',
                     hintText: 'e.g. JEBIN J',
                     labelStyle: GoogleFonts.inter(color: primaryViolet, fontSize: 13.sp),
+                    hintStyle: GoogleFonts.inter(color: mutedText, fontSize: 13.sp),
                     prefixIcon: const Icon(Icons.person_rounded, color: primaryViolet),
                     filled: true,
-                    fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    fillColor: isDark ? const Color(0xFF18233C) : cardBg,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryViolet, width: 1.5.w)),
                   ),
                 ),
@@ -269,6 +276,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                     labelText: 'Date of Birth (YYYY-MM-DD)',
                     hintText: '1998-12-14',
                     labelStyle: GoogleFonts.inter(color: primaryViolet, fontSize: 13.sp),
+                    hintStyle: GoogleFonts.inter(color: mutedText, fontSize: 13.sp),
                     prefixIcon: const Icon(Icons.calendar_today_rounded, color: primaryViolet),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.calendar_month_rounded, color: primaryViolet),
@@ -289,8 +297,9 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       },
                     ),
                     filled: true,
-                    fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    fillColor: isDark ? const Color(0xFF18233C) : cardBg,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryViolet, width: 1.5.w)),
                   ),
                 ),
@@ -303,7 +312,8 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       child: ChoiceChip(
                         label: Text('Pythagorean', style: GoogleFonts.inter(fontSize: 12.sp, fontWeight: FontWeight.w600)),
                         selected: tempSystem == 'pythagorean',
-                        selectedColor: primaryViolet.withValues(alpha: 0.15),
+                        selectedColor: primaryViolet.withValues(alpha: isDark ? 0.35 : 0.15),
+                        backgroundColor: isDark ? const Color(0xFF18233C) : Colors.white,
                         onSelected: (val) {
                           if (val) setDialogState(() => tempSystem = 'pythagorean');
                         },
@@ -314,7 +324,8 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       child: ChoiceChip(
                         label: Text('Chaldean', style: GoogleFonts.inter(fontSize: 12.sp, fontWeight: FontWeight.w600)),
                         selected: tempSystem == 'chaldean',
-                        selectedColor: primaryViolet.withValues(alpha: 0.15),
+                        selectedColor: primaryViolet.withValues(alpha: isDark ? 0.35 : 0.15),
+                        backgroundColor: isDark ? const Color(0xFF18233C) : Colors.white,
                         onSelected: (val) {
                           if (val) setDialogState(() => tempSystem = 'chaldean');
                         },
@@ -357,9 +368,9 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFE),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFBFBFE),
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -376,18 +387,18 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: cardBorder, width: 1.w),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryViolet.withValues(alpha: 0.08),
+                        color: primaryViolet.withValues(alpha: isDark ? 0.2 : 0.08),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -433,12 +444,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: cardBorder, width: 1.w),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryViolet.withValues(alpha: 0.08),
+                            color: primaryViolet.withValues(alpha: isDark ? 0.2 : 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -517,7 +528,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
         border: Border.all(color: cardBorder, width: 1.2.w),
         boxShadow: [
           BoxShadow(
-            color: primaryViolet.withValues(alpha: 0.06),
+            color: primaryViolet.withValues(alpha: isDark ? 0.15 : 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -585,7 +596,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                           decoration: BoxDecoration(
-                            color: primaryViolet.withValues(alpha: 0.08),
+                            color: isDark ? const Color(0xFF2E1065) : primaryViolet.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
                           child: Text(
@@ -593,7 +604,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                             style: GoogleFonts.firaCode(
                               fontSize: 9.5.sp,
                               fontWeight: FontWeight.w700,
-                              color: primaryViolet,
+                              color: isDark ? const Color(0xFFA5B4FC) : primaryViolet,
                             ),
                           ),
                         ),
@@ -628,7 +639,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primaryViolet,
                   side: BorderSide(color: primaryViolet.withValues(alpha: 0.4)),
-                  backgroundColor: Colors.white,
+                  backgroundColor: isDark ? const Color(0xFF18233C) : Colors.white,
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -641,7 +652,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF18233C) : Colors.white,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: cardBorder),
             ),
@@ -711,7 +722,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
     return Container(
       width: 1.w,
       height: 20.h,
-      color: cardBorder,
+      color: isDark ? NumerologyTheme.darkBorder : cardBorder,
     );
   }
 
@@ -750,7 +761,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
               ),
               selected: isSelected,
               selectedColor: primaryViolet,
-              backgroundColor: Colors.white,
+              backgroundColor: isDark ? const Color(0xFF18233C) : Colors.white,
               side: BorderSide(
                 color: isSelected ? primaryViolet : cardBorder,
                 width: 1.w,
@@ -780,7 +791,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       padding: EdgeInsets.all(4.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: isDark ? const Color(0xFF18233C) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(14.r),
       ),
       child: Row(
@@ -805,12 +816,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 8.h),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.white : Colors.transparent,
+              color: isSelected ? (isDark ? NumerologyTheme.darkCardBg : Colors.white) : Colors.transparent,
               borderRadius: BorderRadius.circular(10.r),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -832,7 +843,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 11.5.sp,
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? darkText : mutedText,
+                      color: isSelected ? (isDark ? Colors.white : darkText) : mutedText,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -921,12 +932,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
         return Container(
           margin: EdgeInsets.only(bottom: 14.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.w),
             boxShadow: [
               BoxShadow(
-                color: primaryViolet.withValues(alpha: 0.04),
+                color: primaryViolet.withValues(alpha: isDark ? 0.1 : 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -944,7 +955,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       width: 46.w,
                       height: 46.w,
                       decoration: BoxDecoration(
-                        color: cardBg,
+                        color: isDark ? const Color(0xFF18233C) : cardBg,
                         borderRadius: BorderRadius.circular(14.r),
                       ),
                     ),
@@ -959,7 +970,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                                 width: 110.w,
                                 height: 16.h,
                                 decoration: BoxDecoration(
-                                  color: cardBg,
+                                  color: isDark ? const Color(0xFF18233C) : cardBg,
                                   borderRadius: BorderRadius.circular(6.r),
                                 ),
                               ),
@@ -968,7 +979,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                                 width: 60.w,
                                 height: 20.h,
                                 decoration: BoxDecoration(
-                                  color: cardBg,
+                                  color: isDark ? const Color(0xFF18233C) : cardBg,
                                   borderRadius: BorderRadius.circular(8.r),
                                 ),
                               ),
@@ -979,7 +990,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                             width: 130.w,
                             height: 12.h,
                             decoration: BoxDecoration(
-                              color: cardBg,
+                              color: isDark ? const Color(0xFF18233C) : cardBg,
                               borderRadius: BorderRadius.circular(4.r),
                             ),
                           ),
@@ -993,7 +1004,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                   width: double.infinity,
                   height: 56.h,
                   decoration: BoxDecoration(
-                    color: cardBg.withValues(alpha: 0.5),
+                    color: isDark ? const Color(0xFF18233C) : cardBg.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: cardBorder),
                   ),
@@ -1005,7 +1016,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       width: 160.w,
                       height: 12.h,
                       decoration: BoxDecoration(
-                        color: cardBg,
+                        color: isDark ? const Color(0xFF18233C) : cardBg,
                         borderRadius: BorderRadius.circular(4.r),
                       ),
                     ),
@@ -1029,12 +1040,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 14.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: cardBorder, width: 1.w),
         boxShadow: [
           BoxShadow(
-            color: primaryViolet.withValues(alpha: 0.05),
+            color: primaryViolet.withValues(alpha: isDark ? 0.15 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1057,7 +1068,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       width: 46.w,
                       height: 46.w,
                       decoration: BoxDecoration(
-                        color: cardBg,
+                        color: isDark ? const Color(0xFF18233C) : cardBg,
                         borderRadius: BorderRadius.circular(14.r),
                         border: Border.all(color: cardBorder),
                       ),
@@ -1092,7 +1103,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                               Container(
                                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                                 decoration: BoxDecoration(
-                                  color: cardBg,
+                                  color: isDark ? const Color(0xFF18233C) : cardBg,
                                   borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(color: cardBorder),
                                 ),
@@ -1101,7 +1112,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                                   style: GoogleFonts.firaCode(
                                     fontSize: 10.5.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: primaryViolet,
+                                    color: isDark ? const Color(0xFFA5B4FC) : primaryViolet,
                                   ),
                                 ),
                               ),
@@ -1125,7 +1136,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                 Container(
                   padding: EdgeInsets.all(10.w),
                   decoration: BoxDecoration(
-                    color: cardBg,
+                    color: isDark ? const Color(0xFF18233C) : cardBg,
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: cardBorder),
                   ),
@@ -1134,7 +1145,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.rule_rounded, size: 13.sp, color: primaryViolet),
+                          Icon(Icons.rule_rounded, size: 13.sp, color: isDark ? const Color(0xFFA5B4FC) : primaryViolet),
                           SizedBox(width: 5.w),
                           Expanded(
                             child: Text(
@@ -1142,7 +1153,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 11.5.sp,
                                 fontWeight: FontWeight.w700,
-                                color: primaryViolet,
+                                color: isDark ? const Color(0xFFA5B4FC) : primaryViolet,
                               ),
                             ),
                           ),
@@ -1153,7 +1164,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                         explanation,
                         style: GoogleFonts.inter(
                           fontSize: 12.sp,
-                          color: darkText,
+                          color: isDark ? const Color(0xFFCBD5E1) : darkText,
                           height: 1.35,
                         ),
                       ),
@@ -1169,9 +1180,9 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       return Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(6.r),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
                         ),
                         child: Text(
                           factor.toString(),
@@ -1240,7 +1251,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: cardBorder),
           ),
@@ -1279,7 +1290,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: cardBorder),
             ),
@@ -1289,12 +1300,12 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: cardBg,
+                    color: isDark ? const Color(0xFF18233C) : cardBg,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
                     r['rule_code'] ?? 'RULE',
-                    style: GoogleFonts.firaCode(fontSize: 10.5.sp, fontWeight: FontWeight.w700, color: primaryViolet),
+                    style: GoogleFonts.firaCode(fontSize: 10.5.sp, fontWeight: FontWeight.w700, color: isDark ? const Color(0xFFA5B4FC) : primaryViolet),
                   ),
                 ),
                 SizedBox(width: 10.w),
@@ -1314,7 +1325,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       SizedBox(height: 4.h),
                       Text(
                         'Input Used: ${r['input_value'] ?? r['input_values'] ?? 'Profile Data'}',
-                        style: GoogleFonts.firaCode(fontSize: 10.sp, color: primaryViolet),
+                        style: GoogleFonts.firaCode(fontSize: 10.sp, color: isDark ? const Color(0xFFA5B4FC) : primaryViolet),
                       ),
                     ],
                   ),
@@ -1364,14 +1375,14 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
         return Container(
           margin: EdgeInsets.only(bottom: 10.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(14.r),
             border: Border.all(color: cardBorder),
           ),
           child: ListTile(
             contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
             leading: CircleAvatar(
-              backgroundColor: cardBg,
+              backgroundColor: isDark ? const Color(0xFF18233C) : cardBg,
               child: Icon(Icons.diamond_outlined, color: primaryViolet, size: 20.sp),
             ),
             title: Text(
@@ -1434,7 +1445,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: cardBorder),
       ),
@@ -1463,7 +1474,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
           SizedBox(height: 10.h),
           Text(
             content,
-            style: GoogleFonts.inter(fontSize: 11.5.sp, color: darkText, height: 1.5),
+            style: GoogleFonts.inter(fontSize: 11.5.sp, color: isDark ? const Color(0xFFCBD5E1) : darkText, height: 1.5),
           ),
         ],
       ),
@@ -1485,7 +1496,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
         minChildSize: 0.5,
         builder: (_, scrollController) => Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: ListView(
@@ -1497,7 +1508,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                   width: 40.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
+                    color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                     borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
@@ -1547,7 +1558,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: cardBg,
+                    color: isDark ? const Color(0xFF18233C) : cardBg,
                     borderRadius: BorderRadius.circular(14.r),
                     border: Border.all(color: cardBorder),
                   ),
@@ -1556,7 +1567,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.rule_rounded, size: 14.sp, color: primaryViolet),
+                          Icon(Icons.rule_rounded, size: 14.sp, color: isDark ? const Color(0xFFA5B4FC) : primaryViolet),
                           SizedBox(width: 6.w),
                           Expanded(
                             child: Text(
@@ -1564,7 +1575,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 13.sp,
                                 fontWeight: FontWeight.w700,
-                                color: primaryViolet,
+                                color: isDark ? const Color(0xFFA5B4FC) : primaryViolet,
                               ),
                             ),
                           ),
@@ -1573,7 +1584,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                       SizedBox(height: 4.h),
                       Text(
                         matchData['match_explanation'] ?? '',
-                        style: GoogleFonts.inter(fontSize: 12.sp, color: darkText, height: 1.4),
+                        style: GoogleFonts.inter(fontSize: 12.sp, color: isDark ? const Color(0xFFCBD5E1) : darkText, height: 1.4),
                       ),
                     ],
                   ),
@@ -1640,7 +1651,7 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
                 line,
                 style: GoogleFonts.inter(
                   fontSize: 12.sp,
-                  color: darkText,
+                  color: isDark ? const Color(0xFFCBD5E1) : darkText,
                   height: 1.4,
                 ),
               ),
@@ -1654,9 +1665,9 @@ class _CrystalMatchScreenState extends State<CrystalMatchScreen> {
       margin: EdgeInsets.only(top: 8.h, bottom: 20.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
       ),
       child: Text(
         _reportData?['disclaimer'] ??

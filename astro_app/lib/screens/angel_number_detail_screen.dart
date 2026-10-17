@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class AngelNumberDetailScreen extends StatefulWidget {
   final Map<String, dynamic> lookupData;
@@ -22,15 +23,17 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
   late Map<String, dynamic> _data;
   bool _isLoading = false;
 
-  // Exact Theme Palette from the Angel Numbers Explore Card
+  // Exact Theme Palette from the Angel Numbers Explore Card (Responsive to dark mode)
   static const Color primaryIndigo = Color(0xFF6366F1);
   static const Color darkIndigo = Color(0xFF4F46E5);
-  static const Color softCardBg = Color(0xFFF5F3FF);
-  static const Color cardBorder = Color(0xFFEDE9FE);
-  static const Color darkText = Color(0xFF1E1B4B);
-  static const Color mutedText = Color(0xFF64748B);
-  static const Color badgeBg = Color(0xFFEDE9FE);
-  static const Color badgeText = Color(0xFF4338CA);
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get softCardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF5F3FF);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? primaryIndigo.withValues(alpha: 0.35) : const Color(0xFFEDE9FE);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF1E1B4B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get badgeBg => isDark ? NumerologyTheme.darkButtonBg : const Color(0xFFEDE9FE);
+  Color get badgeText => isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA);
 
   @override
   void initState() {
@@ -81,7 +84,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
             bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24.h,
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkScaffoldBg : Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
           ),
           child: Column(
@@ -169,11 +172,11 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                   fillColor: softCardBg,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
-                    borderSide: const BorderSide(color: cardBorder),
+                    borderSide: BorderSide(color: cardBorder),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
-                    borderSide: const BorderSide(color: cardBorder),
+                    borderSide: BorderSide(color: cardBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12.r),
@@ -243,9 +246,9 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
     final calcSteps = (reduction['calculation_steps'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF9FF),
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         leading: Center(
           child: InkWell(
@@ -255,12 +258,12 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
               width: 38.w,
               height: 38.w,
               decoration: BoxDecoration(
-                color: softCardBg,
+                color: NumerologyTheme.circleBtnBg(isDark),
                 shape: BoxShape.circle,
                 border: Border.all(color: cardBorder),
               ),
               child: Center(
-                child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 15.sp),
+                child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 15.sp),
               ),
             ),
           ),
@@ -298,7 +301,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: softCardBg,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
                     border: Border.all(color: cardBorder),
                   ),
@@ -487,7 +490,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: cardBorder),
       ),
@@ -704,7 +707,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
   Widget _buildInterpretationTabs(Map<String, dynamic> interp) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: cardBorder),
       ),
@@ -849,7 +852,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: cardBorder),
       ),

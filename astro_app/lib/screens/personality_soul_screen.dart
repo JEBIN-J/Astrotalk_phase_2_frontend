@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class PersonalitySoulScreen extends StatefulWidget {
   final String? initialBirthName;
@@ -30,6 +31,17 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _reportData;
   late int _selectedTabIndex;
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFFBFBFE);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : Colors.white;
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : const Color(0xFFFAF5FF);
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFE9D5FF);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF1E1B4B);
+  Color get textSecondary => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get heroBg => isDark ? const Color(0xFF1E1238) : const Color(0xFFFAF5FF);
+  Color get heroBorder => isDark ? const Color(0xFF7C3AED).withValues(alpha: 0.35) : const Color(0xFFE9D5FF);
+  Color get inputFill => isDark ? const Color(0xFF18233C) : const Color(0xFFFAF5FF);
 
   final List<String> _tabs = [
     'Overview',
@@ -123,14 +135,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
         title: Row(
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3E8FF),
+                color: isDark ? const Color(0xFF7C3AED).withValues(alpha: 0.2) : const Color(0xFFF3E8FF),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(Icons.edit_rounded, color: const Color(0xFF7C3AED), size: 20.sp),
@@ -142,7 +154,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E1B4B),
+                  color: textPrimary,
                 ),
               ),
             ),
@@ -154,25 +166,28 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           children: [
             Text(
               'Enter your full name as recorded on your birth certificate for authoritative calculations.',
-              style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B), height: 1.4),
+              style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary, height: 1.4),
             ),
             SizedBox(height: 14.h),
             TextField(
               controller: editController,
               autofocus: true,
+              style: GoogleFonts.inter(color: textPrimary, fontSize: 14.sp),
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: 'Full Birth Name',
+                labelStyle: GoogleFonts.inter(color: textSecondary),
                 hintText: 'e.g., Elizabeth Anne Taylor',
+                hintStyle: GoogleFonts.inter(color: textSecondary.withValues(alpha: 0.6)),
                 filled: true,
-                fillColor: const Color(0xFFFAF5FF),
+                fillColor: inputFill,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFE9D5FF)),
+                  borderSide: BorderSide(color: cardBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: Color(0xFFE9D5FF)),
+                  borderSide: BorderSide(color: cardBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -185,7 +200,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.outfit(color: const Color(0xFF64748B))),
+            child: Text('Cancel', style: GoogleFonts.outfit(color: textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -214,13 +229,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
         title: Row(
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3E8FF),
+                color: isDark ? const Color(0xFF7C3AED).withValues(alpha: 0.2) : const Color(0xFFF3E8FF),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(Icons.info_outline_rounded, color: const Color(0xFF7C3AED), size: 20.sp),
@@ -229,7 +245,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             Expanded(
               child: Text(
                 'Letter Y Classification',
-                style: GoogleFonts.outfit(fontSize: 17.sp, fontWeight: FontWeight.w700, color: const Color(0xFF1E1B4B)),
+                style: GoogleFonts.outfit(fontSize: 17.sp, fontWeight: FontWeight.w700, color: textPrimary),
               ),
             ),
           ],
@@ -246,7 +262,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               SizedBox(height: 4.h),
               Text(
                 'Y is classified strictly as a consonant (numerical value 7). It contributes to your Personality Number and is excluded from your Soul Urge Number. This is the established Western Pythagorean standard.',
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF475569), height: 1.4),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary, height: 1.4),
               ),
               SizedBox(height: 12.h),
               Text(
@@ -256,7 +272,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               SizedBox(height: 4.h),
               Text(
                 'Y is classified strictly as a vowel (numerical value 7). It contributes to your Soul Urge Number and is excluded from your Personality Number.',
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF475569), height: 1.4),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary, height: 1.4),
               ),
             ],
           ),
@@ -274,9 +290,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFE),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFBFBFE),
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -293,18 +309,18 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFEDE9FE), width: 1.w),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
+                        color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.2 : 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: const Color(0xFF1E1B4B), size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -319,7 +335,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF1E1B4B),
+                color: textPrimary,
               ),
             ),
             Text(
@@ -327,7 +343,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               style: GoogleFonts.inter(
                 fontSize: 10.5.sp,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF7C3AED).withValues(alpha: 0.85),
+                color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED).withValues(alpha: 0.85),
               ),
             ),
           ],
@@ -347,18 +363,18 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFEDE9FE), width: 1.w),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
+                            color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.2 : 0.06),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(Icons.refresh_rounded, color: const Color(0xFF7C3AED), size: 19.sp),
+                      child: Icon(Icons.refresh_rounded, color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED), size: 19.sp),
                     ),
                   ),
                 ),
@@ -405,7 +421,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFFAF5FF),
+              color: surfaceBg,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -426,7 +442,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             style: GoogleFonts.outfit(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E1B4B),
+              color: textPrimary,
             ),
           ),
           SizedBox(height: 6.h),
@@ -434,7 +450,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             'Analyzing consonants for outer demeanor and vowels for heart desire.',
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -452,8 +468,8 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           children: [
             Container(
               padding: EdgeInsets.all(16.w),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEF2F2),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.25) : const Color(0xFFFEF2F2),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.error_outline_rounded, color: const Color(0xFFEF4444), size: 36.sp),
@@ -464,7 +480,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: textPrimary,
               ),
             ),
             SizedBox(height: 8.h),
@@ -472,7 +488,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               _errorMessage ?? 'An error occurred while calculating numerology.',
               style: GoogleFonts.inter(
                 fontSize: 13.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
@@ -502,12 +518,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
         child: Container(
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(color: const Color(0xFFE9D5FF)),
+            border: Border.all(color: cardBorder),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
+                color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.15 : 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -519,8 +535,8 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(14.w),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFAF5FF),
+                decoration: BoxDecoration(
+                  color: surfaceBg,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.join_inner_rounded, color: const Color(0xFF7C3AED), size: 36.sp),
@@ -531,7 +547,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E1B4B),
+                  color: textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -540,7 +556,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 'Enter your full name as it appears on your birth certificate to compute your authoritative Personality & Soul Urge Numbers.',
                 style: GoogleFonts.inter(
                   fontSize: 13.sp,
-                  color: const Color(0xFF64748B),
+                  color: textSecondary,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
@@ -548,15 +564,22 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               SizedBox(height: 20.h),
               TextField(
                 controller: _nameController,
+                style: GoogleFonts.inter(color: textPrimary, fontSize: 14.sp),
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   labelText: 'Full Birth Name',
+                  labelStyle: GoogleFonts.inter(color: textSecondary),
                   hintText: 'e.g., Elizabeth Anne Taylor',
+                  hintStyle: GoogleFonts.inter(color: textSecondary.withValues(alpha: 0.6)),
                   filled: true,
-                  fillColor: const Color(0xFFFAF5FF),
+                  fillColor: inputFill,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.r),
-                    borderSide: const BorderSide(color: Color(0xFFE9D5FF)),
+                    borderSide: BorderSide(color: cardBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide(color: cardBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.r),
@@ -595,22 +618,21 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
       margin: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 10.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFAF5FF),
-            Color(0xFFF3E8FF),
-          ],
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1638), const Color(0xFF16192E)]
+              : [const Color(0xFFFAF5FF), const Color(0xFFF3E8FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
-          color: const Color(0xFFE9D5FF),
+          color: cardBorder,
           width: 1.2.w,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.07),
+            color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.15 : 0.07),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -656,9 +678,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
+                        color: isDark ? const Color(0xFF18233C) : Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(6.r),
-                        border: Border.all(color: const Color(0xFFDDD6FE), width: 0.8.w),
+                        border: Border.all(color: isDark ? const Color(0xFF2D3B60) : const Color(0xFFDDD6FE), width: 0.8.w),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -674,7 +696,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 9.5.sp,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF7C3AED),
+                              color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
                               letterSpacing: 0.7,
                             ),
                           ),
@@ -689,7 +711,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E1B4B),
+                    color: textPrimary,
                     letterSpacing: 0.3,
                   ),
                   maxLines: 1,
@@ -707,12 +729,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF18233C) : Colors.white,
                   borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: const Color(0xFFDDD6FE), width: 1.2.w),
+                  border: Border.all(color: isDark ? const Color(0xFF2D3B60) : const Color(0xFFDDD6FE), width: 1.2.w),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF7C3AED).withValues(alpha: 0.08),
+                      color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.15 : 0.08),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -732,7 +754,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 12.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF7C3AED),
+                        color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
                       ),
                     ),
                   ],
@@ -748,7 +770,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
   Widget _buildTabNavigation() {
     return Container(
       height: 48.h,
-      color: const Color(0xFFFBFBFE),
+      color: scaffoldBg,
       child: ListView.separated(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
         scrollDirection: Axis.horizontal,
@@ -767,10 +789,10 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFFAF5FF),
+                color: isSelected ? const Color(0xFF7C3AED) : surfaceBg,
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE9D5FF),
+                  color: isSelected ? const Color(0xFF7C3AED) : cardBorder,
                   width: 1,
                 ),
               ),
@@ -780,7 +802,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 13.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : const Color(0xFF581C87),
+                    color: isSelected ? Colors.white : (isDark ? const Color(0xFFDDD6FE) : const Color(0xFF581C87)),
                   ),
                 ),
               ),
@@ -870,8 +892,8 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 basis: 'Consonants Only',
                 formula: persFormula,
                 accentColor: const Color(0xFF8B5CF6),
-                bgTint: const Color(0xFFFAF5FF),
-                borderColor: const Color(0xFFEDE9FE),
+                bgTint: isDark ? const Color(0xFF191F38) : const Color(0xFFFAF5FF),
+                borderColor: isDark ? const Color(0xFF2D3758) : const Color(0xFFEDE9FE),
                 icon: Icons.join_inner_rounded,
                 onTap: () => setState(() => _selectedTabIndex = 1),
               ),
@@ -887,8 +909,8 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 basis: 'Vowels Only',
                 formula: soulFormula,
                 accentColor: const Color(0xFF7C3AED),
-                bgTint: const Color(0xFFF5F3FF),
-                borderColor: const Color(0xFFDDD6FE),
+                bgTint: isDark ? const Color(0xFF1F1735) : const Color(0xFFF5F3FF),
+                borderColor: isDark ? const Color(0xFF3B2556) : const Color(0xFFDDD6FE),
                 icon: Icons.favorite_rounded,
                 onTap: () => setState(() => _selectedTabIndex = 2),
               ),
@@ -1037,7 +1059,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           border: Border.all(color: borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withValues(alpha: 0.06),
+              color: accentColor.withValues(alpha: isDark ? 0.12 : 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -1097,7 +1119,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1112,14 +1134,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E1B4B),
+                color: textPrimary,
               ),
             ),
             Text(
               subtitle,
               style: GoogleFonts.inter(
                 fontSize: 11.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
               ),
             ),
             SizedBox(height: 8.h),
@@ -1130,7 +1152,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF18233C) : Colors.white,
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(color: borderColor),
                   ),
@@ -1179,12 +1201,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: const Color(0xFFF3E8FF)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.04),
+            color: color.withValues(alpha: isDark ? 0.1 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1233,7 +1255,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             style: GoogleFonts.outfit(
               fontSize: 15.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E1B4B),
+              color: textPrimary,
             ),
           ),
           if (theme.isNotEmpty) ...[
@@ -1242,7 +1264,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               theme,
               style: GoogleFonts.inter(
                 fontSize: 12.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 height: 1.4,
               ),
             ),
@@ -1256,9 +1278,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF5FF),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: const Color(0xFFE9D5FF)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1273,7 +1295,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E1B4B),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -1288,7 +1310,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           SizedBox(height: 6.h),
           Text(
             'Pythagorean numerology defaults Y to a consonant. You can switch to test vocalic Y if your tradition requires it.',
-            style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B), height: 1.35),
+            style: GoogleFonts.inter(fontSize: 11.sp, color: textSecondary, height: 1.35),
           ),
           SizedBox(height: 12.h),
           Row(
@@ -1334,10 +1356,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          color: isSelected
+              ? (isDark ? const Color(0xFF221E42) : Colors.white)
+              : (isDark ? const Color(0xFF131D36) : Colors.white.withValues(alpha: 0.5)),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE9D5FF),
+            color: isSelected ? const Color(0xFF7C3AED) : cardBorder,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -1345,7 +1369,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           children: [
             Icon(
               isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-              color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFF94A3B8),
+              color: isSelected ? const Color(0xFF7C3AED) : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
               size: 16.sp,
             ),
             SizedBox(width: 6.w),
@@ -1358,14 +1382,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 12.sp,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? const Color(0xFF1E1B4B) : const Color(0xFF64748B),
+                      color: isSelected ? textPrimary : textSecondary,
                     ),
                   ),
                   Text(
                     sub,
                     style: GoogleFonts.inter(
                       fontSize: 9.sp,
-                      color: const Color(0xFF94A3B8),
+                      color: textSecondary,
                     ),
                   ),
                 ],
@@ -1638,9 +1662,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFFAF5FF),
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: const Color(0xFFE9D5FF)),
+            border: Border.all(color: cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1650,7 +1674,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E1B4B),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 10.h),
@@ -1673,7 +1697,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           style: GoogleFonts.outfit(
             fontSize: 16.sp,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E1B4B),
+            color: textPrimary,
           ),
         ),
         SizedBox(height: 10.h),
@@ -1686,9 +1710,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFEDE9FE)),
+              border: Border.all(color: cardBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1707,7 +1731,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                     const Spacer(),
                     Text(
                       '${letters.length} letters',
-                      style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF94A3B8)),
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: textSecondary),
                     ),
                   ],
                 ),
@@ -1723,10 +1747,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                     return Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
                       decoration: BoxDecoration(
-                        color: isVowel ? const Color(0xFFF3E8FF) : const Color(0xFFF8FAFC),
+                        color: isVowel
+                            ? (isDark ? const Color(0xFF2C1645) : const Color(0xFFF3E8FF))
+                            : (isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC)),
                         borderRadius: BorderRadius.circular(8.r),
                         border: Border.all(
-                          color: isVowel ? const Color(0xFFC084FC) : const Color(0xFFE2E8F0),
+                          color: isVowel
+                              ? (isDark ? const Color(0xFF7C3AED) : const Color(0xFFC084FC))
+                              : (isDark ? const Color(0xFF2D3B60) : const Color(0xFFE2E8F0)),
                         ),
                       ),
                       child: Column(
@@ -1737,7 +1765,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
-                              color: isVowel ? const Color(0xFF7C3AED) : const Color(0xFF334155),
+                              color: isVowel
+                                  ? (isDark ? const Color(0xFFDDD6FE) : const Color(0xFF7C3AED))
+                                  : (isDark ? Colors.white : const Color(0xFF334155)),
                             ),
                           ),
                           Text(
@@ -1745,7 +1775,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
-                              color: isVowel ? const Color(0xFF9333EA) : const Color(0xFF64748B),
+                              color: isVowel
+                                  ? (isDark ? const Color(0xFFC084FC) : const Color(0xFF9333EA))
+                                  : textSecondary,
                             ),
                           ),
                           Text(
@@ -1753,7 +1785,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 8.sp,
                               fontWeight: FontWeight.w800,
-                              color: isVowel ? const Color(0xFF7C3AED) : const Color(0xFF94A3B8),
+                              color: isVowel
+                                  ? (isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED))
+                                  : textSecondary,
                             ),
                           ),
                         ],
@@ -1794,21 +1828,21 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
         Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: cardBorder),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline_rounded, color: const Color(0xFF94A3B8), size: 16.sp),
+              Icon(Icons.info_outline_rounded, color: textSecondary, size: 16.sp),
               SizedBox(width: 8.w),
               Expanded(
                 child: Text(
                   _reportData?['disclaimer'] ?? '',
                   style: GoogleFonts.inter(
                     fontSize: 11.sp,
-                    color: const Color(0xFF64748B),
+                    color: textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -1830,7 +1864,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             width: 150.w,
             child: Text(
               label,
-              style: GoogleFonts.inter(fontSize: 11.sp, color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(fontSize: 11.sp, color: textSecondary),
             ),
           ),
           Expanded(
@@ -1839,7 +1873,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               style: GoogleFonts.inter(
                 fontSize: 11.sp,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E1B4B),
+                color: textPrimary,
               ),
             ),
           ),
@@ -1858,9 +1892,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: const Color(0xFFEDE9FE)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1876,7 +1910,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: const Color(0xFF1E1B4B)),
+                  style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: textPrimary),
                 ),
               ),
             ],
@@ -1900,19 +1934,19 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                     Expanded(
                       child: Text(
                         st,
-                        style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF334155)),
+                        style: GoogleFonts.inter(fontSize: 12.sp, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155)),
                       ),
                     ),
                   ],
                 ),
               )),
-          Divider(color: const Color(0xFFF1F5F9), height: 16.h),
+          Divider(color: cardBorder, height: 16.h),
           Row(
             children: [
               Expanded(
                 child: Text(
                   'Final Deterministic Result:',
-                  style: GoogleFonts.inter(fontSize: 12.sp, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                  style: GoogleFonts.inter(fontSize: 12.sp, fontWeight: FontWeight.w600, color: textSecondary),
                 ),
               ),
               Container(
@@ -1944,12 +1978,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF5FF),
+        color: heroBg,
         borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: const Color(0xFFE9D5FF), width: 1.5),
+        border: Border.all(color: heroBorder, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.08),
+            color: color.withValues(alpha: isDark ? 0.15 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -2016,7 +2050,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             style: GoogleFonts.outfit(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E1B4B),
+              color: textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -2024,9 +2058,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: const Color(0xFFDDD6FE)),
+              border: Border.all(color: cardBorder),
             ),
             child: Text(
               basisTag,
@@ -2052,12 +2086,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFEDE9FE)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.04),
+            color: accentColor.withValues(alpha: isDark ? 0.08 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -2096,7 +2130,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             style: GoogleFonts.outfit(
               fontSize: 17.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E1B4B),
+              color: textPrimary,
             ),
           ),
           if (coreTheme != null && coreTheme.isNotEmpty) ...[
@@ -2104,16 +2138,16 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFAF5FF),
+                color: surfaceBg,
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: const Color(0xFFF3E8FF)),
+                border: Border.all(color: cardBorder),
               ),
               child: Text(
                 coreTheme,
                 style: GoogleFonts.outfit(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF6B21A8),
+                  color: isDark ? const Color(0xFFDDD6FE) : const Color(0xFF6B21A8),
                 ),
               ),
             ),
@@ -2123,7 +2157,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             body,
             style: GoogleFonts.inter(
               fontSize: 13.sp,
-              color: const Color(0xFF334155),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
               height: 1.5,
             ),
           ),
@@ -2141,9 +2175,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAF5FF),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE9D5FF)),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2166,7 +2200,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E1B4B),
+                    color: textPrimary,
                   ),
                 ),
                 SizedBox(height: 3.h),
@@ -2174,7 +2208,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                   body,
                   style: GoogleFonts.inter(
                     fontSize: 11.5.sp,
-                    color: const Color(0xFF64748B),
+                    color: textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -2194,9 +2228,9 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFEDE9FE)),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         children: [
@@ -2207,7 +2241,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             style: GoogleFonts.inter(
               fontSize: 11.sp,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
           ),
           SizedBox(width: 8.w),
@@ -2237,12 +2271,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFEDE9FE)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.04),
+            color: accentColor.withValues(alpha: isDark ? 0.08 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -2271,14 +2305,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E1B4B),
+                        color: textPrimary,
                       ),
                     ),
                     Text(
                       subtitle,
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                       ),
                     ),
                   ],
@@ -2290,7 +2324,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
           if (items.isEmpty)
             Text(
               'No specific items registered.',
-              style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF94A3B8)),
+              style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary),
             )
           else
             ...items.map((it) => Padding(
@@ -2313,7 +2347,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                           it,
                           style: GoogleFonts.inter(
                             fontSize: 12.5.sp,
-                            color: const Color(0xFF334155),
+                            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                             height: 1.4,
                           ),
                         ),
@@ -2336,12 +2370,12 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
     return Container(
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFEDE9FE)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.04),
+            color: accentColor.withValues(alpha: isDark ? 0.08 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -2370,14 +2404,14 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E1B4B),
+                        color: textPrimary,
                       ),
                     ),
                     Text(
                       subtitle,
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                       ),
                     ),
                   ],
@@ -2390,7 +2424,7 @@ class _PersonalitySoulScreenState extends State<PersonalitySoulScreen> {
             body.isNotEmpty ? body : 'Detailed interpretation content is being updated.',
             style: GoogleFonts.inter(
               fontSize: 13.sp,
-              color: const Color(0xFF334155),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
               height: 1.5,
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class ChildNumerologyScreen extends StatefulWidget {
   final String? initialChildName;
@@ -47,15 +48,17 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
   Map<String, dynamic>? _childReport;
   Map<String, dynamic>? _comparisonReport;
 
-  // Theme Palette: Warm Honey Amber & Sun Gold (Matching the Child Numerology Explore Card)
+  // Theme Palette: Warm Honey Amber & Sun Gold (Responsive to dark mode)
   static const Color primaryAmber = Color(0xFFD97706); // Warm Honey Amber
   static const Color accentAmber = Color(0xFFF59E0B);  // Radiant Sun Gold
-  static const Color cardBg = Color(0xFFFFFBEB);       // Soft Honey Cream
-  static const Color cardBorder = Color(0xFFFEF3C7);   // Delicate Amber Border
-  static const Color darkText = Color(0xFF78350F);     // Deep Cacao Amber
-  static const Color mutedText = Color(0xFF92400E);    // Medium Amber Slate
-  static const Color badgeBg = Color(0xFFFEF3C7);
-  static const Color badgeText = Color(0xFFB45309);
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFFFFBEB);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? const Color(0xFFD97706).withValues(alpha: 0.35) : const Color(0xFFFEF3C7);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF78350F);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF92400E);
+  Color get badgeBg => isDark ? NumerologyTheme.darkButtonBg : const Color(0xFFFEF3C7);
+  Color get badgeText => isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
 
   @override
   void initState() {
@@ -225,7 +228,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? NumerologyTheme.darkScaffoldBg : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
           title: Row(
             children: [
@@ -271,7 +274,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     prefixIcon: const Icon(Icons.badge_rounded, color: primaryAmber),
                     filled: true,
                     fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryAmber, width: 1.5.w)),
                   ),
                 ),
@@ -304,7 +307,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     ),
                     filled: true,
                     fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryAmber, width: 1.5.w)),
                   ),
                 ),
@@ -321,7 +324,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                         label: Text('Pythagorean (1-9)', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700)),
                         selected: tempSystem == 'pythagorean',
                         selectedColor: accentAmber,
-                        backgroundColor: Colors.white,
+                        backgroundColor: isDark ? NumerologyTheme.darkCardBg : Colors.white,
                         labelStyle: TextStyle(color: tempSystem == 'pythagorean' ? Colors.white : darkText),
                         onSelected: (val) {
                           if (val) setDialogState(() => tempSystem = 'pythagorean');
@@ -334,7 +337,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                         label: Text('Chaldean (1-8)', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700)),
                         selected: tempSystem == 'chaldean',
                         selectedColor: primaryAmber,
-                        backgroundColor: Colors.white,
+                        backgroundColor: isDark ? NumerologyTheme.darkCardBg : Colors.white,
                         labelStyle: TextStyle(color: tempSystem == 'chaldean' ? Colors.white : darkText),
                         onSelected: (val) {
                           if (val) setDialogState(() => tempSystem = 'chaldean');
@@ -360,7 +363,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     prefixIcon: const Icon(Icons.person_rounded, color: primaryAmber),
                     filled: true,
                     fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                   ),
                 ),
                 SizedBox(height: 8.h),
@@ -392,7 +395,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     ),
                     filled: true,
                     fillColor: cardBg,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: cardBorder)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
                   ),
                 ),
               ],
@@ -439,9 +442,9 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFDF5), // Warm honey cream canvas
+      backgroundColor: NumerologyTheme.scaffoldBg(isDark),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFDF5),
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -458,7 +461,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
                     border: Border.all(color: cardBorder, width: 1.w),
                     boxShadow: [
@@ -469,7 +472,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -517,7 +520,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     width: 38.w,
                     height: 38.w,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: NumerologyTheme.circleBtnBg(isDark),
                       shape: BoxShape.circle,
                       border: Border.all(color: cardBorder, width: 1.w),
                       boxShadow: [
@@ -610,7 +613,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(vertical: 8.h),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? (isDark ? NumerologyTheme.darkCardBg : Colors.white) : Colors.transparent,
             borderRadius: BorderRadius.circular(12.r),
             boxShadow: isSelected
                 ? [
@@ -726,7 +729,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
               prefixIcon: const Icon(Icons.face_rounded, color: primaryAmber),
               filled: true,
               fillColor: cardBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: cardBorder)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: cardBorder)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: primaryAmber, width: 2.w)),
             ),
           ),
@@ -763,7 +766,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
               ),
               filled: true,
               fillColor: cardBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: const BorderSide(color: cardBorder)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: cardBorder)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide(color: primaryAmber, width: 2.w)),
             ),
           ),
@@ -932,7 +935,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primaryAmber,
                   side: BorderSide(color: primaryAmber.withValues(alpha: 0.4)),
-                  backgroundColor: Colors.white,
+                  backgroundColor: surfaceBg,
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -946,7 +949,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: surfaceBg,
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(color: cardBorder),
             ),
@@ -1034,7 +1037,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryAmber : Colors.white,
+                  color: isSelected ? primaryAmber : surfaceBg,
                   borderRadius: BorderRadius.circular(12.r),
                   border: Border.all(
                     color: isSelected ? primaryAmber : cardBorder,
@@ -1141,7 +1144,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     width: 52.w,
                     height: 52.w,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: surfaceBg,
                       shape: BoxShape.circle,
                       border: Border.all(color: cardBorder, width: 1.5.w),
                       boxShadow: [
@@ -1196,7 +1199,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1293,7 +1296,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1389,7 +1392,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1509,7 +1512,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1557,7 +1560,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1736,7 +1739,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                 borderRadius: BorderRadius.circular(6.r),
                 child: LinearProgressIndicator(
                   value: (score / 100.0).clamp(0.0, 1.0),
-                  backgroundColor: Colors.white,
+                  backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                   color: primaryAmber,
                   minHeight: 7.h,
                 ),
@@ -1750,7 +1753,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1785,7 +1788,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1847,7 +1850,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -1911,9 +1914,9 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: const Color(0xFFFED7AA), width: 1.2.w),
+            border: Border.all(color: isDark ? const Color(0xFFD97706).withValues(alpha: 0.35) : const Color(0xFFFED7AA), width: 1.2.w),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFD97706).withValues(alpha: 0.05),
@@ -1930,16 +1933,16 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                   Container(
                     padding: EdgeInsets.all(6.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF2D2012) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: isDark ? const Color(0xFFB45309) : const Color(0xFFFED7AA)),
                     ),
                     child: Icon(Icons.shield_outlined, color: const Color(0xFFD97706), size: 16.sp),
                   ),
                   SizedBox(width: 8.w),
                   Text(
                     'Mindful Developmental Nuances',
-                    style: GoogleFonts.outfit(fontSize: 14.5.sp, fontWeight: FontWeight.w800, color: const Color(0xFF92400E)),
+                    style: GoogleFonts.outfit(fontSize: 14.5.sp, fontWeight: FontWeight.w800, color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E)),
                   ),
                 ],
               ),
@@ -1948,9 +1951,9 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                     margin: EdgeInsets.only(bottom: 8.h),
                     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
+                      border: Border.all(color: isDark ? const Color(0xFFB45309).withValues(alpha: 0.4) : const Color(0xFFFDE68A).withValues(alpha: 0.7)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -1960,7 +1963,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                         Expanded(
                           child: Text(
                             c.toString(),
-                            style: GoogleFonts.inter(fontSize: 11.5.sp, fontWeight: FontWeight.w600, color: const Color(0xFF78350F)),
+                            style: GoogleFonts.inter(fontSize: 11.5.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF78350F)),
                           ),
                         ),
                       ],
@@ -1975,7 +1978,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -2039,7 +2042,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(18.r),
             border: Border.all(color: cardBorder, width: 1.2.w),
             boxShadow: [
@@ -2156,7 +2159,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: cardBorder),
           ),
@@ -2206,7 +2209,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
                             contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                             filled: true,
                             fillColor: cardBg,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: const BorderSide(color: cardBorder)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
                           ),
                         ),
                       ),
@@ -2262,7 +2265,7 @@ class _ChildNumerologyScreenState extends State<ChildNumerologyScreen> {
               margin: EdgeInsets.only(bottom: 12.h),
               padding: EdgeInsets.all(14.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: surfaceBg,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(color: idx == 0 ? primaryAmber : cardBorder, width: idx == 0 ? 1.8.w : 1.2.w),
                 boxShadow: [

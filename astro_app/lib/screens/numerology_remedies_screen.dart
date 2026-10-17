@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class NumerologyRemediesScreen extends StatefulWidget {
   final String? initialBirthName;
@@ -35,10 +36,14 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
   static const Color primaryTeal = Color(0xFF0F766E);
   static const Color accentTeal = Color(0xFF14B8A6);
   static const Color deepTeal = Color(0xFF134E4A);
-  static const Color cardBg = Color(0xFFF0FDFA);
-  static const Color cardBorder = Color(0xFFCCFBF1);
-  static const Color darkText = Color(0xFF1E293B);
-  static const Color mutedText = Color(0xFF64748B);
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFF9FBFB);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF0FDFA);
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFCCFBF1);
+  Color get darkText => isDark ? Colors.white : const Color(0xFF1E293B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
   @override
   void initState() {
@@ -140,14 +145,14 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22.r)),
         title: Row(
           children: [
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: cardBg,
+                color: isDark ? const Color(0xFF18233C) : cardBg,
                 borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(color: cardBorder),
               ),
@@ -181,11 +186,13 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w600, color: darkText),
               decoration: InputDecoration(
                 labelText: 'Full Birth Name (Optional for Karmic Lessons)',
+                labelStyle: GoogleFonts.inter(fontSize: 13.sp, color: mutedText),
                 hintText: 'e.g. JEBIN J',
-                hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: const Color(0xFF94A3B8)),
+                hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: mutedText),
                 filled: true,
-                fillColor: cardBg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                fillColor: isDark ? const Color(0xFF18233C) : cardBg,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryTeal, width: 1.5.w)),
               ),
             ),
@@ -195,7 +202,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w600, color: darkText),
               decoration: InputDecoration(
                 labelText: 'Date of Birth (YYYY-MM-DD)',
+                labelStyle: GoogleFonts.inter(fontSize: 13.sp, color: mutedText),
                 hintText: '1998-12-13',
+                hintStyle: GoogleFonts.inter(fontSize: 13.sp, color: mutedText),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.calendar_month_rounded, color: primaryTeal),
                   onPressed: () async {
@@ -212,8 +221,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                   },
                 ),
                 filled: true,
-                fillColor: cardBg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: const BorderSide(color: cardBorder)),
+                fillColor: isDark ? const Color(0xFF18233C) : cardBg,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: cardBorder)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide(color: primaryTeal, width: 1.5.w)),
               ),
             ),
@@ -248,9 +258,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBFB),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF9FBFB),
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -267,18 +277,18 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                   width: 38.w,
                   height: 38.w,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: NumerologyTheme.circleBtnBg(isDark),
                     shape: BoxShape.circle,
-                    border: Border.all(color: cardBorder, width: 1.w),
+                    border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryTeal.withValues(alpha: 0.08),
+                        color: primaryTeal.withValues(alpha: isDark ? 0.2 : 0.08),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 16.sp),
+                  child: Icon(Icons.arrow_back_ios_new_rounded, color: NumerologyTheme.circleBtnIcon(isDark), size: 16.sp),
                 ),
               ),
             ),
@@ -321,12 +331,12 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                       width: 38.w,
                       height: 38.w,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: NumerologyTheme.circleBtnBg(isDark),
                         shape: BoxShape.circle,
-                        border: Border.all(color: cardBorder, width: 1.w),
+                        border: Border.all(color: NumerologyTheme.circleBtnBorder(isDark), width: 1.w),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryTeal.withValues(alpha: 0.08),
+                            color: primaryTeal.withValues(alpha: isDark ? 0.2 : 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -379,19 +389,28 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
       margin: EdgeInsets.fromLTRB(16.w, 6.h, 16.w, 8.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFF0FDFA), // Soft Mint
-            Color(0xFFE6FFFA), // Pale Aquamarine Glow
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isDark
+            ? const LinearGradient(
+                colors: [
+                  Color(0xFF0D2524),
+                  Color(0xFF131D36),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [
+                  Color(0xFFF0FDFA), // Soft Mint
+                  Color(0xFFE6FFFA), // Pale Aquamarine Glow
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: cardBorder, width: 1.2.w),
+        border: Border.all(color: isDark ? primaryTeal.withValues(alpha: 0.35) : cardBorder, width: 1.2.w),
         boxShadow: [
           BoxShadow(
-            color: primaryTeal.withValues(alpha: 0.06),
+            color: primaryTeal.withValues(alpha: isDark ? 0.15 : 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -431,14 +450,14 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: isDark ? const Color(0xFF18233C) : Colors.white.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(6.r),
                     border: Border.all(color: cardBorder, width: 0.8.w),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.spa_outlined, size: 10.sp, color: primaryTeal),
+                      Icon(Icons.spa_outlined, size: 10.sp, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal),
                       SizedBox(width: 3.5.w),
                       Flexible(
                         child: Text(
@@ -446,7 +465,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 9.5.sp,
                             fontWeight: FontWeight.w700,
-                            color: primaryTeal,
+                            color: isDark ? const Color(0xFF5EEAD4) : primaryTeal,
                             letterSpacing: 0.7,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -487,7 +506,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF18233C) : Colors.white,
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(color: cardBorder, width: 1.2.w),
                   boxShadow: [
@@ -501,14 +520,14 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.edit_rounded, size: 13.sp, color: primaryTeal),
+                    Icon(Icons.edit_rounded, size: 13.sp, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal),
                     SizedBox(width: 4.w),
                     Text(
                       'Change',
                       style: GoogleFonts.outfit(
                         fontSize: 12.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: primaryTeal,
+                        color: isDark ? const Color(0xFF5EEAD4) : primaryTeal,
                       ),
                     ),
                   ],
@@ -535,7 +554,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: cardBorder),
       ),
@@ -562,7 +581,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 10.sp, color: primaryTeal),
+              Icon(icon, size: 10.sp, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal),
               SizedBox(width: 2.w),
               Flexible(
                 child: Text(
@@ -587,7 +606,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: isDark ? const Color(0xFF18233C) : cardBg,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(color: cardBorder),
       ),
@@ -607,7 +626,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.healing_rounded, size: 14.sp, color: _activeViewTab == 0 ? Colors.white : primaryTeal),
+                      Icon(Icons.healing_rounded, size: 14.sp, color: _activeViewTab == 0 ? Colors.white : (isDark ? const Color(0xFF5EEAD4) : primaryTeal)),
                       SizedBox(width: 5.w),
                       Flexible(
                         child: Text(
@@ -615,7 +634,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
-                            color: _activeViewTab == 0 ? Colors.white : deepTeal,
+                            color: _activeViewTab == 0 ? Colors.white : (isDark ? const Color(0xFF94A3B8) : deepTeal),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -641,7 +660,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.rule_folder_outlined, size: 14.sp, color: _activeViewTab == 1 ? Colors.white : primaryTeal),
+                      Icon(Icons.rule_folder_outlined, size: 14.sp, color: _activeViewTab == 1 ? Colors.white : (isDark ? const Color(0xFF5EEAD4) : primaryTeal)),
                       SizedBox(width: 5.w),
                       Flexible(
                         child: Text(
@@ -649,7 +668,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
-                            color: _activeViewTab == 1 ? Colors.white : deepTeal,
+                            color: _activeViewTab == 1 ? Colors.white : (isDark ? const Color(0xFF94A3B8) : deepTeal),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -714,7 +733,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                   duration: const Duration(milliseconds: 200),
                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                   decoration: BoxDecoration(
-                    color: isSelected ? primaryTeal : cardBg,
+                    color: isSelected ? primaryTeal : (isDark ? const Color(0xFF18233C) : cardBg),
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(color: isSelected ? primaryTeal : cardBorder, width: 1.w),
                   ),
@@ -724,7 +743,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 12.sp,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                        color: isSelected ? Colors.white : deepTeal,
+                        color: isSelected ? Colors.white : (isDark ? const Color(0xFF5EEAD4) : deepTeal),
                       ),
                     ),
                   ),
@@ -765,12 +784,12 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(22.r),
         border: Border.all(color: cardBorder, width: 1.2.w),
         boxShadow: [
           BoxShadow(
-            color: primaryTeal.withValues(alpha: 0.05),
+            color: primaryTeal.withValues(alpha: isDark ? 0.15 : 0.05),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -785,21 +804,21 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: cardBg,
+                  color: isDark ? const Color(0xFF18233C) : cardBg,
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(color: cardBorder),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(_getCategoryIcon(category), size: 11.sp, color: primaryTeal),
+                    Icon(_getCategoryIcon(category), size: 11.sp, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal),
                     SizedBox(width: 4.w),
                     Text(
                       _formatCategoryName(category),
                       style: GoogleFonts.inter(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.w700,
-                        color: deepTeal,
+                        color: isDark ? const Color(0xFF5EEAD4) : deepTeal,
                       ),
                     ),
                   ],
@@ -809,16 +828,16 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
+                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                  border: Border.all(color: isDark ? const Color(0xFF047857) : const Color(0xFFBBF7D0)),
                 ),
                 child: Text(
                   cost,
                   style: GoogleFonts.inter(
                     fontSize: 9.5.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF16A34A),
+                    color: isDark ? const Color(0xFF34D399) : const Color(0xFF16A34A),
                   ),
                 ),
               ),
@@ -843,21 +862,21 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0FDFA),
+                color: isDark ? const Color(0xFF0D2524) : const Color(0xFFF0FDFA),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: const Color(0xFF99F6E4)),
+                border: Border.all(color: isDark ? primaryTeal.withValues(alpha: 0.4) : const Color(0xFF99F6E4)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.auto_awesome_rounded, color: primaryTeal, size: 14.sp),
+                  Icon(Icons.auto_awesome_rounded, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal, size: 14.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       primaryReason,
                       style: GoogleFonts.inter(
                         fontSize: 11.5.sp,
-                        color: deepTeal,
+                        color: isDark ? const Color(0xFFCCFBF1) : deepTeal,
                         fontWeight: FontWeight.w600,
                         height: 1.35,
                       ),
@@ -873,7 +892,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.menu_book_rounded, size: 13.sp, color: primaryTeal),
+                Icon(Icons.menu_book_rounded, size: 13.sp, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal),
                 SizedBox(width: 6.w),
                 Expanded(
                   child: Text(
@@ -896,7 +915,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               explanation,
               style: GoogleFonts.inter(
                 fontSize: 12.sp,
-                color: const Color(0xFF475569),
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
                 height: 1.4,
               ),
             ),
@@ -910,7 +929,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 11.5.sp,
                 fontWeight: FontWeight.w800,
-                color: deepTeal,
+                color: isDark ? const Color(0xFF5EEAD4) : deepTeal,
                 letterSpacing: 0.8,
               ),
             ),
@@ -927,7 +946,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                       width: 18.w,
                       height: 18.w,
                       decoration: BoxDecoration(
-                        color: cardBg,
+                        color: isDark ? const Color(0xFF18233C) : cardBg,
                         shape: BoxShape.circle,
                         border: Border.all(color: cardBorder),
                       ),
@@ -937,7 +956,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 10.sp,
                             fontWeight: FontWeight.w800,
-                            color: primaryTeal,
+                            color: isDark ? const Color(0xFF5EEAD4) : primaryTeal,
                           ),
                         ),
                       ),
@@ -948,7 +967,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                         step,
                         style: GoogleFonts.inter(
                           fontSize: 12.sp,
-                          color: const Color(0xFF334155),
+                          color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                           height: 1.35,
                         ),
                       ),
@@ -965,13 +984,13 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: cardBg,
+                color: isDark ? const Color(0xFF18233C) : cardBg,
                 borderRadius: BorderRadius.circular(14.r),
                 border: Border.all(color: cardBorder),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.format_quote_rounded, color: primaryTeal, size: 20.sp),
+                  Icon(Icons.format_quote_rounded, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal, size: 20.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
@@ -979,7 +998,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 12.5.sp,
                         fontWeight: FontWeight.w700,
-                        color: deepTeal,
+                        color: isDark ? const Color(0xFFCCFBF1) : deepTeal,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -1009,9 +1028,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
+                color: isDark ? const Color(0xFF2C1E0A) : const Color(0xFFFFFBEB),
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                border: Border.all(color: isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1023,7 +1042,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                       precautions,
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
-                        color: const Color(0xFF92400E),
+                        color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
                         height: 1.3,
                       ),
                     ),
@@ -1040,19 +1059,19 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11.sp, color: mutedText),
+          Icon(icon, size: 11.sp, color: isDark ? const Color(0xFF94A3B8) : mutedText),
           SizedBox(width: 4.w),
           Flexible(
             child: Text(
               text,
-              style: GoogleFonts.inter(fontSize: 10.5.sp, color: mutedText, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(fontSize: 10.5.sp, color: isDark ? const Color(0xFF94A3B8) : mutedText, fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -1075,21 +1094,21 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: cardBg,
+            color: isDark ? const Color(0xFF0D2524) : cardBg,
             borderRadius: BorderRadius.circular(18.r),
-            border: Border.all(color: cardBorder),
+            border: Border.all(color: isDark ? primaryTeal.withValues(alpha: 0.35) : cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.verified_user_rounded, color: primaryTeal, size: 18.sp),
+                  Icon(Icons.verified_user_rounded, color: isDark ? const Color(0xFF5EEAD4) : primaryTeal, size: 18.sp),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       'Deterministic Rule Engine 1.0.0',
-                      style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: deepTeal),
+                      style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: isDark ? const Color(0xFF5EEAD4) : deepTeal),
                     ),
                   ),
                 ],
@@ -1097,7 +1116,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
               SizedBox(height: 6.h),
               Text(
                 'Zero random suggestions. Every remedy displayed is activated by an explicit backend rule evaluated against your authenticated numerology profile.',
-                style: GoogleFonts.inter(fontSize: 11.5.sp, color: deepTeal, height: 1.4),
+                style: GoogleFonts.inter(fontSize: 11.5.sp, color: isDark ? const Color(0xFFCCFBF1) : deepTeal, height: 1.4),
               ),
             ],
           ),
@@ -1127,10 +1146,12 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
-                color: isMatched ? const Color(0xFF99F6E4) : const Color(0xFFE2E8F0),
+                color: isMatched
+                    ? (isDark ? const Color(0xFF14B8A6) : const Color(0xFF99F6E4))
+                    : (isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
                 width: isMatched ? 1.4.w : 1.w,
               ),
             ),
@@ -1140,12 +1161,14 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                 Container(
                   padding: EdgeInsets.all(6.w),
                   decoration: BoxDecoration(
-                    color: isMatched ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
+                    color: isMatched
+                        ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4))
+                        : (isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC)),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isMatched ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                    color: isMatched ? const Color(0xFF16A34A) : mutedText,
+                    color: isMatched ? (isDark ? const Color(0xFF34D399) : const Color(0xFF16A34A)) : mutedText,
                     size: 16.sp,
                   ),
                 ),
@@ -1166,7 +1189,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                           Container(
                             padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
                             decoration: BoxDecoration(
-                              color: isMatched ? const Color(0xFFF0FDF4) : const Color(0xFFF1F5F9),
+                              color: isMatched
+                                  ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFF0FDF4))
+                                  : (isDark ? const Color(0xFF18233C) : const Color(0xFFF1F5F9)),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
@@ -1174,7 +1199,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 9.sp,
                                 fontWeight: FontWeight.w800,
-                                color: isMatched ? const Color(0xFF16A34A) : mutedText,
+                                color: isMatched ? (isDark ? const Color(0xFF34D399) : const Color(0xFF16A34A)) : mutedText,
                               ),
                             ),
                           ),
@@ -1190,7 +1215,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 10.5.sp,
                           fontWeight: FontWeight.w600,
-                          color: isMatched ? primaryTeal : darkText,
+                          color: isMatched ? (isDark ? const Color(0xFF5EEAD4) : primaryTeal) : darkText,
                         ),
                       ),
                     ],
@@ -1206,9 +1231,9 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1240,11 +1265,11 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
-              color: cardBg,
+              color: isDark ? const Color(0xFF18233C) : cardBg,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: primaryTeal.withValues(alpha: 0.12),
+                  color: primaryTeal.withValues(alpha: isDark ? 0.25 : 0.12),
                   blurRadius: 20,
                   spreadRadius: 4,
                 ),
@@ -1278,12 +1303,12 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
         child: Container(
           padding: EdgeInsets.all(22.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? NumerologyTheme.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(22.r),
             border: Border.all(color: cardBorder),
             boxShadow: [
               BoxShadow(
-                color: primaryTeal.withValues(alpha: 0.06),
+                color: primaryTeal.withValues(alpha: isDark ? 0.15 : 0.06),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -1294,8 +1319,8 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(12.w),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF2F2),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.error_outline_rounded, color: const Color(0xFFEF4444), size: 32.sp),
@@ -1384,7 +1409,7 @@ class _NumerologyRemediesScreenState extends State<NumerologyRemediesScreen> {
             SizedBox(height: 14.h),
             OutlinedButton(
               onPressed: () => setState(() => _selectedCategory = 'all'),
-              style: OutlinedButton.styleFrom(foregroundColor: primaryTeal, side: const BorderSide(color: primaryTeal)),
+              style: OutlinedButton.styleFrom(foregroundColor: isDark ? const Color(0xFF5EEAD4) : primaryTeal, side: BorderSide(color: isDark ? const Color(0xFF5EEAD4) : primaryTeal)),
               child: const Text('View All Remedies'),
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class PersonalYearDetailScreen extends StatefulWidget {
   final String dateOfBirth;
@@ -32,6 +33,18 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
   late String _currentName;
   late String _currentSystem;
   late int _selectedYear;
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFF0FDF4);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : Colors.white;
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC);
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0);
+  Color get heroBg => isDark ? const Color(0xFF0F241C) : const Color(0xFFECFDF5);
+  Color get heroBorder => isDark ? const Color(0xFF10B981).withValues(alpha: 0.3) : const Color(0xFFD1FAE5);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF0F172A);
+  Color get textSecondary => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get subCardBg => isDark ? const Color(0xFF18233C) : const Color(0xFFF0FDF4);
+  Color get subCardBorder => isDark ? const Color(0xFF10B981).withValues(alpha: 0.25) : const Color(0xFFDCFCE7);
 
   final List<String> _tabTitles = [
     'Annual Overview',
@@ -112,10 +125,11 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF10B981),
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFF10B981),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF0F172A),
+              onSurface: textPrimary,
+              surface: cardBg,
             ),
           ),
           child: child!,
@@ -146,19 +160,19 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0FDF4),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Container(
             padding: EdgeInsets.all(6.w),
-            decoration: const BoxDecoration(
-              color: Color(0xFFECFDF5),
+            decoration: BoxDecoration(
+              color: NumerologyTheme.circleBtnBg(isDark),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: const Color(0xFF1E293B)),
+            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: NumerologyTheme.circleBtnIcon(isDark)),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -170,14 +184,14 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: textPrimary,
               ),
             ),
             Text(
               '$_currentName • ${_currentDob.isNotEmpty ? _currentDob : 'No DOB'}',
               style: GoogleFonts.inter(
                 fontSize: 11.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -217,14 +231,14 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 15.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 6.h),
               Text(
                 'Summing birth month, birth day & target calendar year',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary),
               ),
             ],
           ),
@@ -241,8 +255,8 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
             children: [
               Container(
                 padding: EdgeInsets.all(20.w),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFECFDF5),
+                decoration: BoxDecoration(
+                  color: heroBg,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.calendar_month_rounded, size: 48.sp, color: const Color(0xFF10B981)),
@@ -253,7 +267,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -262,7 +276,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 13.sp,
-                  color: const Color(0xFF64748B),
+                  color: textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -301,14 +315,14 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
               SizedBox(height: 8.h),
               Text(
                 _errorMessage ?? 'Unable to retrieve Personal Year report.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 12.sp, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(fontSize: 12.sp, color: textSecondary),
               ),
               SizedBox(height: 20.h),
               ElevatedButton.icon(
@@ -384,12 +398,12 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10B981).withValues(alpha: 0.06),
+            color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -400,14 +414,14 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded, size: 14.sp, color: const Color(0xFF059669)),
+              Icon(Icons.calendar_month_rounded, size: 14.sp, color: const Color(0xFF10B981)),
               SizedBox(width: 6.w),
               Text(
                 'SELECT CALENDAR YEAR',
                 style: GoogleFonts.outfit(
                   fontSize: 10.5.sp,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF065F46),
+                  color: textPrimary,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -416,7 +430,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
+                    color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
@@ -424,7 +438,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 8.5.sp,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF047857),
+                      color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
                     ),
                   ),
                 ),
@@ -445,10 +459,10 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                       duration: const Duration(milliseconds: 180),
                       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF10B981) : const Color(0xFFF0FDF4),
+                        color: isSelected ? const Color(0xFF10B981) : surfaceBg,
                         borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF10B981) : const Color(0xFFDCFCE7),
+                          color: isSelected ? const Color(0xFF10B981) : cardBorder,
                           width: 1,
                         ),
                       ),
@@ -457,7 +471,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 12.sp,
                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? Colors.white : const Color(0xFF047857),
+                          color: isSelected ? Colors.white : textSecondary,
                         ),
                       ),
                     ),
@@ -476,12 +490,12 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
+        color: heroBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
+        border: Border.all(color: heroBorder, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10B981).withValues(alpha: 0.10),
+            color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.2 : 0.10),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -530,7 +544,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
+                        color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Text(
@@ -538,7 +552,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 9.5.sp,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF047857),
+                          color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -549,7 +563,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: textPrimary,
                         height: 1.25,
                       ),
                     ),
@@ -558,7 +572,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                       'Nine-Year Vibrational Cycle • Jan 1 - Dec 31',
                       style: GoogleFonts.inter(
                         fontSize: 10.5.sp,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -571,9 +585,9 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFD1FAE5)),
+              border: Border.all(color: heroBorder),
             ),
             child: Row(
               children: [
@@ -585,7 +599,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF065F46),
+                      color: textPrimary,
                       height: 1.3,
                     ),
                   ),
@@ -608,12 +622,12 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -632,7 +646,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF334155),
+                    color: textPrimary,
                     letterSpacing: 0.6,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -642,14 +656,14 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
+                  color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.4) : const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   'DOB: $_currentDob',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 9.sp,
-                    color: const Color(0xFF047857),
+                    color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -691,9 +705,9 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
+              color: subCardBg,
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: const Color(0xFFDCFCE7)),
+              border: Border.all(color: subCardBorder),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,7 +720,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 10.5.sp,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF065F46),
+                      color: isDark ? const Color(0xFFA7F3D0) : const Color(0xFF065F46),
                       height: 1.35,
                     ),
                   ),
@@ -723,9 +737,9 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,7 +749,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 8.5.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
           ),
           SizedBox(height: 2.h),
@@ -751,7 +765,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
             subtitle,
             style: GoogleFonts.inter(
               fontSize: 8.sp,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
@@ -779,10 +793,10 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF10B981) : Colors.white,
+                  color: isSelected ? const Color(0xFF10B981) : cardBg,
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
+                    color: isSelected ? const Color(0xFF10B981) : cardBorder,
                     width: 1,
                   ),
                   boxShadow: isSelected
@@ -800,7 +814,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : textSecondary,
                   ),
                 ),
               ),
@@ -956,12 +970,12 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -980,7 +994,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -991,7 +1005,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
             content,
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF334155),
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
               height: 1.5,
               fontWeight: FontWeight.w400,
             ),
@@ -1011,9 +1025,9 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1027,7 +1041,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
             ],
@@ -1054,7 +1068,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                       item,
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
-                        color: const Color(0xFF334155),
+                        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                         height: 1.4,
                       ),
                     ),
@@ -1072,9 +1086,9 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
       margin: EdgeInsets.symmetric(vertical: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1086,7 +1100,7 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
               'Personal Year Numerology is a traditional philosophical and archetypal practice intended for personal reflection, seasonal goal-setting, and self-discovery. It does not provide deterministic scientific predictions of future events, health, financial outcomes, or legal matters.',
               style: GoogleFonts.inter(
                 fontSize: 10.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 height: 1.35,
               ),
             ),

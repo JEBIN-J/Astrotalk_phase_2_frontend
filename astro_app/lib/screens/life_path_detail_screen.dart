@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/astro_api_service.dart';
+import '../theme/numerology_theme.dart';
 
 class LifePathDetailScreen extends StatefulWidget {
   final String dateOfBirth;
@@ -38,6 +39,17 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
     'Strengths & Growth',
     'Daily Practices'
   ];
+
+  bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
+  Color get primaryBlue => const Color(0xFF2563EB);
+  Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFF8FAFC);
+  Color get cardBg => isDark ? NumerologyTheme.darkCardBg : Colors.white;
+  Color get surfaceBg => isDark ? const Color(0xFF18233C) : const Color(0xFFF8FAFC);
+  Color get bannerBg => isDark ? const Color(0xFF131D36) : const Color(0xFFF0F7FF);
+  Color get bannerBorder => isDark ? primaryBlue.withValues(alpha: 0.35) : const Color(0xFFDBEAFE);
+  Color get cardBorder => isDark ? NumerologyTheme.darkBorder : const Color(0xFFE2E8F0);
+  Color get textPrimary => isDark ? Colors.white : const Color(0xFF0F172A);
+  Color get textSecondary => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
   @override
   void initState() {
@@ -130,19 +142,19 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: NumerologyTheme.appBarBg(isDark),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: Container(
             padding: EdgeInsets.all(6.w),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+            decoration: BoxDecoration(
+              color: NumerologyTheme.circleBtnBg(isDark),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: const Color(0xFF1E293B)),
+            child: Icon(Icons.arrow_back_rounded, size: 18.sp, color: NumerologyTheme.circleBtnIcon(isDark)),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -154,14 +166,14 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
               style: GoogleFonts.outfit(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: textPrimary,
               ),
             ),
             Text(
               '$_currentName • ${_currentDob.isNotEmpty ? _currentDob : 'No DOB'}',
               style: GoogleFonts.inter(
                 fontSize: 11.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -169,7 +181,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, size: 20.sp, color: const Color(0xFF2563EB)),
+            icon: Icon(Icons.refresh_rounded, size: 20.sp, color: primaryBlue),
             tooltip: 'Recalculate',
             onPressed: _loadLifePathData,
           ),
@@ -355,12 +367,12 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F7FF),
+        color: bannerBg,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: const Color(0xFFDBEAFE), width: 1.2),
+        border: Border.all(color: bannerBorder, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.06),
+            color: primaryBlue.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -385,7 +397,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                      color: primaryBlue.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -411,7 +423,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                         margin: EdgeInsets.only(bottom: 4.h),
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7),
+                          color: isDark ? const Color(0xFF2D2012) : const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
@@ -419,7 +431,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 9.sp,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFD97706),
+                            color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -429,7 +441,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: textPrimary,
                         height: 1.25,
                       ),
                     ),
@@ -438,7 +450,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                       'Pythagorean System • Verified',
                       style: GoogleFonts.inter(
                         fontSize: 11.sp,
-                        color: const Color(0xFF64748B),
+                        color: textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -451,9 +463,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: cardBorder),
             ),
             child: Row(
               children: [
@@ -465,7 +477,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 11.sp,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1E293B),
+                      color: textPrimary,
                       height: 1.3,
                     ),
                   ),
@@ -488,9 +500,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -504,7 +516,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.account_tree_outlined, size: 15.sp, color: const Color(0xFF2563EB)),
+              Icon(Icons.account_tree_outlined, size: 15.sp, color: primaryBlue),
               SizedBox(width: 6.w),
               Expanded(
                 child: Text(
@@ -512,7 +524,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF334155),
+                    color: textPrimary,
                     letterSpacing: 0.6,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -522,14 +534,14 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: surfaceBg,
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
                   'DOB: $_currentDob',
                   style: GoogleFonts.jetBrainsMono(
                     fontSize: 9.sp,
-                    color: const Color(0xFF475569),
+                    color: textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -551,9 +563,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: surfaceBg,
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: cardBorder),
               ),
               child: Row(
                 children: [
@@ -565,7 +577,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                        color: textPrimary,
                       ),
                     ),
                   ),
@@ -582,9 +594,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,7 +606,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 9.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF64748B),
+              color: textSecondary,
             ),
           ),
           SizedBox(height: 2.h),
@@ -603,14 +615,14 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 13.sp,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
+              color: textPrimary,
             ),
           ),
           Text(
             reduced,
             style: GoogleFonts.inter(
               fontSize: 9.sp,
-              color: const Color(0xFF2563EB),
+              color: primaryBlue,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -636,16 +648,16 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF2563EB) : Colors.white,
+                  color: isSelected ? primaryBlue : cardBg,
                   borderRadius: BorderRadius.circular(20.r),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF2563EB) : const Color(0xFFE2E8F0),
+                    color: isSelected ? primaryBlue : cardBorder,
                     width: 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                            color: primaryBlue.withValues(alpha: 0.25),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -657,7 +669,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : textSecondary,
                   ),
                 ),
               ),
@@ -828,9 +840,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -852,7 +864,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: textPrimary,
                   ),
                 ),
               ),
@@ -863,7 +875,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             content,
             style: GoogleFonts.inter(
               fontSize: 12.sp,
-              color: const Color(0xFF334155),
+              color: textSecondary,
               height: 1.5,
               fontWeight: FontWeight.w400,
             ),
@@ -883,9 +895,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -899,7 +911,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F172A),
+                  color: textPrimary,
                 ),
               ),
             ],
@@ -926,7 +938,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
                       item,
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
-                        color: const Color(0xFF334155),
+                        color: textSecondary,
                         height: 1.4,
                       ),
                     ),
@@ -943,9 +955,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+        color: isDark ? const Color(0xFF0D2818) : const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
+        border: Border.all(color: isDark ? const Color(0xFF166534).withValues(alpha: 0.4) : const Color(0xFFDCFCE7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -955,7 +967,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             style: GoogleFonts.outfit(
               fontSize: 12.sp,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF166534),
+              color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF166534),
             ),
           ),
           SizedBox(height: 4.h),
@@ -963,7 +975,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
             body,
             style: GoogleFonts.inter(
               fontSize: 11.sp,
-              color: const Color(0xFF15803D),
+              color: isDark ? Colors.white : const Color(0xFF15803D),
               height: 1.4,
             ),
           ),
@@ -977,9 +989,9 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
       margin: EdgeInsets.symmetric(vertical: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cardBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -991,7 +1003,7 @@ class _LifePathDetailScreenState extends State<LifePathDetailScreen> {
               'Numerology is a traditional philosophical and archetypal practice intended for personal reflection and self-discovery. It does not provide deterministic scientific predictions of future events, health, financial earnings, or legal outcomes.',
               style: GoogleFonts.inter(
                 fontSize: 10.sp,
-                color: const Color(0xFF64748B),
+                color: textSecondary,
                 height: 1.35,
               ),
             ),
