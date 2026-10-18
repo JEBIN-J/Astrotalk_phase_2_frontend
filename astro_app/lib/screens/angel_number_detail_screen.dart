@@ -25,7 +25,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
 
   // Exact Theme Palette from the Angel Numbers Explore Card (Responsive to dark mode)
   static const Color primaryIndigo = Color(0xFF6366F1);
-  static const Color darkIndigo = Color(0xFF4F46E5);
+  Color get darkIndigo => isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
   bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
   Color get softCardBg => isDark ? NumerologyTheme.darkCardBg : const Color(0xFFF5F3FF);
   Color get surfaceBg => isDark ? const Color(0xFF18233C) : Colors.white;
@@ -202,7 +202,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Sighting of $seq saved to your personal journal!'),
-                            backgroundColor: darkIndigo,
+                            backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFF4F46E5),
                           ),
                         );
                       }
@@ -290,29 +290,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
             ),
           ],
         ),
-        actions: [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(right: 14.w),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20.r),
-                onTap: () => _showRecordSightingModal(context, normSeq),
-                child: Container(
-                  width: 38.w,
-                  height: 38.w,
-                  decoration: BoxDecoration(
-                    color: NumerologyTheme.circleBtnBg(isDark),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: cardBorder),
-                  ),
-                  child: Center(
-                    child: Icon(Icons.bookmark_add_outlined, color: primaryIndigo, size: 18.sp),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: primaryIndigo))
@@ -569,9 +547,9 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 12.w),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: isDark ? cardBorder : const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,9 +596,9 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
       width: double.infinity,
       padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: isDark ? const Color(0xFF2D2012) : const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,7 +614,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                   style: GoogleFonts.outfit(
                     fontSize: 14.5.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF92400E),
+                    color: isDark ? const Color(0xFFFBBF24) : const Color(0xFF92400E),
                   ),
                 ),
                 SizedBox(height: 4.h),
@@ -644,7 +622,7 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
                   'We never fabricate or substitute unrelated interpretations. The digit reduction and pattern analysis above are mathematically computed for $seq. As new approved editorial interpretations are added to the library, they will appear here.',
                   style: GoogleFonts.outfit(
                     fontSize: 12.5.sp,
-                    color: const Color(0xFFB45309),
+                    color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309),
                     height: 1.35,
                   ),
                 ),
@@ -716,9 +694,9 @@ class _AngelNumberDetailScreenState extends State<AngelNumberDetailScreen> with 
           TabBar(
             controller: _tabController,
             isScrollable: true,
-            labelColor: primaryIndigo,
+            labelColor: isDark ? const Color(0xFFA5B4FC) : primaryIndigo,
             unselectedLabelColor: mutedText,
-            indicatorColor: primaryIndigo,
+            indicatorColor: isDark ? const Color(0xFFA5B4FC) : primaryIndigo,
             indicatorWeight: 3,
             labelStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w700),
             unselectedLabelStyle: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500),

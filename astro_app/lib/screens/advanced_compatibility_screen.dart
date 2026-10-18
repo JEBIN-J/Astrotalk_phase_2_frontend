@@ -234,11 +234,18 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: deepPurple,
-              onPrimary: Colors.white,
-              onSurface: darkText,
-            ),
+            colorScheme: isDark
+                ? ColorScheme.dark(
+                    primary: deepPurple,
+                    onPrimary: Colors.white,
+                    surface: const Color(0xFF1E293B),
+                    onSurface: Colors.white,
+                  )
+                : ColorScheme.light(
+                    primary: deepPurple,
+                    onPrimary: Colors.white,
+                    onSurface: darkText,
+                  ),
           ),
           child: child!,
         );
@@ -345,8 +352,10 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFAF5FF), Color(0xFFF3E8FF)],
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                    : [const Color(0xFFFAF5FF), const Color(0xFFF3E8FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -414,7 +423,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
                   label: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(rel['icon'] as IconData, size: 13.sp, color: isSel ? Colors.white : deepPurple),
+                      Icon(rel['icon'] as IconData, size: 13.sp, color: isSel ? Colors.white : (isDark ? const Color(0xFFC084FC) : deepPurple)),
                       SizedBox(width: 6.w),
                       Text(rel['label'] as String),
                     ],
@@ -479,7 +488,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           Center(
             child: IconButton.filledTonal(
               onPressed: _swapProfiles,
-              icon: Icon(Icons.swap_vert_rounded, color: deepPurple, size: 20.sp),
+              icon: Icon(Icons.swap_vert_rounded, color: isDark ? const Color(0xFFC084FC) : deepPurple, size: 20.sp),
               style: IconButton.styleFrom(
                 backgroundColor: badgeBg,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -578,7 +587,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           style: GoogleFonts.outfit(
             fontSize: 11.5.sp,
             fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-            color: isSel ? deepPurple : mutedText,
+            color: isSel ? (isDark ? const Color(0xFFC084FC) : deepPurple) : mutedText,
           ),
         ),
       ),
@@ -633,7 +642,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
           SizedBox(height: 4.h),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFFDFBFE),
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFFDFBFE),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: cardBorder),
             ),
@@ -659,7 +668,7 @@ class _AdvancedCompatibilityScreenState extends State<AdvancedCompatibilityScree
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFDFBFE),
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFFDFBFE),
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(color: cardBorder),
               ),

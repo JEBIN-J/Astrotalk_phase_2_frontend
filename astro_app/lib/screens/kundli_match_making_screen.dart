@@ -23,9 +23,9 @@ class KundliMatchMakingScreen extends StatefulWidget {
   State<KundliMatchMakingScreen> createState() => _KundliMatchMakingScreenState();
 }
 
-// Theme Color Palette - Radiant Rose & Warm Amber
-const Color primaryRose = Color(0xFFE11D48);
-const Color deepRose = Color(0xFFBE123C);
+// Theme Color Palette - Rich Wine & Deep Rose (Darker & Subdued)
+const Color primaryRose = Color(0xFFBE123C); // Darker rich crimson (was bright neon 0xFFE11D48)
+const Color deepRose = Color(0xFF881337);    // Deep wine red
 const Color softRose = Color(0xFFFFF1F2);
 const Color roseBorder = Color(0xFFFECDD3);
 const Color darkText = Color(0xFF0F172A);
@@ -34,21 +34,34 @@ const Color goldAccent = Color(0xFFF59E0B);
 const Color successGreen = Color(0xFF10B981);
 const Color warningOrange = Color(0xFFF97316);
 
+// Dark mode helpers
+Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E293B) : Colors.white;
+Color _scaffoldBg(bool isDark) => isDark ? const Color(0xFF0F172A) : const Color(0xFFFFF5F7);
+Color _bodyText(bool isDark) => isDark ? Colors.white : darkText;
+Color _borderCol(bool isDark) => isDark ? const Color(0xFF334155) : roseBorder;
+Color _subCardBg(bool isDark) => isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+Color _disclaimerBg(bool isDark) => isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+Color _disclaimerBorder(bool isDark) => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+Color _softRoseDark(bool isDark) => isDark ? const Color(0xFF1E1419) : softRose;
+Color _primaryRed(bool isDark) => isDark ? const Color(0xFF881337) : primaryRose;
+Color _deepRed(bool isDark) => isDark ? const Color(0xFF4C0519) : deepRose;
+Color _accentRose(bool isDark) => isDark ? const Color(0xFFFB7185) : primaryRose;
+
 class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
     with SingleTickerProviderStateMixin {
 
   // Controllers - Person A (Groom)
-  final TextEditingController _boyNameController = TextEditingController(text: 'Rahul');
-  final TextEditingController _boyDobController = TextEditingController(text: '1994-08-10');
-  final TextEditingController _boyTobController = TextEditingController(text: '14:30');
-  final TextEditingController _boyPlaceController = TextEditingController(text: 'New Delhi');
+  final TextEditingController _boyNameController = TextEditingController();
+  final TextEditingController _boyDobController = TextEditingController();
+  final TextEditingController _boyTobController = TextEditingController();
+  final TextEditingController _boyPlaceController = TextEditingController();
   bool _boyTimeUnknown = false;
 
   // Controllers - Person B (Bride)
-  final TextEditingController _girlNameController = TextEditingController(text: 'Priya');
-  final TextEditingController _girlDobController = TextEditingController(text: '1996-03-22');
-  final TextEditingController _girlTobController = TextEditingController(text: '10:15');
-  final TextEditingController _girlPlaceController = TextEditingController(text: 'New Delhi');
+  final TextEditingController _girlNameController = TextEditingController();
+  final TextEditingController _girlDobController = TextEditingController();
+  final TextEditingController _girlTobController = TextEditingController();
+  final TextEditingController _girlPlaceController = TextEditingController();
   bool _girlTimeUnknown = false;
 
   // State
@@ -59,6 +72,8 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   bool _isSaved = false;
 
   late TabController _resultTabController;
+
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
 
   void _showLocationSelector(TextEditingController controller) {
     showModalBottomSheet(
@@ -115,13 +130,31 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   Future<void> _calculateMatch() async {
     final boyDob = _boyDobController.text.trim();
     final girlDob = _girlDobController.text.trim();
+    final boyPlace = _boyPlaceController.text.trim();
+    final girlPlace = _girlPlaceController.text.trim();
 
     if (boyDob.isEmpty) {
       setState(() => _errorMessage = "Please enter Groom's date of birth.");
       return;
     }
+    if (!_boyTimeUnknown && _boyTobController.text.trim().isEmpty) {
+      setState(() => _errorMessage = "Please enter Groom's time of birth or check 'unknown'.");
+      return;
+    }
+    if (boyPlace.isEmpty) {
+      setState(() => _errorMessage = "Please enter Groom's birth place (city).");
+      return;
+    }
     if (girlDob.isEmpty) {
       setState(() => _errorMessage = "Please enter Bride's date of birth.");
+      return;
+    }
+    if (!_girlTimeUnknown && _girlTobController.text.trim().isEmpty) {
+      setState(() => _errorMessage = "Please enter Bride's time of birth or check 'unknown'.");
+      return;
+    }
+    if (girlPlace.isEmpty) {
+      setState(() => _errorMessage = "Please enter Bride's birth place (city).");
       return;
     }
 
@@ -136,7 +169,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
         'name': _boyNameController.text.trim().isEmpty ? 'Groom' : _boyNameController.text.trim(),
         'date_of_birth': boyDob,
         'time_of_birth': _boyTimeUnknown ? null : _boyTobController.text.trim(),
-        'place_of_birth': _boyPlaceController.text.trim().isEmpty ? 'New Delhi' : _boyPlaceController.text.trim(),
+        'place_of_birth': boyPlace,
         'is_birth_time_known': !_boyTimeUnknown,
       };
 
@@ -144,7 +177,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
         'name': _girlNameController.text.trim().isEmpty ? 'Bride' : _girlNameController.text.trim(),
         'date_of_birth': girlDob,
         'time_of_birth': _girlTimeUnknown ? null : _girlTobController.text.trim(),
-        'place_of_birth': _girlPlaceController.text.trim().isEmpty ? 'New Delhi' : _girlPlaceController.text.trim(),
+        'place_of_birth': girlPlace,
         'is_birth_time_known': !_girlTimeUnknown,
       };
 
@@ -213,13 +246,21 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
       firstDate: DateTime(1930),
       lastDate: DateTime.now(),
       builder: (context, child) {
+        final dark = isDark;
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryRose,
-              onPrimary: Colors.white,
-              onSurface: darkText,
-            ),
+            colorScheme: dark
+                ? const ColorScheme.dark(
+                    primary: primaryRose,
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF1E293B),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: primaryRose,
+                    onPrimary: Colors.white,
+                    onSurface: darkText,
+                  ),
           ),
           child: child!,
         );
@@ -249,13 +290,21 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
       context: context,
       initialTime: initial,
       builder: (context, child) {
+        final dark = isDark;
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryRose,
-              onPrimary: Colors.white,
-              onSurface: darkText,
-            ),
+            colorScheme: dark
+                ? const ColorScheme.dark(
+                    primary: primaryRose,
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF1E293B),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: primaryRose,
+                    onPrimary: Colors.white,
+                    onSurface: darkText,
+                  ),
           ),
           child: child!,
         );
@@ -277,8 +326,9 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bool dark = isDark;
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF5F7),
+      backgroundColor: _scaffoldBg(dark),
       appBar: AppBar(
         title: Text(
           'Match Making / Kundli Milan',
@@ -288,8 +338,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             fontSize: 20.sp,
           ),
         ),
-        backgroundColor: primaryRose,
+        backgroundColor: dark ? _scaffoldBg(dark) : primaryRose,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
@@ -334,7 +386,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                 _buildPersonCard(
                   title: "Bride's Birth Details (Person B)",
                   icon: Icons.female_rounded,
-                  accentColor: primaryRose,
+                  accentColor: _accentRose(dark),
                   nameController: _girlNameController,
                   dobController: _girlDobController,
                   tobController: _girlTobController,
@@ -368,18 +420,24 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   // =========================================================================
 
   Widget _buildHeaderBanner() {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [primaryRose, deepRose],
+        gradient: LinearGradient(
+          colors: dark
+              ? [const Color(0xFF4C0519), const Color(0xFF1E293B)]
+              : [primaryRose, deepRose],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: dark ? const Color(0xFF881337).withValues(alpha: 0.5) : Colors.transparent,
+        ),
         boxShadow: [
           BoxShadow(
-            color: primaryRose.withValues(alpha: 0.3),
+            color: (dark ? const Color(0xFF4C0519) : primaryRose).withValues(alpha: dark ? 0.35 : 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -390,10 +448,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: dark ? const Color(0xFF881337).withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.favorite_rounded, color: Colors.white, size: 28.sp),
+            child: Icon(Icons.favorite_rounded, color: dark ? const Color(0xFFFDA4AF) : Colors.white, size: 28.sp),
           ),
           SizedBox(width: 14.w),
           Expanded(
@@ -425,12 +483,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildTraditionSelector() {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +499,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 14.sp,
-              color: darkText,
+              color: _bodyText(dark),
             ),
           ),
           SizedBox(height: 10.h),
@@ -459,6 +518,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildTraditionChip(String value, String label, IconData icon) {
+    final bool dark = isDark;
     final isSelected = _selectedTradition == value;
     return InkWell(
       onTap: () => setState(() => _selectedTradition = value),
@@ -466,10 +526,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? primaryRose : softRose,
+          color: isSelected ? _primaryRed(dark) : _softRoseDark(dark),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isSelected ? deepRose : roseBorder,
+            color: isSelected ? (dark ? const Color(0xFFBE123C) : _deepRed(dark)) : _borderCol(dark),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -479,13 +539,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             Icon(
               icon,
               size: 16.sp,
-              color: isSelected ? Colors.white : primaryRose,
+              color: isSelected ? Colors.white : _accentRose(dark),
             ),
             SizedBox(width: 6.w),
             Text(
               label,
               style: GoogleFonts.outfit(
-                color: isSelected ? Colors.white : darkText,
+                color: isSelected ? Colors.white : _bodyText(dark),
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 fontSize: 12.sp,
               ),
@@ -507,15 +567,16 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
     required bool timeUnknown,
     required ValueChanged<bool> onTimeUnknownChanged,
   }) {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: dark ? 0.3 : 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -541,7 +602,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 15.sp,
-                    color: darkText,
+                    color: _bodyText(dark),
                   ),
                 ),
               ),
@@ -551,8 +612,11 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
           // Name field
           TextField(
             controller: nameController,
+            style: GoogleFonts.outfit(color: _bodyText(dark), fontSize: 13.sp),
             decoration: InputDecoration(
               labelText: 'Name (Optional)',
+              hintText: 'Enter name',
+              hintStyle: GoogleFonts.outfit(color: mutedText.withValues(alpha: 0.6), fontSize: 13.sp),
               labelStyle: GoogleFonts.outfit(color: mutedText, fontSize: 13.sp),
               prefixIcon: Icon(Icons.person_outline_rounded, color: accentColor, size: 20.sp),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -570,8 +634,11 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             child: IgnorePointer(
               child: TextField(
                 controller: dobController,
+                style: GoogleFonts.outfit(color: _bodyText(dark), fontSize: 13.sp),
                 decoration: InputDecoration(
                   labelText: 'Date of Birth (YYYY-MM-DD)*',
+                  hintText: 'Select date of birth',
+                  hintStyle: GoogleFonts.outfit(color: mutedText.withValues(alpha: 0.6), fontSize: 13.sp),
                   labelStyle: GoogleFonts.outfit(color: mutedText, fontSize: 13.sp),
                   prefixIcon: Icon(Icons.calendar_month_outlined, color: accentColor, size: 20.sp),
                   suffixIcon: const Icon(Icons.arrow_drop_down, color: mutedText),
@@ -589,8 +656,11 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
               child: IgnorePointer(
                 child: TextField(
                   controller: tobController,
+                  style: GoogleFonts.outfit(color: _bodyText(dark), fontSize: 13.sp),
                   decoration: InputDecoration(
                     labelText: 'Time of Birth (HH:MM)*',
+                    hintText: 'Select time of birth',
+                    hintStyle: GoogleFonts.outfit(color: mutedText.withValues(alpha: 0.6), fontSize: 13.sp),
                     labelStyle: GoogleFonts.outfit(color: mutedText, fontSize: 13.sp),
                     prefixIcon: Icon(Icons.access_time_rounded, color: accentColor, size: 20.sp),
                     suffixIcon: const Icon(Icons.arrow_drop_down, color: mutedText),
@@ -615,7 +685,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                     'Exact birth time is unknown (Flags Lagna as unavailable)',
                     style: GoogleFonts.outfit(
                       fontSize: 12.sp,
-                      color: darkText,
+                      color: _bodyText(dark),
                     ),
                   ),
                 ),
@@ -627,7 +697,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
           TextField(
             controller: placeController,
             readOnly: false,
-            style: GoogleFonts.outfit(color: darkText, fontSize: 13.sp),
+            style: GoogleFonts.outfit(color: _bodyText(dark), fontSize: 13.sp),
             decoration: InputDecoration(
               labelText: 'Birth Place (City)*',
               hintText: 'e.g. Chennai, Mumbai, London',
@@ -678,15 +748,16 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildCalculateButton() {
+    final bool dark = isDark;
     return ElevatedButton(
       onPressed: _isLoading ? null : _calculateMatch,
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryRose,
+        backgroundColor: _primaryRed(dark),
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(vertical: 16.h),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         elevation: 4,
-        shadowColor: primaryRose.withValues(alpha: 0.4),
+        shadowColor: _primaryRed(dark).withValues(alpha: 0.4),
       ),
       child: _isLoading
           ? Row(
@@ -745,12 +816,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
       statusColor = warningOrange;
     }
 
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
         boxShadow: [
           BoxShadow(
             color: primaryRose.withValues(alpha: 0.08),
@@ -770,7 +842,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 18.sp,
-                    color: darkText,
+                    color: _bodyText(dark),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -800,12 +872,14 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 20.w),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [softRose, Colors.white],
+                colors: dark
+                    ? [const Color(0xFF3B0A1A), const Color(0xFF1E293B)]
+                    : [softRose, Colors.white],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: roseBorder),
+              border: Border.all(color: _borderCol(dark)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -830,7 +904,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                     ),
                   ],
                 ),
-                Container(width: 1, height: 48.h, color: roseBorder),
+                Container(width: 1, height: 48.h, color: _borderCol(dark)),
                 Column(
                   children: [
                     Text(
@@ -838,7 +912,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                       style: GoogleFonts.outfit(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
-                        color: darkText,
+                        color: _bodyText(dark),
                       ),
                     ),
                     Text(
@@ -858,7 +932,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             recommendation,
             style: GoogleFonts.outfit(
               fontSize: 13.sp,
-              color: darkText.withValues(alpha: 0.85),
+              color: _bodyText(dark).withValues(alpha: 0.85),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -869,18 +943,19 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildResultsTabBar() {
+    final bool dark = isDark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
       ),
       child: TabBar(
         controller: _resultTabController,
         isScrollable: true,
-        labelColor: primaryRose,
+        labelColor: _accentRose(dark),
         unselectedLabelColor: mutedText,
-        indicatorColor: primaryRose,
+        indicatorColor: _accentRose(dark),
         indicatorWeight: 3,
         labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp),
         unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.normal, fontSize: 13.sp),
@@ -934,10 +1009,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardBg(isDark),
               borderRadius: BorderRadius.circular(14.r),
               border: Border.all(
-                color: isParihara ? goldAccent : (isComp ? const Color(0xFFBBF7D0) : roseBorder),
+                color: isParihara ? goldAccent : (isComp ? const Color(0xFFBBF7D0) : _borderCol(isDark)),
                 width: isParihara ? 1.5 : 1.0,
               ),
             ),
@@ -958,7 +1033,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                             style: GoogleFonts.outfit(
                               fontWeight: FontWeight.bold,
                               fontSize: 15.sp,
-                              color: darkText,
+                              color: _bodyText(isDark),
                             ),
                           ),
                           if (isParihara)
@@ -1005,7 +1080,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   borderRadius: BorderRadius.circular(6.r),
                   child: LinearProgressIndicator(
                     value: ratio,
-                    backgroundColor: softRose,
+                    backgroundColor: isDark ? const Color(0xFF334155) : softRose,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       ratio == 1.0 ? successGreen : (ratio > 0 ? primaryRose : Colors.red),
                     ),
@@ -1019,7 +1094,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                       child: Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: _subCardBg(isDark),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Column(
@@ -1034,7 +1109,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                               style: GoogleFonts.outfit(
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.w600,
-                                color: darkText,
+                                color: _bodyText(isDark),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1048,7 +1123,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                       child: Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: _subCardBg(isDark),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Column(
@@ -1063,7 +1138,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                               style: GoogleFonts.outfit(
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.w600,
-                                color: darkText,
+                                color: _bodyText(isDark),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1079,7 +1154,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   remarks,
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
-                    color: darkText.withValues(alpha: 0.8),
+                    color: _bodyText(isDark).withValues(alpha: 0.8),
                     height: 1.35,
                   ),
                 ),
@@ -1117,9 +1192,9 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
         Container(
           padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _cardBg(isDark),
             borderRadius: BorderRadius.circular(14.r),
-            border: Border.all(color: roseBorder),
+            border: Border.all(color: _borderCol(isDark)),
           ),
           child: Column(
             children: [
@@ -1132,7 +1207,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 15.sp,
-                        color: darkText,
+                        color: _bodyText(isDark),
                       ),
                     ),
                   ),
@@ -1192,9 +1267,9 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
             margin: EdgeInsets.only(bottom: 10.h),
             padding: EdgeInsets.all(14.w),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _cardBg(isDark),
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: isSat ? const Color(0xFFDCFCE7) : roseBorder),
+              border: Border.all(color: isSat ? const Color(0xFFDCFCE7) : _borderCol(isDark)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1208,7 +1283,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.bold,
                           fontSize: 14.sp,
-                          color: darkText,
+                          color: _bodyText(isDark),
                         ),
                       ),
                     ),
@@ -1240,7 +1315,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   exp,
                   style: GoogleFonts.outfit(
                     fontSize: 12.sp,
-                    color: darkText.withValues(alpha: 0.85),
+                    color: _bodyText(isDark).withValues(alpha: 0.85),
                     height: 1.35,
                   ),
                 ),
@@ -1250,7 +1325,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   style: GoogleFonts.outfit(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
-                    color: darkText.withValues(alpha: 0.7),
+                    color: _bodyText(isDark).withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1262,10 +1337,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildPoruthamStatusBadge(String title, String label, bool isGood) {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: isGood ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+        color: isGood
+            ? (dark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4))
+            : (dark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2)),
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
           color: isGood ? const Color(0xFF86EFAC) : const Color(0xFFFCA5A5),
@@ -1309,15 +1387,16 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
 
     final remedies = (_matchResult!['remedies'] as List<dynamic>?) ?? [];
 
+    final bool dark = isDark;
     return Column(
       children: [
         // Compatibility Verdict
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _cardBg(dark),
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: isMatch ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3)),
+            border: Border.all(color: isMatch ? const Color(0xFFBBF7D0) : _borderCol(dark)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1336,7 +1415,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 15.sp,
-                        color: darkText,
+                        color: _bodyText(dark),
                       ),
                     ),
                   ),
@@ -1347,7 +1426,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                 verdict,
                 style: GoogleFonts.outfit(
                   fontSize: 13.sp,
-                  color: darkText.withValues(alpha: 0.85),
+                  color: _bodyText(dark).withValues(alpha: 0.85),
                   height: 1.4,
                 ),
               ),
@@ -1365,9 +1444,9 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFBEB),
+              color: isDark ? const Color(0xFF2D1B00) : const Color(0xFFFFFBEB),
               borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: const Color(0xFFFDE68A)),
+              border: Border.all(color: isDark ? const Color(0xFF78350F) : const Color(0xFFFDE68A)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1397,7 +1476,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                         Expanded(
                           child: RichText(
                             text: TextSpan(
-                              style: GoogleFonts.outfit(fontSize: 12.sp, color: darkText),
+                              style: GoogleFonts.outfit(fontSize: 12.sp, color: _bodyText(isDark)),
                               children: [
                                 TextSpan(
                                   text: '${rem['type']}: ',
@@ -1421,12 +1500,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildManglikPersonStatus(String title, String status, String details, Color accent) {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1440,7 +1520,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 13.sp,
-                    color: darkText,
+                    color: _bodyText(dark),
                   ),
                 ),
               ),
@@ -1496,12 +1576,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildProfileCard(String title, Map<String, dynamic> data, Color accent) {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg(dark),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: roseBorder),
+        border: Border.all(color: _borderCol(dark)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1515,7 +1596,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 15.sp,
-                  color: darkText,
+                  color: _bodyText(dark),
                 ),
               ),
             ],
@@ -1555,7 +1636,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
               style: GoogleFonts.outfit(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w600,
-                color: darkText,
+                color: _bodyText(isDark),
               ),
             ),
           ),
@@ -1569,23 +1650,24 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   // =========================================================================
 
   Widget _buildActionButtons() {
+    final bool dark = isDark;
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => setState(() => _matchResult = null),
-            icon: const Icon(Icons.refresh_rounded, color: primaryRose),
+            icon: Icon(Icons.refresh_rounded, color: _accentRose(dark)),
             label: Text(
               'Recalculate / Modify',
               style: GoogleFonts.outfit(
-                color: primaryRose,
+                color: _accentRose(dark),
                 fontWeight: FontWeight.bold,
                 fontSize: 13.sp,
               ),
             ),
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 14.h),
-              side: const BorderSide(color: primaryRose),
+              side: BorderSide(color: _primaryRed(dark)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
           ),
@@ -1606,7 +1688,7 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryRose,
+              backgroundColor: _primaryRed(dark),
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 14.h),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -1618,12 +1700,13 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   }
 
   Widget _buildDisclaimer() {
+    final bool dark = isDark;
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: _disclaimerBg(dark),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: _disclaimerBorder(dark)),
       ),
       child: Text(
         'Traditional Shastric Disclaimer: This matching analysis is calculated from classical Vedic scriptures (Brihat Parashara Hora Shastra, Muhurta Chintamani, and South Indian Dasa Porutham). It serves as an advisory astrological tool and should be considered alongside mutual understanding, emotional maturity, shared values, and reciprocal love.',
@@ -1696,11 +1779,12 @@ class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: dark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: Column(
@@ -1722,14 +1806,14 @@ class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
             style: GoogleFonts.outfit(
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,
-              color: darkText,
+              color: dark ? Colors.white : darkText,
             ),
           ),
           SizedBox(height: 14.h),
           TextField(
             controller: _searchCtrl,
             autofocus: true,
-            style: GoogleFonts.outfit(color: darkText, fontSize: 14.sp),
+            style: GoogleFonts.outfit(color: dark ? Colors.white : darkText, fontSize: 14.sp),
             decoration: InputDecoration(
               hintText: 'Search for a city (e.g. Chennai, Mumbai)...',
               hintStyle: GoogleFonts.outfit(color: mutedText, fontSize: 13.sp),
@@ -1744,7 +1828,7 @@ class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
                     )
                   : null,
               filled: true,
-              fillColor: const Color(0xFFFFF1F2),
+              fillColor: dark ? const Color(0xFF3B0A1A) : const Color(0xFFFFF1F2),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r), borderSide: BorderSide.none),
             ),
             onChanged: _onSearchChanged,
@@ -1762,7 +1846,7 @@ class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
                             SizedBox(height: 8.h),
                             Text(
                               'No matching locations found',
-                              style: GoogleFonts.outfit(fontSize: 14.sp, color: darkText.withValues(alpha: 0.7)),
+                              style: GoogleFonts.outfit(fontSize: 14.sp, color: (dark ? Colors.white : darkText).withValues(alpha: 0.7)),
                             ),
                             SizedBox(height: 4.h),
                             Text(
@@ -1792,7 +1876,7 @@ class _LocationSelectorSheetState extends State<_LocationSelectorSheet> {
                               style: GoogleFonts.outfit(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w600,
-                                color: darkText,
+                                color: dark ? Colors.white : darkText,
                               ),
                             ),
                             subtitle: Text(

@@ -8,7 +8,6 @@ import '../theme/numerology_theme.dart';
 import 'life_path_detail_screen.dart';
 import 'birth_day_detail_screen.dart';
 import 'personal_year_detail_screen.dart';
-import 'name_analysis_screen.dart';
 import 'personality_soul_screen.dart';
 import 'missing_numbers_screen.dart';
 import 'numerology_remedies_screen.dart';
@@ -491,128 +490,6 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
     }
   }
 
-  Widget _buildWideReportCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating Full Report... (Coming Soon)')));
-      },
-      child: Container(
-        width: double.infinity,
-        margin: EdgeInsets.symmetric(vertical: 16.h),
-        padding: EdgeInsets.all(18.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22.r),
-          gradient: isDark
-              ? const LinearGradient(
-                  colors: [Color(0xFF131D36), Color(0xFF1A2644)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : const LinearGradient(
-                  colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          border: Border.all(
-            color: isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.35) : const Color(0xFFBFDBFE),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isDark ? const Color(0xFF1D4ED8) : const Color(0xFF93C5FD)).withValues(alpha: isDark ? 0.2 : 0.25),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFBFDBFE)),
-                  ),
-                  child: Text(
-                    'COMPLETE REPORT',
-                    style: GoogleFonts.outfit(
-                      fontSize: 11.sp,
-                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 18),
-                SizedBox(width: 4.w),
-                Text(
-                  '4.6',
-                  style: GoogleFonts.inter(
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.5.sp,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Your Complete Numerology Blueprint',
-              style: GoogleFonts.outfit(
-                fontSize: 17.5.sp,
-                fontWeight: FontWeight.w800,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              'Name fixes, remedies, a 5-year forecast & more — all in one report.',
-              style: GoogleFonts.inter(
-                fontSize: 12.sp,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-                height: 1.3,
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 13.h),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                ),
-                borderRadius: BorderRadius.circular(14.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Get My Numerology Blueprint',
-                  style: GoogleFonts.outfit(
-                    fontSize: 14.5.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildResultsView() {
     if (_profileData == null) return const SizedBox();
@@ -753,32 +630,6 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       ));
     }
 
-    final nameVal = (_profileData!['namank']?['reduced'] ?? _profileData!['expression']?['reduced'])?.toString();
-    gridItems.add(_buildCosmicCard(
-      context: context,
-      title: 'Name\nAnalysis',
-      subtitle: 'What your name reveals.',
-      icon: Icons.format_color_text_rounded,
-      cardBg: const Color(0xFFFEFCE8),
-      borderColor: const Color(0xFFFEF3C7),
-      iconBg: const Color(0xFFF59E0B),
-      arrowBg: const Color(0xFFFEF3C7),
-      arrowColor: const Color(0xFFD97706),
-      watermarkType: _WatermarkType.letters,
-      valueBadge: nameVal != null ? 'No. $nameVal' : null,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NameAnalysisScreen(
-              initialBirthName: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
-              initialSystem: _system,
-              dateOfBirth: _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
-            ),
-          ),
-        );
-      },
-    ));
 
     gridItems.add(_buildCosmicCard(
       context: context,
@@ -875,20 +726,6 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
       },
     ));
 
-    gridItems.add(_buildCosmicCard(
-      context: context,
-      title: 'Phone\nAnalysis',
-      subtitle: 'Vibration of your phone.',
-      icon: Icons.phone_android_rounded,
-      cardBg: const Color(0xFFECFDF5),
-      borderColor: const Color(0xFFA7F3D0),
-      iconBg: const Color(0xFF059669),
-      arrowBg: const Color(0xFFA7F3D0),
-      arrowColor: const Color(0xFF047857),
-      watermarkType: _WatermarkType.phone,
-      isNew: true,
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Phone vibration module'))),
-    ));
 
     return FadeTransition(
       opacity: _animController,
@@ -905,33 +742,14 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
               Builder(
                 builder: (context) {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'YOUR COSMIC PROFILE',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12.sp,
-                          letterSpacing: 2.0,
-                          fontWeight: FontWeight.w800,
-                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            'See All',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12.5.sp,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
-                            ),
-                          ),
-                          SizedBox(width: 3.w),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
-                        ],
-                      ),
-                    ],
+                  return Text(
+                    'YOUR COSMIC PROFILE',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.sp,
+                      letterSpacing: 2.0,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
                   );
                 },
               ),
@@ -950,9 +768,6 @@ class _NumerologyCalculatorScreenState extends State<NumerologyCalculatorScreen>
                 itemCount: 2,
                 itemBuilder: (context, index) => gridItems[index],
               ),
-
-              // Light Luxury Complete Report Card
-              _buildWideReportCard(),
 
               // Remaining Cards in 2x2 Grid
               GridView.builder(

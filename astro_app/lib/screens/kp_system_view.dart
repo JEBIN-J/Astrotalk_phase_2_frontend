@@ -1808,7 +1808,7 @@ class _KpSystemViewState extends State<KpSystemView> {
               columnSpacing: 14.w,
               horizontalMargin: 12.w,
               columns: [
-                DataColumn(label: Text('House', style: _headerStyle(isDark))),
+                DataColumn(label: Text('Cusp', style: _headerStyle(isDark))),
                 if (widget.showDegrees)
                   DataColumn(
                     label: Text('Cusp Deg', style: _headerStyle(isDark)),
@@ -1830,7 +1830,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                 return DataRow(
                   cells: [
                     DataCell(
-                      Text('H${c['house']}', style: _cellBoldStyle(isDark)),
+                      Text('C${c['house']}', style: _cellBoldStyle(isDark)),
                     ),
                     if (widget.showDegrees)
                       DataCell(

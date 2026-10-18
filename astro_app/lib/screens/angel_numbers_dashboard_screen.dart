@@ -62,7 +62,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
@@ -421,27 +421,6 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                       ),
                     ),
 
-                    // Right Sighting Quick Action
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20.r),
-                      onTap: _showAddSightingSheet,
-                      child: Container(
-                        width: 38.w,
-                        height: 38.w,
-                        decoration: BoxDecoration(
-                          color: softCardBg,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: cardBorder),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.bookmark_add_outlined,
-                            color: primaryIndigo,
-                            size: 18.sp,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -518,19 +497,7 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                         ),
                       ),
                     ),
-                    Tab(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.history_edu_rounded, size: 14.sp),
-                            SizedBox(width: 5.w),
-                            const Text('Sightings Journal'),
-                          ],
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -554,17 +521,9 @@ class _AngelNumbersDashboardScreenState extends State<AngelNumbersDashboardScree
                 _buildDecodeTab(),
                 _buildPersonalNumberTab(),
                 _buildMirrorHoursTab(),
-                _buildJournalTab(),
               ],
             ),
-      floatingActionButton: _tabController.index == 3
-          ? FloatingActionButton.extended(
-              onPressed: _showAddSightingSheet,
-              backgroundColor: primaryIndigo,
-              icon: const Icon(Icons.add_rounded, color: Colors.white),
-              label: Text('Record Sighting', style: GoogleFonts.outfit(fontWeight: FontWeight.w700, color: Colors.white)),
-            )
-          : null,
+
     );
   }
 

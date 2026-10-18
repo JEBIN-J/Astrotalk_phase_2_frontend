@@ -476,36 +476,14 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                       SizedBox(height: 20.h),
 
                       // "EXPLORE" Header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'EXPLORE',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12.sp,
-                              letterSpacing: 2.0,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {},
-                            child: Row(
-                              children: [
-                                Text(
-                                  'See All',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12.5.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
-                                  ),
-                                ),
-                                SizedBox(width: 3.w),
-                                Icon(Icons.arrow_forward_ios_rounded, size: 11.sp, color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB)),
-                              ],
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'EXPLORE',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12.sp,
+                          letterSpacing: 2.0,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                        ),
                       ),
                       SizedBox(height: 14.h),
 
