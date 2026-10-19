@@ -110,6 +110,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   bool _isKpTableViewMode = true;
   bool _isLalKitabTableViewMode = true;
   bool _isBnnEventTableViewMode = true;
+  int _lalKitabSubTabIndex = 0; // 0: Teva (Natal), 1: Varshphal (Yearly), 2: 35-Year Dasha
+  int? _selectedVarshphalYear;
+  int _selectedDashaCycleIndex = 0;
+  bool _isVarshphalTableViewMode = true;
 
   int _bnnTargetYear = DateTime.now().year;
   bool _isScrubbingBnn = false;
@@ -3219,10 +3223,103 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     }
 
     final planets = _lalKitabData!['planets'] as List<dynamic>? ?? [];
+    final houses = _lalKitabData!['houses'] as List<dynamic>? ?? [];
+    final dasha35 = _lalKitabData!['dasha_35_years'] as Map<String, dynamic>? ?? {};
+    final defaultVarshphal = _lalKitabData!['varshphal'] as Map<String, dynamic>? ?? {};
+    final varshphals = _lalKitabData!['varshphals'] as Map<String, dynamic>? ?? {};
+    final availableYears = _lalKitabData!['available_varshphal_years'] as List<dynamic>? ?? [];
+
+    final int defaultYear = (defaultVarshphal['target_year'] as num?)?.toInt() ?? DateTime.now().year;
+    final int activeYear = _selectedVarshphalYear ?? defaultYear;
+    final Map<String, dynamic> activeVarshphal = (varshphals[activeYear.toString()] as Map<String, dynamic>?) ?? defaultVarshphal;
 
     return ListView(
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
+      children: [
+        // Top Sub-Tab Navigation Bar
+        Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              _buildLkSubTabButton(0, 'Teva (Natal)', Icons.auto_awesome, isDark),
+              _buildLkSubTabButton(1, 'Varshphal', Icons.calendar_today, isDark),
+              _buildLkSubTabButton(2, '35-Yr Dasha', Icons.timeline, isDark),
+            ],
+          ),
+        ),
+
+        // Sub-Tab Content
+        if (_lalKitabSubTabIndex == 0)
+          _buildLalKitabTevaSubTab(context, isDark, planets, houses)
+        else if (_lalKitabSubTabIndex == 1)
+          _buildLalKitabVarshphalSubTab(context, isDark, activeVarshphal, availableYears, activeYear, defaultYear)
+        else
+          _buildLalKitabDashaSubTab(context, isDark, dasha35),
+      ],
+    );
+  }
+
+  Widget _buildLkSubTabButton(int index, String label, IconData icon, bool isDark) {
+    final isSelected = _lalKitabSubTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _lalKitabSubTabIndex = index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(vertical: 8.h),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF040133) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8.r),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF040133).withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 14.sp,
+                color: isSelected ? Colors.white : (isDark ? Colors.white60 : const Color(0xFF64748B)),
+              ),
+              SizedBox(width: 5.w),
+              Flexible(
+                child: Text(
+                  label,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12.sp,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // SUB-TAB 0: LAL KITAB TEVA (NATAL CHART & REMEDIES)
+  // =========================================================================
+  Widget _buildLalKitabTevaSubTab(BuildContext context, bool isDark, List<dynamic> planets, List<dynamic> houses) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. Lal Kitab Chart Box
         Container(
@@ -3241,16 +3338,23 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
           child: Column(
             children: [
-              Text(
-                'Lal Kitab Chart',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.stars, color: Color(0xFFD97706), size: 18),
+                  SizedBox(width: 6.w),
+                  Text(
+                    'Lal Kitab Natal Chart (Teva)',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF040133)),
+                  ),
+                ],
               ),
               SizedBox(height: 16.h),
               KundliInteractiveChart(
                 chartStyle: _currentChartStyle,
                 isDark: isDark,
                 chartTypeKey: 'LalKitab',
-                showUpagrahas: false, // Upagrahas generally not used in Lal Kitab
+                showUpagrahas: false,
                 showDegrees: _showDegreesOnChart,
                 kundliData: _lalKitabData,
               ),
@@ -3259,323 +3363,1440 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         ),
         SizedBox(height: 24.h),
 
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // 2. Header and Table/Card toggle
+        Row(
           children: [
-            Text(
-              'Lal Kitab Houses & Remedies',
-              style: GoogleFonts.outfit(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
+            Expanded(
+              child: Text(
+                'Lal Kitab Houses & Remedies',
+                style: GoogleFonts.outfit(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(height: 10.h),
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => setState(() => _isLalKitabTableViewMode = !_isLalKitabTableViewMode),
+            SizedBox(width: 8.w),
+            InkWell(
+              onTap: () => setState(() => _isLalKitabTableViewMode = !_isLalKitabTableViewMode),
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isLalKitabTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
+                      size: 13.sp,
+                      color: const Color(0xFF0284C7),
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      _isLalKitabTableViewMode ? 'Card' : 'Table',
+                      style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 14.h),
+
+        // 3. Table or Card list
+        if (_isLalKitabTableViewMode)
+          _buildLkPlanetsTable(isDark, planets)
+        else
+          ...planets.map((p) => _buildLkPlanetCard(p as Map<String, dynamic>, isDark)),
+      ],
+    );
+  }
+
+  // =========================================================================
+  // SUB-TAB 1: LAL KITAB VARSHPHAL (YEARLY CHART & 12-MONTH PROGRESSION)
+  // =========================================================================
+  Widget _buildLalKitabVarshphalSubTab(
+    BuildContext context,
+    bool isDark,
+    Map<String, dynamic> varshphal,
+    List<dynamic> availableYears,
+    int activeYear,
+    int defaultYear,
+  ) {
+    final planets = varshphal['planets'] as List<dynamic>? ?? [];
+    final monthly = varshphal['monthly_timeline'] as List<dynamic>? ?? [];
+    final completedAge = varshphal['completed_age'] ?? (activeYear - (_lalKitabData!['date_of_birth'] != null ? DateTime.tryParse(_lalKitabData!['date_of_birth'].toString())?.year ?? activeYear : activeYear));
+    final runningYear = varshphal['running_year'] ?? (completedAge + 1);
+    final yearLord = varshphal['year_lord']?.toString() ?? 'Mars';
+    final startDate = varshphal['start_date']?.toString() ?? '';
+    final endDate = varshphal['end_date']?.toString() ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Year Control & Summary Card
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [const Color(0xFF040133), const Color(0xFF1E1B4B)]
+                  : [const Color(0xFF040133), const Color(0xFF312E81)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF040133).withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Navigation Stepper Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 18),
+                    onPressed: () {
+                      setState(() {
+                        _selectedVarshphalYear = activeYear - 1;
+                      });
+                    },
+                    tooltip: 'Previous Year',
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                        'Varshphal $activeYear',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        'Age: $completedAge Yrs • Running ${runningYear}th Year',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+                    onPressed: () {
+                      setState(() {
+                        _selectedVarshphalYear = activeYear + 1;
+                      });
+                    },
+                    tooltip: 'Next Year',
+                  ),
+                ],
+              ),
+              Divider(height: 20.h, color: Colors.white24),
+
+              // Badges Row: Date span + Year Lord + Reset to Current
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (startDate.isNotEmpty && endDate.isNotEmpty)
+                    Flexible(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.date_range, color: Colors.amberAccent, size: 13),
+                            SizedBox(width: 4.w),
+                            Flexible(
+                              child: Text(
+                                '$startDate - $endDate',
+                                style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.white, fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                      color: const Color(0xFFD97706).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          _isLalKitabTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
-                          size: 14.sp,
-                          color: const Color(0xFF0284C7),
-                        ),
-                        SizedBox(width: 6.w),
+                        const Icon(Icons.shield, color: Colors.white, size: 13),
+                        SizedBox(width: 4.w),
                         Text(
-                          _isLalKitabTableViewMode ? 'Switch to Card View' : 'Switch to Table View',
-                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
+                          'Year Lord: $yearLord',
+                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        if (_isLalKitabTableViewMode)
-          Builder(builder: (ctx) {
-            final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
-            return Container(
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. Fixed Left Column (Planet)
-                  SizedBox(
-                    width: 80.w,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          height: 40.h,
-                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                          padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          alignment: Alignment.centerLeft,
-                          child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
-                        ),
-                        Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        ...planets.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final p = entry.value as Map<String, dynamic>;
-                          final planet = p['planet']?.toString() ?? '';
-                          final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
-
-                          return Container(
-                            height: 44.h,
-                            color: rowBg,
-                            padding: EdgeInsets.symmetric(horizontal: 12.w),
-                            alignment: Alignment.centerLeft,
-                            child: Text(planet, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-
-                  // 2. Scrollable Right Area
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            height: 40.h,
-                            color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                            padding: EdgeInsets.symmetric(horizontal: 12.w),
-                            child: Row(
-                              children: [
-                                SizedBox(width: 45.w, child: Text('House', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                SizedBox(width: 70.w, child: Text('Sign', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                SizedBox(width: 75.w, child: Text('Degree', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                SizedBox(width: 85.w, child: Text('Dignity', style: headerStyle, overflow: TextOverflow.ellipsis)),
-                                SizedBox(width: 65.w, child: Center(child: Text('Remedies', style: headerStyle, overflow: TextOverflow.ellipsis))),
-                              ],
-                            ),
-                          ),
-                          Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                          ...planets.asMap().entries.map((entry) {
-                            final idx = entry.key;
-                            final p = entry.value as Map<String, dynamic>;
-                            final house = p['house']?.toString() ?? '';
-                            final sign = p['sign']?.toString() ?? '';
-                            final degree = p['longitude_formatted']?.toString() ?? p['degree_formatted']?.toString() ?? p['degree']?.toString() ?? '';
-                            final dignity = p['dignity']?.toString() ?? 'Neutral';
-                            final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
-                            final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-
-                            final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
-
-                            Color dignityColor = const Color(0xFF64748B);
-                            if (dignity == 'Exalted') dignityColor = const Color(0xFF059669);
-                            if (dignity == 'Debilitated') dignityColor = const Color(0xFFDC2626);
-
-                            return Container(
-                              height: 44.h,
-                              color: rowBg,
-                              padding: EdgeInsets.symmetric(horizontal: 12.w),
-                              child: Row(
-                                children: [
-                                  SizedBox(width: 45.w, child: Text(house, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                  SizedBox(width: 70.w, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                  SizedBox(width: 75.w, child: Text(degree, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                  SizedBox(width: 85.w, child: Text(dignity, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: dignityColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                  SizedBox(width: 65.w, child: Center(
-                                    child: rem.isNotEmpty 
-                                        ? Container(
-                                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                                            decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
-                                            child: Text('${rem.length}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
-                                          )
-                                        : Text('-', style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey)),
-                                  )),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
                     ),
                   ),
                 ],
               ),
-            );
-          })
+              if (activeYear != defaultYear) ...[
+                SizedBox(height: 10.h),
+                InkWell(
+                  onTap: () => setState(() => _selectedVarshphalYear = defaultYear),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      'Back to Current Year ($defaultYear)',
+                      style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        SizedBox(height: 20.h),
+
+        // 2. Interactive Varshphal Chart
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: const Color(0xFF040133).withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.wb_sunny_rounded, color: Color(0xFFD97706), size: 18),
+                  SizedBox(width: 6.w),
+                  Text(
+                    'Lal Kitab Varshphal Chart ($activeYear)',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF040133)),
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'Annual progressed placements (Fixed Aries Kala Purusha)',
+                style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54),
+              ),
+              SizedBox(height: 14.h),
+              KundliInteractiveChart(
+                chartStyle: _currentChartStyle,
+                isDark: isDark,
+                chartTypeKey: 'LalKitab',
+                showUpagrahas: false,
+                showDegrees: _showDegreesOnChart,
+                kundliData: varshphal,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 24.h),
+
+        // 3. 12-Month Progression (Maasik Kundli Timeline)
+        if (monthly.isNotEmpty) ...[
+          Row(
+            children: [
+              Icon(Icons.calendar_month, color: const Color(0xFF0284C7), size: 18.sp),
+              SizedBox(width: 8.w),
+              Text(
+                '12-Month Progression (Maasik Kundli)',
+                style: GoogleFonts.outfit(
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Each month activates a progressive house from the birthday onwards',
+            style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54),
+          ),
+          SizedBox(height: 12.h),
+
+          // Horizontal scroll of months
+          SizedBox(
+            height: 148.h,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: monthly.length,
+              separatorBuilder: (ctx, idx) => SizedBox(width: 10.w),
+              itemBuilder: (ctx, idx) {
+                final m = monthly[idx] as Map<String, dynamic>;
+                final mNum = m['month_number'] ?? (idx + 1);
+                final house = m['house'] ?? (idx + 1);
+                final sign = m['sign']?.toString() ?? '';
+                final mStart = m['start_date']?.toString() ?? '';
+                final mEnd = m['end_date']?.toString() ?? '';
+                final isCurr = m['is_current'] == true;
+                final mPlanets = (m['planets_active'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+                final significance = m['significance']?.toString() ?? '';
+
+                return Container(
+                  width: 180.w,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: isCurr
+                        ? const Color(0xFF040133)
+                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                    borderRadius: BorderRadius.circular(14.r),
+                    border: Border.all(
+                      color: isCurr
+                          ? const Color(0xFFD97706)
+                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      width: isCurr ? 2 : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: isCurr ? const Color(0xFFD97706) : const Color(0xFF0284C7).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(
+                              'Month $mNum',
+                              style: GoogleFonts.outfit(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: isCurr ? Colors.white : const Color(0xFF0284C7),
+                              ),
+                            ),
+                          ),
+                          if (isCurr)
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF059669),
+                                borderRadius: BorderRadius.circular(4.r),
+                              ),
+                              child: Text(
+                                'ACTIVE NOW',
+                                style: GoogleFonts.outfit(fontSize: 8.sp, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Text(
+                        'House $house ($sign)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isCurr ? Colors.white : (isDark ? Colors.white : const Color(0xFF1E293B)),
+                        ),
+                      ),
+                      Text(
+                        '$mStart - $mEnd',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.sp,
+                          color: isCurr ? Colors.white70 : (isDark ? Colors.white60 : Colors.black54),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        significance,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.sp,
+                          color: isCurr ? Colors.white60 : Colors.black45,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.bubble_chart, size: 12.sp, color: isCurr ? Colors.amberAccent : const Color(0xFFD97706)),
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            child: Text(
+                              mPlanets.isNotEmpty ? mPlanets.join(', ') : 'House Lord Active',
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w600,
+                                color: isCurr ? Colors.amberAccent : const Color(0xFFD97706),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: 24.h),
+        ],
+
+        // 4. Annual Planetary Placements & Varshphal Remedies Header
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Varshphal Placements & Remedies',
+                style: GoogleFonts.outfit(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(width: 8.w),
+            InkWell(
+              onTap: () => setState(() => _isVarshphalTableViewMode = !_isVarshphalTableViewMode),
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF040133).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: const Color(0xFF040133).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isVarshphalTableViewMode ? Icons.grid_view_rounded : Icons.table_chart_rounded,
+                      size: 13.sp,
+                      color: const Color(0xFF040133),
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      _isVarshphalTableViewMode ? 'Card' : 'Table',
+                      style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF040133)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 14.h),
+
+        if (_isVarshphalTableViewMode)
+          _buildVarshphalPlanetsTable(isDark, planets)
         else
-          ...planets.map((p) {
-          final planet = p['planet']?.toString() ?? '';
-          final house = p['house']?.toString() ?? '';
-          final sign = p['sign']?.toString() ?? '';
-          final lkSign = p['lk_sign']?.toString() ?? '';
-          final degree = p['longitude_formatted']?.toString() ?? '';
-          final dignity = p['dignity']?.toString() ?? '';
-          final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+          ...planets.map((p) => _buildVarshphalPlanetCard(p as Map<String, dynamic>, isDark)),
+      ],
+    );
+  }
 
-          final pos = (interp['pos'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-          final neg = (interp['neg'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-          final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+  // =========================================================================
+  // SUB-TAB 2: LAL KITAB 35-YEAR DASHA CYCLE (35 SAALA CHAKKAR)
+  // =========================================================================
+  Widget _buildLalKitabDashaSubTab(BuildContext context, bool isDark, Map<String, dynamic> dasha35) {
+    final currentDasha = dasha35['current_dasha'] as Map<String, dynamic>? ?? {};
+    final cycles = dasha35['cycles'] as List<dynamic>? ?? [];
 
-          Color accentColor = const Color(0xFF4338CA);
-          if (planet == 'Sun' || planet == 'Mars') accentColor = const Color(0xFFDC2626);
-          if (planet == 'Moon' || planet == 'Venus') accentColor = const Color(0xFF0284C7);
-          if (planet == 'Jupiter') accentColor = const Color(0xFFD97706);
-          if (planet == 'Mercury') accentColor = const Color(0xFF059669);
-          if (planet == 'Saturn' || planet == 'Rahu' || planet == 'Ketu') accentColor = const Color(0xFF475569);
+    final activeCycleIndex = _selectedDashaCycleIndex.clamp(0, cycles.isEmpty ? 0 : cycles.length - 1);
+    final activeCycle = (cycles.isNotEmpty ? cycles[activeCycleIndex] : {}) as Map<String, dynamic>;
+    final mahadashas = activeCycle['mahadashas'] as List<dynamic>? ?? [];
 
-          return Container(
-            margin: EdgeInsets.only(bottom: 16.h),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Current Running Dasha Spotlight Card
+        if (currentDasha.isNotEmpty)
+          Container(
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF040133), const Color(0xFF1E1B4B)]
+                    : [const Color(0xFF040133), const Color(0xFF312E81)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
               boxShadow: [
                 BoxShadow(
-                  color: accentColor.withValues(alpha: 0.05),
+                  color: const Color(0xFF040133).withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.flash_on, color: Colors.amberAccent, size: 16),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: Text(
+                        'CURRENT RUNNING DASHA',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                          color: Colors.amberAccent,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        currentDasha['cycle_name']?.toString() ?? 'Cycle 1',
+                        style: GoogleFonts.outfit(fontSize: 9.5.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 14.h),
+
+                Row(
+                  children: [
+                    // Major Planet (Mahadasha)
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Major Period (Mahadasha)',
+                              style: GoogleFonts.outfit(fontSize: 10.5.sp, color: Colors.white70),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '${currentDasha['mahadasha_planet'] ?? '-'}',
+                              style: GoogleFonts.outfit(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '${currentDasha['mahadasha_start']} - ${currentDasha['mahadasha_end']}',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.white60),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '${currentDasha['mahadasha_years']} Years Span',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.amberAccent, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+
+                    // Sub Period (Antardasha)
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Sub Period (Antardasha)',
+                              style: GoogleFonts.outfit(fontSize: 10.5.sp, color: Colors.white70),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '${currentDasha['antardasha_planet'] ?? '-'}',
+                              style: GoogleFonts.outfit(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.amberAccent,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              '${currentDasha['antardasha_start']} - ${currentDasha['antardasha_end']}',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.white60),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '${currentDasha['antardasha_months']} Months',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.white70, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        SizedBox(height: 20.h),
+
+        // 2. Cycle Selection Segment
+        Text(
+          'Lal Kitab 35-Year Cycles (35 Saala Chakkar)',
+          style: GoogleFonts.outfit(
+            fontSize: 17.sp,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          'Repeating 35-year planetary progression sequence',
+          style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54),
+        ),
+        SizedBox(height: 12.h),
+
+        // Cycle Buttons (Premium 2-Line Segmented Cards)
+        Row(
+          children: List.generate(cycles.length, (idx) {
+            final isSelected = activeCycleIndex == idx;
+            final cycleNumber = idx + 1;
+            final isRunningCycle = (currentDasha['cycle'] as num?)?.toInt() == cycleNumber;
+
+            String ageSpanText = 'Age 0–35';
+            if (cycleNumber == 2) ageSpanText = 'Age 35–70';
+            if (cycleNumber == 3) ageSpanText = 'Age 70–105';
+
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedDashaCycleIndex = idx),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  height: 56.h,
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFF040133), Color(0xFF1E1B4B)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isSelected
+                        ? null
+                        : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF040133)
+                          : (isRunningCycle
+                              ? const Color(0xFFD97706).withValues(alpha: 0.6)
+                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))),
+                      width: isSelected || isRunningCycle ? 1.5 : 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected
+                            ? const Color(0xFF040133).withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                        blurRadius: isSelected ? 6 : 3,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isRunningCycle) ...[
+                            Container(
+                              width: 6.r,
+                              height: 6.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD97706),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                          ],
+                          Text(
+                            'Cycle $cycleNumber',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark ? Colors.white : const Color(0xFF1E293B)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        ageSpanText,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5.sp,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.amberAccent
+                              : (isRunningCycle
+                                  ? const Color(0xFFD97706)
+                                  : (isDark ? Colors.white60 : const Color(0xFF64748B))),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+        SizedBox(height: 16.h),
+
+        // 3. Mahadasha Expansion Tiles
+        ...mahadashas.map((md) {
+          final m = md as Map<String, dynamic>;
+          final planet = m['planet']?.toString() ?? '';
+          final durYears = m['duration_years']?.toString() ?? '';
+          final ageSpan = m['age_span']?.toString() ?? '';
+          final start = m['start_date']?.toString() ?? '';
+          final end = m['end_date']?.toString() ?? '';
+          final isCurr = m['is_current'] == true;
+          final antardashas = m['antardashas'] as List<dynamic>? ?? [];
+
+          Color planetColor = const Color(0xFF4338CA);
+          if (planet == 'Sun' || planet == 'Mars') planetColor = const Color(0xFFDC2626);
+          if (planet == 'Moon' || planet == 'Venus') planetColor = const Color(0xFF0284C7);
+          if (planet == 'Jupiter') planetColor = const Color(0xFFD97706);
+          if (planet == 'Mercury') planetColor = const Color(0xFF059669);
+          if (planet == 'Saturn' || planet == 'Rahu' || planet == 'Ketu') planetColor = const Color(0xFF475569);
+
+          return Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: isCurr ? planetColor : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                width: isCurr ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                initiallyExpanded: isCurr,
+                leading: CircleAvatar(
+                  radius: 18.r,
+                  backgroundColor: planetColor.withValues(alpha: 0.15),
+                  child: Text(
+                    planet.substring(0, planet.length > 2 ? 2 : 1),
+                    style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: planetColor),
+                  ),
+                ),
                 title: Row(
                   children: [
-                    Container(
-                      width: 4.w,
-                      height: 24.h,
-                      decoration: BoxDecoration(color: accentColor, borderRadius: BorderRadius.circular(2.r)),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            planet,
-                            style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            'House $house ($lkSign) • $degree',
-                            style: GoogleFonts.outfit(fontSize: 12.sp, color: accentColor, fontWeight: FontWeight.w600),
-                          ),
-                        ],
+                    Text(
+                      planet,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
                       ),
                     ),
-                    if (dignity != 'Neutral')
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: planetColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        '$durYears Yrs',
+                        style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.bold, color: planetColor),
+                      ),
+                    ),
+                    if (isCurr) ...[
+                      SizedBox(width: 6.w),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: dignity == 'Exalted' ? const Color(0xFF10B981).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12.r),
+                          color: const Color(0xFF059669),
+                          borderRadius: BorderRadius.circular(6.r),
                         ),
                         child: Text(
-                          dignity,
-                          style: GoogleFonts.outfit(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
-                            color: dignity == 'Exalted' ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                          ),
+                          'ACTIVE',
+                          style: GoogleFonts.outfit(fontSize: 9.sp, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ),
+                    ],
                   ],
+                ),
+                subtitle: Text(
+                  '$start - $end ($ageSpan)',
+                  style: GoogleFonts.outfit(fontSize: 11.5.sp, color: isDark ? Colors.white60 : Colors.black54),
                 ),
                 children: [
                   Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.only(bottomLeft: Radius.circular(16.r), bottomRight: Radius.circular(16.r)),
-                    ),
+                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (pos.isNotEmpty) ...[
-                          _buildLkSectionTitle('Positive Effects', const Color(0xFF059669)),
-                          ...pos.map((e) => _buildLkBulletPoint(e, isDark)),
-                          SizedBox(height: 12.h),
-                        ],
-                        if (neg.isNotEmpty) ...[
-                          _buildLkSectionTitle('Possible Challenges', const Color(0xFFDC2626)),
-                          ...neg.map((e) => _buildLkBulletPoint(e, isDark)),
-                          SizedBox(height: 12.h),
-                        ],
-                        _buildLkSectionTitle('General Insights', accentColor),
-                        if (interp['career'] != null) _buildLkBulletPoint('Career: ${interp['career']}', isDark),
-                        if (interp['family'] != null) _buildLkBulletPoint('Family: ${interp['family']}', isDark),
-                        if (interp['finance'] != null) _buildLkBulletPoint('Finance: ${interp['finance']}', isDark),
-                        SizedBox(height: 16.h),
-                        if (rem.isNotEmpty) ...[
-                          Container(
-                            padding: EdgeInsets.all(12.w),
+                        Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        SizedBox(height: 10.h),
+                        Text(
+                          'Classical Antardashas (3 Equal Segments)',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: planetColor,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        ...antardashas.map((ad) {
+                          final a = ad as Map<String, dynamic>;
+                          final aPlanet = a['planet']?.toString() ?? '';
+                          final aDur = a['duration_formatted']?.toString() ?? '${a['duration_months']} M';
+                          final aStart = a['start_date']?.toString() ?? '';
+                          final aEnd = a['end_date']?.toString() ?? '';
+                          final aCurr = a['is_current'] == true;
+
+                          return Container(
+                            margin: EdgeInsets.only(bottom: 6.h),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD97706).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12.r),
-                              border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
+                              color: aCurr
+                                  ? planetColor.withValues(alpha: 0.1)
+                                  : (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF8FAFC)),
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(
+                                color: aCurr ? planetColor : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                              ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.healing, size: 16.sp, color: const Color(0xFFD97706)),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      'Traditional Lal Kitab Remedies',
-                                      style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706)),
+                                if (aCurr)
+                                  const Icon(Icons.arrow_right, color: Color(0xFF059669), size: 18)
+                                else
+                                  const Icon(Icons.circle, size: 6, color: Colors.grey),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Text(
+                                    '$planet - $aPlanet ($aDur)',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12.5.sp,
+                                      fontWeight: aCurr ? FontWeight.bold : FontWeight.w500,
+                                      color: aCurr ? (isDark ? Colors.white : const Color(0xFF040133)) : null,
                                     ),
-                                  ],
+                                  ),
                                 ),
-                                SizedBox(height: 8.h),
-                                ...rem.map((e) => Padding(
-                                      padding: EdgeInsets.only(bottom: 4.h),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text('• ', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFFB45309), fontWeight: FontWeight.bold)),
-                                          Expanded(child: Text(e, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
-                                        ],
-                                      ),
-                                    )),
-                                SizedBox(height: 8.h),
                                 Text(
-                                  'Note: These are traditional astrological practices.',
-                                  style: GoogleFonts.outfit(fontSize: 10.sp, fontStyle: FontStyle.italic, color: isDark ? Colors.white54 : Colors.black54),
-                                )
+                                  '$aStart - $aEnd',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 10.5.sp,
+                                    color: aCurr ? (isDark ? Colors.white70 : const Color(0xFF040133)) : Colors.grey,
+                                  ),
+                                ),
                               ],
                             ),
-                          )
-                        ],
+                          );
+                        }),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
           );
         }),
       ],
+    );
+  }
+
+  // =========================================================================
+  // HELPER TABLES & CARDS
+  // =========================================================================
+  Widget _buildLkPlanetsTable(bool isDark, List<dynamic> planets) {
+    final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Left Column
+          SizedBox(
+            width: 80.w,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 40.h,
+                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  alignment: Alignment.centerLeft,
+                  child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
+                ),
+                Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                ...planets.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final p = entry.value as Map<String, dynamic>;
+                  final planet = p['planet']?.toString() ?? '';
+                  final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                  return Container(
+                    height: 44.h,
+                    color: rowBg,
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    alignment: Alignment.centerLeft,
+                    child: Text(planet, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // Scrollable Right Area
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 40.h,
+                    color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 45.w, child: Text('House', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 70.w, child: Text('Sign', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 75.w, child: Text('Degree', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 85.w, child: Text('Dignity', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 65.w, child: Center(child: Text('Remedies', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                  ...planets.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final p = entry.value as Map<String, dynamic>;
+                    final house = p['house']?.toString() ?? '';
+                    final sign = p['sign']?.toString() ?? '';
+                    final degree = p['longitude_formatted']?.toString() ?? p['degree_formatted']?.toString() ?? p['degree']?.toString() ?? '';
+                    final dignity = p['dignity']?.toString() ?? 'Neutral';
+                    final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+                    final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+                    final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                    Color dignityColor = const Color(0xFF64748B);
+                    if (dignity == 'Exalted') dignityColor = const Color(0xFF059669);
+                    if (dignity == 'Debilitated') dignityColor = const Color(0xFFDC2626);
+
+                    return Container(
+                      height: 44.h,
+                      color: rowBg,
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 45.w, child: Text(house, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 70.w, child: Text(sign, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 75.w, child: Text(degree, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 85.w, child: Text(dignity, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: dignityColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 65.w, child: Center(
+                            child: rem.isNotEmpty 
+                                ? Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                    decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
+                                    child: Text('${rem.length}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
+                                  )
+                                : Text('-', style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey)),
+                          )),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVarshphalPlanetsTable(bool isDark, List<dynamic> planets) {
+    final headerStyle = GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155));
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Left Column
+          SizedBox(
+            width: 80.w,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 40.h,
+                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
+                  alignment: Alignment.centerLeft,
+                  child: Text('Planet', style: headerStyle, overflow: TextOverflow.ellipsis),
+                ),
+                Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                ...planets.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final p = entry.value as Map<String, dynamic>;
+                  final planet = p['planet']?.toString() ?? '';
+                  final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                  return Container(
+                    height: 44.h,
+                    color: rowBg,
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    alignment: Alignment.centerLeft,
+                    child: Text(planet, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // Scrollable Right Area
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 40.h,
+                    color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 55.w, child: Text('Varsh H.', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 55.w, child: Text('Natal H.', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 70.w, child: Text('Sign', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 85.w, child: Text('Dignity', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 65.w, child: Text('Pakka', style: headerStyle, overflow: TextOverflow.ellipsis)),
+                        SizedBox(width: 65.w, child: Center(child: Text('Remedies', style: headerStyle, overflow: TextOverflow.ellipsis))),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                  ...planets.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final p = entry.value as Map<String, dynamic>;
+                    final annualHouse = p['house']?.toString() ?? '';
+                    final natalHouse = p['natal_house']?.toString() ?? '';
+                    final sign = p['sign']?.toString() ?? '';
+                    final dignity = p['dignity']?.toString() ?? 'Neutral';
+                    final isPakka = p['is_pakka_ghar'] == true;
+                    final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+                    final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+                    final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+
+                    Color dignityColor = const Color(0xFF64748B);
+                    if (dignity == 'Exalted') dignityColor = const Color(0xFF059669);
+                    if (dignity == 'Debilitated') dignityColor = const Color(0xFFDC2626);
+
+                    return Container(
+                      height: 44.h,
+                      color: rowBg,
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 55.w, child: Text(annualHouse, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF040133)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 55.w, child: Text(natalHouse, style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 70.w, child: Text(sign, style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 85.w, child: Text(dignity, style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.bold, color: dignityColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                          SizedBox(width: 65.w, child: isPakka
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(color: const Color(0xFF059669).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6.r)),
+                                  child: Text('Yes', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                                )
+                              : Text('No', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey))),
+                          SizedBox(width: 65.w, child: Center(
+                            child: rem.isNotEmpty 
+                                ? Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                    decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8.r)),
+                                    child: Text('${rem.length}', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
+                                  )
+                                : Text('-', style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.grey)),
+                          )),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLkPlanetCard(Map<String, dynamic> p, bool isDark) {
+    final planet = p['planet']?.toString() ?? '';
+    final house = p['house']?.toString() ?? '';
+    final lkSign = p['lk_sign']?.toString() ?? '';
+    final degree = p['longitude_formatted']?.toString() ?? '';
+    final dignity = p['dignity']?.toString() ?? '';
+    final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+
+    final pos = (interp['pos'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final neg = (interp['neg'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+    Color accentColor = const Color(0xFF4338CA);
+    if (planet == 'Sun' || planet == 'Mars') accentColor = const Color(0xFFDC2626);
+    if (planet == 'Moon' || planet == 'Venus') accentColor = const Color(0xFF0284C7);
+    if (planet == 'Jupiter') accentColor = const Color(0xFFD97706);
+    if (planet == 'Mercury') accentColor = const Color(0xFF059669);
+    if (planet == 'Saturn' || planet == 'Rahu' || planet == 'Ketu') accentColor = const Color(0xFF475569);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(16.r), topRight: Radius.circular(16.r)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14.r,
+                      backgroundColor: accentColor,
+                      child: Text(planet[0], style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      planet,
+                      style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12.r)),
+                      child: Text('House $house', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: accentColor)),
+                    ),
+                  ],
+                ),
+                Text(
+                  '$lkSign $degree',
+                  style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (dignity.isNotEmpty && dignity != 'Neutral') ...[
+                  Row(
+                    children: [
+                      Text('Dignity: ', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54)),
+                      Text(
+                        dignity,
+                        style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: dignity == 'Exalted' ? const Color(0xFF059669) : const Color(0xFFDC2626)),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                ],
+                if (pos.isNotEmpty) ...[
+                  _buildLkSectionTitle('Positive Indications', const Color(0xFF059669)),
+                  ...pos.map((e) => _buildLkBulletPoint(e, isDark)),
+                  SizedBox(height: 12.h),
+                ],
+                if (neg.isNotEmpty) ...[
+                  _buildLkSectionTitle('Potential Challenges', const Color(0xFFDC2626)),
+                  ...neg.map((e) => _buildLkBulletPoint(e, isDark)),
+                  SizedBox(height: 12.h),
+                ],
+                if (rem.isNotEmpty) ...[
+                  _buildLkSectionTitle('Lal Kitab Remedies (Upaya)', const Color(0xFFD97706)),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD97706).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...rem.map((e) => Padding(
+                              padding: EdgeInsets.only(bottom: 4.h),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('\u2022 ', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFFB45309), fontWeight: FontWeight.bold)),
+                                  Expanded(child: Text(e, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
+                                ],
+                              ),
+                            )),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Note: These are traditional Lal Kitab astrological remedies.',
+                          style: GoogleFonts.outfit(fontSize: 10.sp, fontStyle: FontStyle.italic, color: isDark ? Colors.white54 : Colors.black54),
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVarshphalPlanetCard(Map<String, dynamic> p, bool isDark) {
+    final planet = p['planet']?.toString() ?? '';
+    final annualHouse = p['house']?.toString() ?? '';
+    final natalHouse = p['natal_house']?.toString() ?? '';
+    final sign = p['sign']?.toString() ?? '';
+    final dignity = p['dignity']?.toString() ?? 'Neutral';
+    final isPakka = p['is_pakka_ghar'] == true;
+    final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
+
+    final pos = (interp['pos'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final neg = (interp['neg'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final rem = (interp['rem'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+    Color accentColor = const Color(0xFF040133);
+    if (planet == 'Sun' || planet == 'Mars') accentColor = const Color(0xFFDC2626);
+    if (planet == 'Moon' || planet == 'Venus') accentColor = const Color(0xFF0284C7);
+    if (planet == 'Jupiter') accentColor = const Color(0xFFD97706);
+    if (planet == 'Mercury') accentColor = const Color(0xFF059669);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(16.r), topRight: Radius.circular(16.r)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14.r,
+                      backgroundColor: accentColor,
+                      child: Text(planet[0], style: GoogleFonts.outfit(fontSize: 12.sp, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      planet,
+                      style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87),
+                    ),
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12.r)),
+                      child: Text('Annual House $annualHouse (Natal: H$natalHouse)', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: accentColor)),
+                    ),
+                  ],
+                ),
+                Text(
+                  sign,
+                  style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('Dignity: ', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54)),
+                    Text(
+                      dignity,
+                      style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: dignity == 'Exalted' ? const Color(0xFF059669) : (dignity == 'Debilitated' ? const Color(0xFFDC2626) : const Color(0xFF64748B))),
+                    ),
+                    if (isPakka) ...[
+                      SizedBox(width: 12.w),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(color: const Color(0xFF059669).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6.r)),
+                        child: Text('Permanent House (Pakka Ghar)', style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                      ),
+                    ],
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                if (pos.isNotEmpty) ...[
+                  _buildLkSectionTitle('Yearly Blessings & Opportunities', const Color(0xFF059669)),
+                  ...pos.map((e) => _buildLkBulletPoint(e, isDark)),
+                  SizedBox(height: 12.h),
+                ],
+                if (neg.isNotEmpty) ...[
+                  _buildLkSectionTitle('Yearly Caution & Precautions', const Color(0xFFDC2626)),
+                  ...neg.map((e) => _buildLkBulletPoint(e, isDark)),
+                  SizedBox(height: 12.h),
+                ],
+                if (rem.isNotEmpty) ...[
+                  _buildLkSectionTitle('Varshphal Annual Upaya (Perform for 40-43 days)', const Color(0xFFD97706)),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD97706).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ...rem.map((e) => Padding(
+                              padding: EdgeInsets.only(bottom: 4.h),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('\u2022 ', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFFB45309), fontWeight: FontWeight.bold)),
+                                  Expanded(child: Text(e, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
+                                ],
+                              ),
+                            )),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Varshphal remedies are traditionally performed for 40 to 43 continuous days in daylight.',
+                          style: GoogleFonts.outfit(fontSize: 10.sp, fontStyle: FontStyle.italic, color: isDark ? Colors.white54 : Colors.black54),
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
@@ -3595,7 +4816,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('• ', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white54 : Colors.black54)),
+          Text('\u2022 ', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white54 : Colors.black54)),
           Expanded(child: Text(text, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87, height: 1.4))),
         ],
       ),
@@ -6665,81 +7886,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               Text("Detailed Breakdown", style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
               SizedBox(height: 16.h),
             
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  ),
-                  child: DataTable(
-                    columnSpacing: 18.0,
-                    horizontalMargin: 12.0,
-                    headingRowHeight: 40.0,
-                    dataRowMinHeight: 36.0,
-                    dataRowMaxHeight: 38.0,
-                    headingTextStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF4338CA), fontSize: 13.sp),
-                    dataTextStyle: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87),
-                    columns: localTabIndex == 0 ? [
-                      DataColumn(label: Text('Bala')),
-                      DataColumn(label: Text('Sun')),
-                      DataColumn(label: Text('Moon')),
-                      DataColumn(label: Text('Mars')),
-                      DataColumn(label: Text('Mercury')),
-                      DataColumn(label: Text('Jupiter')),
-                      DataColumn(label: Text('Venus')),
-                      DataColumn(label: Text('Saturn')),
-                    ] : localTabIndex == 1 ? [
-                      DataColumn(label: Text('Bhava')),
-                      DataColumn(label: Text('Bhava Bala')),
-                      DataColumn(label: Text('In Rupas')),
-                      DataColumn(label: Text('Bhava Cusp')),
-                      DataColumn(label: Text('Adhipati of Cusp')),
-                      DataColumn(label: Text('Adhipati Bala')),
-                      DataColumn(label: Text('Dig Bala')),
-                      DataColumn(label: Text('Drig Bala')),
-                    ] : [
-                      DataColumn(label: Text('Planet')),
-                      DataColumn(label: Text('Score')),
-                      DataColumn(label: Text('Percentage')),
-                      DataColumn(label: Text('Rank')),
-                    ],
-                    rows: localTabIndex == 0 
-                        ? _buildShadbalaDetailedRows(currentList, isDark)
-                        : currentList.map<DataRow>((item) {
-                            if (localTabIndex == 1) {
-                              // Use backend-provided values directly — no re-calculation in Flutter
-                              final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
-                              final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
-                              final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
-                              final double totalVirupas = adhipatiBala + digBala + drigBala;
-                              // Use backend rupas (strength field = total_rupas from backend)
-                              final double totalRupas = (item['rupas'] as num?)?.toDouble() ?? (item['strength'] as num?)?.toDouble() ?? (totalVirupas / 60.0);
-                            
-                              return DataRow(cells: [
-                                DataCell(Text('${item['house'] ?? ''}')),
-                                DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                                DataCell(Text('${item['sign'] ?? ''}')),
-                                DataCell(Text('${item['adhipati'] ?? ''}')),
-                                DataCell(Text(adhipatiBala.toStringAsFixed(2))),
-                                DataCell(Text(digBala.toStringAsFixed(2))),
-                                DataCell(Text(drigBala.toStringAsFixed(2))),
-                              ]);
-                            } else {
-                              return DataRow(cells: [
-                                DataCell(Text(item['planet'] ?? '')),
-                                DataCell(Text('${item['score'] ?? ''}', style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF059669)))),
-                                DataCell(Text('${item['percentage'] ?? ''}%')),
-                                DataCell(Text('${item['rank'] ?? ''}')),
-                              ]);
-                            }
-                          }).toList(),
-
-                  ),
-                ),
+              _buildFixedColumnBreakdownTable(
+                context: context,
+                isDark: isDark,
+                localTabIndex: localTabIndex,
+                currentList: currentList,
               ),
             
             ]
@@ -6941,66 +8092,232 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
 
-  List<DataRow> _buildShadbalaDetailedRows(List<dynamic> shadbalaList, bool isDark) {
-    // We need to pivot the shadbalaList (which is a list of planet dicts) into rows of parameters.
-    // Order of planets in columns: Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn.
-    final planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
-    
-    // Map each planet to its dictionary for quick lookup
-    final map = {for (var item in shadbalaList) item['planet']?.toString() ?? '': item};
+  Widget _buildFixedColumnBreakdownTable({
+    required BuildContext context,
+    required bool isDark,
+    required int localTabIndex,
+    required List<dynamic> currentList,
+  }) {
+    final headerStyle = GoogleFonts.outfit(
+      fontWeight: FontWeight.bold,
+      color: const Color(0xFF4338CA),
+      fontSize: 13.sp,
+    );
+    final dataStyle = GoogleFonts.outfit(
+      fontSize: 13.sp,
+      color: isDark ? Colors.white70 : Colors.black87,
+    );
 
-    // Helper to get value
-    String val(String planet, String key, {int decimals = 2}) {
-      final pData = map[planet];
-      if (pData == null) return '-';
-      final v = pData[key];
-      if (v is num) return v.toStringAsFixed(decimals);
-      return v?.toString() ?? '-';
+    final String fixedHeader = localTabIndex == 0 ? 'Bala' : 'Bhava';
+    final List<DataColumn> scrollableColumns = [];
+    final List<DataRow> fixedRows = [];
+    final List<DataRow> scrollableRows = [];
+
+    if (localTabIndex == 0) {
+      final planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'];
+      for (var p in planets) {
+        scrollableColumns.add(DataColumn(label: Text(p)));
+      }
+
+      final map = {for (var item in currentList) item['planet']?.toString() ?? '': item};
+
+      String val(String planet, String key, {int decimals = 2}) {
+        final pData = map[planet];
+        if (pData == null) return '-';
+        final v = pData[key];
+        if (v is num) return v.toStringAsFixed(decimals);
+        return v?.toString() ?? '-';
+      }
+
+      final rowDefinitions = <Map<String, dynamic>>[
+        {'label': 'Uchcha', 'key': 'uchcha'},
+        {'label': 'Saptavargaja', 'key': 'saptavargaja'},
+        {'label': 'Oja-Yugma', 'key': 'oja_yugma'},
+        {'label': 'Kendradi', 'key': 'kendradi'},
+        {'label': 'Drekkana', 'key': 'drekkana'},
+        {'label': 'Sthana Bala', 'key': 'sthana_bala', 'isSubTotal': true, 'color': const Color(0xFF2563EB)},
+        {'label': 'Dig Bala', 'key': 'dig_bala', 'isSubTotal': true, 'color': const Color(0xFF2563EB)},
+        {'label': 'Natonnata', 'key': 'natonnata'},
+        {'label': 'Paksha', 'key': 'paksha'},
+        {'label': 'Tribhaga', 'key': 'tribhaga'},
+        {'label': 'Abda', 'key': 'abda'},
+        {'label': 'Maasa', 'key': 'maasa'},
+        {'label': 'Vaara', 'key': 'vaara'},
+        {'label': 'Hora', 'key': 'hora'},
+        {'label': 'Ayana', 'key': 'ayana'},
+        {'label': 'Yuddha', 'key': 'yuddha'},
+        {'label': 'Kaala Bala', 'key': 'kala_bala', 'isSubTotal': true, 'color': const Color(0xFF2563EB)},
+        {'label': 'Chesta', 'key': 'chesta_bala'},
+        {'label': 'Naisargika', 'key': 'naisargika_bala'},
+        {'label': 'Drig Bala', 'key': 'drik_bala', 'isSubTotal': true, 'color': const Color(0xFF2563EB)},
+        {'label': 'Shadbala', 'key': 'total_virupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
+        {'label': 'In Rupas', 'key': 'total_rupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
+        {'label': 'Minimum', 'key': 'minimum', 'decimals': 1},
+        {'label': 'Strength', 'key': 'strength'},
+        {'label': 'Rank', 'key': 'rank', 'decimals': 0},
+        {'label': 'Ishta Phala', 'key': 'ishta_phala'},
+        {'label': 'Kashta Phala', 'key': 'kashta_phala'},
+      ];
+
+      for (var def in rowDefinitions) {
+        final label = def['label'] as String;
+        final key = def['key'] as String;
+        final isSubTotal = def['isSubTotal'] == true;
+        final isTotal = def['isTotal'] == true;
+        final decimals = (def['decimals'] as int?) ?? 2;
+        final Color? customColor = def['color'] as Color?;
+
+        final textStyle = TextStyle(
+          fontWeight: (isSubTotal || isTotal) ? FontWeight.bold : FontWeight.normal,
+          color: customColor ?? ((isSubTotal || isTotal) ? (isDark ? Colors.blue.shade300 : const Color(0xFF1E3A8A)) : null),
+        );
+
+        fixedRows.add(DataRow(
+          cells: [
+            DataCell(
+              ConstrainedBox(
+                constraints: BoxConstraints(minWidth: 105.w, maxWidth: 125.w),
+                child: Text(
+                  label,
+                  style: textStyle,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ],
+        ));
+
+        scrollableRows.add(DataRow(
+          cells: planets.map((p) => DataCell(Text(val(p, key, decimals: decimals), style: textStyle))).toList(),
+        ));
+      }
+    } else {
+      scrollableColumns.addAll([
+        const DataColumn(label: Text('Bhava Bala')),
+        const DataColumn(label: Text('In Rupas')),
+        const DataColumn(label: Text('Bhava Cusp')),
+        const DataColumn(label: Text('Adhipati of Cusp')),
+        const DataColumn(label: Text('Adhipati Bala')),
+        const DataColumn(label: Text('Dig Bala')),
+        const DataColumn(label: Text('Drig Bala')),
+      ]);
+
+      for (var item in currentList) {
+        final double adhipatiBala = (item['adhipati_bala'] as num?)?.toDouble() ?? 0.0;
+        final double digBala = (item['dig_bala'] as num?)?.toDouble() ?? 0.0;
+        final double drigBala = (item['drig_bala'] as num?)?.toDouble() ?? 0.0;
+        final double totalVirupas = adhipatiBala + digBala + drigBala;
+        final double totalRupas = (item['rupas'] as num?)?.toDouble() ?? (item['strength'] as num?)?.toDouble() ?? (totalVirupas / 60.0);
+
+        fixedRows.add(DataRow(
+          cells: [
+            DataCell(
+              ConstrainedBox(
+                constraints: BoxConstraints(minWidth: 65.w, maxWidth: 85.w),
+                child: Text('${item['house'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ));
+
+        scrollableRows.add(DataRow(
+          cells: [
+            DataCell(Text(totalVirupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+            DataCell(Text(totalRupas.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+            DataCell(Text('${item['sign'] ?? ''}')),
+            DataCell(Text('${item['adhipati'] ?? ''}')),
+            DataCell(Text(adhipatiBala.toStringAsFixed(2))),
+            DataCell(Text(digBala.toStringAsFixed(2))),
+            DataCell(Text(drigBala.toStringAsFixed(2))),
+          ],
+        ));
+      }
     }
 
-    // Helper to create a row
-    DataRow parameterRow(String label, String key, {bool isSubTotal = false, bool isTotal = false, int decimals = 2, Color? customColor}) {
-      final textStyle = TextStyle(
-        fontWeight: (isSubTotal || isTotal) ? FontWeight.bold : FontWeight.normal,
-        color: customColor ?? ((isSubTotal || isTotal) ? (isDark ? Colors.blue.shade300 : const Color(0xFF1E3A8A)) : null),
-      );
-      return DataRow(
-        cells: [
-          DataCell(Text(label, style: textStyle)),
-          ...planets.map((p) => DataCell(Text(val(p, key, decimals: decimals), style: textStyle))),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Fixed "Bala" / "Bhava" identifier column on the left
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              border: Border(
+                right: BorderSide(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                  width: 1.5.w,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.06),
+                  blurRadius: 4,
+                  offset: const Offset(2, 0),
+                ),
+              ],
+            ),
+            child: DataTable(
+              columnSpacing: 0,
+              horizontalMargin: 12.w,
+              headingRowHeight: 40.0,
+              dataRowMinHeight: 38.0,
+              dataRowMaxHeight: 38.0,
+              headingTextStyle: headerStyle,
+              dataTextStyle: dataStyle,
+              border: TableBorder(
+                horizontalInside: BorderSide(
+                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFE2E8F0),
+                  width: 1.0,
+                ),
+              ),
+              columns: [
+                DataColumn(
+                  label: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: localTabIndex == 0 ? 105.w : 65.w,
+                      maxWidth: localTabIndex == 0 ? 125.w : 85.w,
+                    ),
+                    child: Text(fixedHeader, style: headerStyle),
+                  ),
+                ),
+              ],
+              rows: fixedRows,
+            ),
+          ),
+          // 2. Horizontally scrollable data columns on the right
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: DataTable(
+                columnSpacing: 18.w,
+                horizontalMargin: 16.w,
+                headingRowHeight: 40.0,
+                dataRowMinHeight: 38.0,
+                dataRowMaxHeight: 38.0,
+                headingTextStyle: headerStyle,
+                dataTextStyle: dataStyle,
+                border: TableBorder(
+                  horizontalInside: BorderSide(
+                    color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFE2E8F0),
+                    width: 1.0,
+                  ),
+                ),
+                columns: scrollableColumns,
+                rows: scrollableRows,
+              ),
+            ),
+          ),
         ],
-      );
-    }
-
-    return [
-      parameterRow('Uchcha', 'uchcha'),
-      parameterRow('Saptavargaja', 'saptavargaja'),
-      parameterRow('Oja-Yugma', 'oja_yugma'),
-      parameterRow('Kendradi', 'kendradi'),
-      parameterRow('Drekkana', 'drekkana'),
-      parameterRow('Sthana Bala', 'sthana_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
-      parameterRow('Dig Bala', 'dig_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
-      parameterRow('Natonnata', 'natonnata'),
-      parameterRow('Paksha', 'paksha'),
-      parameterRow('Tribhaga', 'tribhaga'),
-      parameterRow('Abda', 'abda'),
-      parameterRow('Maasa', 'maasa'),
-      parameterRow('Vaara', 'vaara'),
-      parameterRow('Hora', 'hora'),
-      parameterRow('Ayana', 'ayana'),
-      parameterRow('Yuddha', 'yuddha'),
-      parameterRow('Kaala Bala', 'kala_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
-      parameterRow('Chesta', 'chesta_bala'),
-      parameterRow('Naisargika', 'naisargika_bala'),
-      parameterRow('Drig Bala', 'drik_bala', isSubTotal: true, customColor: const Color(0xFF2563EB)),
-      parameterRow('Shadbala', 'total_virupas', isTotal: true, customColor: const Color(0xFF10B981)),
-      parameterRow('In Rupas', 'total_rupas', isTotal: true, customColor: const Color(0xFF10B981)),
-      parameterRow('Minimum', 'minimum', decimals: 1),
-      parameterRow('Strength', 'strength'),
-      parameterRow('Rank', 'rank', decimals: 0),
-      parameterRow('Ishta Phala', 'ishta_phala'),
-      parameterRow('Kashta Phala', 'kashta_phala'),
-    ];
+      ),
+    );
   }
 
   // TAB 7: KOT CHAKRA
