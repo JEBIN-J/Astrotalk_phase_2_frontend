@@ -6,6 +6,7 @@ import '../models/astro_models.dart';
 import '../services/astro_api_service.dart';
 import '../widgets/kundli_chart_painter.dart';
 import '../widgets/nested_transit_chart_widget.dart';
+import '../services/astrologer_location_service.dart';
 import 'planetary_transit_view.dart';
 class KpSystemView extends StatefulWidget {
   final String personName;
@@ -72,6 +73,7 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   static const List<String> subSections = [
     'KP Chart',
+    'Ruling Planets',
     'Dasha',
     'Significators',
     'KP Aspects',
@@ -316,6 +318,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     });
 
     try {
+      final astrologerLoc = await AstrologerLocationService.getLocation();
       final res = await AstroApiService.getKpSystemData(
         name: widget.personName.isNotEmpty ? widget.personName : 'User',
         dateOfBirth: widget.dateOfBirth,
@@ -324,6 +327,9 @@ class _KpSystemViewState extends State<KpSystemView> {
         latitude: widget.latitude,
         longitude: widget.longitude,
         timezone: widget.timezone,
+        transitLatitude: astrologerLoc.latitude,
+        transitLongitude: astrologerLoc.longitude,
+        transitTimezone: astrologerLoc.timezone,
         ayanamsa: _selectedAyanamsa,
       );
 
@@ -347,6 +353,7 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   Future<void> _fetchNatalKpData() async {
     try {
+      final astrologerLoc = await AstrologerLocationService.getLocation();
       final res = await AstroApiService.getKpSystemData(
         name: widget.personName.isNotEmpty ? widget.personName : 'User',
         dateOfBirth: widget.dateOfBirth,
@@ -355,6 +362,9 @@ class _KpSystemViewState extends State<KpSystemView> {
         latitude: widget.latitude,
         longitude: widget.longitude,
         timezone: widget.timezone,
+        transitLatitude: astrologerLoc.latitude,
+        transitLongitude: astrologerLoc.longitude,
+        transitTimezone: astrologerLoc.timezone,
         ayanamsa: _selectedAyanamsa,
       );
       if (mounted) {
@@ -552,30 +562,36 @@ class _KpSystemViewState extends State<KpSystemView> {
   // 3. ACTIVE SECTION ROUTER
   // =========================================================================
   Widget _buildActiveSectionContent(bool isDark) {
-    switch (_activeSectionIndex) {
-      case 0:
+    if (_activeSectionIndex < 0 || _activeSectionIndex >= subSections.length) {
+      return _buildKpChartSection(isDark);
+    }
+    final section = subSections[_activeSectionIndex];
+    switch (section) {
+      case 'KP Chart':
         return _buildKpChartSection(isDark);
-      case 1:
+      case 'Ruling Planets':
+        return _buildRulingPlanetsDedicatedView(isDark);
+      case 'Dasha':
         return _buildDashaSection(isDark);
-      case 2:
+      case 'Significators':
         return _buildSignificatorsSection(isDark);
-      case 3:
+      case 'KP Aspects':
         return _buildAspectsSection(isDark);
-      case 4:
+      case 'Nakshatra Nadi':
         return _buildNakshatraNadiSection(isDark);
-      case 5:
+      case '4-Step':
         return _buildFourStepSection(isDark);
-      case 6:
+      case 'Angular Distance':
         return _buildAngularDistanceSection(isDark);
-      case 7:
+      case 'Planetary Transit':
         return _buildPlanetaryTransitSection(
           isDark,
           chartChildBuilder: (context, stepIntervalWidget) =>
               _buildKpChartSection(isDark, stepIntervalWidget: stepIntervalWidget),
         );
-      case 8:
+      case 'Vedic Elements':
         return _buildVedicElementsSection(isDark);
-      case 9:
+      case 'Cue Cards':
         return _buildCueCardsSection(isDark);
       default:
         return _buildKpChartSection(isDark);
@@ -1473,7 +1489,7 @@ class _KpSystemViewState extends State<KpSystemView> {
         SizedBox(height: 14.h),
 
         // Interactive Chart Canvas
-        if (_activeSectionIndex == 7 && _transitCuspsType == 'Use Natal Cusps')
+        if (_activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit' && _transitCuspsType == 'Use Natal Cusps')
           NestedNorthIndianTransitChart(
             natalData: _natalKpData ?? _kpData,
             transitData: _transitKpData ?? _kpData,
@@ -1641,162 +1657,327 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
+  // =========================================================================
   // 5. RULING PLANETS
-  Widget _buildRulingPlanetsSection(Map<String, dynamic> rp, bool isDark) {
-    final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
-    final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
-
-    final ascSubLord = rp['asc_sub_lord'] ??
-        rp['lagna_sub_lord'] ??
-        _kpData?['ascendant']?['sub_lord'] ??
-        _kpData?['ascendant']?['sl'] ??
-        (cusps.isNotEmpty ? cusps.first['sl'] : null) ??
-        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sl'] : null) ??
-        '-';
-
-    final moonSubLord = rp['moon_sub_lord'] ??
-        planets.firstWhere((p) => p['name'] == 'Moon', orElse: () => null)?['sl'] ??
-        '-';
-
-    final dayLord = rp['day_lord']?.toString() ?? '-';
-    final horaLord = rp['hora_lord']?.toString() ?? '-';
-
+  // =========================================================================
+  Widget _buildRulingPlanetsDedicatedView(bool isDark) {
+    final rp = _kpData?['ruling_planets'] as Map<String, dynamic>? ?? {};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ruling Planets (Calculated)',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 15.sp,
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
-          ),
-        ),
-        SizedBox(height: 10.h),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
-          ),
-          child: Column(
-            children: [
-              _buildRpItem(
-                'Lagna Rashi Lord',
-                rp['lagna_rashi_lord']?.toString() ?? '-',
-                isDark,
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Lagna Nakshatra Lord',
-                rp['lagna_nakshatra_lord']?.toString() ?? '-',
-                isDark,
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Ascendant Sub Lord (Asc SL)',
-                ascSubLord.toString(),
-                isDark,
-                color: const Color(0xFF4F46E5),
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Moon Rashi Lord',
-                rp['moon_rashi_lord']?.toString() ?? '-',
-                isDark,
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Moon Nakshatra Lord',
-                rp['moon_nakshatra_lord']?.toString() ?? '-',
-                isDark,
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Moon Sub Lord (Moon SL)',
-                moonSubLord.toString(),
-                isDark,
-                color: const Color(0xFF4F46E5),
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Vedic Day Lord',
-                dayLord,
-                isDark,
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isDark ? Colors.white12 : Colors.black12,
-              ),
-              _buildRpItem(
-                'Hora Lord',
-                horaLord,
-                isDark,
-                color: const Color(0xFFD97706),
-                isLast: true,
-              ),
-            ],
-          ),
-        ),
+        _buildRulingPlanetsSection(rp, isDark, isDedicatedTab: true),
+        SizedBox(height: 24.h),
       ],
     );
   }
 
-  Widget _buildRpItem(
-    String label,
-    String value,
+  Widget _buildRulingPlanetsSection(
+    Map<String, dynamic> rp,
     bool isDark, {
-    bool isLast = false,
-    Color? color,
+    bool isDedicatedTab = false,
   }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.outfit(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-          ),
-          Text(
-            value.toUpperCase(),
-            style: GoogleFonts.outfit(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
-              color: color ?? const Color(0xFF059669),
-            ),
+    final chartRp = (rp['chart'] as Map<String, dynamic>?) ?? rp;
+    final currRp = (rp['current'] as Map<String, dynamic>?) ??
+        (_kpData?['current_ruling_planets'] as Map<String, dynamic>?) ??
+        {};
+
+    final items = [
+      {
+        'label': 'Hora Lord',
+        'chart': chartRp['hora_lord']?.toString() ?? rp['hora_lord']?.toString() ?? '-',
+        'current': currRp['hora_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Asc Sign Lord',
+        'chart': chartRp['asc_sign_lord']?.toString() ?? rp['lagna_rashi_lord']?.toString() ?? '-',
+        'current': currRp['asc_sign_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Asc Star Lord',
+        'chart': chartRp['asc_star_lord']?.toString() ?? rp['lagna_nakshatra_lord']?.toString() ?? '-',
+        'current': currRp['asc_star_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Asc Sub Lord',
+        'chart': chartRp['asc_sub_lord']?.toString() ?? rp['asc_sub_lord']?.toString() ?? rp['lagna_sub_lord']?.toString() ?? '-',
+        'current': currRp['asc_sub_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Moon Sign Lord',
+        'chart': chartRp['moon_sign_lord']?.toString() ?? rp['moon_rashi_lord']?.toString() ?? '-',
+        'current': currRp['moon_sign_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Moon Star Lord',
+        'chart': chartRp['moon_star_lord']?.toString() ?? rp['moon_nakshatra_lord']?.toString() ?? '-',
+        'current': currRp['moon_star_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Moon Sub Lord',
+        'chart': chartRp['moon_sub_lord']?.toString() ?? rp['moon_sub_lord']?.toString() ?? '-',
+        'current': currRp['moon_sub_lord']?.toString() ?? '-',
+      },
+      {
+        'label': 'Day Lord',
+        'chart': chartRp['day_lord']?.toString() ?? rp['day_lord']?.toString() ?? '-',
+        'current': currRp['day_lord']?.toString() ?? '-',
+      },
+    ];
+
+    final currentTimestamp = currRp['timestamp']?.toString() ?? '';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: const Color(0xFF93C5FD).withValues(alpha: isDark ? 0.35 : 0.65),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Header: "Ruling Planets" with refresh indicator
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFF93C5FD).withValues(alpha: isDark ? 0.3 : 0.5),
+                    width: 1.2,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.stars_rounded,
+                    color: const Color(0xFF4338CA),
+                    size: 20.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ruling Planets',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.sp,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        if (currentTimestamp.isNotEmpty)
+                          Text(
+                            'Current Transit: $currentTimestamp',
+                            style: GoogleFonts.inter(
+                              fontSize: 10.5.sp,
+                              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      _fetchKpData();
+                    },
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: const Color(0xFF4338CA).withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.sync_rounded,
+                            size: 13.sp,
+                            color: const Color(0xFF4338CA),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            'Refresh',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF4338CA),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Table Header Row: Item | Planet(Chart) | Planet(Current)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1E293B), Color(0xFF334155)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              padding: EdgeInsets.symmetric(vertical: 10.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 14.w),
+                      child: Text(
+                        'Item',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 13.5.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 18.h,
+                    color: Colors.white24,
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Center(
+                      child: Text(
+                        'Planet(Chart)',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 13.5.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 18.h,
+                    color: Colors.white24,
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Center(
+                      child: Text(
+                        'Planet(Current)',
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 13.5.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Table Body Rows
+            ...items.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final row = entry.value;
+              final isLast = idx == items.length - 1;
+              final rowBg = idx % 2 == 1
+                  ? (isDark ? const Color(0xFF0F172A).withValues(alpha: 0.3) : const Color(0xFFF8FAFC))
+                  : Colors.transparent;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: rowBg,
+                  border: isLast
+                      ? null
+                      : Border(
+                          bottom: BorderSide(
+                            color: const Color(0xFF93C5FD).withValues(alpha: isDark ? 0.2 : 0.4),
+                            width: 1,
+                          ),
+                        ),
+                ),
+                padding: EdgeInsets.symmetric(vertical: 11.h),
+                child: Row(
+                  children: [
+                    // Item Column
+                    Expanded(
+                      flex: 4,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 14.w),
+                        child: Text(
+                          row['label']!,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 18.h,
+                      color: const Color(0xFF93C5FD).withValues(alpha: isDark ? 0.2 : 0.4),
+                    ),
+                    // Planet(Chart) Column
+                    Expanded(
+                      flex: 3,
+                      child: Center(
+                        child: Text(
+                          row['chart']!,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF4338CA),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 18.h,
+                      color: const Color(0xFF93C5FD).withValues(alpha: isDark ? 0.2 : 0.4),
+                    ),
+                    // Planet(Current) Column
+                    Expanded(
+                      flex: 3,
+                      child: Center(
+                        child: Text(
+                          row['current']!,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF059669),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

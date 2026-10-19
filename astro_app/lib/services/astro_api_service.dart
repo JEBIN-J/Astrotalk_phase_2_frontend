@@ -269,7 +269,11 @@ class AstroApiService {
     double? longitude,
     double? timezone,
     required String ayanamsa,
-  double? customAyanamsa,
+    double? customAyanamsa,
+    double? transitLatitude,
+    double? transitLongitude,
+    double? transitTimezone,
+    String? transitDatetime,
   }) async {
     final uri = Uri.parse('$baseUrl/horoscope/kp');
     final Map<String, dynamic> bodyMap = {
@@ -283,6 +287,10 @@ class AstroApiService {
     if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
+    if (transitLatitude != null) bodyMap['transit_latitude'] = transitLatitude;
+    if (transitLongitude != null) bodyMap['transit_longitude'] = transitLongitude;
+    if (transitTimezone != null) bodyMap['transit_timezone'] = transitTimezone;
+    if (transitDatetime != null) bodyMap['transit_datetime'] = transitDatetime;
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
