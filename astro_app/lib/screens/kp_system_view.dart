@@ -1279,6 +1279,32 @@ class _KpSystemViewState extends State<KpSystemView> {
     final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
     final ayanFormatted = _kpData?['ayanamsa_formatted']?.toString() ?? '';
 
+    final ascKp = _kpData?['ascendant'] as Map<String, dynamic>?;
+    final ascSign = ascKp?['sign']?.toString() ??
+        _kpData?['ascendant_sign']?.toString() ??
+        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sign']?.toString() : null) ??
+        '-';
+    final ascNl = ascKp?['nl']?.toString() ??
+        ascKp?['nakshatra_lord']?.toString() ??
+        _kpData?['ruling_planets']?['lagna_nakshatra_lord']?.toString() ??
+        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['nl']?.toString() : null) ??
+        '-';
+    final ascSl = ascKp?['sl']?.toString() ??
+        ascKp?['sub_lord']?.toString() ??
+        _kpData?['ruling_planets']?['asc_sub_lord']?.toString() ??
+        _kpData?['ruling_planets']?['lagna_sub_lord']?.toString() ??
+        (cusps.isNotEmpty ? cusps.first['sl']?.toString() : null) ??
+        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sl']?.toString() : null) ??
+        '-';
+    final ascSsl = ascKp?['ssl']?.toString() ??
+        ascKp?['sub_sub_lord']?.toString() ??
+        (cusps.isNotEmpty ? cusps.first['ssl']?.toString() : null) ??
+        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['ssl']?.toString() : null) ??
+        '-';
+
+    final rp = _kpData?['ruling_planets'] as Map<String, dynamic>? ?? {};
+    final horaLord = rp['hora_lord']?.toString() ?? '-';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1501,7 +1527,31 @@ class _KpSystemViewState extends State<KpSystemView> {
               ],
             ),
           ),
-        SizedBox(height: 20.h),
+        SizedBox(height: 16.h),
+
+        // Ascendant Details Pill Card (Sign, NL, SL, SSL, Hora)
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color: const Color(0xFF4338CA).withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildAscDetailPill('Sign', ascSign, isDark),
+              _buildAscDetailPill('NL (Star)', ascNl, isDark),
+              _buildAscDetailPill('SL (Sub)', ascSl, isDark, highlightColor: const Color(0xFF059669)),
+              if (ascSsl != '-' && ascSsl.isNotEmpty)
+                _buildAscDetailPill('SSL', ascSsl, isDark, highlightColor: const Color(0xFF7C3AED)),
+              _buildAscDetailPill('Hora', horaLord, isDark, highlightColor: const Color(0xFFD97706)),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
 
         // Lower Table: Switches between Bhava Table and Planetary Table
         Builder(
@@ -1561,8 +1611,56 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
+
+  Widget _buildAscDetailPill(
+    String label,
+    String value,
+    bool isDark, {
+    Color? highlightColor,
+  }) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10.5.sp,
+            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 3.h),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            fontSize: 13.sp,
+            fontWeight: FontWeight.w700,
+            color: highlightColor ?? (isDark ? Colors.white : const Color(0xFF0F172A)),
+          ),
+        ),
+      ],
+    );
+  }
+
   // 5. RULING PLANETS
   Widget _buildRulingPlanetsSection(Map<String, dynamic> rp, bool isDark) {
+    final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
+    final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
+
+    final ascSubLord = rp['asc_sub_lord'] ??
+        rp['lagna_sub_lord'] ??
+        _kpData?['ascendant']?['sub_lord'] ??
+        _kpData?['ascendant']?['sl'] ??
+        (cusps.isNotEmpty ? cusps.first['sl'] : null) ??
+        (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sl'] : null) ??
+        '-';
+
+    final moonSubLord = rp['moon_sub_lord'] ??
+        planets.firstWhere((p) => p['name'] == 'Moon', orElse: () => null)?['sl'] ??
+        '-';
+
+    final dayLord = rp['day_lord']?.toString() ?? '-';
+    final horaLord = rp['hora_lord']?.toString() ?? '-';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1605,6 +1703,17 @@ class _KpSystemViewState extends State<KpSystemView> {
                 color: isDark ? Colors.white12 : Colors.black12,
               ),
               _buildRpItem(
+                'Ascendant Sub Lord (Asc SL)',
+                ascSubLord.toString(),
+                isDark,
+                color: const Color(0xFF4F46E5),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
+              _buildRpItem(
                 'Moon Rashi Lord',
                 rp['moon_rashi_lord']?.toString() ?? '-',
                 isDark,
@@ -1625,9 +1734,31 @@ class _KpSystemViewState extends State<KpSystemView> {
                 color: isDark ? Colors.white12 : Colors.black12,
               ),
               _buildRpItem(
-                'Vedic Day Lord',
-                rp['day_lord']?.toString() ?? '-',
+                'Moon Sub Lord (Moon SL)',
+                moonSubLord.toString(),
                 isDark,
+                color: const Color(0xFF4F46E5),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
+              _buildRpItem(
+                'Vedic Day Lord',
+                dayLord,
+                isDark,
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark ? Colors.white12 : Colors.black12,
+              ),
+              _buildRpItem(
+                'Hora Lord',
+                horaLord,
+                isDark,
+                color: const Color(0xFFD97706),
                 isLast: true,
               ),
             ],
@@ -1642,6 +1773,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     String value,
     bool isDark, {
     bool isLast = false,
+    Color? color,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
@@ -1661,7 +1793,7 @@ class _KpSystemViewState extends State<KpSystemView> {
             style: GoogleFonts.outfit(
               fontSize: 13.sp,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF059669),
+              color: color ?? const Color(0xFF059669),
             ),
           ),
         ],
