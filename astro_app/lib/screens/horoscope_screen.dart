@@ -115,6 +115,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   int _selectedDashaCycleIndex = 0;
   bool _isVarshphalTableViewMode = true;
 
+  // Jaimini 5-Level Chara Dasha state variables
+  Map<String, dynamic>? _jaiminiSelectedMahadasha;
+  Map<String, dynamic>? _jaiminiSelectedAntardasha;
+  Map<String, dynamic>? _jaiminiSelectedPratyantardasha;
+  Map<String, dynamic>? _jaiminiSelectedSukshmaDasha;
+  bool _isLoadingJaiminiSubDasha = false;
+  int _jaiminiSubTabIndex = 0;
+
   int _bnnTargetYear = DateTime.now().year;
   bool _isScrubbingBnn = false;
 
@@ -5241,6 +5249,685 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     _fetchBnnDataOnly();
   }
 
+  Future<void> _fetchJaiminiSubDasha(Map<String, dynamic> parentItem, String targetLevel) async {
+    setState(() => _isLoadingJaiminiSubDasha = true);
+    try {
+      final subList = await AstroApiService.getJaiminiSubDasha(
+        parentSign: parentItem['sign']?.toString() ?? 'Aries',
+        startDate: parentItem['start_date']?.toString() ?? '',
+        endDate: parentItem['end_date']?.toString() ?? '',
+        targetLevel: targetLevel,
+      );
+      if (mounted) {
+        setState(() {
+          _isLoadingJaiminiSubDasha = false;
+          if (targetLevel == 'sukshma') {
+            parentItem['sukshma_dashas'] = subList;
+            _jaiminiSelectedPratyantardasha = parentItem;
+            _jaiminiSelectedSukshmaDasha = null;
+          } else if (targetLevel == 'prana') {
+            parentItem['prana_dashas'] = subList;
+            _jaiminiSelectedSukshmaDasha = parentItem;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingJaiminiSubDasha = false);
+    }
+  }
+
+  String _getJaiminiSignGlyph(String? sign) {
+    if (sign == null) return '✦';
+    switch (sign.toLowerCase().trim()) {
+      case 'aries': return '♈';
+      case 'taurus': return '♉';
+      case 'gemini': return '♊';
+      case 'cancer': return '♋';
+      case 'leo': return '♌';
+      case 'virgo': return '♍';
+      case 'libra': return '♎';
+      case 'scorpio': return '♏';
+      case 'sagittarius': return '♐';
+      case 'capricorn': return '♑';
+      case 'aquarius': return '♒';
+      case 'pisces': return '♓';
+      default: return '✦';
+    }
+  }
+
+  void _jumpToJaiminiActivePeriod(List<dynamic> dashas) {
+    dynamic activeMd;
+    for (var d in dashas) {
+      if (d['is_active'] == true) {
+        activeMd = d;
+        break;
+      }
+    }
+    if (activeMd == null && dashas.isNotEmpty) activeMd = dashas.first;
+    if (activeMd == null) return;
+
+    dynamic activeAd;
+    final ads = (activeMd['antardashas'] as List<dynamic>? ?? []);
+    for (var ad in ads) {
+      if (ad['is_active'] == true) {
+        activeAd = ad;
+        break;
+      }
+    }
+    if (activeAd == null && ads.isNotEmpty) activeAd = ads.first;
+
+    dynamic activePd;
+    if (activeAd != null) {
+      final pds = (activeAd['pratyantardashas'] as List<dynamic>? ?? []);
+      for (var pd in pds) {
+        if (pd['is_active'] == true) {
+          activePd = pd;
+          break;
+        }
+      }
+      if (activePd == null && pds.isNotEmpty) activePd = pds.first;
+    }
+
+    dynamic activeSd;
+    if (activePd != null) {
+      final sds = (activePd['sukshma_dashas'] as List<dynamic>? ?? []);
+      for (var sd in sds) {
+        if (sd['is_active'] == true) {
+          activeSd = sd;
+          break;
+        }
+      }
+      if (activeSd == null && sds.isNotEmpty) activeSd = sds.first;
+    }
+
+    setState(() {
+      _jaiminiSelectedMahadasha = activeMd as Map<String, dynamic>?;
+      _jaiminiSelectedAntardasha = activeAd as Map<String, dynamic>?;
+      _jaiminiSelectedPratyantardasha = activePd as Map<String, dynamic>?;
+      _jaiminiSelectedSukshmaDasha = activeSd as Map<String, dynamic>?;
+    });
+  }
+
+  Widget _buildJaiminiSpotlightCard(
+    bool isDark,
+    Map<String, dynamic> currentPeriod,
+    List<dynamic> dashas,
+  ) {
+    final md = currentPeriod['mahadasha'] as Map<String, dynamic>? ?? {};
+    final ad = currentPeriod['antardasha'] as Map<String, dynamic>? ?? {};
+    final pd = currentPeriod['pratyantardasha'] as Map<String, dynamic>? ?? {};
+    final sd = currentPeriod['sukshma_dasha'] as Map<String, dynamic>? ?? {};
+    final pran = currentPeriod['prana_dasha'] as Map<String, dynamic>? ?? {};
+
+    Widget buildTierChip(String label, Map<String, dynamic> tierData, Color accentColor) {
+      final sign = tierData['sign']?.toString() ?? '-';
+      final duration = tierData['duration']?.toString() ?? '';
+      final lord = tierData['lord']?.toString() ?? '';
+      final glyph = _getJaiminiSignGlyph(sign);
+
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(color: accentColor.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Text(glyph, style: GoogleFonts.outfit(fontSize: 12.sp)),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              sign,
+              style: GoogleFonts.outfit(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
+            if (duration.isNotEmpty)
+              Text(
+                duration,
+                style: GoogleFonts.outfit(
+                  fontSize: 10.sp,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            if (lord.isNotEmpty)
+              Text(
+                lord,
+                style: GoogleFonts.outfit(
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w500,
+                  color: accentColor,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1B4B), const Color(0xFF0F172A)]
+              : [const Color(0xFFEEF2FF), Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4338CA).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4338CA).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.bolt_rounded, color: const Color(0xFF4338CA), size: 16.sp),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CURRENT RUNNING CHARA DASHA',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: const Color(0xFF4338CA),
+                      ),
+                    ),
+                    Text(
+                      'Live 5-tier backend synchronized breakdown',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10.sp,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () => _jumpToJaiminiActivePeriod(dashas),
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4338CA),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.near_me_rounded, color: Colors.white, size: 12.sp),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Jump to Active',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                buildTierChip('MD', md, const Color(0xFF4338CA)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(Icons.arrow_forward_ios_rounded, size: 10.sp, color: const Color(0xFF94A3B8)),
+                ),
+                buildTierChip('AD', ad, const Color(0xFF7C3AED)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(Icons.arrow_forward_ios_rounded, size: 10.sp, color: const Color(0xFF94A3B8)),
+                ),
+                buildTierChip('PD', pd, const Color(0xFF0284C7)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(Icons.arrow_forward_ios_rounded, size: 10.sp, color: const Color(0xFF94A3B8)),
+                ),
+                buildTierChip('SD', sd, const Color(0xFF059669)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(Icons.arrow_forward_ios_rounded, size: 10.sp, color: const Color(0xFF94A3B8)),
+                ),
+                buildTierChip('Pran', pran, const Color(0xFFD97706)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJaiminiBreadcrumbBar(bool isDark) {
+    final hasMd = _jaiminiSelectedMahadasha != null;
+    final hasAd = _jaiminiSelectedAntardasha != null;
+    final hasPd = _jaiminiSelectedPratyantardasha != null;
+    final hasSd = _jaiminiSelectedSukshmaDasha != null;
+
+    int currentLevelNum = 1;
+    if (hasSd) {
+      currentLevelNum = 5;
+    } else if (hasPd) {
+      currentLevelNum = 4;
+    } else if (hasAd) {
+      currentLevelNum = 3;
+    } else if (hasMd) {
+      currentLevelNum = 2;
+    }
+
+    Widget buildCrumb(String title, bool isSelected, VoidCallback onTap) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF4338CA).withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(6.r),
+            border: isSelected
+                ? Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.4))
+                : null,
+          ),
+          child: Text(
+            title,
+            style: GoogleFonts.outfit(
+              fontSize: 12.sp,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected
+                  ? const Color(0xFF4338CA)
+                  : (isDark ? Colors.white70 : const Color(0xFF475569)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          if (currentLevelNum > 1) ...[
+            InkWell(
+              onTap: () {
+                setState(() {
+                  if (currentLevelNum == 5) {
+                    _jaiminiSelectedSukshmaDasha = null;
+                  } else if (currentLevelNum == 4) {
+                    _jaiminiSelectedPratyantardasha = null;
+                  } else if (currentLevelNum == 3) {
+                    _jaiminiSelectedAntardasha = null;
+                  } else if (currentLevelNum == 2) {
+                    _jaiminiSelectedMahadasha = null;
+                  }
+                });
+              },
+              borderRadius: BorderRadius.circular(6.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back_rounded, size: 12.sp, color: const Color(0xFF4338CA)),
+                    SizedBox(width: 2.w),
+                    Text('Up', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 6.w),
+          ],
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  buildCrumb(
+                    'Mahadasha',
+                    !hasMd,
+                    () => setState(() {
+                      _jaiminiSelectedMahadasha = null;
+                      _jaiminiSelectedAntardasha = null;
+                      _jaiminiSelectedPratyantardasha = null;
+                      _jaiminiSelectedSukshmaDasha = null;
+                    }),
+                  ),
+                  if (hasMd) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.w),
+                      child: Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                    ),
+                    buildCrumb(
+                      'AD: ${_jaiminiSelectedMahadasha!['sign']}',
+                      hasMd && !hasAd,
+                      () => setState(() {
+                        _jaiminiSelectedAntardasha = null;
+                        _jaiminiSelectedPratyantardasha = null;
+                        _jaiminiSelectedSukshmaDasha = null;
+                      }),
+                    ),
+                  ],
+                  if (hasAd) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.w),
+                      child: Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                    ),
+                    buildCrumb(
+                      'PD: ${_jaiminiSelectedAntardasha!['sign']}',
+                      hasAd && !hasPd,
+                      () => setState(() {
+                        _jaiminiSelectedPratyantardasha = null;
+                        _jaiminiSelectedSukshmaDasha = null;
+                      }),
+                    ),
+                  ],
+                  if (hasPd) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.w),
+                      child: Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                    ),
+                    buildCrumb(
+                      'SD: ${_jaiminiSelectedPratyantardasha!['sign']}',
+                      hasPd && !hasSd,
+                      () => setState(() {
+                        _jaiminiSelectedSukshmaDasha = null;
+                      }),
+                    ),
+                  ],
+                  if (hasSd) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2.w),
+                      child: Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                    ),
+                    buildCrumb(
+                      'Pran: ${_jaiminiSelectedSukshmaDasha!['sign']}',
+                      true,
+                      () {},
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJaiminiDashaTable({
+    required BuildContext context,
+    required bool isDark,
+    required List<dynamic> currentList,
+    required int levelNum,
+    required Function(Map<String, dynamic>) onPeriodTap,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: SizedBox(
+          width: 480.w,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Table Header
+              Container(
+                color: const Color(0xFF4338CA),
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 145.w,
+                      child: Text('Sign / Lord', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                    SizedBox(
+                      width: 85.w,
+                      child: Text('Duration', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                    SizedBox(
+                      width: 115.w,
+                      child: Text('Start Date', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                    SizedBox(
+                      width: 120.w,
+                      child: Text('End Date', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Rows
+              ...currentList.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value as Map<String, dynamic>;
+                final isActive = item['is_active'] == true;
+                final sign = item['sign']?.toString() ?? '';
+                final glyph = _getJaiminiSignGlyph(sign);
+                final lord = item['lord']?.toString() ?? '';
+                final dur = item['duration_formatted']?.toString() ?? item['duration']?.toString() ?? '';
+                final startStr = item['start_formatted']?.toString() ?? item['start_date']?.toString() ?? '';
+                final endStr = item['end_formatted']?.toString() ?? item['end_date']?.toString() ?? '';
+
+                final rowBg = isActive
+                    ? (isDark ? const Color(0xFF1E1B4B).withValues(alpha: 0.6) : const Color(0xFFEEF2FF))
+                    : (index.isEven
+                        ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC))
+                        : Colors.transparent);
+
+                return Material(
+                  color: rowBg,
+                  child: InkWell(
+                    onTap: () => onPeriodTap(item),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFE2E8F0),
+                            width: 0.8,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Sign / Lord Column
+                          SizedBox(
+                            width: 145.w,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 26.w,
+                                  height: 26.w,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: isActive
+                                        ? Colors.green.withValues(alpha: 0.15)
+                                        : const Color(0xFF4338CA).withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                    border: isActive ? Border.all(color: Colors.green.withValues(alpha: 0.5), width: 1) : null,
+                                  ),
+                                  child: Text(glyph, style: GoogleFonts.outfit(fontSize: 13.sp)),
+                                ),
+                                SizedBox(width: 8.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              sign,
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 13.sp,
+                                                fontWeight: FontWeight.bold,
+                                                color: isActive ? Colors.green : const Color(0xFF4338CA),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (isActive) ...[
+                                            SizedBox(width: 4.w),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green,
+                                                borderRadius: BorderRadius.circular(4.r),
+                                              ),
+                                              child: Text('NOW', style: GoogleFonts.outfit(fontSize: 8.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      if (lord.isNotEmpty)
+                                        Text(
+                                          'Lord: $lord',
+                                          style: GoogleFonts.outfit(fontSize: 10.sp, color: const Color(0xFF64748B)),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Duration Column
+                          SizedBox(
+                            width: 85.w,
+                            child: Container(
+                              margin: EdgeInsets.only(right: 8.w),
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4338CA).withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Text(
+                                dur.contains('Yr') || dur.contains('Mo') || dur.contains('Day') || dur.contains('Hr') || dur.contains('Min') ? dur : '$dur Yrs',
+                                style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+
+                          // Start Date Column
+                          SizedBox(
+                            width: 115.w,
+                            child: Padding(
+                              padding: EdgeInsets.only(right: 6.w),
+                              child: Text(
+                                startStr,
+                                style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+
+                          // End Date Column
+                          SizedBox(
+                            width: 120.w,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    endStr,
+                                    style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (levelNum < 5)
+                                  Icon(Icons.chevron_right_rounded, size: 16.sp, color: const Color(0xFF4338CA)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildJaiminiTab(BuildContext context, bool isDark) {
     if (_jaiminiData == null) {
       return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
@@ -5251,6 +5938,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final arudhas = _jaiminiData!['arudha_padas'] as List<dynamic>? ?? [];
     final argalas = _jaiminiData!['argala_on_al'] as List<dynamic>? ?? [];
     final dashas = _jaiminiData!['chara_dasha'] as List<dynamic>? ?? [];
+    final currentPeriod = _jaiminiData!['current_period'] as Map<String, dynamic>? ?? {};
     final rashiMatrix = _jaiminiData!['rashi_drishti'] as List<dynamic>? ?? [];
     final config = _jaiminiData!['config'] as Map<String, dynamic>? ?? {};
     final yogas = _jaiminiData!['jaimini_yogas'] as List<dynamic>? ?? [];
@@ -5280,45 +5968,47 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       );
     }
 
-    Widget buildCollapsibleSection(String title, String? subtitle, List<Widget> sectionChildren, {bool initiallyExpanded = false}) {
-      return Padding(
-        padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            dividerColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-          child: ExpansionTile(
-            initiallyExpanded: initiallyExpanded,
-            tilePadding: EdgeInsets.zero,
-            iconColor: const Color(0xFF4338CA),
-            collapsedIconColor: isDark ? Colors.white70 : Colors.black54,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)),
-                ),
-                if (subtitle != null) ...[
-                  SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black54),
-                  ),
-                ]
-              ],
-            ),
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: sectionChildren,
-              )
-            ],
-          ),
-        ),
-      );
+    final List<String> jaiminiSubTabs = [
+      'Chara Karakas',
+      'Arudha Padas',
+      'Rashi Drishti',
+      'Argala',
+      'Chara Dasha',
+      'Special Lagnas',
+      'Karakamsha',
+      'Yogas',
+      'Transits',
+    ];
+    final activeSubTabIndex = _jaiminiSubTabIndex.clamp(0, jaiminiSubTabs.length - 1);
+
+    String getJaiminiTabTitle(int index, dynamic scheme) {
+      switch (index) {
+        case 0: return 'Chara Karakas (${scheme ?? '7K'})';
+        case 1: return 'Arudha Padas';
+        case 2: return 'Rashi Drishti';
+        case 3: return 'Argala on Arudha Lagna';
+        case 4: return 'Chara Dasha Timeline';
+        case 5: return 'Special Lagnas';
+        case 6: return 'Karakamsha Analysis';
+        case 7: return 'Jaimini Yogas';
+        case 8: return 'Jaimini Transits';
+        default: return '';
+      }
+    }
+
+    String? getJaiminiTabSubtitle(int index, dynamic karakamsha) {
+      switch (index) {
+        case 0: return 'Planets ranked by exact degree to show soul desires.';
+        case 1: return 'The illusion/image of each house in society.';
+        case 2: return 'Sign-based aspects and mutual planetary sight.';
+        case 3: return 'Planetary interventions and obstructions.';
+        case 4: return 'Tap any period to drill down: Mahadasha -> Antardasha -> Pratyantardasha -> Sukshma Dasha -> Prana Dasha.';
+        case 5: return 'Other Ascendants used in Jaimini.';
+        case 6: return 'Houses counted from Karakamsha ($karakamsha).';
+        case 7: return 'Special combinations.';
+        case 8: return 'Activation for ${DateTime.now().toString().split(' ')[0]}';
+        default: return null;
+      }
     }
 
     
@@ -5374,11 +6064,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
     Widget buildToggle() {
       return Container(
-        margin: EdgeInsets.only(bottom: 16.h, top: 16.h),
+        padding: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
-          borderRadius: BorderRadius.circular(10.r),
-          border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFD1D5DB)),
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(9.r),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -5387,16 +6077,37 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               onTap: () => setState(() => _isJaiminiCardView = false),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: !_isJaiminiCardView ? const Color(0xFF4338CA) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9.r),
+                  color: !_isJaiminiCardView ? const Color(0xFF4F46E5) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7.r),
+                  boxShadow: !_isJaiminiCardView
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.table_rows_rounded, size: 16, color: !_isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45)),
-                    SizedBox(width: 6.w),
-                    Text('Table View', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: !_isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45))),
+                    Icon(
+                      Icons.table_rows_rounded,
+                      size: 13.5.sp,
+                      color: !_isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Table',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.5.sp,
+                        fontWeight: FontWeight.w600,
+                        color: !_isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -5405,16 +6116,37 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               onTap: () => setState(() => _isJaiminiCardView = true),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: _isJaiminiCardView ? const Color(0xFF4338CA) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9.r),
+                  color: _isJaiminiCardView ? const Color(0xFF4F46E5) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7.r),
+                  boxShadow: _isJaiminiCardView
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.view_agenda_rounded, size: 16, color: _isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45)),
-                    SizedBox(width: 6.w),
-                    Text('Card View', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: _isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : Colors.black45))),
+                    Icon(
+                      Icons.view_agenda_rounded,
+                      size: 13.5.sp,
+                      color: _isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Cards',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.5.sp,
+                        fontWeight: FontWeight.w600,
+                        color: _isJaiminiCardView ? Colors.white : (isDark ? Colors.white54 : const Color(0xFF64748B)),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -5428,9 +6160,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       padding: EdgeInsets.all(16.w),
       physics: const BouncingScrollPhysics(),
       children: [
-        // 1. Overview Section
+        // 1. Overview Section (Dropdown format)
         Container(
-          padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(16.r),
@@ -5439,30 +6170,41 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 10, offset: const Offset(0, 4)),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          clipBehavior: Clip.antiAlias,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              childrenPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+              iconColor: const Color(0xFF4338CA),
+              collapsedIconColor: isDark ? Colors.white70 : Colors.black54,
+              title: Row(
                 children: [
                   Icon(Icons.auto_awesome, color: const Color(0xFF4338CA), size: 18.sp),
                   SizedBox(width: 8.w),
                   Text('Jaimini Overview', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : const Color(0xFF4338CA))),
                 ],
               ),
-              SizedBox(height: 16.h),
-              Wrap(
-                spacing: 12.w,
-                runSpacing: 12.h,
-                children: [
-                  _buildSummaryChip('Atmakaraka', overview['atmakaraka']?.toString() ?? '', isDark),
-                  _buildSummaryChip('Karakamsha', overview['karakamsha']?.toString() ?? '', isDark),
-                  _buildSummaryChip('Arudha Lagna', overview['arudha_lagna']?.toString() ?? '', isDark),
-                  _buildSummaryChip('Upapada', overview['upapada']?.toString() ?? '', isDark),
-                  _buildSummaryChip('Current Dasha', overview['current_dasha_sign']?.toString() ?? '', isDark),
-                  _buildSummaryChip('Karaka Scheme', config['karaka_scheme']?.toString() ?? '7K', isDark),
-                ],
-              )
-            ],
+              children: [
+                Wrap(
+                  spacing: 12.w,
+                  runSpacing: 12.h,
+                  children: [
+                    _buildSummaryChip('Atmakaraka', overview['atmakaraka']?.toString() ?? '', isDark),
+                    _buildSummaryChip('Karakamsha', overview['karakamsha']?.toString() ?? '', isDark),
+                    _buildSummaryChip('Arudha Lagna', overview['arudha_lagna']?.toString() ?? '', isDark),
+                    _buildSummaryChip('Upapada', overview['upapada']?.toString() ?? '', isDark),
+                    _buildSummaryChip('Current Dasha', overview['current_dasha_sign']?.toString() ?? '', isDark),
+                    _buildSummaryChip('Karaka Scheme', config['karaka_scheme']?.toString() ?? '7K', isDark),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
 
@@ -5487,111 +6229,119 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ),
 
-        Align(
-          alignment: Alignment.centerRight,
-          child: buildToggle(),
-        ),
-
-        buildCollapsibleSection(
-          'Chara Karakas (${config['karaka_scheme'] ?? '7K'})', 
-          'Planets ranked by exact degree to show soul desires.',
-          initiallyExpanded: true,
-          [
-            if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Rank', 'Karaka', 'Planet', 'Eff. Degree', 'Sign'],
-            flexes: [1, 2, 2, 2, 2],
-            rows: charaKarakas.map((ck) => [
-              Text(ck['rank'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(ck['karaka_code'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-              Text(ck['planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-              Text(ck['effective_degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(ck['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-            ]).toList(),
-          )
-        else
-          ...charaKarakas.map((ck) {
-            final code = ck['karaka_code']?.toString() ?? '';
-            final planet = ck['planet']?.toString() ?? '';
-            final degree = ck['effective_degree']?.toString() ?? '';
-            final sign = ck['sign']?.toString() ?? '';
-            final meaning = ck['meaning']?.toString() ?? '';
-
-            Color badgeColor = const Color(0xFF64748B);
-            if (code == 'AK') badgeColor = const Color(0xFFD97706);
-            if (code == 'AmK') badgeColor = const Color(0xFF059669);
-            if (code == 'DK') badgeColor = const Color(0xFFDC2626);
-
-            return Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Text(code, style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: badgeColor)),
+        // Sub-tabs navigation bar (Image 1 format)
+        Container(
+          height: 46.h,
+          margin: EdgeInsets.only(top: 16.h, bottom: 8.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: List.generate(jaiminiSubTabs.length, (index) {
+                final isSelected = activeSubTabIndex == index;
+                return GestureDetector(
+                  onTap: () => setState(() => _jaiminiSubTabIndex = index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      jaiminiSubTabs[index],
+                      style: GoogleFonts.outfit(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        fontSize: 13.5.sp,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white54 : const Color(0xFF64748B)),
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(child: Text(planet, style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)))),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(degree, style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                          Text(sign, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54)),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                  SizedBox(height: 10.h),
-                  Text(meaning, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                ],
-              ),
-            );
-          }),
-          ],
+                );
+              }),
+            ),
+          ),
         ),
 
-        buildCollapsibleSection('Arudha Padas', 'The illusion/image of each house in society.', [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Pada', 'Pada Sign', 'House Lord', 'Exception'],
-            flexes: [1, 2, 2, 2],
-            rows: arudhas.map((a) => [
-              Text(a['name'].toString().split(' ').first, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-              Text(a['final_pada'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-              Text(a['sign_lord'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(a['exception'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-            ]).toList(),
-          )
-        else
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: arudhas.map((a) {
-              final exception = a['exception']?.toString() ?? 'No';
-              final hasEx = exception != 'No';
+        // Section Title & Subtitle + View Toggle
+        Padding(
+          padding: EdgeInsets.only(top: 10.h, bottom: 12.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      getJaiminiTabTitle(activeSubTabIndex, config['karaka_scheme']),
+                      style: GoogleFonts.outfit(
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  buildToggle(),
+                ],
+              ),
+              if (getJaiminiTabSubtitle(activeSubTabIndex, overview['karakamsha']) != null) ...[
+                SizedBox(height: 4.h),
+                Text(
+                  getJaiminiTabSubtitle(activeSubTabIndex, overview['karakamsha'])!,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12.sp,
+                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        if (activeSubTabIndex == 0) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Rank', 'Karaka', 'Planet', 'Eff. Degree', 'Sign'],
+              flexes: [1, 2, 2, 2, 2],
+              rows: charaKarakas.map((ck) => [
+                Text(ck['rank'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(ck['karaka_code'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                Text(ck['planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                Text(ck['effective_degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(ck['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ]).toList(),
+            )
+          else
+            ...charaKarakas.map((ck) {
+              final code = ck['karaka_code']?.toString() ?? '';
+              final planet = ck['planet']?.toString() ?? '';
+              final degree = ck['effective_degree']?.toString() ?? '';
+              final sign = ck['sign']?.toString() ?? '';
+              final meaning = ck['meaning']?.toString() ?? '';
+
+              Color badgeColor = const Color(0xFF64748B);
+              if (code == 'AK') badgeColor = const Color(0xFFD97706);
+              if (code == 'AmK') badgeColor = const Color(0xFF059669);
+              if (code == 'DK') badgeColor = const Color(0xFFDC2626);
+
               return Container(
-                width: (MediaQuery.of(context).size.width - 40.w) / 2,
-                padding: EdgeInsets.all(12.w),
+                margin: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: hasEx ? const Color(0xFF4338CA).withValues(alpha: 0.5) : const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
                   ],
@@ -5600,411 +6350,678 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(a['name']?.toString().split(' ').first ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                        if (hasEx) Icon(Icons.info_outline, size: 14.sp, color: const Color(0xFF4338CA)),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(a['final_pada']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                    SizedBox(height: 4.h),
-                    Text('Lord: ${a['sign_lord']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF64748B))),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          ],
-        ),
-
-        buildCollapsibleSection('Rashi Drishti (Aspects)', null, [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Sign', 'Aspects Signs', 'Planets in Sign'],
-            flexes: [2, 4, 2],
-            rows: rashiMatrix.map((rm) {
-              final aspects = (rm['aspects'] as List).join(', ');
-              final planets = (rm['planets_in_sign'] as List).join(', ');
-              return [
-                Text(rm['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                Text(aspects.isEmpty ? '-' : aspects, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              ];
-            }).toList(),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rashiMatrix.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-              itemBuilder: (context, index) {
-                final rm = rashiMatrix[index];
-                return Padding(
-                  padding: EdgeInsets.all(12.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(rm['sign'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                      SizedBox(height: 4.h),
-                      Text('Aspects: ${(rm['aspects'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                      if ((rm['planets_in_sign'] as List).isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: 2.h),
-                          child: Text('Planets: ${(rm['planets_in_sign'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text(code, style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: badgeColor)),
                         ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          ],
-        ),
-
-        buildCollapsibleSection('Argala on Arudha Lagna', 'Planetary interventions and obstructions.', [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Argala Type', 'Causing Planets', 'Obstructing (Virodh)', 'Status'],
-            flexes: [2, 2, 2, 2],
-            rows: argalas.map((arg) {
-              final argP = (arg['argala_planets'] as List).join(', ');
-              final virP = (arg['virodh_planets'] as List).join(', ');
-              return [
-                Text(arg['type'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                Text(argP.isEmpty ? 'None' : argP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                Text(virP.isEmpty ? 'None' : virP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                Text(arg['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: arg['status'] == 'Effective' ? Colors.green : Colors.red)),
-              ];
-            }).toList(),
-          )
-        else
-          ...argalas.map((arg) {
-            final isEffective = arg['status'] == 'Effective';
-            return Container(
-              margin: EdgeInsets.only(bottom: 8.h),
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: isEffective ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(arg['type']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                        SizedBox(height: 4.h),
-                        Text('By: ${arg['argala_planets']?.isEmpty == true ? 'None' : (arg['argala_planets'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                        Text('Obstructed: ${arg['virodh_planets']?.isEmpty == true ? 'None' : (arg['virodh_planets'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: isEffective ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(arg['status']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isEffective ? Colors.green : Colors.red)),
-                  )
-                ],
-              ),
-            );
-          }),
-          ],
-        ),
-
-        buildCollapsibleSection('Chara Dasha Timeline', 'Sign-based life periods.', [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Dasha Sign', 'Duration', 'Start', 'End'],
-            flexes: [2, 1, 2, 2],
-            rows: dashas.map((d) => [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(d['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                  if (d['antardashas'] != null)
-                    Text('${(d['antardashas'] as List).length} Sub-periods', style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey)),
-                ],
-              ),
-              Text('${d['duration']} Yrs', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(d['start_date'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(d['end_date'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-            ]).toList(),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: dashas.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-              itemBuilder: (context, index) {
-                final d = dashas[index];
-                return Padding(
-                  padding: EdgeInsets.all(14.w),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40.w,
-                        height: 40.w,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4338CA).withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(d['sign']?.toString().substring(0, 2).toUpperCase() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        SizedBox(width: 12.w),
+                        Expanded(child: Text(planet, style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B)))),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(d['sign']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                            Text('${d['duration']} Years', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                            Text(degree, style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                            Text(sign, style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white54 : Colors.black54)),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(d['start_date']?.toString().split('-').first ?? '', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                          Text('-', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                          Text(d['end_date']?.toString().split('-').first ?? '', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          ],
-        ),
-        
-        buildCollapsibleSection('Special Lagnas', 'Other Ascendants used in Jaimini.', [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Lagna Name', 'Sign', 'Degree'],
-            flexes: [2, 1, 1],
-            rows: specialLagnas.map((sl) => [
-              Text(sl['name'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-              Text(sl['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(sl['degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-            ]).toList(),
-          )
-        else
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: specialLagnas.map((sl) {
-              return Container(
-                width: (MediaQuery.of(context).size.width - 40.w) / 2,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(sl['name']?.toString().split(' ').first ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                    SizedBox(height: 8.h),
-                    Text(sl['sign']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                    SizedBox(height: 4.h),
-                    Text(sl['degree']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                      ],
+                    ),
+                    SizedBox(height: 10.h),
+                    Text(meaning, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
                   ],
                 ),
               );
-            }).toList(),
-          ),
-          ],
-        ),
-
-        buildCollapsibleSection('Karakamsha Analysis', 'Houses counted from Karakamsha (${overview["karakamsha"]}).', [
-        if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['House', 'Sign', 'Planets', 'Rashi Drishti'],
-            flexes: [1, 1, 2, 2],
-            rows: kAnalysis.map((k) {
-              final planets = (k['planets'] as List).join(', ');
-              final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
-              return [
-                Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-                Text(drishti.isEmpty ? '-' : drishti, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              ];
-            }).toList(),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: kAnalysis.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-              itemBuilder: (context, index) {
-                final k = kAnalysis[index];
-                final planets = (k['planets'] as List).join(', ');
-                final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
-                return Padding(
+            }),
+        ] else if (activeSubTabIndex == 1) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Pada', 'Pada Sign', 'House Lord', 'Exception'],
+              flexes: [1, 2, 2, 2],
+              rows: arudhas.map((a) => [
+                Text(a['name'].toString().split(' ').first, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                Text(a['final_pada'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                Text(a['sign_lord'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(a['exception'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ]).toList(),
+            )
+          else
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: arudhas.map((a) {
+                final exception = a['exception']?.toString() ?? 'No';
+                final hasEx = exception != 'No';
+                return Container(
+                  width: (MediaQuery.of(context).size.width - 40.w) / 2,
                   padding: EdgeInsets.all(12.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(6.w),
-                            decoration: BoxDecoration(color: const Color(0xFF4338CA).withValues(alpha: 0.1), shape: BoxShape.circle),
-                            child: Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      Text('Planets: ${planets.isEmpty ? 'None' : planets}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                      Text('Rashi Drishti: ${drishti.isEmpty ? 'None' : drishti}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: hasEx ? const Color(0xFF4338CA).withValues(alpha: 0.5) : const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
                     ],
                   ),
-                );
-              },
-            ),
-          ),
-          ],
-        ),
-
-        buildCollapsibleSection('Jaimini Yogas', 'Special combinations.', [
-        if (yogas.isEmpty)
-           Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Text('No Jaimini Yogas formed.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
-          )
-        else if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Yoga', 'Planets', 'Status'],
-            flexes: [2, 3, 2],
-            rows: yogas.map((y) => [
-              Text(y['yoga'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
-              Text(y['planets'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text(y['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.green)),
-            ]).toList(),
-          )
-        else
-          ...yogas.map((y) {
-            return Container(
-              margin: EdgeInsets.only(bottom: 8.h),
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(y['yoga']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6.r)),
-                        child: Text(y['status']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.green)),
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(y['planets']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                  Text(y['rule']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                  Text('Evidence: ${y['evidence']}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
-                ],
-              ),
-            );
-          }),
-          ],
-        ),
-          
-        buildCollapsibleSection('Current Jaimini Transits', 'Activation for ${DateTime.now().toString().split(' ')[0]}', [
-        if (transits.isEmpty)
-           Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Text('No major transit activations today.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
-          )
-        else if (!_isJaiminiCardView)
-          buildCustomTable(
-            headers: ['Planet', 'Current Sign', 'Connections'],
-            flexes: [2, 2, 3],
-            rows: transits.map((t) => [
-              Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
-              Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-              Text((t['connections'] as List).join(', '), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
-            ]).toList(),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: transits.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-              itemBuilder: (context, index) {
-                final t = transits[index];
-                return Padding(
-                  padding: EdgeInsets.all(12.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
-                          Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+                          Text(a['name']?.toString().split(' ').first ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                          if (hasEx) Icon(Icons.info_outline, size: 14.sp, color: const Color(0xFF4338CA)),
                         ],
                       ),
                       SizedBox(height: 4.h),
-                      Text('Connections: ${(t['connections'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                      Text(a['final_pada']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                      SizedBox(height: 4.h),
+                      Text('Lord: ${a['sign_lord']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF64748B))),
                     ],
                   ),
                 );
-              },
+              }).toList(),
             ),
+        ] else if (activeSubTabIndex == 2) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Sign', 'Aspects Signs', 'Planets in Sign'],
+              flexes: [2, 4, 2],
+              rows: rashiMatrix.map((rm) {
+                final aspects = (rm['aspects'] as List).join(', ');
+                final planets = (rm['planets_in_sign'] as List).join(', ');
+                return [
+                  Text(rm['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                  Text(aspects.isEmpty ? '-' : aspects, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                ];
+              }).toList(),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: rashiMatrix.length,
+                separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                itemBuilder: (context, index) {
+                  final rm = rashiMatrix[index];
+                  return Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(rm['sign'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                        SizedBox(height: 4.h),
+                        Text('Aspects: ${(rm['aspects'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                        if ((rm['planets_in_sign'] as List).isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(top: 2.h),
+                            child: Text('Planets: ${(rm['planets_in_sign'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ] else if (activeSubTabIndex == 3) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Argala Type', 'Causing Planets', 'Obstructing (Virodh)', 'Status'],
+              flexes: [2, 2, 2, 2],
+              rows: argalas.map((arg) {
+                final argP = (arg['argala_planets'] as List).join(', ');
+                final virP = (arg['virodh_planets'] as List).join(', ');
+                return [
+                  Text(arg['type'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                  Text(argP.isEmpty ? 'None' : argP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(virP.isEmpty ? 'None' : virP, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(arg['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: arg['status'] == 'Effective' ? Colors.green : Colors.red)),
+                ];
+              }).toList(),
+            )
+          else
+            ...argalas.map((arg) {
+              final isEffective = arg['status'] == 'Effective';
+              return Container(
+                margin: EdgeInsets.only(bottom: 8.h),
+                padding: EdgeInsets.all(14.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: isEffective ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(arg['type']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                          SizedBox(height: 4.h),
+                          Text('By: ${arg['argala_planets']?.isEmpty == true ? 'None' : (arg['argala_planets'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                          Text('Obstructed: ${arg['virodh_planets']?.isEmpty == true ? 'None' : (arg['virodh_planets'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: isEffective ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Text(arg['status']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isEffective ? Colors.green : Colors.red)),
+                    )
+                  ],
+                ),
+              );
+            }),
+        ] else if (activeSubTabIndex == 4) ...[
+          Builder(
+            builder: (context) {
+              final bool hasMd = _jaiminiSelectedMahadasha != null;
+              final bool hasAd = _jaiminiSelectedAntardasha != null;
+              final bool hasPd = _jaiminiSelectedPratyantardasha != null;
+              final bool hasSd = _jaiminiSelectedSukshmaDasha != null;
+
+              List<dynamic> currentList;
+              String levelTitle;
+              String levelSub;
+              int levelNum;
+
+              if (hasSd) {
+                currentList = (_jaiminiSelectedSukshmaDasha!['prana_dashas'] as List<dynamic>? ?? []);
+                levelTitle = 'Prana Dashas';
+                levelSub = 'Level 5 (Sub-micro periods of ${_jaiminiSelectedSukshmaDasha!['sign']})';
+                levelNum = 5;
+              } else if (hasPd) {
+                currentList = (_jaiminiSelectedPratyantardasha!['sukshma_dashas'] as List<dynamic>? ?? []);
+                levelTitle = 'Sukshma Dashas';
+                levelSub = 'Level 4 (Micro periods of ${_jaiminiSelectedPratyantardasha!['sign']})';
+                levelNum = 4;
+              } else if (hasAd) {
+                currentList = (_jaiminiSelectedAntardasha!['pratyantardashas'] as List<dynamic>? ?? []);
+                levelTitle = 'Pratyantardashas';
+                levelSub = 'Level 3 (Sub-sub periods of ${_jaiminiSelectedAntardasha!['sign']})';
+                levelNum = 3;
+              } else if (hasMd) {
+                currentList = (_jaiminiSelectedMahadasha!['antardashas'] as List<dynamic>? ?? []);
+                levelTitle = 'Antardashas';
+                levelSub = 'Level 2 (Sub-periods of ${_jaiminiSelectedMahadasha!['sign']})';
+                levelNum = 2;
+              } else {
+                currentList = dashas;
+                levelTitle = 'Mahadashas';
+                levelSub = 'Level 1 (12 Major Rashi life cycles)';
+                levelNum = 1;
+              }
+
+              void handlePeriodTap(Map<String, dynamic> item) {
+                if (levelNum == 1) {
+                  setState(() {
+                    _jaiminiSelectedMahadasha = item;
+                    _jaiminiSelectedAntardasha = null;
+                    _jaiminiSelectedPratyantardasha = null;
+                    _jaiminiSelectedSukshmaDasha = null;
+                  });
+                } else if (levelNum == 2) {
+                  setState(() {
+                    _jaiminiSelectedAntardasha = item;
+                    _jaiminiSelectedPratyantardasha = null;
+                    _jaiminiSelectedSukshmaDasha = null;
+                  });
+                } else if (levelNum == 3) {
+                  if (item['sukshma_dashas'] != null && (item['sukshma_dashas'] as List).isNotEmpty) {
+                    setState(() {
+                      _jaiminiSelectedPratyantardasha = item;
+                      _jaiminiSelectedSukshmaDasha = null;
+                    });
+                  } else {
+                    _fetchJaiminiSubDasha(item, 'sukshma');
+                  }
+                } else if (levelNum == 4) {
+                  if (item['prana_dashas'] != null && (item['prana_dashas'] as List).isNotEmpty) {
+                    setState(() {
+                      _jaiminiSelectedSukshmaDasha = item;
+                    });
+                  } else {
+                    _fetchJaiminiSubDasha(item, 'prana');
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${item['sign']} Prana Dasha: ${item['start_formatted'] ?? item['start_date']} to ${item['end_formatted'] ?? item['end_date']} (${item['duration']})',
+                        style: GoogleFonts.outfit(),
+                      ),
+                      backgroundColor: const Color(0xFF4338CA),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Live Running Dasha Spotlight Card
+                  _buildJaiminiSpotlightCard(isDark, currentPeriod, dashas),
+
+                  // 2. Interactive Breadcrumb Trail Bar
+                  _buildJaiminiBreadcrumbBar(isDark),
+
+                  // 3. Current Level Header
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6.h),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4338CA).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text('L$levelNum', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(levelTitle, style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Text(
+                            levelSub,
+                            style: GoogleFonts.outfit(fontSize: 11.sp, color: const Color(0xFF64748B)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (levelNum < 5)
+                          Text(
+                            'Tap to view sub',
+                            style: GoogleFonts.outfit(fontSize: 10.sp, fontStyle: FontStyle.italic, color: const Color(0xFF4338CA)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+
+                  // Loading Indicator if fetching sub-dashas on demand
+                  if (_isLoadingJaiminiSubDasha)
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 24.h),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4338CA))),
+                          SizedBox(width: 12.w),
+                          Text('Calculating astronomical sub-periods...', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFF4338CA), fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    )
+                  else if (currentList.isEmpty)
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      alignment: Alignment.center,
+                      child: Text('No sub-periods available for this cycle.', style: GoogleFonts.outfit(fontSize: 13.sp, color: const Color(0xFF64748B))),
+                    )
+                  else if (!_isJaiminiCardView)
+                    _buildJaiminiDashaTable(
+                      context: context,
+                      isDark: isDark,
+                      currentList: currentList,
+                      levelNum: levelNum,
+                      onPeriodTap: handlePeriodTap,
+                    )
+                  else
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentList.length,
+                        separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                        itemBuilder: (context, index) {
+                          final item = currentList[index] as Map<String, dynamic>;
+                          final isActive = item['is_active'] == true;
+                          final sign = item['sign']?.toString() ?? '';
+                          final glyph = _getJaiminiSignGlyph(sign);
+                          final lord = item['lord']?.toString() ?? '';
+                          final dur = item['duration_formatted']?.toString() ?? item['duration']?.toString() ?? '';
+                          final startStr = item['start_formatted']?.toString() ?? item['start_date']?.toString() ?? '';
+                          final endStr = item['end_formatted']?.toString() ?? item['end_date']?.toString() ?? '';
+
+                          return InkWell(
+                            onTap: () => handlePeriodTap(item),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                              decoration: BoxDecoration(
+                                color: isActive ? (isDark ? const Color(0xFF1E1B4B).withValues(alpha: 0.5) : const Color(0xFFEEF2FF).withValues(alpha: 0.7)) : Colors.transparent,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 42.w,
+                                    height: 42.w,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? Colors.green.withValues(alpha: 0.15)
+                                          : const Color(0xFF4338CA).withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                      border: isActive ? Border.all(color: Colors.green.withValues(alpha: 0.5)) : null,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(glyph, style: GoogleFonts.outfit(fontSize: 14.sp)),
+                                        Text(
+                                          sign.length >= 2 ? sign.substring(0, 2).toUpperCase() : sign,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 9.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: isActive ? Colors.green : const Color(0xFF4338CA),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                sign,
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 15.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isActive
+                                                      ? Colors.green
+                                                      : (isDark ? Colors.white : const Color(0xFF1E293B)),
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            if (isActive) ...[
+                                              SizedBox(width: 6.w),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green.withValues(alpha: 0.15),
+                                                  borderRadius: BorderRadius.circular(4.r),
+                                                ),
+                                                child: Text(
+                                                  'ACTIVE NOW',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 9.sp,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.green,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        SizedBox(height: 2.h),
+                                        Row(
+                                          children: [
+                                            if (lord.isNotEmpty)
+                                              Text(
+                                                'Lord: $lord • ',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 11.sp,
+                                                  color: const Color(0xFF64748B),
+                                                ),
+                                              ),
+                                            Text(
+                                              dur.contains('Yr') || dur.contains('Mo') || dur.contains('Day') || dur.contains('Hr') || dur.contains('Min') ? dur : '$dur Years',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 11.sp,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF4338CA),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2.h),
+                                        Text(
+                                          '$startStr  →  $endStr',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 11.sp,
+                                            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (levelNum < 5)
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 20.sp,
+                                      color: const Color(0xFF4338CA),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-          ],
-        ),
+        ] else if (activeSubTabIndex == 5) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Lagna Name', 'Sign', 'Degree'],
+              flexes: [2, 1, 1],
+              rows: specialLagnas.map((sl) => [
+                Text(sl['name'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                Text(sl['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(sl['degree'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ]).toList(),
+            )
+          else
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: specialLagnas.map((sl) {
+                return Container(
+                  width: (MediaQuery.of(context).size.width - 40.w) / 2,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(sl['name']?.toString().split(' ').first ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                      SizedBox(height: 8.h),
+                      Text(sl['sign']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                      SizedBox(height: 4.h),
+                      Text(sl['degree']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ] else if (activeSubTabIndex == 6) ...[
+          if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['House', 'Sign', 'Planets', 'Rashi Drishti'],
+              flexes: [1, 1, 2, 2],
+              rows: kAnalysis.map((k) {
+                final planets = (k['planets'] as List).join(', ');
+                final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
+                return [
+                  Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                  Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(planets.isEmpty ? '-' : planets, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(drishti.isEmpty ? '-' : drishti, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                ];
+              }).toList(),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: kAnalysis.length,
+                separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                itemBuilder: (context, index) {
+                  final k = kAnalysis[index];
+                  final planets = (k['planets'] as List).join(', ');
+                  final drishti = (k['rashi_drishti_received_from'] as List).join(', ');
+                  return Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(6.w),
+                              decoration: BoxDecoration(color: const Color(0xFF4338CA).withValues(alpha: 0.1), shape: BoxShape.circle),
+                              child: Text(k['house'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(k['sign'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text('Planets: ${planets.isEmpty ? 'None' : planets}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                        Text('Rashi Drishti: ${drishti.isEmpty ? 'None' : drishti}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ] else if (activeSubTabIndex == 7) ...[
+          if (yogas.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Text('No Jaimini Yogas formed.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
+            )
+          else if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Yoga', 'Planets', 'Status'],
+              flexes: [2, 3, 2],
+              rows: yogas.map((y) => [
+                Text(y['yoga'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
+                Text(y['planets'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text(y['status'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: Colors.green)),
+              ]).toList(),
+            )
+          else
+            ...yogas.map((y) {
+              return Container(
+                margin: EdgeInsets.only(bottom: 8.h),
+                padding: EdgeInsets.all(14.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(y['yoga']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.amber.shade700)),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6.r)),
+                          child: Text(y['status']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.green)),
+                        )
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(y['planets']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    Text(y['rule']?.toString() ?? '', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                    Text('Evidence: ${y['evidence']}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                  ],
+                ),
+              );
+            }),
+        ] else if (activeSubTabIndex == 8) ...[
+          if (transits.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Text('No major transit activations today.', style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white70 : Colors.black54)),
+            )
+          else if (!_isJaiminiCardView)
+            buildCustomTable(
+              headers: ['Planet', 'Current Sign', 'Connections'],
+              flexes: [2, 2, 3],
+              rows: transits.map((t) => [
+                Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                Text((t['connections'] as List).join(', '), style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black87)),
+              ]).toList(),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: const Color(0xFFCBD5E1).withValues(alpha: 0.3)),
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: transits.length,
+                separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                itemBuilder: (context, index) {
+                  final t = transits[index];
+                  return Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(t['transit_planet'].toString(), style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                            Text(t['transit_sign'].toString(), style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Text('Connections: ${(t['connections'] as List).join(', ')}', style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF64748B))),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
           
         SizedBox(height: 32.h),
       ],

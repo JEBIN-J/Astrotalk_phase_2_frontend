@@ -1304,6 +1304,35 @@ class AstroApiService {
     }
   }
 
+  static Future<List<dynamic>> getJaiminiSubDasha({
+    required String parentSign,
+    required String startDate,
+    required String endDate,
+    required String targetLevel,
+  }) async {
+    final uri = Uri.parse('$baseUrl/horoscope/jaimini-sub-dasha');
+    try {
+      final res = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode({
+          'parent_sign': parentSign,
+          'start_date': startDate,
+          'end_date': endDate,
+          'target_level': targetLevel,
+        }),
+      ).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        return (data['sub_dashas'] as List<dynamic>?) ?? [];
+      }
+      return [];
+    } catch (e) {
+      debugPrint('API Error getJaiminiSubDasha: $e');
+      return [];
+    }
+  }
+
   static Future<Map<String, dynamic>> getKotaChakra({
     String name = 'User',
     String dateOfBirth = '1998-12-13',
