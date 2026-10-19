@@ -125,6 +125,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   int _bnnTargetYear = DateTime.now().year;
   bool _isScrubbingBnn = false;
+  int _bnnSubTabIndex = 0;
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
@@ -4843,6 +4844,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final progressions = _bnnData!['progressions'] as Map<String, dynamic>? ?? {};
     final jupProgression = progressions['jupiter'] as Map<String, dynamic>? ?? {};
     final saturnProgression = progressions['saturn'] as Map<String, dynamic>? ?? {};
+    final rahuProgression = progressions['rahu'] as Map<String, dynamic>? ?? {};
+    final ketuProgression = progressions['ketu'] as Map<String, dynamic>? ?? {};
     
     // Map planets for the interactive chart, ensuring they have 'name' and 'sign_index'.
     // We also pull the Ascendant from _kundliData so the chart can orient itself correctly.
@@ -4853,6 +4856,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         sIndex = jupProgression['current_progressed_sign_index'];
       } else if (p['planet'] == 'Saturn' && saturnProgression['current_progressed_sign_index'] != null) {
         sIndex = saturnProgression['current_progressed_sign_index'];
+      } else if (p['planet'] == 'Rahu' && rahuProgression['current_progressed_sign_index'] != null) {
+        sIndex = rahuProgression['current_progressed_sign_index'];
+      } else if (p['planet'] == 'Ketu' && ketuProgression['current_progressed_sign_index'] != null) {
+        sIndex = ketuProgression['current_progressed_sign_index'];
       }
       return {
         'name': p['planet'],
@@ -4892,12 +4899,492 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 2, child: Text(label, style: GoogleFonts.outfit(fontSize: 13.sp, color: isDark ? Colors.white70 : Colors.black54))),
-            Expanded(flex: 3, child: Text(value, style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.bold, color: valueColor ?? (isDark ? Colors.white : Colors.black87)))),
+            Expanded(flex: 5, child: Text(label, style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white70 : Colors.black54))),
+            SizedBox(width: 8.w),
+            Expanded(flex: 6, child: Text(value, style: GoogleFonts.outfit(fontSize: 12.sp, fontWeight: FontWeight.bold, color: valueColor ?? (isDark ? Colors.white : Colors.black87)))),
           ],
         ),
       );
     }
+
+    Widget buildProgressionCard({
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required Color color,
+      required Map<String, dynamic> data,
+    }) {
+      if (data.isEmpty) {
+        return Container(
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildCardTitle(title, icon, color),
+              Text('Data not available', style: GoogleFonts.outfit(color: Colors.grey)),
+            ],
+          ),
+        );
+      }
+
+      final isRetro = data['is_retrograde'] == true;
+      final hasExchange = data['has_exchange'] == true;
+      final exchangePartner = data['exchange_partner']?.toString() ?? '';
+      final exchangeSign = data['exchange_sign']?.toString() ?? '';
+      final retroRule = data['retrograde_rule']?.toString();
+      final major = data['major_progression'] as Map<String, dynamic>? ?? {};
+      final minor = data['minor_progression'] as Map<String, dynamic>? ?? {};
+      final minorPeriods = minor['active_periods'] as List<dynamic>? ?? [];
+      final timeline = data['timeline'] as List<dynamic>? ?? [];
+
+      final elapsedMajor = (data['elapsed_progression_years'] as num?)?.toDouble() ?? 0.0;
+      final remainingMajor = (data['remaining_progression_years'] as num?)?.toDouble() ?? 0.0;
+      final totalMajorDuration = (elapsedMajor + remainingMajor) > 0 ? (elapsedMajor + remainingMajor) : 1.0;
+      final progressFraction = (elapsedMajor / totalMajorDuration).clamp(0.0, 1.0);
+
+      return Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                        child: Icon(icon, color: color, size: 20.sp),
+                      ),
+                      SizedBox(width: 10.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.sp,
+                                color: isDark ? Colors.white : color,
+                              ),
+                            ),
+                            Text(
+                              subtitle,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.sp,
+                                color: isDark ? Colors.white60 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(
+                          'Cycle ${data['current_cycle'] ?? data['cycle'] ?? 1}',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.sp,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Status Badges (Retrograde, Exchange, Direct, Reverse)
+                  SizedBox(height: 10.h),
+                  Wrap(
+                    spacing: 6.w,
+                    runSpacing: 6.h,
+                    children: [
+                      if (hasExchange)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            'Exchange with $exchangePartner (Shifts to $exchangeSign @ 36y)',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                        ),
+                      if (isRetro)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            retroRule != null && retroRule != 'N/A (Direct)' ? 'Retro: $retroRule' : 'Retrograde',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFEF4444),
+                            ),
+                          ),
+                        )
+                      else if (!hasExchange && data['direction'] != 'Reverse')
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            'Direct Progression',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF3B82F6),
+                            ),
+                          ),
+                        ),
+                      if (data['direction'] == 'Reverse')
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            'Reverse Direction',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF8B5CF6),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
+
+            // Natal & Major Progression Section
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildDataRow('Natal Position', '${data['natal_sign']} ${data['natal_degree']}'),
+                  buildDataRow(
+                    'Major Progressed Sign',
+                    '${data['current_progressed_sign_name']} (Sign ${data['current_progressed_sign_index']})',
+                    valueColor: color,
+                  ),
+                  if (major['age_start'] != null && major['age_end'] != null)
+                    buildDataRow(
+                      'Major Period Age',
+                      '${major['age_start']}y - ${major['age_end']}y (${major['duration']} yrs)',
+                    ),
+                  buildDataRow(
+                    'Major Elapsed / Remaining',
+                    '${data['elapsed_progression_years']}y elapsed / ${data['remaining_progression_years']}y remaining',
+                  ),
+                  if (major['rule_detail'] != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(8.w),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                        ),
+                        child: Text(
+                          'Formula: ${major['rule_detail']}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11.sp,
+                            fontStyle: FontStyle.italic,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Major Progress Bar
+                  SizedBox(height: 4.h),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4.r),
+                    child: LinearProgressIndicator(
+                      value: progressFraction,
+                      minHeight: 6.h,
+                      backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${(progressFraction * 100).toStringAsFixed(1)}% of major cycle completed',
+                      style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey),
+                    ),
+                  ),
+
+                  // Minor Progression Box
+                  if (minor.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: color.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header: Title and rate badge
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Minor Progression (Sub-Period)',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                    color: color,
+                                  ),
+                                ),
+                              ),
+                              if (minor['rate_per_sign'] != null)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    '${minor['rate_per_sign']}',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 9.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 4.h,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Current Minor Sign: ${minor['sign']} (${minor['sign_index']})',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.sp,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                ),
+                                child: Text(
+                                  '${minor['elapsed_years']}y / ${minor['remaining_years']}y rem.',
+                                  style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.blue, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Minor Sub-periods horizontal list
+                          if (minorPeriods.isNotEmpty) ...[
+                            SizedBox(height: 10.h),
+                            Text(
+                              'Cycle Sub-Periods:',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
+                            SizedBox(height: 6.h),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: minorPeriods.map((p) {
+                                  final isCurrent = p['is_current'] == true;
+                                  return Container(
+                                    margin: EdgeInsets.only(right: 6.w),
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                                    decoration: BoxDecoration(
+                                      color: isCurrent
+                                          ? color
+                                          : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      border: Border.all(
+                                        color: isCurrent ? color : (isDark ? Colors.white24 : Colors.black12),
+                                        width: isCurrent ? 1.5 : 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          p['sign_name'].toString(),
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: isCurrent ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.h),
+                                        Text(
+                                          '${p['age_start']} - ${p['age_end']}y',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 9.sp,
+                                            color: isCurrent ? Colors.white.withValues(alpha: 0.9) : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Expandable Major Progression Timeline
+            if (timeline.isNotEmpty)
+              ExpansionTile(
+                title: Text(
+                  'Full Major Progression Timeline',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp, color: color),
+                ),
+                tilePadding: EdgeInsets.symmetric(horizontal: 16.w),
+                children: timeline.map((round) {
+                  final isCurrentMajor = round['progression_number'] == (data['current_cycle'] ?? data['cycle']);
+                  return Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    color: isCurrentMajor ? color.withValues(alpha: 0.08) : Colors.transparent,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 22.w,
+                          height: 22.h,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isCurrentMajor ? color : (isDark ? Colors.white12 : Colors.grey.shade200),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '${round['progression_number']}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isCurrentMajor ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${round['sign_name']} (Sign ${round['sign_index']})',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12.sp,
+                                      color: isCurrentMajor ? color : null,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Age: ${round['age_start']}y - ${round['age_end']}y',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11.sp,
+                                      color: isCurrentMajor ? color : Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (round['rule_detail'] != null)
+                                Text(
+                                  round['rule_detail'].toString(),
+                                  style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      );
+    }
+
+    final bnnSubTabs = [
+      'Progressive Chart',
+      'Jupiter (Jeeva)',
+      'Saturn (Karma)',
+      'Rahu & Ketu',
+      'Trine Groups',
+      'Relationships',
+      'Events',
+    ];
+    final activeSubTabIndex = _bnnSubTabIndex.clamp(0, bnnSubTabs.length - 1);
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
@@ -4905,7 +5392,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         // Time Travel UI
         Container(
           padding: EdgeInsets.all(16.w),
-          margin: EdgeInsets.only(bottom: 16.h),
+          margin: EdgeInsets.only(bottom: 12.h),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark ? [const Color(0xFF1E293B), const Color(0xFF0F172A)] : [Colors.white, const Color(0xFFF8FAFC)],
@@ -4938,275 +5425,306 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ),
 
-        // 2. Progressive Chart (Dynamically Populated)
+        // Sub-tabs navigation bar (Image 2 format)
         Container(
-          padding: EdgeInsets.all(16.w),
+          height: 46.h,
+          margin: EdgeInsets.only(bottom: 16.h),
+          padding: EdgeInsets.all(4.w),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          child: Column(
-            children: [
-              buildCardTitle('Progressive Chart (BNN)', Icons.grid_on_rounded, const Color(0xFF4338CA)),
-              KundliInteractiveChart(
-                chartStyle: _currentChartStyle,
-                isDark: isDark,
-                chartTypeKey: 'BNN',
-                showUpagrahas: false,
-                showDegrees: _showDegreesOnChart,
-                kundliData: chartData,
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // 3. Natal Planetary Positions
-        ExpansionTile(
-          title: Text('Natal Planetary Positions', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
-          collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          children: bnnPlanets.map((p) {
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
-              child: Row(
-                children: [
-                  Expanded(flex: 2, child: Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: p['retrograde'] == true ? Colors.red : null))),
-                  Expanded(flex: 2, child: Text(p['sign'].toString())),
-                  Expanded(flex: 2, child: Text(p['degree'].toString(), style: GoogleFonts.outfit(color: Colors.blue))),
-                  Expanded(flex: 2, child: Text(p['retrograde'] == true ? '(R)' : 'Direct', style: GoogleFonts.outfit(fontSize: 11.sp))),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 16.h),
-
-        // 4. Trine Groups
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildCardTitle('Directional Trine Groups', Icons.explore, const Color(0xFF059669)),
-              ...trineGroups.map((g) {
-                return Padding(
-                  padding: EdgeInsets.only(bottom: 12.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(g['group'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
-                      Text(g['signs'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey)),
-                      SizedBox(height: 4.h),
-                      Text((g['planets'] as List).isEmpty ? 'Empty' : (g['planets'] as List).join(', '), style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // 5. Relationship Matrix
-        ExpansionTile(
-          title: Text('BNN Relationship Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
-          collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          children: relationships.map((r) {
-            final strength = r['strength_percentage'] as int;
-            Color strengthColor = strength >= 75 ? Colors.green : (strength >= 50 ? Colors.orange : Colors.grey);
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('${r['planet_a']} + ${r['planet_b']}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                        decoration: BoxDecoration(color: strengthColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
-                        child: Text('${strength}%', style: GoogleFonts.outfit(color: strengthColor, fontWeight: FontWeight.bold, fontSize: 11.sp)),
-                      )
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Text('${r['relationship_type']} (${r['sign_distance']} signs)', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue)),
-                  Text(r['meaning'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        SizedBox(height: 16.h),
-
-        // 6. Jupiter Progression
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildCardTitle('Jupiter Progression (Jeeva)', Icons.loop, const Color(0xFFD97706)),
-              if (jupProgression.isNotEmpty) ...[
-                buildDataRow('Natal Position', '${jupProgression['natal_sign']} ${jupProgression['natal_degree']}'),
-                buildDataRow('Current Cycle', '${jupProgression['current_cycle']}'),
-                buildDataRow('Elapsed / Remaining', '${jupProgression['elapsed_progression_years']}y / ${jupProgression['remaining_progression_years']}y'),
-                buildDataRow('Progressed Sign', '${jupProgression['current_progressed_sign_name']} (${jupProgression['current_progressed_sign_index']})'),
-              ] else
-                const Text('Data not available'),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // 7. Saturn Progression
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildCardTitle('Saturn Progression (Karma)', Icons.work_history, const Color(0xFF2563EB)),
-              if (saturnProgression.isNotEmpty) ...[
-                buildDataRow('Natal Position', '${saturnProgression['natal_sign']} ${saturnProgression['natal_degree']}'),
-                buildDataRow('Current Cycle', '${saturnProgression['cycle']}'),
-                buildDataRow('Elapsed / Remaining', '${saturnProgression['elapsed_progression_years']}y / ${saturnProgression['remaining_progression_years']}y'),
-                buildDataRow('Progressed Sign', '${saturnProgression['current_progressed_sign_name']} (${saturnProgression['current_progressed_sign_index']})'),
-              ] else
-                const Text('Data not available'),
-            ],
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        // 8. Event Activation
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFE11D48).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  buildCardTitle('Event Activation (Dynamic)', Icons.event_available, const Color(0xFFE11D48)),
-                  InkWell(
-                    onTap: () => setState(() => _isBnnEventTableViewMode = !_isBnnEventTableViewMode),
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: 12.h),
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE11D48).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Text(
-                        _isBnnEventTableViewMode ? 'Card View' : 'Table View',
-                        style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFFE11D48)),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: List.generate(bnnSubTabs.length, (index) {
+                final isSelected = activeSubTabIndex == index;
+                return GestureDetector(
+                  onTap: () => setState(() => _bnnSubTabIndex = index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      bnnSubTabs[index],
+                      style: GoogleFonts.outfit(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                        fontSize: 13.5.sp,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white54 : const Color(0xFF64748B)),
                       ),
                     ),
                   ),
-                ],
-              ),
-              if (_isBnnEventTableViewMode)
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      Container(
-                        color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                        child: Row(
-                          children: [
-                            Expanded(flex: 3, child: Text('Event', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                            Expanded(flex: 3, child: Text('Karakas', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                            Expanded(flex: 3, child: Text('Natal/Trst', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                            Expanded(flex: 3, child: Text('Status', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                          ],
-                        ),
-                      ),
-                      ...events.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final e = entry.value;
-                        final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
-                        Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
-                        return Container(
-                          color: rowBg,
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 3, child: Text(e['event'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold))),
-                              Expanded(flex: 3, child: Text(e['karakas'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp))),
-                              Expanded(flex: 3, child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('${e['strength']}%', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue, fontWeight: FontWeight.bold)),
-                                  Text(e['transit_trigger'] == 'Yes' ? 'Trst: Yes' : 'Trst: No', style: GoogleFonts.outfit(fontSize: 10.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : Colors.grey)),
-                                ],
-                              )),
-                              Expanded(flex: 3, child: Text(e['status'].toString().replaceAll(' BNN confirmation', ''), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor, height: 1.2))),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  )
-                )
-              else
-                ...events.map((e) {
-                  Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                );
+              }),
+            ),
+          ),
+        ),
+
+        // Tab Content
+        if (activeSubTabIndex == 0) ...[
+          // Progressive Chart (Dynamically Populated)
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              children: [
+                buildCardTitle('Progressive Chart (BNN)', Icons.grid_on_rounded, const Color(0xFF4338CA)),
+                KundliInteractiveChart(
+                  chartStyle: _currentChartStyle,
+                  isDark: isDark,
+                  chartTypeKey: 'BNN',
+                  showUpagrahas: false,
+                  showDegrees: _showDegreesOnChart,
+                  kundliData: chartData,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+
+          // Natal Planetary Positions
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text('Natal Planetary Positions', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+            collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            children: bnnPlanets.map((p) {
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                child: Row(
+                  children: [
+                    Expanded(flex: 2, child: Text(p['planet'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: p['retrograde'] == true ? Colors.red : null))),
+                    Expanded(flex: 2, child: Text(p['sign'].toString())),
+                    Expanded(flex: 2, child: Text(p['degree'].toString(), style: GoogleFonts.outfit(color: Colors.blue))),
+                    Expanded(flex: 2, child: Text(p['retrograde'] == true ? '(R)' : 'Direct', style: GoogleFonts.outfit(fontSize: 11.sp))),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ] else if (activeSubTabIndex == 1) ...[
+          // Jupiter Progression (Jeeva)
+          buildProgressionCard(
+            title: 'Jupiter Progression (Jeeva)',
+            subtitle: 'Life Path, Wisdom & Major Evolution (12y Major / 1y Minor)',
+            icon: Icons.loop_rounded,
+            color: const Color(0xFFD97706),
+            data: jupProgression,
+          ),
+        ] else if (activeSubTabIndex == 2) ...[
+          // Saturn Progression (Karma)
+          buildProgressionCard(
+            title: 'Saturn Progression (Karma)',
+            subtitle: 'Career, Duty & Life Lessons (30y Major / 2.5y Minor)',
+            icon: Icons.work_history_rounded,
+            color: const Color(0xFF2563EB),
+            data: saturnProgression,
+          ),
+        ] else if (activeSubTabIndex == 3) ...[
+          // Rahu Progression (Destiny & Desires)
+          buildProgressionCard(
+            title: 'Rahu Progression (Destiny & Desires)',
+            subtitle: 'Reverse Direction (18y Major / 1.5y Minor)',
+            icon: Icons.alt_route_rounded,
+            color: const Color(0xFF7C3AED),
+            data: rahuProgression,
+          ),
+
+          // Ketu Progression (Moksha)
+          buildProgressionCard(
+            title: 'Ketu Progression (Moksha)',
+            subtitle: 'Opposite Rahu - Reverse Direction (18y Major / 1.5y Minor)',
+            icon: Icons.spa_rounded,
+            color: const Color(0xFF0D9488),
+            data: ketuProgression,
+          ),
+        ] else if (activeSubTabIndex == 4) ...[
+          // Trine Groups
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildCardTitle('Directional Trine Groups', Icons.explore, const Color(0xFF059669)),
+                ...trineGroups.map((g) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: 12.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(e['event'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                            Text(e['status'].toString(), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor)),
-                          ],
-                        ),
-                        Text('Karakas: ${e['karakas']}', style: GoogleFonts.outfit(fontSize: 11.sp)),
-                        Text('Natal Conn: ${e['natal_connection']} (${e['strength']}%)', style: GoogleFonts.outfit(fontSize: 11.sp)),
-                        Text('Transit Triggered: ${e['transit_trigger']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : null)),
-                        Divider(height: 16.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        Text(g['group'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
+                        Text(g['signs'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey)),
+                        SizedBox(height: 4.h),
+                        Text((g['planets'] as List).isEmpty ? 'Empty' : (g['planets'] as List).join(', '), style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                       ],
                     ),
                   );
                 }),
-            ],
+              ],
+            ),
           ),
-        ),
+        ] else if (activeSubTabIndex == 5) ...[
+          // Relationship Matrix
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text('BNN Relationship Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+            collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            children: relationships.map((r) {
+              final strength = r['strength_percentage'] as int;
+              Color strengthColor = strength >= 75 ? Colors.green : (strength >= 50 ? Colors.orange : Colors.grey);
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('${r['planet_a']} + ${r['planet_b']}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                          decoration: BoxDecoration(color: strengthColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
+                          child: Text('$strength%', style: GoogleFonts.outfit(color: strengthColor, fontWeight: FontWeight.bold, fontSize: 11.sp)),
+                        )
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Text('${r['relationship_type']} (${r['sign_distance']} signs)', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue)),
+                    Text(r['meaning'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ] else if (activeSubTabIndex == 6) ...[
+          // Event Activation
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFE11D48).withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    buildCardTitle('Event Activation (Dynamic)', Icons.event_available, const Color(0xFFE11D48)),
+                    InkWell(
+                      onTap: () => setState(() => _isBnnEventTableViewMode = !_isBnnEventTableViewMode),
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE11D48).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          _isBnnEventTableViewMode ? 'Card View' : 'Table View',
+                          style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: const Color(0xFFE11D48)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_isBnnEventTableViewMode)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        Container(
+                          color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          child: Row(
+                            children: [
+                              Expanded(flex: 3, child: Text('Event', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 3, child: Text('Karakas', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 3, child: Text('Natal/Trst', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 3, child: Text('Status', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                            ],
+                          ),
+                        ),
+                        ...events.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final e = entry.value;
+                          final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
+                          Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                          return Container(
+                            color: rowBg,
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(flex: 3, child: Text(e['event'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold))),
+                                Expanded(flex: 3, child: Text(e['karakas'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp))),
+                                Expanded(flex: 3, child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('${e['strength']}%', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue, fontWeight: FontWeight.bold)),
+                                    Text(e['transit_trigger'] == 'Yes' ? 'Trst: Yes' : 'Trst: No', style: GoogleFonts.outfit(fontSize: 10.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : Colors.grey)),
+                                  ],
+                                )),
+                                Expanded(flex: 3, child: Text(e['status'].toString().replaceAll(' BNN confirmation', ''), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor, height: 1.2))),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  )
+                else
+                  ...events.map((e) {
+                    Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(e['event'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                              Text(e['status'].toString(), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor)),
+                            ],
+                          ),
+                          Text('Karakas: ${e['karakas']}', style: GoogleFonts.outfit(fontSize: 11.sp)),
+                          Text('Natal Conn: ${e['natal_connection']} (${e['strength']}%)', style: GoogleFonts.outfit(fontSize: 11.sp)),
+                          Text('Transit Triggered: ${e['transit_trigger']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : null)),
+                          Divider(height: 16.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ],
         
         SizedBox(height: 48.h),
       ],
