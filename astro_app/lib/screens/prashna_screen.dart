@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/astro_api_service.dart';
+import '../services/astrologer_location_service.dart';
 import '../widgets/kundli_chart_painter.dart';
 import '../models/astro_models.dart';
 
@@ -34,11 +35,42 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _tabController = TabController(length: 7, vsync: this);
+    _loadAstrologerLocationAndFetch();
+    AstrologerLocationService.locationNotifier.addListener(_onGlobalLocationChanged);
+  }
+
+  Future<void> _loadAstrologerLocationAndFetch() async {
+    final loc = await AstrologerLocationService.getLocation();
+    if (mounted) {
+      setState(() {
+        _place = loc.city;
+        _latitude = loc.latitude;
+        _longitude = loc.longitude;
+        _timezone = loc.timezone;
+      });
+    }
     _fetchPrashnaChart();
+  }
+
+  void _onGlobalLocationChanged() {
+    final loc = AstrologerLocationService.locationNotifier.value;
+    if (loc != null && mounted) {
+      final changed = _place != loc.city || _latitude != loc.latitude || _longitude != loc.longitude || _timezone != loc.timezone;
+      if (changed) {
+        setState(() {
+          _place = loc.city;
+          _latitude = loc.latitude;
+          _longitude = loc.longitude;
+          _timezone = loc.timezone;
+        });
+        _fetchPrashnaChart();
+      }
+    }
   }
 
   @override
   void dispose() {
+    AstrologerLocationService.locationNotifier.removeListener(_onGlobalLocationChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -329,7 +361,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                             
                             // Calculation Basis (Dasha Year Length)
                             DropdownButtonFormField<double>(
-                              value: tempDaysInYear,
+                              initialValue: tempDaysInYear,
                               decoration: InputDecoration(
                                 labelText: 'Dasha Year Length',
                                 labelStyle: GoogleFonts.outfit(fontSize: 14.sp, color: Colors.grey.shade600),
@@ -378,17 +410,32 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
                               elevation: 0,
                             ),
                             onPressed: () {
+                              final newPlace = placeCtrl.text;
+                              final newLat = double.tryParse(latCtrl.text) ?? _latitude;
+                              final newLon = double.tryParse(lonCtrl.text) ?? _longitude;
+                              final newTz = double.tryParse(tzCtrl.text) ?? _timezone;
+
                               Navigator.pop(context);
                               if (mounted) {
                                 setState(() {
                                   _questionDate = tempDate;
                                   _questionTime = tempTime;
-                                  _place = placeCtrl.text;
-                                  _latitude = double.tryParse(latCtrl.text) ?? _latitude;
-                                  _longitude = double.tryParse(lonCtrl.text) ?? _longitude;
-                                  _timezone = double.tryParse(tzCtrl.text) ?? _timezone;
+                                  _place = newPlace;
+                                  _latitude = newLat;
+                                  _longitude = newLon;
+                                  _timezone = newTz;
                                   _daysInYear = tempDaysInYear;
                                 });
+
+                                AstrologerLocationService.setLocation(
+                                  AstrologerLocation(
+                                    city: newPlace,
+                                    latitude: newLat,
+                                    longitude: newLon,
+                                    timezone: newTz,
+                                  ),
+                                );
+
                                 _fetchPrashnaChart();
                               }
                             },
@@ -696,38 +743,74 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
               ),
             ],
           ),
-          child: Column(
-            children: [
-              _infoRow('Question Date', ov['question_date']?.toString() ?? 'N/A', isDark, isTop: true),
-              _divider(isDark),
-              _infoRow('Question Time', ov['question_time']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Question Place', ov['place']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Latitude', ov['latitude']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Longitude', ov['longitude']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Timezone', ov['timezone']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('UTC Time', ov['utc_time']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Julian Day', ov['julian_day']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Ayanamsa', ov['ayanamsa']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Prashna Lagna', ov['prashna_lagna']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Lagna Degree', ov['lagna_degree']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Moon Sign', ov['moon_sign']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Moon Degree', ov['moon_degree']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Moon Nakshatra', ov['moon_nakshatra']?.toString() ?? 'N/A', isDark),
-              _divider(isDark),
-              _infoRow('Moon Pada', ov['moon_pada']?.toString() ?? 'N/A', isDark, isBottom: true),
-            ],
+          clipBehavior: Clip.antiAlias,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              leading: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: (isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5)).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.analytics_outlined,
+                  size: 19.sp,
+                  color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5),
+                ),
+              ),
+              title: Text(
+                'Prashna Parameters & Details',
+                style: GoogleFonts.outfit(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              subtitle: Text(
+                'Coordinates, Ayanamsa, Lagna & Moon details',
+                style: GoogleFonts.inter(
+                  fontSize: 11.5.sp,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ),
+              iconColor: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5),
+              collapsedIconColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              children: [
+                Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                _infoRow('Question Date', ov['question_date']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Question Time', ov['question_time']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Question Place', ov['place']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Latitude', ov['latitude']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Longitude', ov['longitude']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Timezone', ov['timezone']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('UTC Time', ov['utc_time']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Julian Day', ov['julian_day']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Ayanamsa', ov['ayanamsa']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Prashna Lagna', ov['prashna_lagna']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Lagna Degree', ov['lagna_degree']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Moon Sign', ov['moon_sign']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Moon Degree', ov['moon_degree']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Moon Nakshatra', ov['moon_nakshatra']?.toString() ?? 'N/A', isDark),
+                _divider(isDark),
+                _infoRow('Moon Pada', ov['moon_pada']?.toString() ?? 'N/A', isDark, isBottom: true),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 24.h),
@@ -838,9 +921,10 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
 
   Widget _infoRow(String label, String value, bool isDark, {bool isTop = false, bool isBottom = false}) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 13.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
@@ -849,12 +933,18 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
               fontSize: 14.sp,
             ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              fontSize: 15.sp,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 14.5.sp,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -1228,9 +1318,7 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
               ),
             ),
             Divider(height: 1, thickness: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            ...timeline.asMap().entries.map((entry) {
-              final int mdIdx = entry.key;
-              final md = entry.value;
+            ...timeline.map((md) {
               final ads = md['antardashas'] as List? ?? [];
               final mdName = md['sign'] ?? md['lord'] ?? md['planet'] ?? '-';
               final mdStart = md['start_date'] ?? md['start'] ?? '-';
@@ -1294,7 +1382,6 @@ class _PrashnaScreenState extends State<PrashnaScreen> with SingleTickerProvider
 
   Widget _buildKalaChakraTab(Map<String, dynamic>? kcData) {
     if (kcData == null) return const Center(child: Text('Data not available'));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Column(
       children: [

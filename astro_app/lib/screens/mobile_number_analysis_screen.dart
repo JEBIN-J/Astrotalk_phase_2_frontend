@@ -61,6 +61,16 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
     _loadSavedProfile();
   }
 
+  @visibleForTesting
+  void setMockReportData(Map<String, dynamic> data) {
+    _reportData = data;
+  }
+
+  @visibleForTesting
+  void setActiveTabForTesting(int tab) {
+    _activeTab = tab;
+  }
+
   Future<void> _loadSavedProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final savedDob = prefs.getString('numerology_user_dob') ?? '1995-05-15';
@@ -538,24 +548,43 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               elevation: 2,
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.auto_awesome_rounded, size: 18.sp),
                 SizedBox(width: 8.w),
-                Text('Analyze Mobile Number', style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w700)),
+                Flexible(
+                  child: Text(
+                    'Analyze Mobile Number',
+                    style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w700),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
           SizedBox(height: 14.h),
           Center(
-            child: TextButton.icon(
+            child: TextButton(
               onPressed: () {
                 _phoneController.text = '9876543210';
                 _dobController.text = '1995-05-15';
                 _analyzeNumber();
               },
-              icon: Icon(Icons.science_outlined, size: 16.sp, color: primaryGreen),
-              label: Text('Try Test Fixture: 9876543210', style: GoogleFonts.outfit(fontSize: 13.sp, fontWeight: FontWeight.w600, color: primaryGreen)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.science_outlined, size: 16.sp, color: primaryGreen),
+                  SizedBox(width: 6.w),
+                  Flexible(
+                    child: Text(
+                      'Try Test Fixture: 9876543210',
+                      style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w600, color: primaryGreen),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1453,23 +1482,29 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(6.w),
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: cardBorder),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(color: cardBorder),
+                          ),
+                          child: Icon(Icons.dialpad_rounded, color: primaryGreen, size: 16.sp),
                         ),
-                        child: Icon(Icons.dialpad_rounded, color: primaryGreen, size: 16.sp),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Digit Matrix (0 to 9)',
-                        style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: darkText),
-                      ),
-                    ],
+                        SizedBox(width: 8.w),
+                        Flexible(
+                          child: Text(
+                            'Digit Matrix (0 to 9)',
+                            style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: darkText),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Row(
                     children: [
@@ -1721,9 +1756,12 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                     child: Icon(Icons.blur_on_rounded, color: primaryGreen, size: 16.sp),
                   ),
                   SizedBox(width: 8.w),
-                  Text(
-                    'Missing Digits (Frequencies To Cultivate)',
-                    style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: darkText),
+                  Flexible(
+                    child: Text(
+                      'Missing Digits (Frequencies To Cultivate)',
+                      style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w800, color: darkText),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -1947,11 +1985,13 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                         Text(
                           overall,
                           style: GoogleFonts.outfit(fontSize: 16.5.sp, fontWeight: FontWeight.w800, color: darkText),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 3.h),
                         Text(
                           'Personal Planetary Resonance Index',
                           style: GoogleFonts.inter(fontSize: 10.5.sp, color: mutedText, fontWeight: FontWeight.w500),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -2114,8 +2154,13 @@ class _MobileNumberAnalysisScreenState extends State<MobileNumberAnalysisScreen>
                     ),
                     child: Icon(Icons.menu_book_rounded, color: primaryGreen, size: 16.sp),
                   ),
-                  SizedBox(width: 8.w),
-                  Text('Documented Planetary Principle', style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.w800, color: darkText)),
+                  Flexible(
+                    child: Text(
+                      'Documented Planetary Principle',
+                      style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.w800, color: darkText),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 8.h),

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_api_service.dart';
+import '../services/astrologer_location_service.dart';
 
 class KpPlanetaryTransitSection extends StatefulWidget {
   final bool isDark;
@@ -48,6 +49,9 @@ class KpPlanetaryTransitSection extends StatefulWidget {
 class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> with SingleTickerProviderStateMixin {
   late DateTime _currentTransitDate;
   String _transitLocation = '';
+  double? _transitLat;
+  double? _transitLon;
+  double? _transitTz;
   
   bool _isRealTimeEnabled = false;
   Timer? _realTimeTimer;
@@ -71,11 +75,17 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     super.initState();
     _currentTransitDate = DateTime.now();
     _transitLocation = widget.originalPlaceOfBirth;
+    _transitLat = widget.originalLatitude;
+    _transitLon = widget.originalLongitude;
+    _transitTz = widget.originalTimezone;
     
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
+
+    _loadTransitLocation();
+    AstrologerLocationService.locationNotifier.addListener(_onGlobalLocationChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -83,6 +93,33 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         widget.onCuspsTypeChanged?.call(_cuspsType);
       }
     });
+  }
+
+  Future<void> _loadTransitLocation() async {
+    final loc = await AstrologerLocationService.getLocation();
+    if (mounted) {
+      setState(() {
+        _transitLocation = loc.city;
+        _transitLat = loc.latitude;
+        _transitLon = loc.longitude;
+        _transitTz = loc.timezone;
+      });
+    }
+  }
+
+  void _onGlobalLocationChanged() {
+    final loc = AstrologerLocationService.locationNotifier.value;
+    if (loc != null && mounted) {
+      setState(() {
+        _transitLocation = loc.city;
+        _transitLat = loc.latitude;
+        _transitLon = loc.longitude;
+        _transitTz = loc.timezone;
+      });
+      if (_cuspsType == 'Use Transit Cusps' && (_isSwapped || _isRealTimeEnabled)) {
+        _fetchTransitData(isSilent: true);
+      }
+    }
   }
 
   @override
@@ -97,6 +134,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
 
   @override
   void dispose() {
+    AstrologerLocationService.locationNotifier.removeListener(_onGlobalLocationChanged);
     _realTimeTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
@@ -117,16 +155,20 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
       final String formattedDate = DateFormat('yyyy-MM-dd').format(_currentTransitDate);
       final String formattedTime = DateFormat('HH:mm:ss').format(_currentTransitDate);
 
-      String targetLocation = _cuspsType == 'Use Natal Cusps' ? widget.originalPlaceOfBirth : _transitLocation;
-      
+      final bool isTransitCusps = _cuspsType == 'Use Transit Cusps';
+      final String targetLocation = isTransitCusps ? _transitLocation : widget.originalPlaceOfBirth;
+      final double targetLat = isTransitCusps ? (_transitLat ?? widget.originalLatitude) : widget.originalLatitude;
+      final double targetLon = isTransitCusps ? (_transitLon ?? widget.originalLongitude) : widget.originalLongitude;
+      final double targetTz = isTransitCusps ? (_transitTz ?? widget.originalTimezone) : widget.originalTimezone;
+
       final res = await AstroApiService.getKpSystemData(
         name: 'Transit',
         dateOfBirth: formattedDate,
         timeOfBirth: formattedTime,
         placeOfBirth: targetLocation,
-        latitude: widget.originalLatitude,
-        longitude: widget.originalLongitude,
-        timezone: widget.originalTimezone,
+        latitude: targetLat,
+        longitude: targetLon,
+        timezone: targetTz,
         ayanamsa: widget.selectedAyanamsa,
       );
 
@@ -258,13 +300,184 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     }
   }
 
+  void _showLocationPicker() async {
+    final searchCtrl = TextEditingController();
+    List<Map<String, String>> places = await AstroApiService.getPlaces();
+
+    if (!mounted) return;
+
+    final isDark = widget.isDark;
+    final cardBg = isDark ? const Color(0xFF0F172A) : Colors.white;
+    final textPrimary = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    const primaryIndigo = Color(0xFF4F46E5);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.75,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollCtrl) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                  ),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40.w,
+                          height: 4.h,
+                          margin: EdgeInsets.symmetric(vertical: 12.h),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            borderRadius: BorderRadius.circular(2.r),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on_rounded, color: primaryIndigo, size: 22.sp),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Select Astrologer Location',
+                              style: GoogleFonts.outfit(fontSize: 16.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: TextField(
+                          controller: searchCtrl,
+                          style: GoogleFonts.outfit(fontSize: 14.sp, color: textPrimary),
+                          decoration: InputDecoration(
+                            hintText: 'Search city (e.g. Bijapur, Mumbai)...',
+                            hintStyle: GoogleFonts.outfit(fontSize: 13.5.sp, color: textMuted),
+                            prefixIcon: Icon(Icons.search, color: textMuted, size: 20.sp),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            contentPadding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
+                          ),
+                          onChanged: (val) async {
+                            final results = await AstroApiService.getPlaces(query: val);
+                            setModalState(() {
+                              places = results;
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      const Divider(height: 1),
+                      Expanded(
+                        child: places.isEmpty
+                            ? Center(
+                                child: Text('No matching locations found', style: GoogleFonts.outfit(color: textMuted)),
+                              )
+                            : ListView.builder(
+                                controller: scrollCtrl,
+                                padding: EdgeInsets.all(16.w),
+                                itemCount: places.length,
+                                itemBuilder: (c, idx) {
+                                  final p = places[idx];
+                                  final isCurrentSelected = p['city'] == _transitLocation;
+                                  return ListTile(
+                                    dense: true,
+                                    leading: Icon(Icons.place_outlined, color: primaryIndigo, size: 20.sp),
+                                    title: Text(
+                                      p['city'] ?? '',
+                                      style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600, color: textPrimary),
+                                    ),
+                                    subtitle: Text(
+                                      '${p['coords']} • ${p['tz']}',
+                                      style: GoogleFonts.inter(fontSize: 11.5.sp, color: textMuted),
+                                    ),
+                                    trailing: isCurrentSelected
+                                        ? Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                                            decoration: BoxDecoration(
+                                              color: primaryIndigo,
+                                              borderRadius: BorderRadius.circular(6.r),
+                                            ),
+                                            child: Text(
+                                              'ACTIVE',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 10.sp,
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        : null,
+                                    onTap: () {
+                                      final city = p['city'] ?? 'Custom Location';
+                                      final lat = double.tryParse(p['lat_val'] ?? '') ?? 28.6139;
+                                      final lon = double.tryParse(p['lon_val'] ?? '') ?? 77.2090;
+                                      final tz = double.tryParse(p['tz_val'] ?? '') ?? 5.5;
+
+                                      setState(() {
+                                        _transitLocation = city;
+                                        _transitLat = lat;
+                                        _transitLon = lon;
+                                        _transitTz = tz;
+                                      });
+
+                                      AstrologerLocationService.setLocation(
+                                        AstrologerLocation(
+                                          city: city,
+                                          latitude: lat,
+                                          longitude: lon,
+                                          timezone: tz,
+                                        ),
+                                      );
+
+                                      Navigator.pop(ctx);
+                                      if (_cuspsType == 'Use Transit Cusps') {
+                                        _fetchTransitData();
+                                      }
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Astrologer location updated to $city'),
+                                          backgroundColor: const Color(0xFF4F46E5),
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
     final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
     final mutedTextColor = isDark ? Colors.white70 : const Color(0xFF64748B);
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor = const Color(0xFF4338CA).withOpacity(0.2);
+    final borderColor = const Color(0xFF4338CA).withValues(alpha: 0.2);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -327,7 +540,18 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
           child: Row(
             children: [
               Expanded(
-                child: _buildInfoItem('Location', _transitLocation, Icons.location_on_rounded, isDark, textColor, mutedTextColor),
+                child: InkWell(
+                  onTap: _cuspsType == 'Use Transit Cusps' ? _showLocationPicker : null,
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: _buildInfoItem(
+                    _cuspsType == 'Use Transit Cusps' ? 'Astrologer Location' : 'Birth Location',
+                    _cuspsType == 'Use Transit Cusps' ? _transitLocation : widget.originalPlaceOfBirth,
+                    Icons.location_on_rounded,
+                    isDark,
+                    textColor,
+                    mutedTextColor,
+                  ),
+                ),
               ),
               Container(width: 1.w, height: 40.h, color: borderColor),
               SizedBox(width: 16.w),
@@ -361,7 +585,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                     decoration: BoxDecoration(
                       color: isSelected ? (isDark ? const Color(0xFF312E81) : const Color(0xFFEEF2FF)) : Colors.transparent,
                       borderRadius: BorderRadius.circular(8.r),
-                      border: isSelected ? Border.all(color: const Color(0xFF4338CA).withOpacity(0.3)) : null,
+                      border: isSelected ? Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)) : null,
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -398,7 +622,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                     borderRadius: BorderRadius.circular(12.r),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4338CA).withOpacity(0.3),
+                        color: const Color(0xFF4338CA).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -428,9 +652,9 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
                   alignment: Alignment.center,
                   child: Icon(Icons.refresh_rounded, color: Colors.red, size: 24.sp),
@@ -450,13 +674,13 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
             padding: EdgeInsets.symmetric(vertical: 14.h),
             decoration: BoxDecoration(
               color: _isRealTimeEnabled 
-                  ? Colors.redAccent.withOpacity(0.12) 
-                  : Colors.green.withOpacity(0.1),
+                  ? Colors.redAccent.withValues(alpha: 0.12) 
+                  : Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
                 color: _isRealTimeEnabled 
                     ? Colors.redAccent 
-                    : Colors.green.withOpacity(0.5),
+                    : Colors.green.withValues(alpha: 0.5),
                 width: _isRealTimeEnabled ? 1.5 : 1,
               ),
             ),
@@ -507,6 +731,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
             ),
           ),
         ),
+        SizedBox(height: 16.h),
 
         // 5. Embedded Chart Section with Step Interval Controls
         if (widget.chartChildBuilder != null) ...[
@@ -653,10 +878,10 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: borderColor.withOpacity(0.5), width: 1),
+        border: Border.all(color: borderColor.withValues(alpha: 0.5), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -716,12 +941,12 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         decoration: BoxDecoration(
           color: isDisabled 
               ? (isDark ? Colors.grey[800] : const Color(0xFFF1F5F9)) 
-              : color.withOpacity(0.1),
+              : color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
             color: isDisabled 
                 ? Colors.transparent 
-                : color.withOpacity(0.3),
+                : color.withValues(alpha: 0.3),
           ),
         ),
         child: Row(

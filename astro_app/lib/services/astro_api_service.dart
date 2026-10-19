@@ -1385,6 +1385,7 @@ class AstroApiService {
     double? timezone,
     String? ayanamsa,
     int? horaryNumber,
+    String? horaryMode,
   }) async {
     final uri = Uri.parse('$baseUrl/horary/chart');
     final Map<String, dynamic> bodyMap = {
@@ -1397,6 +1398,7 @@ class AstroApiService {
     if (timezone != null) bodyMap['timezone'] = timezone;
     if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (horaryNumber != null) bodyMap['horary_number'] = horaryNumber;
+    if (horaryMode != null) bodyMap['horary_mode'] = horaryMode;
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
@@ -1411,9 +1413,9 @@ class AstroApiService {
     }
   }
 
-  
-  static Future<int> getHoraryRandomNumber() async {
-    final uri = Uri.parse('$baseUrl/horary/generate_number');
+  static Future<int> getHoraryRandomNumber({String? mode}) async {
+    final query = mode != null ? '?mode=$mode' : '';
+    final uri = Uri.parse('$baseUrl/horary/generate_number$query');
     try {
       final res = await http.get(uri, headers: _headers).timeout(_timeout);
       if (res.statusCode == 200) {
