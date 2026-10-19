@@ -211,11 +211,11 @@ class AstroClassicTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131D36) : Colors.white,
+          color: isDark ? const Color(0xFF0A034D) : Colors.white,
           borderRadius: BorderRadius.circular(22.r),
           border: Border.all(
             color: isDark
-                ? const Color(0xFF1E2E56)
+                ? const Color(0xFF140770)
                 : item.primaryColor.withValues(alpha: 0.14),
             width: 1.2.w,
           ),
@@ -633,10 +633,10 @@ class AstroDetailedListTile extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: 10.h),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131D36) : Colors.white,
+          color: isDark ? const Color(0xFF0A034D) : Colors.white,
           borderRadius: BorderRadius.circular(18.r),
           border: Border.all(
-            color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0),
+            color: isDark ? const Color(0xFF140770) : const Color(0xFFE2E8F0),
           ),
           boxShadow: [
             BoxShadow(

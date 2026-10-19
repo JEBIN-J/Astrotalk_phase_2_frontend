@@ -9,12 +9,12 @@ enum AppColorPalette {
 }
 
 class AppTheme {
-  // Midnight Cosmic
-  static const Color cosmicNavy = Color(0xFF0B1120);
-  static const Color cosmicSurface = Color(0xFF131D36);
-  static const Color cosmicBorder = Color(0xFF1E2E56);
-  static const Color cosmicAccent = Color(0xFF6366F1);
-  static const Color cosmicCyan = Color(0xFF06B6D4);
+  // Midnight Cosmic (Deep Midnight Celestial Dark Blue #040133)
+  static const Color cosmicNavy = Color(0xFF040133);
+  static const Color cosmicSurface = Color(0xFF0A034D);
+  static const Color cosmicBorder = Color(0xFF140770);
+  static const Color cosmicAccent = Color(0xFF2818BA);
+  static const Color cosmicCyan = Color(0xFF38BDF8);
   static const Color celestialGold = Color(0xFFFFD54F);
 
   // Sacred Saffron
@@ -27,10 +27,10 @@ class AppTheme {
 
   // Royal Indigo
   static const Color royalBlue = Color(0xFF1E40AF);
-  static const Color royalIndigo = Color(0xFF4338CA);
+  static const Color royalIndigo = Color(0xFF2563EB);
   static const Color royalLightBg = Color(0xFFF8FAFC);
-  static const Color royalCard = Color(0xFF141C33);
-  static const Color royalBorder = Color(0xFF233054);
+  static const Color royalCard = Color(0xFF0A034D);
+  static const Color royalBorder = Color(0xFF140770);
 
   // Emerald Divine
   static const Color emeraldPrimary = Color(0xFF047857);
@@ -55,13 +55,17 @@ class AppTheme {
         );
       case AppColorPalette.royalIndigo:
         return const LinearGradient(
-          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF0284C7)],
+          colors: [Color(0xFF040133), Color(0xFF0C0466), Color(0xFF160999)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case AppColorPalette.midnightCosmic:
         return const LinearGradient(
-          colors: [Color(0xFF0B1120), Color(0xFF131D36), Color(0xFF0A0F1D)],
+          colors: [
+            Color(0xFF040133), // Exact requested #040133
+            Color(0xFF09034A), // Rich midnight indigo
+            Color(0xFF10066B), // Deep luminous night blue
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -186,7 +190,7 @@ class AppTheme {
           primary = royalBlue;
           break;
         case AppColorPalette.midnightCosmic:
-          primary = royalIndigo;
+          primary = royalBlue;
           break;
       }
     }

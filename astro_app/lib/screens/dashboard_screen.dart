@@ -99,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     final headerGradient = AppTheme.getHeaderGradient(widget.currentPalette, isDark);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF080D1A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? const Color(0xFF040133) : const Color(0xFFF8FAFC),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
@@ -552,10 +552,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF131D36) : Colors.white,
+          color: isDark ? const Color(0xFF103578) : Colors.white,
           borderRadius: BorderRadius.circular(24.r),
           border: Border.all(
-            color: isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0),
+            color: isDark ? const Color(0xFF1D54B2) : const Color(0xFFE2E8F0),
             width: 1.3.w,
           ),
           boxShadow: [
@@ -708,7 +708,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               width: 254.w,
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF131D36) : Colors.white,
+                color: isDark ? const Color(0xFF103578) : Colors.white,
                 borderRadius: BorderRadius.circular(20.r),
                 border: Border.all(
                   color: item.color.withValues(alpha: isDark ? 0.4 : 0.2),
@@ -797,25 +797,25 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? const LinearGradient(
-                        colors: [Color(0xFF4338CA), Color(0xFF6366F1), Color(0xFF818CF8)],
+                        colors: [Color(0xFF1E40AF), Color(0xFF2563EB), Color(0xFF3B82F6)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
                     : null,
                 color: isSelected
                     ? null
-                    : (isDark ? const Color(0xFF131D36) : Colors.white),
+                    : (isDark ? const Color(0xFF103578) : Colors.white),
                 borderRadius: BorderRadius.circular(24.r),
                 border: Border.all(
                   color: isSelected
                       ? Colors.white.withValues(alpha: 0.2)
-                      : (isDark ? const Color(0xFF1E2E56) : const Color(0xFFE2E8F0)),
+                      : (isDark ? const Color(0xFF1D54B2) : const Color(0xFFE2E8F0)),
                   width: 1.2.w,
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.4),
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.35),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
