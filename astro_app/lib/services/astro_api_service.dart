@@ -347,6 +347,119 @@ class AstroApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> getAstrologerWorkspace({
+    required String name,
+    required String dateOfBirth,
+    String system = 'pythagorean',
+    String? referenceDate,
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/astrologer-workspace');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'dob': dateOfBirth,
+      'system': system,
+      if (referenceDate != null && referenceDate.isNotEmpty) 'reference_date': referenceDate,
+    };
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load Astrologer Workspace: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getAstrologerWorkspace: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> getChartWorkspace({
+    required String name,
+    required String dateOfBirth,
+    String system = 'pythagorean',
+    String? startDate,
+    int durationYears = 10,
+    String? endDate,
+    String? referenceDate,
+    int? parentDashaFilter,
+    String gridType = 'vedic',
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/chart-workspace');
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'dob': dateOfBirth,
+      'system': system,
+      'duration_years': durationYears,
+      'grid_type': gridType,
+      if (startDate != null && startDate.isNotEmpty) 'start_date': startDate,
+      if (endDate != null && endDate.isNotEmpty) 'end_date': endDate,
+      if (referenceDate != null && referenceDate.isNotEmpty) 'reference_date': referenceDate,
+      if (parentDashaFilter != null) 'parent_dasha_filter': parentDashaFilter,
+    };
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        final err = jsonDecode(res.body);
+        throw Exception(err['message'] ?? 'Failed to load Chart Workspace: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getChartWorkspace: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getParyantardashasForYear({
+    required String dateOfBirth,
+    int? year,
+    String? referenceDate,
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/dasha/paryantardashas');
+    final Map<String, dynamic> bodyMap = {
+      'dob': dateOfBirth,
+      if (year != null) 'year': year,
+      if (referenceDate != null && referenceDate.isNotEmpty) 'reference_date': referenceDate,
+    };
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        return (data['data'] as List<dynamic>?)?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      } else {
+        throw Exception('Failed to load Paryantardashas: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getParyantardashasForYear: $e');
+      rethrow;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getDailyDashas({
+    required String dateOfBirth,
+    String? centerDate,
+    int spanDays = 14,
+  }) async {
+    final uri = Uri.parse('$baseUrl/numerology/dasha/daily');
+    final Map<String, dynamic> bodyMap = {
+      'dob': dateOfBirth,
+      if (centerDate != null && centerDate.isNotEmpty) 'center_date': centerDate,
+      'span_days': spanDays,
+    };
+    try {
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        return (data['data'] as List<dynamic>?)?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      } else {
+        throw Exception('Failed to load Daily Dashas: ${res.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('API Error getDailyDashas: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>> getLifePathReport({
     required String dateOfBirth,
     String? name,

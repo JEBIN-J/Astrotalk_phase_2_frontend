@@ -10,6 +10,8 @@ import 'mobile_number_analysis_screen.dart';
 import 'child_numerology_screen.dart';
 import 'advanced_compatibility_screen.dart';
 import 'angel_numbers_dashboard_screen.dart';
+import 'numerology_astrologer_workspace_screen.dart';
+import 'numerology_chart_workspace_screen.dart';
 
 class NumerologyDashboardScreen extends StatefulWidget {
   const NumerologyDashboardScreen({super.key});
@@ -351,7 +353,262 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 22.h),
+                    SizedBox(height: 16.h),
+
+                    // 4. ASTROLOGER MODE (Dedicated Dasha Workspace)
+                    Text(
+                      'ASTROLOGER',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(14.r),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14.r),
+                        onTap: () {
+                          final name = nameController.text.trim();
+                          final dob = dobController.text.trim();
+
+                          if (name.isEmpty || dob.isEmpty) {
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              const SnackBar(
+                                backgroundColor: Color(0xFFDC2626),
+                                content: Text(
+                                  'Please enter your Name and Date of Birth to launch Astrologer mode.',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Persist user selection
+                          _saveUserProfile(name, dob, selectedSystem);
+                          Navigator.pop(sheetContext);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NumerologyAstrologerWorkspaceScreen(
+                                name: name,
+                                dob: dob,
+                                system: selectedSystem,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14.r),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF3B82F6) : const Color(0xFF2563EB),
+                              width: 1.2,
+                            ),
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                                  : [const Color(0xFFEFF6FF), Colors.white],
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38.w,
+                                height: 38.w,
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.table_chart_rounded,
+                                  color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB),
+                                  size: 19.sp,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Astrologer Workspace',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13.5.sp,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                        SizedBox(width: 6.w),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF2563EB),
+                                            borderRadius: BorderRadius.circular(4.r),
+                                          ),
+                                          child: Text(
+                                            'NEW',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 8.5.sp,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      'Table-based Numerology Dasha & Timelines',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.sp,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14.sp,
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // 5. NUMEROLOGY CHART OPTION
+                    Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(14.r),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14.r),
+                        onTap: () {
+                          final name = nameController.text.trim();
+                          final dob = dobController.text.trim();
+
+                          if (name.isEmpty || dob.isEmpty) {
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              const SnackBar(
+                                backgroundColor: Color(0xFFDC2626),
+                                content: Text(
+                                  'Please enter your Name and Date of Birth to view your Chart.',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          _saveUserProfile(name, dob, selectedSystem);
+                          Navigator.pop(sheetContext);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NumerologyChartWorkspaceScreen(
+                                name: name,
+                                dob: dob,
+                                system: selectedSystem,
+                                initialDurationYears: 10,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14.r),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF10B981) : const Color(0xFF059669),
+                              width: 1.2,
+                            ),
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF064E3B).withValues(alpha: 0.4), const Color(0xFF0F172A)]
+                                  : [const Color(0xFFECFDF5), Colors.white],
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38.w,
+                                height: 38.w,
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.grid_view_rounded,
+                                  color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF059669),
+                                  size: 19.sp,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Numerology Chart',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13.5.sp,
+                                            fontWeight: FontWeight.w700,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                        SizedBox(width: 6.w),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF059669).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6.r),
+                                          ),
+                                          child: Text(
+                                            'LO SHU & 10-YR',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 8.5.sp,
+                                              fontWeight: FontWeight.w800,
+                                              color: const Color(0xFF059669),
+                                              letterSpacing: 0.4,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      'Lo Shu 3x3 Grid, 10-Yr Dasha & Pratyantar',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.sp,
+                                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14.sp,
+                                color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
 
                     // Save / Reveal Numbers Button with Material InkWell
                     Material(
@@ -641,6 +898,65 @@ class _NumerologyDashboardScreenState extends State<NumerologyDashboardScreen> {
                                   ),
                                 ),
                               );
+                            },
+                          ),
+                          _buildExploreCard(
+                            context: context,
+                            title: 'Astrologer\nWorkspace',
+                            subtitle: 'Multi-tier Dasha tables & timeline calculations.',
+                            icon: Icons.table_chart_rounded,
+                            cardBg: const Color(0xFFEFF6FF),
+                            borderColor: const Color(0xFFBFDBFE),
+                            iconBg: const Color(0xFF2563EB),
+                            arrowBg: const Color(0xFFDBEAFE),
+                            arrowColor: const Color(0xFF1D4ED8),
+                            watermarkType: _WatermarkType.numbers,
+                            isNew: true,
+                            onTap: () {
+                              if (_userName.isEmpty || _userDob.isEmpty) {
+                                _showProfileDialog(isFirstTime: false);
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => NumerologyAstrologerWorkspaceScreen(
+                                      name: _userName,
+                                      dob: _userDob,
+                                      system: _userSystem,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          _buildExploreCard(
+                            context: context,
+                            title: 'Numerology\nChart',
+                            subtitle: 'Lo Shu 3x3 grid, 10-Yr Dasha & Pratyantar subperiods.',
+                            icon: Icons.grid_view_rounded,
+                            cardBg: const Color(0xFFF0FDF4),
+                            borderColor: const Color(0xFFBBF7D0),
+                            iconBg: const Color(0xFF16A34A),
+                            arrowBg: const Color(0xFFDCFCE7),
+                            arrowColor: const Color(0xFF15803D),
+                            watermarkType: _WatermarkType.numbers,
+                            isNew: true,
+                            onTap: () {
+                              if (_userName.isEmpty || _userDob.isEmpty) {
+                                _showProfileDialog(isFirstTime: false);
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => NumerologyChartWorkspaceScreen(
+                                      name: _userName,
+                                      dob: _userDob,
+                                      system: _userSystem,
+                                      initialDurationYears: 10,
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ],
