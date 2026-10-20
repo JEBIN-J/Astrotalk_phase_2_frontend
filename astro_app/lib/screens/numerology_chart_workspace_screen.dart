@@ -1032,9 +1032,6 @@ class _NumerologyChartWorkspaceScreenState
   }) {
     final borderColor = isDark ? const Color(0xFF1F2937) : const Color(0xFFE2E8F0);
     final numberColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final watermarkColor = isDark
-        ? const Color(0xFF334155)
-        : const Color(0xFFCBD5E1);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1047,7 +1044,6 @@ class _NumerologyChartWorkspaceScreenState
             final displayText = cell?['display_text']?.toString() ?? '';
             final hasNumber = displayText.isNotEmpty && displayText != '-';
             final isAdded = cell?['is_added'] == true;
-            final int expectedNumber = cell?['number'] ?? 0;
 
             return Expanded(
               child: InkWell(
@@ -1067,19 +1063,6 @@ class _NumerologyChartWorkspaceScreenState
                   ),
                   child: Stack(
                     children: [
-                      // Faint watermark of expected house number when empty
-                      if (!hasNumber && expectedNumber > 0)
-                        Center(
-                          child: Text(
-                            '$expectedNumber',
-                            style: GoogleFonts.outfit(
-                              fontSize: (fontSize - 2).sp,
-                              fontWeight: FontWeight.w500,
-                              color: watermarkColor,
-                            ),
-                          ),
-                        ),
-
                       // Number Text
                       if (hasNumber)
                         Center(
@@ -1189,7 +1172,7 @@ class _NumerologyChartWorkspaceScreenState
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            fromDate,
+                            'From: $fromDate',
                             style: GoogleFonts.inter(
                               fontSize: 10.5.sp,
                               fontWeight: FontWeight.w700,
@@ -1204,7 +1187,7 @@ class _NumerologyChartWorkspaceScreenState
                         color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                       Text(
-                        toDate,
+                        'To: $toDate',
                         style: GoogleFonts.inter(
                           fontSize: 10.5.sp,
                           fontWeight: FontWeight.w700,
@@ -1375,7 +1358,7 @@ class _NumerologyChartWorkspaceScreenState
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            fromDate,
+                            'From: $fromDate',
                             style: GoogleFonts.inter(
                               fontSize: 10.5.sp,
                               fontWeight: FontWeight.w700,
@@ -1390,7 +1373,7 @@ class _NumerologyChartWorkspaceScreenState
                         color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       ),
                       Text(
-                        toDate,
+                        'To: $toDate',
                         style: GoogleFonts.inter(
                           fontSize: 10.5.sp,
                           fontWeight: FontWeight.w700,
