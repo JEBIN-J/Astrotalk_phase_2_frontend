@@ -189,6 +189,36 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   late List<int> _activeTabIndices;
 
+  String _getAyanamsaDisplayName(String key) {
+    switch (key) {
+      case 'LAHIRI': return 'Lahiri (Chitrapaksha)';
+      case 'BV_RAMAN': return 'B.V. Raman';
+      case 'KP_OLD': return 'Krishnamurti (KP Old)';
+      case 'SRI_YUKTESWAR': return 'Sri Yukteswar';
+      case 'DE_LUCE': return 'De Luce';
+      case 'USHA_SHASHI': return 'Usha-Shashi (Revati)';
+      case 'DJWHAL_KHOOL': return 'Djwhal Khool';
+      case 'JN_BHASIN': return 'J.N. Bhasin';
+      case 'FAGAN_BRADLEY': return 'Fagan-Bradley';
+      case 'TROPICAL': return 'Tropical (Sayana)';
+      case 'CUSTOM': return 'Custom';
+      case 'KP_NEW': return 'Krishnamurti (KP New)';
+      case 'KP_STRAIGHT_LINE': return 'KP Straight Line';
+      case 'KHULLAR': return 'Khullar';
+      case 'CHANDRA_HARI': return 'Chandra Hari';
+      default: return key;
+    }
+  }
+
+  String _formatAyanamsaDMS(double decimalDegrees) {
+    if (decimalDegrees == 0.0) return '';
+    int d = decimalDegrees.floor();
+    double minDouble = (decimalDegrees - d) * 60;
+    int m = minDouble.floor();
+    double s = (minDouble - m) * 60;
+    return '$d°$m\'${s.toStringAsFixed(2)}"';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -710,46 +740,24 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
-                          value: _selectedAyanamsa,
+                          value: const [
+                            'LAHIRI', 'BV_RAMAN', 'KP_OLD', 'SRI_YUKTESWAR', 'DE_LUCE', 
+                            'USHA_SHASHI', 'DJWHAL_KHOOL', 'JN_BHASIN', 'FAGAN_BRADLEY', 
+                            'TROPICAL', 'CUSTOM', 'KP_NEW', 'KP_STRAIGHT_LINE', 'KHULLAR', 'CHANDRA_HARI'
+                          ].contains(_selectedAyanamsa) ? _selectedAyanamsa : 'LAHIRI',
                           isExpanded: true,
                           dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                           icon: Icon(Icons.arrow_drop_down_rounded, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
-                          items: [
+                          items: const [
                             'LAHIRI', 'BV_RAMAN', 'KP_OLD', 'SRI_YUKTESWAR', 'DE_LUCE', 
                             'USHA_SHASHI', 'DJWHAL_KHOOL', 'JN_BHASIN', 'FAGAN_BRADLEY', 
                             'TROPICAL', 'CUSTOM', 'KP_NEW', 'KP_STRAIGHT_LINE', 'KHULLAR', 'CHANDRA_HARI'
                           ].map((String val) {
-                            String label = val;
-                            if (val == 'LAHIRI') label = 'Lahiri (Chitrapaksha)';
-                            else if (val == 'BV_RAMAN') label = 'B.V. Raman';
-                            else if (val == 'KP_OLD') label = 'Krishnamurti (KP Old)';
-                            else if (val == 'SRI_YUKTESWAR') label = 'Sri Yukteswar';
-                            else if (val == 'DE_LUCE') label = 'De Luce';
-                            else if (val == 'USHA_SHASHI') label = 'Usha-Shashi (Revati)';
-                            else if (val == 'DJWHAL_KHOOL') label = 'Djwhal Khool';
-                            else if (val == 'JN_BHASIN') label = 'J.N. Bhasin';
-                            else if (val == 'FAGAN_BRADLEY') label = 'Fagan-Bradley';
-                            else if (val == 'TROPICAL') label = 'Tropical (Sayana)';
-                            else if (val == 'CUSTOM') label = 'Custom';
-                            else if (val == 'KP_NEW') label = 'Krishnamurti (KP New)';
-                            else if (val == 'KP_STRAIGHT_LINE') label = 'KP Straight Line';
-                            else if (val == 'KHULLAR') label = 'Khullar';
-                            else if (val == 'CHANDRA_HARI') label = 'Chandra Hari';
-
+                            final String label = _getAyanamsaDisplayName(val);
                             final double? deg = _ayanamsaDegrees[val];
-                            
-                            String formatDMS(double decimalDegrees) {
-                              if (decimalDegrees == 0.0) return '';
-                              int d = decimalDegrees.floor();
-                              double minDouble = (decimalDegrees - d) * 60;
-                              int m = minDouble.floor();
-                              double s = (minDouble - m) * 60;
-                              return '$d°$m\'${s.toStringAsFixed(2)}"';
-                            }
-                            
                             final String degStr = (val == 'CUSTOM')
                                 ? ''
-                                : (deg != null && deg != 0.0 ? '  ${formatDMS(deg)}' : '');
+                                : (deg != null && deg != 0.0 ? '  ${_formatAyanamsaDMS(deg)}' : '');
 
                             return DropdownMenuItem(
                               value: val,
@@ -3358,7 +3366,31 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   ),
                 ],
               ),
-              SizedBox(height: 16.h),
+              SizedBox(height: 6.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.tune_rounded, size: 12.sp, color: const Color(0xFF4338CA)),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Ayanamsa: ${_getAyanamsaDisplayName(_selectedAyanamsa)}${_ayanamsaDegrees[_selectedAyanamsa] != null && _ayanamsaDegrees[_selectedAyanamsa] != 0.0 ? ' • ${_formatAyanamsaDMS(_ayanamsaDegrees[_selectedAyanamsa]!)}' : ''}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? const Color(0xFF818CF8) : const Color(0xFF4338CA),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 12.h),
               KundliInteractiveChart(
                 chartStyle: _currentChartStyle,
                 isDark: isDark,
@@ -3619,7 +3651,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ),
               SizedBox(height: 4.h),
               Text(
-                'Annual progressed placements (Fixed Aries Kala Purusha)',
+                'Annual progressed placements (Fixed Aries Kala Purusha) • ${_getAyanamsaDisplayName(_selectedAyanamsa)}',
                 style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54),
               ),
               SizedBox(height: 14.h),
@@ -4359,7 +4391,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                     final idx = entry.key;
                     final p = entry.value as Map<String, dynamic>;
                     final house = p['house']?.toString() ?? '';
-                    final sign = p['sign']?.toString() ?? '';
+                    final sign = p['lk_sign']?.toString() ?? p['sign']?.toString() ?? '';
                     final degree = p['longitude_formatted']?.toString() ?? p['degree_formatted']?.toString() ?? p['degree']?.toString() ?? '';
                     final dignity = p['dignity']?.toString() ?? 'Neutral';
                     final interp = p['interpretation'] as Map<String, dynamic>? ?? {};
@@ -4837,7 +4869,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)));
     }
 
+    final overview = _bnnData!['overview'] as Map<String, dynamic>? ?? {};
     final bnnPlanets = _bnnData!['planets'] as List<dynamic>? ?? [];
+    final natalPlanets = (_bnnData!['natal_planets'] as List<dynamic>?) ?? bnnPlanets;
     final relationships = _bnnData!['relationships'] as List<dynamic>? ?? [];
     final trineGroups = _bnnData!['trine_groups'] as List<dynamic>? ?? [];
     final events = _bnnData!['events'] as List<dynamic>? ?? [];
@@ -4846,6 +4880,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final saturnProgression = progressions['saturn'] as Map<String, dynamic>? ?? {};
     final rahuProgression = progressions['rahu'] as Map<String, dynamic>? ?? {};
     final ketuProgression = progressions['ketu'] as Map<String, dynamic>? ?? {};
+    final ageVal = overview['age'] ?? overview['current_age'];
     
     // Map planets for the interactive chart, ensuring they have 'name' and 'sign_index'.
     // We also pull the Ascendant from _kundliData so the chart can orient itself correctly.
@@ -5391,7 +5426,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       children: [
         // Time Travel UI
         Container(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           margin: EdgeInsets.only(bottom: 12.h),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -5403,24 +5438,57 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Time Travel (Age):', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp)),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFF4338CA)),
-                    onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(-1),
-                  ),
-                  _isScrubbingBnn 
-                    ? SizedBox(width: 24.w, height: 24.h, child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4338CA)))
-                    : Text('$_bnnTargetYear', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: const Color(0xFF4338CA))),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFF4338CA)),
-                    onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(1),
-                  ),
-                ],
-              )
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Time Travel Progression',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      ageVal != null ? 'Age: $ageVal yrs' : 'Year: $_bnnTargetYear',
+                      style: GoogleFonts.outfit(fontSize: 12.sp, color: const Color(0xFF4338CA), fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10.r),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.remove_circle_outline, size: 20.sp, color: const Color(0xFF4338CA)),
+                      padding: EdgeInsets.all(4.w),
+                      constraints: const BoxConstraints(),
+                      onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(-1),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w),
+                      child: _isScrubbingBnn 
+                        ? SizedBox(width: 16.w, height: 16.h, child: const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4338CA)))
+                        : Text('$_bnnTargetYear', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp, color: const Color(0xFF4338CA))),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add_circle_outline, size: 20.sp, color: const Color(0xFF4338CA)),
+                      padding: EdgeInsets.all(4.w),
+                      constraints: const BoxConstraints(),
+                      onPressed: _isScrubbingBnn ? null : () => _changeBnnTargetYear(1),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -5498,7 +5566,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             title: Text('Natal Planetary Positions', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
             collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            children: bnnPlanets.map((p) {
+            children: natalPlanets.map((p) {
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12))),
@@ -5660,13 +5728,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                       children: [
                         Container(
                           color: isDark ? const Color(0xFF334155).withValues(alpha: 0.5) : const Color(0xFFF1F5F9),
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                           child: Row(
                             children: [
-                              Expanded(flex: 3, child: Text('Event', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                              Expanded(flex: 3, child: Text('Karakas', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                              Expanded(flex: 3, child: Text('Natal/Trst', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
-                              Expanded(flex: 3, child: Text('Status', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 7, child: Text('Event', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 8, child: Text('Karakas', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 7, child: Text('Potential / Trst', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
+                              Expanded(flex: 6, child: Text('Status', style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : const Color(0xFF334155)))),
                             ],
                           ),
                         ),
@@ -5674,23 +5742,109 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           final idx = entry.key;
                           final e = entry.value;
                           final rowBg = idx.isOdd ? (isDark ? Colors.white.withValues(alpha: 0.02) : const Color(0xFFF8FAFC)) : Colors.transparent;
-                          Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
+                          final statusStr = e['status']?.toString() ?? 'Insufficient';
+                          final isTriggered = statusStr.contains('Active') || statusStr.contains('Trigger');
+                          final isStrong = statusStr.contains('Strong');
+                          final isModerate = statusStr.contains('Moderate');
+                          
+                          Color badgeBg = isTriggered 
+                              ? const Color(0xFF10B981).withValues(alpha: 0.15) 
+                              : (isStrong 
+                                  ? const Color(0xFF3B82F6).withValues(alpha: 0.15) 
+                                  : (isModerate ? const Color(0xFFF59E0B).withValues(alpha: 0.15) : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05))));
+                          Color badgeText = isTriggered 
+                              ? const Color(0xFF10B981) 
+                              : (isStrong 
+                                  ? const Color(0xFF2563EB) 
+                                  : (isModerate ? const Color(0xFFD97706) : Colors.grey));
+                          
+                          final dynamicScore = e['dynamic_score'] ?? e['strength'] ?? 0;
+                          final natalStrength = e['natal_strength'] ?? 0;
+                          
                           return Container(
                             color: rowBg,
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                             child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Expanded(flex: 3, child: Text(e['event'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold))),
-                                Expanded(flex: 3, child: Text(e['karakas'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp))),
-                                Expanded(flex: 3, child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('${e['strength']}%', style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue, fontWeight: FontWeight.bold)),
-                                    Text(e['transit_trigger'] == 'Yes' ? 'Trst: Yes' : 'Trst: No', style: GoogleFonts.outfit(fontSize: 10.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : Colors.grey)),
-                                  ],
-                                )),
-                                Expanded(flex: 3, child: Text(e['status'].toString().replaceAll(' BNN confirmation', ''), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor, height: 1.2))),
+                                Expanded(
+                                  flex: 7, 
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 4.w),
+                                    child: Text(e['event'].toString(), style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 8, 
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 4.w),
+                                    child: Text(e['karakas'].toString(), style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white70 : Colors.black87)),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 7, 
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                                        textBaseline: TextBaseline.alphabetic,
+                                        children: [
+                                          Text('$dynamicScore%', style: GoogleFonts.outfit(fontSize: 11.5.sp, color: const Color(0xFF2563EB), fontWeight: FontWeight.bold)),
+                                          SizedBox(width: 3.w),
+                                          Text('($natalStrength%)', style: GoogleFonts.outfit(fontSize: 9.sp, color: Colors.grey, fontWeight: FontWeight.w500)),
+                                        ],
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Wrap(
+                                        spacing: 3.w,
+                                        runSpacing: 2.h,
+                                        children: [
+                                          Container(
+                                            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                            decoration: BoxDecoration(
+                                              color: e['transit_trigger'] == 'Yes' ? const Color(0xFF10B981).withValues(alpha: 0.15) : (isDark ? Colors.white10 : Colors.grey.shade200),
+                                              borderRadius: BorderRadius.circular(3.r),
+                                            ),
+                                            child: Text(
+                                              e['transit_trigger'] == 'Yes' ? 'Trst: Yes' : 'Trst: No',
+                                              style: GoogleFonts.outfit(fontSize: 8.5.sp, fontWeight: FontWeight.bold, color: e['transit_trigger'] == 'Yes' ? const Color(0xFF10B981) : Colors.grey),
+                                            ),
+                                          ),
+                                          if (e['progression_trigger'] == 'Yes')
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                                borderRadius: BorderRadius.circular(3.r),
+                                              ),
+                                              child: Text(
+                                                'Prog: Yes',
+                                                style: GoogleFonts.outfit(fontSize: 8.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 6, 
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                                    decoration: BoxDecoration(
+                                      color: badgeBg,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                    child: Text(
+                                      statusStr.replaceAll(' BNN confirmation', ''),
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: badgeText, height: 1.1),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           );
@@ -5700,23 +5854,54 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                   )
                 else
                   ...events.map((e) {
-                    Color statusColor = e['status'].toString().contains('Strong') ? Colors.green : Colors.grey;
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 12.h),
+                    final statusStr = e['status']?.toString() ?? 'Insufficient';
+                    final isTriggered = statusStr.contains('Active') || statusStr.contains('Trigger');
+                    final isStrong = statusStr.contains('Strong');
+                    final isModerate = statusStr.contains('Moderate');
+                    Color badgeBg = isTriggered 
+                        ? const Color(0xFF10B981).withValues(alpha: 0.15) 
+                        : (isStrong ? const Color(0xFF3B82F6).withValues(alpha: 0.15) : (isModerate ? const Color(0xFFF59E0B).withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1)));
+                    Color badgeText = isTriggered 
+                        ? const Color(0xFF10B981) 
+                        : (isStrong ? const Color(0xFF2563EB) : (isModerate ? const Color(0xFFD97706) : Colors.grey));
+                    final dynamicScore = e['dynamic_score'] ?? e['strength'] ?? 0;
+                    final natalStrength = e['natal_strength'] ?? 0;
+                    
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 12.h),
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: isTriggered ? const Color(0xFF10B981).withValues(alpha: 0.4) : (isDark ? Colors.white10 : Colors.black12)),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(e['event'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                              Text(e['status'].toString(), style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: statusColor)),
+                              Text(e['event'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.5.sp)),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                                decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(6.r)),
+                                child: Text(statusStr, style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: badgeText)),
+                              ),
                             ],
                           ),
-                          Text('Karakas: ${e['karakas']}', style: GoogleFonts.outfit(fontSize: 11.sp)),
-                          Text('Natal Conn: ${e['natal_connection']} (${e['strength']}%)', style: GoogleFonts.outfit(fontSize: 11.sp)),
-                          Text('Transit Triggered: ${e['transit_trigger']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: e['transit_trigger'] == 'Yes' ? Colors.red : null)),
-                          Divider(height: 16.h, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                          SizedBox(height: 6.h),
+                          Text('Karakas: ${e['karakas']}', style: GoogleFonts.outfit(fontSize: 11.5.sp)),
+                          Text('Year Potential: $dynamicScore% (Birth Base: $natalStrength%)', style: GoogleFonts.outfit(fontSize: 11.5.sp, color: const Color(0xFF2563EB), fontWeight: FontWeight.bold)),
+                          Text('Natal Connection: ${e['natal_connection']}', style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white70 : Colors.black54)),
+                          if (e['progression_trigger'] != null)
+                            Padding(
+                              padding: EdgeInsets.only(top: 2.h),
+                              child: Text('Progression: ${e['progression_trigger'] == 'Yes' ? 'Active (${e['progression_detail']})' : 'Dormant'}', style: GoogleFonts.outfit(fontSize: 10.5.sp, color: e['progression_trigger'] == 'Yes' ? const Color(0xFF6366F1) : Colors.grey)),
+                            ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 2.h),
+                            child: Text('Transit: ${e['transit_trigger'] == 'Yes' ? 'Active (${e['transit_detail']})' : 'No major transit'}', style: GoogleFonts.outfit(fontSize: 10.5.sp, color: e['transit_trigger'] == 'Yes' ? const Color(0xFF10B981) : Colors.grey)),
+                          ),
                         ],
                       ),
                     );

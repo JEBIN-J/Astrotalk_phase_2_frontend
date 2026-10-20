@@ -1286,11 +1286,10 @@ class AstroApiService {
       'place_of_birth': placeOfBirth,
     };
     if (latitude != null) bodyMap['latitude'] = latitude;
-    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
-    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
-    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;
+    if (ayanamsa != null) bodyMap['ayanamsa'] = ayanamsa;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
 
     try {
       final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
