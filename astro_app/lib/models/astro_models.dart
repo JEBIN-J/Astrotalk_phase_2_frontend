@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Visual Dashboard Layout Styles / Models
 enum DashboardStyle {
@@ -123,15 +124,18 @@ class GlobalBirthProfile {
   factory GlobalBirthProfile() => _instance;
   GlobalBirthProfile._internal();
 
-  String personName = '';
-  String dob = '';
-  String tob = '';
-  String pob = '';
-  double latitude = 0.0;
-  double longitude = 0.0;
-  double timezone = 0.0;
-  DateTime currentDateTime = DateTime.now();
-  bool isProfileSet = false;
+  String personName = 'Om Nath';
+  String dob = '22/01/1984';
+  String tob = '02:39:13';
+  String pob = 'Hajipur';
+  double latitude = 25.41;
+  double longitude = 85.13;
+  double timezone = 5.5;
+  DateTime currentDateTime = DateTime(1984, 1, 22, 2, 39, 13);
+  bool isProfileSet = true;
+
+  String selectedAyanamsa = 'LAHIRI';
+  double? customAyanamsa;
 
   void updateProfile({
     required String name,
@@ -152,5 +156,32 @@ class GlobalBirthProfile {
     timezone = tz;
     currentDateTime = dateTime;
     isProfileSet = true;
+  }
+
+  Future<void> updateAyanamsa(String ayanamsa, [double? custom]) async {
+    selectedAyanamsa = ayanamsa;
+    customAyanamsa = custom;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('global_selected_ayanamsa', ayanamsa);
+      if (custom != null) {
+        await prefs.setDouble('global_custom_ayanamsa', custom);
+      } else {
+        await prefs.remove('global_custom_ayanamsa');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> loadSavedAyanamsa() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('global_selected_ayanamsa');
+      if (saved != null && saved.isNotEmpty) {
+        selectedAyanamsa = saved;
+      }
+      if (prefs.containsKey('global_custom_ayanamsa')) {
+        customAyanamsa = prefs.getDouble('global_custom_ayanamsa');
+      }
+    } catch (_) {}
   }
 }

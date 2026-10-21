@@ -238,6 +238,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     
     // Initialize from GlobalBirthProfile
     final profile = GlobalBirthProfile();
+    _selectedAyanamsa = profile.selectedAyanamsa;
+    _customAyanamsa = profile.customAyanamsa;
     if (profile.isProfileSet) {
       _personName = profile.personName;
       _dob = profile.dob;
@@ -719,7 +721,6 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         }).toList(),
                       ),
                     ),
-                    if (!isKpSystemFocused) ...[
                       SizedBox(height: 32.h),
                       Text(
                         'Ayanamsa',
@@ -792,6 +793,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             if (val != null) {
                               setModalState(() => _selectedAyanamsa = val);
                               setState(() => _selectedAyanamsa = val);
+                              GlobalBirthProfile().updateAyanamsa(val, _customAyanamsa);
                               if (val != 'CUSTOM') {
                                 _fetchKundliData();
                               }
@@ -814,11 +816,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           final parsed = double.tryParse(val);
                           if (parsed != null) {
                             setState(() => _customAyanamsa = parsed);
+                            GlobalBirthProfile().updateAyanamsa(_selectedAyanamsa, parsed);
                           }
                         },
                         onSubmitted: (_) => _fetchKundliData(),
                       ),
-                    ],
                     ],
                     if (!isKpSystemFocused) ...[
                       SizedBox(height: 32.h),
@@ -8684,7 +8686,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   Widget _buildPlanetsTab(BuildContext context, bool isDark) {
     return KpSystemView(
-      key: ValueKey('$_dobFormattedForApi-$_tobFormattedForApi-$_latitude-$_longitude-$_timezone-$_personName-$_showUpagrahasOnChart-$_showDegreesOnChart'),
+      key: ValueKey('$_dobFormattedForApi-$_tobFormattedForApi-$_latitude-$_longitude-$_timezone-$_personName-$_showUpagrahasOnChart-$_showDegreesOnChart-$_selectedAyanamsa'),
       personName: _personName,
       dateOfBirth: _dobFormattedForApi,
       timeOfBirth: _tobFormattedForApi,
@@ -8697,6 +8699,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       onEditProfile: _showEditProfileDialog,
       showUpagrahas: _showUpagrahasOnChart,
       showDegrees: _showDegreesOnChart,
+      initialAyanamsa: _selectedAyanamsa,
+      onAyanamsaChanged: (newAyan) {
+        setState(() => _selectedAyanamsa = newAyan);
+        GlobalBirthProfile().updateAyanamsa(newAyan);
+      },
     );
   }
 
@@ -9531,7 +9538,14 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             
               // Bar Chart Section
               Text(title, style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-              SizedBox(height: 16.h),
+              if (localTabIndex == 0) ...[
+                SizedBox(height: 3.h),
+                Text(
+                  'Ratio to Parashara Minimum (≥ 1.00 indicates fully adequate strength)',
+                  style: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54),
+                ),
+              ],
+              SizedBox(height: 14.h),
             
               Container(
                 padding: EdgeInsets.all(16.w),
@@ -9870,10 +9884,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         {'label': 'Chesta', 'key': 'chesta_bala'},
         {'label': 'Naisargika', 'key': 'naisargika_bala'},
         {'label': 'Drig Bala', 'key': 'drik_bala', 'isSubTotal': true, 'color': const Color(0xFF2563EB)},
-        {'label': 'Shadbala', 'key': 'total_virupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
-        {'label': 'In Rupas', 'key': 'total_rupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
-        {'label': 'Minimum', 'key': 'minimum', 'decimals': 1},
-        {'label': 'Strength', 'key': 'strength'},
+        {'label': 'Total (Virupas)', 'key': 'total_virupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
+        {'label': 'Total (Rupas)', 'key': 'total_rupas', 'isTotal': true, 'color': const Color(0xFF10B981)},
+        {'label': 'Required (Rupas)', 'key': 'minimum', 'decimals': 1},
+        {'label': 'Strength Ratio', 'key': 'strength'},
         {'label': 'Rank', 'key': 'rank', 'decimals': 0},
         {'label': 'Ishta Phala', 'key': 'ishta_phala'},
         {'label': 'Kashta Phala', 'key': 'kashta_phala'},

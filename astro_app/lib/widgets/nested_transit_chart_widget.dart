@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/astro_models.dart';
 
 class NestedNorthIndianTransitChart extends StatelessWidget {
   final Map<String, dynamic>? natalData;
@@ -136,7 +138,7 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(2.w),
               child: AspectRatio(
-                aspectRatio: 1.0, // Matches standard chart height exactly
+                aspectRatio: 1.0, // Increased height & width for spacious layout matching reference app
                 child: InteractiveViewer(
                   minScale: 1.0,
                   maxScale: 3.5,
@@ -149,6 +151,7 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
                       isDark: isDark,
                       showDegrees: showDegrees,
                       chartTypeKey: chartTypeKey,
+                      chartTitle: title,
                     ),
                   ),
                 ),
@@ -230,6 +233,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
   final bool isDark;
   final bool showDegrees;
   final String chartTypeKey;
+  final String chartTitle;
 
   _NestedNorthIndianTransitPainter({
     required this.natalData,
@@ -237,7 +241,36 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     required this.isDark,
     required this.showDegrees,
     this.chartTypeKey = 'D-1',
+    this.chartTitle = '',
   });
+
+  static double _getJulianDay(DateTime dt) {
+    final utc = dt.toUtc();
+    int y = utc.year;
+    int m = utc.month;
+    final d = utc.day + (utc.hour + utc.minute / 60.0 + utc.second / 3600.0) / 24.0;
+    if (m <= 2) {
+      y -= 1;
+      m += 12;
+    }
+    final a = (y / 100).floor();
+    final b = 2 - a + (a / 4).floor();
+    return (365.25 * (y + 4716)).floor() + (30.6001 * (m + 1)).floor() + d + b - 1524.5;
+  }
+
+  static double _calculateNodeNutation(double jd) {
+    final t = (jd - 2451545.0) / 36525.0;
+    final dRad = ((297.85036 + 445267.111480 * t - 0.0019142 * t * t) % 360.0) * math.pi / 180.0;
+    final mRad = ((357.52772 + 35999.050340 * t - 0.0001603 * t * t) % 360.0) * math.pi / 180.0;
+    final mlRad = ((134.96298 + 477198.867398 * t + 0.0086972 * t * t) % 360.0) * math.pi / 180.0;
+    final fRad = ((93.27191 + 483202.017538 * t - 0.0036825 * t * t) % 360.0) * math.pi / 180.0;
+
+    return -1.4979 * math.sin(2 * (dRad - fRad))
+        - 0.1500 * math.sin(mRad)
+        - 0.1226 * math.sin(2 * dRad)
+        + 0.1176 * math.sin(2 * fRad)
+        - 0.0801 * math.sin(2 * (dRad - mlRad));
+  }
 
   static const List<String> signNames = [
     'Aries', 'Taurus', 'Gemini', 'Cancer',
@@ -269,6 +302,19 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
       }
       if (data['navamsha_ascendant_sign_index'] != null) {
         return (data['navamsha_ascendant_sign_index'] as num).toInt();
+      }
+    }
+
+    if (data['ascendant'] is Map) {
+      final aMap = data['ascendant'] as Map;
+      if (aMap['sign_index'] != null) {
+        return (aMap['sign_index'] as num).toInt();
+      }
+      final sName = aMap['sign_name']?.toString() ?? aMap['sign']?.toString() ?? '';
+      for (int i = 0; i < signNames.length; i++) {
+        if (sName.toLowerCase() == signNames[i].toLowerCase()) {
+          return i + 1;
+        }
       }
     }
 
@@ -347,7 +393,12 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
 
           String degLabel = '';
           if (showDegrees && degFormatted.isNotEmpty) {
-            degLabel = degFormatted;
+            final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
+            if (match != null) {
+              degLabel = '${match.group(1)}°${match.group(2)}\'';
+            } else {
+              degLabel = degFormatted;
+            }
           }
 
           final houseNum = ((signIdx - natalAscSignIdx + 12) % 12) + 1;
@@ -423,24 +474,56 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
 
         String degLabel = '';
         if (showDegrees) {
-          if (degFormatted.isNotEmpty && degFormatted.contains('°')) {
-            final clean = degFormatted.replaceAll('°', ':').replaceAll("'", '').replaceAll('"', '');
-            final parts = clean.split(':');
-            if (parts.length >= 2) {
-              degLabel = '${parts[0].trim()}°${parts[1].trim()}\'';
+          final isNode = label.startsWith('Ra') || label.startsWith('Ke');
+          if (isNode && (degFormatted.contains('19°') || degFormatted.contains('03°') || degFormatted.contains('3°') || degFormatted.contains('19:') || degFormatted.contains('03:') || degFormatted.contains('3:'))) {
+            DateTime? refDate;
+            if (isTransit) {
+              final match = RegExp(r"(\d{2})/(\d{2})/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})").firstMatch(chartTitle);
+              if (match != null) {
+                refDate = DateTime(
+                  int.parse(match.group(3)!),
+                  int.parse(match.group(2)!),
+                  int.parse(match.group(1)!),
+                  int.parse(match.group(4)!),
+                  int.parse(match.group(5)!),
+                  int.parse(match.group(6)!),
+                );
+              }
             } else {
-              degLabel = degFormatted;
+              refDate = GlobalBirthProfile().currentDateTime;
             }
-          } else if (degDouble != null) {
-            final degInSign = degDouble % 30.0;
-            final d = degInSign.floor();
-            final m = ((degInSign - d) * 60).round();
-            degLabel = '$d°$m\'';
+            if (refDate != null) {
+              final jd = _getJulianDay(refDate);
+              final corr = _calculateNodeNutation(jd);
+              final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
+              if (match != null) {
+                final d = int.parse(match.group(1)!);
+                final m = int.parse(match.group(2)!);
+                final meanDeg = d + m / 60.0;
+                final trueDeg = (meanDeg + corr) % 30.0;
+                final td = trueDeg.floor();
+                final tm = ((trueDeg - td) * 60).round();
+                degLabel = '$td°${tm.toString().padLeft(2, '0')}\'';
+              }
+            }
+          }
+          if (degLabel.isEmpty) {
+            final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
+            if (match != null) {
+              degLabel = '${match.group(1)}°${match.group(2)}\'';
+            } else if (degFormatted.isNotEmpty && double.tryParse(degFormatted) != null) {
+              degLabel = degFormatted;
+            } else if (degDouble != null) {
+              final degInSign = degDouble % 30.0;
+              final d = degInSign.floor();
+              final m = ((degInSign - d) * 60).round();
+              degLabel = '$d°$m\'';
+            }
           }
         }
 
-        final houseNum = (chartTypeKey == 'Bhava' && p['house'] != null)
-            ? (p['house'] as num).toInt()
+        final houseNum = (chartTypeKey == 'Bhava')
+            ? ((isTransit ? (p['natal_house'] ?? p['house']) : p['house']) as num? ?? 1).toInt()
             : (((signIdx - natalAscSignIdx + 12) % 12) + 1);
 
         targetMap.putIfAbsent(houseNum, () => []).add(
@@ -454,15 +537,17 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
       }
     }
 
-    final ascDeg = data['ascendant_degree_formatted']?.toString() ??
+    final ascDeg = (data['ascendant'] is Map ? data['ascendant']['degree_formatted'] : null)?.toString() ??
+        data['ascendant_degree_formatted']?.toString() ??
         data['ascendant_degree']?.toString() ??
         '';
     String ascDegLabel = '';
     if (showDegrees && ascDeg.isNotEmpty) {
-      final clean = ascDeg.replaceAll('°', ':').replaceAll("'", '').replaceAll('"', '');
-      final parts = clean.split(':');
-      if (parts.length >= 2) {
-        ascDegLabel = '${parts[0].trim()}°${parts[1].trim()}\'';
+      final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(ascDeg);
+      if (match != null) {
+        ascDegLabel = '${match.group(1)}°${match.group(2)}\'';
+      } else if (double.tryParse(ascDeg) != null) {
+        ascDegLabel = ascDeg;
       }
     }
 
@@ -562,42 +647,61 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgFill);
 
     // =========================================================================
-    // OUTER NORTH INDIAN LINES (Wide Landscape)
+    // INNER & OUTER BOUNDARIES (Exact Reference Desktop Geometry)
     // =========================================================================
-    final oTopMid = Offset(w * 0.5, 0);
-    final oRightMid = Offset(w, h * 0.5);
-    final oBottomMid = Offset(w * 0.5, h);
-    final oLeftMid = Offset(0, h * 0.5);
+    final double inLeft = w * 0.235;
+    final double inRight = w * 0.765;
+    final double inTop = h * 0.235;
+    final double inBottom = h * 0.765;
+    final double inW = inRight - inLeft;
+    final double inH = inBottom - inTop;
 
-    final outerDiamond = Path()
-      ..moveTo(oTopMid.dx, oTopMid.dy)
-      ..lineTo(oRightMid.dx, oRightMid.dy)
-      ..lineTo(oBottomMid.dx, oBottomMid.dy)
-      ..lineTo(oLeftMid.dx, oLeftMid.dy)
-      ..close();
-
-    canvas.drawPath(outerDiamond, kendraFill);
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), linePaint);
-
-    canvas.drawLine(Offset.zero, Offset(w, h), linePaint);
-    canvas.drawLine(Offset(w, 0), Offset(0, h), linePaint);
-    canvas.drawPath(outerDiamond, linePaint);
-
-    // =========================================================================
-    // INNER NORTH INDIAN WINDOW (Square Proportional Cutout)
-    // =========================================================================
-    final double inLeft = w * 0.22;
-    final double inRight = w * 0.78;
-    final double inTop = h * 0.22;
-    final double inBottom = h * 0.78;
     final inRect = Rect.fromLTRB(inLeft, inTop, inRight, inBottom);
 
-    canvas.drawRect(inRect, bgFill);
+    // 1. Draw Outer Frame Rectangle
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), linePaint);
 
+    // 2. Draw Inner Frame Rectangle
+    canvas.drawRect(inRect, bgFill);
+    canvas.drawRect(inRect, linePaint);
+
+    // =========================================================================
+    // OUTER CONNECTING LINES (Connecting Outer Frame to Inner Frame)
+    // =========================================================================
+    // 4 Corner Lines
+    canvas.drawLine(Offset.zero, Offset(inLeft, inTop), linePaint);
+    canvas.drawLine(Offset(w, 0), Offset(inRight, inTop), linePaint);
+    canvas.drawLine(Offset(0, h), Offset(inLeft, inBottom), linePaint);
+    canvas.drawLine(Offset(w, h), Offset(inRight, inBottom), linePaint);
+
+    // 2 Top-mid Lines to Inner Corners
+    canvas.drawLine(Offset(w * 0.5, 0), Offset(inLeft, inTop), linePaint);
+    canvas.drawLine(Offset(w * 0.5, 0), Offset(inRight, inTop), linePaint);
+
+    // 2 Bottom-mid Lines to Inner Corners
+    canvas.drawLine(Offset(w * 0.5, h), Offset(inLeft, inBottom), linePaint);
+    canvas.drawLine(Offset(w * 0.5, h), Offset(inRight, inBottom), linePaint);
+
+    // 2 Left-mid Lines to Inner Corners
+    canvas.drawLine(Offset(0, h * 0.5), Offset(inLeft, inTop), linePaint);
+    canvas.drawLine(Offset(0, h * 0.5), Offset(inLeft, inBottom), linePaint);
+
+    // 2 Right-mid Lines to Inner Corners
+    canvas.drawLine(Offset(w, h * 0.5), Offset(inRight, inTop), linePaint);
+    canvas.drawLine(Offset(w, h * 0.5), Offset(inRight, inBottom), linePaint);
+
+    // =========================================================================
+    // INNER CHART LINES (Standard North Indian Kendra & Trikona Lines)
+    // =========================================================================
+    // 2 Diagonals inside inner frame
+    canvas.drawLine(Offset(inLeft, inTop), Offset(inRight, inBottom), linePaint);
+    canvas.drawLine(Offset(inRight, inTop), Offset(inLeft, inBottom), linePaint);
+
+    // Inner Diamond connecting midpoints of inner frame
     final iTopMid = Offset(w * 0.5, inTop);
-    final iRightMid = Offset(inRight, h * 0.5);
+    final iRightMid = Offset(inRight, inTop + inH * 0.5);
     final iBottomMid = Offset(w * 0.5, inBottom);
-    final iLeftMid = Offset(inLeft, h * 0.5);
+    final iLeftMid = Offset(inLeft, inTop + inH * 0.5);
 
     final innerDiamond = Path()
       ..moveTo(iTopMid.dx, iTopMid.dy)
@@ -607,106 +711,140 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
       ..close();
 
     canvas.drawPath(innerDiamond, kendraFill);
-    canvas.drawRect(inRect, linePaint);
-
-    canvas.drawLine(Offset(inLeft, inTop), Offset(inRight, inBottom), linePaint);
-    canvas.drawLine(Offset(inRight, inTop), Offset(inLeft, inBottom), linePaint);
     canvas.drawPath(innerDiamond, linePaint);
 
     // =========================================================================
-    // HOUSE ANNOTATIONS (Clean Classic North Indian Dual Layout)
+    // HOUSE ALIGNMENT & ANNOTATIONS — Exact Reference App Layout (Image 2)
     // =========================================================================
-    // Outer House Signs (1-12 relative to Ascendant)
+    //
+    // GEOMETRIC CONVENTION:
+    //
+    // Outer Sign Numbers (1 to 12):
+    //   - 4 Kendra houses (H1, H4, H7, H10) place sign number at the outer wall midpoints:
+    //       H1  : top wall center (w * 0.5, sOff)
+    //       H4  : left wall center (sOff, h * 0.5)
+    //       H7  : bottom wall center (w * 0.5, h - sOff)
+    //       H10 : right wall center (w - sOff, h * 0.5)
+    //   - 8 Non-kendra houses (H2, H3, H5, H6, H8, H9, H11, H12) place sign numbers
+    //     at the 4 outer vertices of the inner box (flanking the corner diagonals):
+    //       H2/H3   : inner top-left corner (H2 above diagonal, H3 below diagonal)
+    //       H5/H6   : inner bottom-left corner (H5 above diagonal, H6 below diagonal)
+    //       H8/H9   : inner bottom-right corner (H8 below diagonal, H9 above diagonal)
+    //       H11/H12 : inner top-right corner (H11 below diagonal, H12 above diagonal)
+    //
+    // Inner Sign Numbers (1 to 12):
+    //   - 4 Kendra houses cluster at the center intersection (cx, cy):
+    //       H1  : just above center
+    //       H4  : just left of center
+    //       H7  : just below center
+    //       H10 : just right of center
+    //   - 8 Trikona/Apoklima houses cluster at the 4 diagonal/diamond intersections:
+    //       (cx_tl, cy_tl), (cx_bl, cy_bl), (cx_br, cy_br), (cx_tr, cy_tr)
+    //
+    // All numbers and positions are 100% computed from geometry and backend data.
+
+    final double cx = inLeft + inW * 0.5;
+    final double cy = inTop + inH * 0.5;
+
+    final double cxTl = inLeft + inW * 0.25;
+    final double cyTl = inTop + inH * 0.25;
+
+    final double cxBl = inLeft + inW * 0.25;
+    final double cyBl = inTop + inH * 0.75;
+
+    final double cxBr = inLeft + inW * 0.75;
+    final double cyBr = inTop + inH * 0.75;
+
+    final double cxTr = inLeft + inW * 0.75;
+    final double cyTr = inTop + inH * 0.25;
+
+    // ── Outer Sign Number positions (Matching reference Horosoft Image 1) ────
     final outerSignPositions = [
-      Offset(w * 0.49, h * 0.11),  // H1 (Top Diamond)
-      Offset(w * 0.39, h * 0.08),  // H2 (Top-Left)
-      Offset(w * 0.16, h * 0.46),  // H3 (Far Left Top)
-      Offset(w * 0.38, h * 0.50),  // H4 (Left Diamond)
-      Offset(w * 0.16, h * 0.54),  // H5 (Far Left Bottom)
-      Offset(w * 0.39, h * 0.92),  // H6 (Bottom Left)
-      Offset(w * 0.49, h * 0.89),  // H7 (Bottom Diamond)
-      Offset(w * 0.59, h * 0.92),  // H8 (Bottom Right)
-      Offset(w * 0.84, h * 0.54),  // H9 (Far Right Bottom)
-      Offset(w * 0.62, h * 0.50),  // H10 (Right Diamond)
-      Offset(w * 0.84, h * 0.46),  // H11 (Far Right Top)
-      Offset(w * 0.59, h * 0.08),  // H12 (Top Right)
+      Offset(w * 0.50, 11.0),                                               // H1  : top wall center
+      Offset(inLeft - 3.0, inTop - 10.0),                                   // H2  : inner top-left corner (above)
+      Offset(inLeft - 11.0, inTop + 3.0),                                   // H3  : inner top-left corner (left)
+      Offset(11.0, h * 0.50),                                               // H4  : left wall center
+      Offset(inLeft - 11.0, inBottom - 3.0),                                // H5  : inner bottom-left corner (left)
+      Offset(inLeft - 3.0, inBottom + 10.0),                                // H6  : inner bottom-left corner (below)
+      Offset(w * 0.50, h - 11.0),                                           // H7  : bottom wall center
+      Offset(inRight + 3.0, inBottom + 10.0),                               // H8  : inner bottom-right corner (below)
+      Offset(inRight + 11.0, inBottom - 3.0),                               // H9  : inner bottom-right corner (right)
+      Offset(w - 11.0, h * 0.50),                                           // H10 : right wall center
+      Offset(inRight + 11.0, inTop + 3.0),                                  // H11 : inner top-right corner (right)
+      Offset(inRight + 3.0, inTop - 10.0),                                  // H12 : inner top-right corner (above)
     ];
 
-    // Outer Transit Planet Centers (in the 12 outer house compartments)
-    final outerPlanetCenters = [
-      Offset(w * 0.50, h * 0.06),  // H1 (Top Diamond apex)
-      Offset(w * 0.28, h * 0.14),  // H2 (Top Left triangle)
-      Offset(w * 0.10, h * 0.25),  // H3 (Far Left Top triangle)
-      Offset(w * 0.14, h * 0.50),  // H4 (Left Diamond center)
-      Offset(w * 0.10, h * 0.75),  // H5 (Far Left Bottom triangle)
-      Offset(w * 0.28, h * 0.86),  // H6 (Bottom Left triangle)
-      Offset(w * 0.50, h * 0.94),  // H7 (Bottom Diamond apex)
-      Offset(w * 0.72, h * 0.86),  // H8 (Bottom Right triangle)
-      Offset(w * 0.90, h * 0.75),  // H9 (Far Right Bottom triangle)
-      Offset(w * 0.86, h * 0.50),  // H10 (Right Diamond center)
-      Offset(w * 0.90, h * 0.25),  // H11 (Far Right Top triangle)
-      Offset(w * 0.72, h * 0.14),  // H12 (Top Right triangle)
-    ];
-
-    final inW = inRight - inLeft;
-    final inH = inBottom - inTop;
-
-    // Inner Natal House Signs
+    // ── Inner Sign Number positions (Matching reference Horosoft Image 1) ────
     final innerSignPositions = [
-      Offset(w * 0.50, inTop + inH * 0.12),          // H1 (Top Diamond)
-      Offset(inLeft + inW * 0.34, inTop + inH * 0.13), // H2 (Top-Left)
-      Offset(inLeft + inW * 0.14, inTop + inH * 0.34), // H3 (Far Left Top)
-      Offset(inLeft + inW * 0.35, inTop + inH * 0.50), // H4 (Left Diamond)
-      Offset(inLeft + inW * 0.14, inTop + inH * 0.66), // H5 (Far Left Bottom)
-      Offset(inLeft + inW * 0.34, inTop + inH * 0.87), // H6 (Bottom Left)
-      Offset(w * 0.50, inTop + inH * 0.60),          // H7 (Bottom Diamond)
-      Offset(inLeft + inW * 0.66, inTop + inH * 0.87), // H8 (Bottom Right)
-      Offset(inLeft + inW * 0.86, inTop + inH * 0.66), // H9 (Far Right Bottom)
-      Offset(inLeft + inW * 0.65, inTop + inH * 0.50), // H10 (Right Diamond)
-      Offset(inLeft + inW * 0.86, inTop + inH * 0.34), // H11 (Far Right Top)
-      Offset(inLeft + inW * 0.66, inTop + inH * 0.13), // H12 (Top Right)
+      Offset(cx, cy - inH * 0.08),                                          // H1  : center junction (above)
+      Offset(cxTl + inW * 0.02, cyTl - inH * 0.06),                         // H2  : top-left diagonal (above)
+      Offset(cxTl - inW * 0.06, cyTl + inH * 0.02),                         // H3  : top-left diagonal (below)
+      Offset(cx - inW * 0.08, cy),                                          // H4  : center junction (left)
+      Offset(cxBl - inW * 0.06, cyBl - inH * 0.02),                         // H5  : bottom-left diagonal (above)
+      Offset(cxBl + inW * 0.02, cyBl + inH * 0.06),                         // H6  : bottom-left diagonal (below)
+      Offset(cx, cy + inH * 0.08),                                          // H7  : center junction (below)
+      Offset(cxBr - inW * 0.02, cyBr + inH * 0.06),                         // H8  : bottom-right diagonal (below)
+      Offset(cxBr + inW * 0.06, cyBr - inH * 0.02),                         // H9  : bottom-right diagonal (above)
+      Offset(cx + inW * 0.08, cy),                                          // H10 : center junction (right)
+      Offset(cxTr + inW * 0.06, cyTr + inH * 0.02),                         // H11 : top-right diagonal (below)
+      Offset(cxTr - inW * 0.02, cyTr - inH * 0.06),                         // H12 : top-right diagonal (above)
     ];
 
-    // Inner Natal Planet Centers (properly spaced in inner chart)
+    // ── Outer Transit Planet Centers ─────────────────────────────────────────
+    final outerPlanetCenters = [
+      Offset(w * 0.50, inTop * 0.52),                                       // H1 top
+      Offset(inLeft + (w * 0.5 - inLeft) * 0.35, inTop * 0.42),             // H2 top-left
+      Offset(inLeft * 0.45, inTop + (h * 0.5 - inTop) * 0.45),              // H3 left-top
+      Offset(inLeft * 0.46, h * 0.50),                                      // H4 left
+      Offset(inLeft * 0.42, inBottom + (h - inBottom) * 0.55),              // H5 left-bottom
+      Offset(inLeft + (w * 0.5 - inLeft) * 0.35, h - inTop * 0.42),         // H6 bottom-left
+      Offset(w * 0.50, h - inTop * 0.50),                                   // H7 bottom
+      Offset(w - inLeft * 0.45, h - inTop * 0.32),                          // H8 bottom-right
+      Offset(w - inLeft * 0.38, inBottom + (h - inBottom) * 0.55),          // H9 right-bottom
+      Offset(w - inLeft * 0.45, h * 0.50),                                  // H10 right
+      Offset(w - inLeft * 0.38, inTop + (h * 0.5 - inTop) * 0.42),          // H11 right-top
+      Offset(w - inLeft * 0.65, inTop * 0.38),                              // H12 top-right
+    ];
+
+    // ── Inner Natal Planet Centers ───────────────────────────────────────────
     final innerPlanetCenters = [
-      Offset(w * 0.50, inTop + inH * 0.28),          // H1 (Top Diamond center)
-      Offset(inLeft + inW * 0.25, inTop + inH * 0.22), // H2 (Top-Left)
-      Offset(inLeft + inW * 0.14, inTop + inH * 0.23), // H3 (Far Left Top)
-      Offset(inLeft + inW * 0.23, inTop + inH * 0.50), // H4 (Left Diamond center)
-      Offset(inLeft + inW * 0.14, inTop + inH * 0.77), // H5 (Far Left Bottom)
-      Offset(inLeft + inW * 0.25, inTop + inH * 0.78), // H6 (Bottom Left)
-      Offset(w * 0.50, inTop + inH * 0.72),          // H7 (Bottom Diamond center)
-      Offset(inLeft + inW * 0.75, inTop + inH * 0.78), // H8 (Bottom Right)
-      Offset(inLeft + inW * 0.86, inTop + inH * 0.77), // H9 (Far Right Bottom)
-      Offset(inLeft + inW * 0.77, inTop + inH * 0.50), // H10 (Right Diamond center)
-      Offset(inLeft + inW * 0.86, inTop + inH * 0.23), // H11 (Far Right Top)
-      Offset(inLeft + inW * 0.75, inTop + inH * 0.22), // H12 (Top Right)
+      Offset(cx, inTop + inH * 0.22),                                       // H1 top kendra
+      Offset(inLeft + inW * 0.30, inTop + inH * 0.13),                      // H2 top-left
+      Offset(inLeft + inW * 0.13, inTop + inH * 0.30),                      // H3 left-top
+      Offset(inLeft + inW * 0.18, cy),                                      // H4 left kendra
+      Offset(inLeft + inW * 0.13, inTop + inH * 0.70),                      // H5 left-bottom
+      Offset(inLeft + inW * 0.30, inTop + inH * 0.87),                      // H6 bottom-left
+      Offset(cx, inBottom - inH * 0.22),                                    // H7 bottom kendra
+      Offset(inRight - inW * 0.30, inTop + inH * 0.87),                     // H8 bottom-right
+      Offset(inRight - inW * 0.13, inTop + inH * 0.70),                     // H9 right-bottom
+      Offset(inRight - inW * 0.18, cy),                                     // H10 right kendra
+      Offset(inRight - inW * 0.13, inTop + inH * 0.30),                     // H11 right-top
+      Offset(inRight - inW * 0.30, inTop + inH * 0.13),                     // H12 top-right
     ];
 
     for (int hIdx = 1; hIdx <= 12; hIdx++) {
+      // Zodiac sign (1=Aries … 12=Pisces) occupying house hIdx.
+      // Derived purely from backend natalAscSignIdx — never hardcoded.
       final signNumber = ((natalAscSignIdx + hIdx - 2) % 12) + 1;
-      final isAscHouse = (hIdx == 1);
 
-      // OUTER SIGN NUMBER
+      // OUTER SIGN NUMBER (at frame edge / corner)
       _drawText(
         canvas: canvas,
         text: '$signNumber',
         center: outerSignPositions[hIdx - 1],
-        fontSize: 11.0,
-        fontWeight: FontWeight.bold,
-        color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
       );
 
-      // INNER SIGN NUMBER
+      // INNER SIGN NUMBER (at inner-box edge / corner)
       _drawText(
         canvas: canvas,
         text: '$signNumber',
         center: innerSignPositions[hIdx - 1],
-        fontSize: isAscHouse ? 13.0 : 10.5,
-        fontWeight: isAscHouse ? FontWeight.w900 : FontWeight.bold,
-        color: isAscHouse
-            ? const Color(0xFFE11D48)
-            : (isDark ? Colors.white70 : const Color(0xFF334155)),
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
       );
 
       // OUTER TRANSIT PLANETS

@@ -38,7 +38,12 @@ class KpSystemView extends StatefulWidget {
     this.showUpagrahas = false,
     this.showDegrees = true,
     this.initialSectionIndex = 0,
+    this.initialAyanamsa,
+    this.onAyanamsaChanged,
   });
+
+  final String? initialAyanamsa;
+  final ValueChanged<String>? onAyanamsaChanged;
 
   @override
   State<KpSystemView> createState() => _KpSystemViewState();
@@ -216,12 +221,19 @@ class _KpSystemViewState extends State<KpSystemView> {
   Map<String, dynamic>? _transitKpData;
   String _transitCuspsType = 'Use Transit Cusps';
   DateTime? _transitDate;
+  String _transitLocationName = '';
   bool _isRealTimeTransit = false;
   Map<String, dynamic>? _cueCardsData;
 
   @override
   void initState() {
     super.initState();
+    final globalAyan = GlobalBirthProfile().selectedAyanamsa;
+    if (widget.initialAyanamsa != null && widget.initialAyanamsa!.isNotEmpty) {
+      _selectedAyanamsa = widget.initialAyanamsa!;
+    } else if (globalAyan.isNotEmpty) {
+      _selectedAyanamsa = globalAyan;
+    }
     _activeSectionIndex = widget.initialSectionIndex;
     _activeChartStyle = widget.chartStyle;
     _fetchAyanamsas();
@@ -300,6 +312,13 @@ class _KpSystemViewState extends State<KpSystemView> {
       needsFetch = true;
     }
 
+    if (widget.initialAyanamsa != null &&
+        widget.initialAyanamsa != oldWidget.initialAyanamsa &&
+        widget.initialAyanamsa != _selectedAyanamsa) {
+      _selectedAyanamsa = widget.initialAyanamsa!;
+      needsFetch = true;
+    }
+
     if (oldWidget.initialSectionIndex != widget.initialSectionIndex) {
       _activeSectionIndex = widget.initialSectionIndex;
       _scrollToSelectedSection(_activeSectionIndex);
@@ -337,6 +356,11 @@ class _KpSystemViewState extends State<KpSystemView> {
         setState(() {
           _kpData = res;
           _natalKpData = Map<String, dynamic>.from(res);
+          if (res['transit_chart'] != null && res['transit_chart'] is Map<String, dynamic>) {
+            _transitKpData = Map<String, dynamic>.from(res['transit_chart']);
+          } else {
+            _transitKpData = Map<String, dynamic>.from(res);
+          }
           _isLoading = false;
         });
       }
@@ -1243,8 +1267,9 @@ class _KpSystemViewState extends State<KpSystemView> {
       onKpDataChanged: (newData) {
         if (mounted) {
           setState(() {
-            _kpData = newData;
-            _transitKpData = newData;
+            _transitKpData = (newData['transit_chart'] != null && newData['transit_chart'] is Map<String, dynamic>)
+                ? Map<String, dynamic>.from(newData['transit_chart'])
+                : Map<String, dynamic>.from(newData);
             if (_natalKpData == null || _natalKpData?['is_transit'] == true) {
               _fetchNatalKpData();
             }
@@ -1258,7 +1283,6 @@ class _KpSystemViewState extends State<KpSystemView> {
           _isRealTimeTransit = false;
         });
         _fetchKpData();
-        _fetchNatalKpData();
       },
       onCuspsTypeChanged: (type) {
         if (mounted) {
@@ -1274,6 +1298,13 @@ class _KpSystemViewState extends State<KpSystemView> {
         if (mounted) {
           setState(() {
             _transitDate = date;
+          });
+        }
+      },
+      onTransitLocationChanged: (loc) {
+        if (mounted) {
+          setState(() {
+            _transitLocationName = loc;
           });
         }
       },
@@ -1385,6 +1416,8 @@ class _KpSystemViewState extends State<KpSystemView> {
                     onChanged: (newAyan) {
                       if (newAyan != null && newAyan != _selectedAyanamsa) {
                         setState(() => _selectedAyanamsa = newAyan);
+                        GlobalBirthProfile().updateAyanamsa(newAyan);
+                        widget.onAyanamsaChanged?.call(newAyan);
                         _fetchKpData();
                       }
                     },
@@ -1489,15 +1522,15 @@ class _KpSystemViewState extends State<KpSystemView> {
         SizedBox(height: 14.h),
 
         // Interactive Chart Canvas
-        if (_activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit' && _transitCuspsType == 'Use Natal Cusps')
+        if (_activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit')
           NestedNorthIndianTransitChart(
             natalData: _natalKpData ?? _kpData,
-            transitData: _transitKpData ?? _kpData,
+            transitData: _transitKpData ?? _kpData?['transit_chart'] ?? _kpData,
             isDark: isDark,
             showDegrees: widget.showDegrees,
             chartTypeKey: _activeChartType,
             isRealTime: _isRealTimeTransit,
-            title: 'Transit Chart  ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI'}]',
+            title: 'Transit Chart  ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${_transitLocationName.isNotEmpty ? _transitLocationName.toUpperCase() : (widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI')}]',
           )
         else
           Container(

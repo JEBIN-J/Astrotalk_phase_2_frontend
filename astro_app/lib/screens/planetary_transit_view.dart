@@ -19,6 +19,7 @@ class KpPlanetaryTransitSection extends StatefulWidget {
   final VoidCallback onResetKpData;
   final ValueChanged<String>? onCuspsTypeChanged;
   final ValueChanged<DateTime>? onTransitDateChanged;
+  final ValueChanged<String>? onTransitLocationChanged;
   final ValueChanged<bool>? onRealTimeToggled;
   final Widget? chartChild;
   final Widget Function(BuildContext context, Widget stepIntervalWidget)? chartChildBuilder;
@@ -37,6 +38,7 @@ class KpPlanetaryTransitSection extends StatefulWidget {
     required this.onResetKpData,
     this.onCuspsTypeChanged,
     this.onTransitDateChanged,
+    this.onTransitLocationChanged,
     this.onRealTimeToggled,
     this.chartChild,
     this.chartChildBuilder,
@@ -90,6 +92,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         widget.onTransitDateChanged?.call(_currentTransitDate);
+        widget.onTransitLocationChanged?.call(_transitLocation);
         widget.onCuspsTypeChanged?.call(_cuspsType);
       }
     });
@@ -104,6 +107,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         _transitLon = loc.longitude;
         _transitTz = loc.timezone;
       });
+      widget.onTransitLocationChanged?.call(_transitLocation);
     }
   }
 
@@ -116,6 +120,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
         _transitLon = loc.longitude;
         _transitTz = loc.timezone;
       });
+      widget.onTransitLocationChanged?.call(_transitLocation);
       if (_cuspsType == 'Use Transit Cusps' && (_isSwapped || _isRealTimeEnabled)) {
         _fetchTransitData(isSilent: true);
       }
