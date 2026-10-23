@@ -276,6 +276,7 @@ class _KpSystemViewState extends State<KpSystemView> {
   @override
   void initState() {
     super.initState();
+    _transitDate = DateTime.now();
     final globalAyan = GlobalBirthProfile().selectedAyanamsa;
     if (widget.initialAyanamsa != null && widget.initialAyanamsa!.isNotEmpty) {
       _selectedAyanamsa = widget.initialAyanamsa!;
@@ -385,6 +386,7 @@ class _KpSystemViewState extends State<KpSystemView> {
     });
 
     try {
+      final now = _transitDate ?? DateTime.now();
       final astrologerLoc = await AstrologerLocationService.getLocation();
       final res = await AstroApiService.getKpSystemData(
         name: widget.personName.isNotEmpty ? widget.personName : 'User',
@@ -394,6 +396,7 @@ class _KpSystemViewState extends State<KpSystemView> {
         latitude: widget.latitude,
         longitude: widget.longitude,
         timezone: widget.timezone,
+        transitDatetime: DateFormat('yyyy-MM-dd HH:mm:ss').format(now),
         transitLatitude: astrologerLoc.latitude,
         transitLongitude: astrologerLoc.longitude,
         transitTimezone: astrologerLoc.timezone,

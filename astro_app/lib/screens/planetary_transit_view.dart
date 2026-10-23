@@ -664,42 +664,40 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                   ),
                   SizedBox(height: 14.h),
 
-                  // Quick presets
-                  Wrap(
-                    spacing: 8.w,
-                    runSpacing: 6.h,
-                    children: [
-                      _buildPresetChip('Now', () {
-                        final now = DateTime.now();
-                        setModalState(() {
-                          selectedDate = now;
-                          hour = now.hour;
-                          minute = now.minute;
-                          second = now.second;
-                        });
-                      }, isDark),
-                      _buildPresetChip('23:14:48 (Horosoft Ref)', () {
-                        setModalState(() {
-                          hour = 23;
-                          minute = 14;
-                          second = 48;
-                        });
-                      }, isDark),
-                      _buildPresetChip('12:00:00 (Noon)', () {
-                        setModalState(() {
-                          hour = 12;
-                          minute = 0;
-                          second = 0;
-                        });
-                      }, isDark),
-                      _buildPresetChip('00:00:00 (Midnight)', () {
-                        setModalState(() {
-                          hour = 0;
-                          minute = 0;
-                          second = 0;
-                        });
-                      }, isDark),
-                    ],
+                  // Dynamic Now Action
+                  InkWell(
+                    onTap: () {
+                      final now = DateTime.now();
+                      setModalState(() {
+                        selectedDate = now;
+                        hour = now.hour;
+                        minute = now.minute;
+                        second = now.second;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE0E7FF),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.access_time_rounded, size: 15.sp, color: const Color(0xFF4338CA)),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'Reset to Current Time (Now)',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF4338CA),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   SizedBox(height: 20.h),
 
@@ -796,27 +794,7 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     );
   }
 
-  Widget _buildPresetChip(String text, VoidCallback onTap, bool isDark) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.outfit(
-            fontSize: 11.5.sp,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white70 : const Color(0xFF334155),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
