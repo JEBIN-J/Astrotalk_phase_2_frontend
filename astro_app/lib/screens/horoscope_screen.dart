@@ -91,11 +91,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   late TabController _bottomSubTabController;
 
   String _personName = 'User';
-  String _dob = '15 Aug 1990';
-  String _tob = '08:30 AM';
+  late String _dob;
+  late String _tob;
   String _pob = 'New Delhi, Delhi, India';
 
-  DateTime _currentDateTime = DateTime(1990, 8, 15, 8, 30);
+  late DateTime _currentDateTime;
   double _latitude = 28.6139;
   double _longitude = 77.2090;
   double _timezone = 5.5;
@@ -236,6 +236,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     
     _bottomSubTabController = TabController(length: 4, vsync: this);
     
+    final now = DateTime.now();
+    _currentDateTime = now;
+    _dob = DateFormat('dd MMM yyyy').format(now);
+    _tob = DateFormat('hh:mm a').format(now);
+
     // Initialize from GlobalBirthProfile
     final profile = GlobalBirthProfile();
     _selectedAyanamsa = profile.selectedAyanamsa;
@@ -250,14 +255,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       _timezone = profile.timezone;
       _currentDateTime = profile.currentDateTime;
       _isProfileSet = true;
-      _fetchKundliData();
     }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_isProfileSet) {
-        _showEditProfileDialog();
-      }
-    });
+    _fetchKundliData();
     // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
     _tabController.addListener(() {
       if (_tabController.index >= 0 && _tabController.index < _activeTabIndices.length) {
@@ -1044,7 +1043,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void _showEditProfileDialog() {
     showDialog(
       context: context,
-      barrierDismissible: _isProfileSet, // Prevent dismiss if no profile set
+      barrierDismissible: true,
       builder: (ctx) => _EditBirthDetailsDialog(
         initialName: _personName,
         initialDateTime: _isProfileSet ? _currentDateTime : DateTime.now(),

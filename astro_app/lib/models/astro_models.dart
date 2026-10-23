@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Visual Dashboard Layout Styles / Models
@@ -122,20 +123,26 @@ class DailyAstroInsight {
 class GlobalBirthProfile {
   static final GlobalBirthProfile _instance = GlobalBirthProfile._internal();
   factory GlobalBirthProfile() => _instance;
-  GlobalBirthProfile._internal();
 
   String personName = 'User';
-  String dob = '15 Aug 1990';
-  String tob = '08:30 AM';
+  late String dob;
+  late String tob;
   String pob = 'New Delhi, Delhi, India';
   double latitude = 28.6139;
   double longitude = 77.2090;
   double timezone = 5.5;
-  DateTime currentDateTime = DateTime(1990, 8, 15, 8, 30);
+  late DateTime currentDateTime;
   bool isProfileSet = false;
 
   String selectedAyanamsa = 'LAHIRI';
   double? customAyanamsa;
+
+  GlobalBirthProfile._internal() {
+    final now = DateTime.now();
+    currentDateTime = now;
+    dob = DateFormat('dd MMM yyyy').format(now);
+    tob = DateFormat('hh:mm a').format(now);
+  }
 
   Future<void> updateProfile({
     required String name,
@@ -177,32 +184,12 @@ class GlobalBirthProfile {
       if (hasProfile) {
         final savedName = prefs.getString('global_person_name') ?? '';
         final savedPob = prefs.getString('global_pob') ?? '';
-        // If the stored profile is the static placeholder, purge it cleanly
-        if (savedName == 'Om Nath' || savedPob == 'Hajipur') {
-          await prefs.remove('global_person_name');
-          await prefs.remove('global_dob');
-          await prefs.remove('global_tob');
-          await prefs.remove('global_pob');
-          await prefs.remove('global_lat');
-          await prefs.remove('global_lon');
-          await prefs.remove('global_tz');
-          await prefs.remove('global_dt');
-          await prefs.setBool('global_is_profile_set', false);
-          isProfileSet = false;
-          personName = '';
-          dob = '';
-          tob = '';
-          pob = '';
-          latitude = 0.0;
-          longitude = 0.0;
-          return;
-        }
-        personName = savedName;
-        dob = prefs.getString('global_dob') ?? '';
-        tob = prefs.getString('global_tob') ?? '';
-        pob = savedPob;
-        latitude = prefs.getDouble('global_lat') ?? 0.0;
-        longitude = prefs.getDouble('global_lon') ?? 0.0;
+        personName = savedName.isNotEmpty ? savedName : 'User';
+        dob = prefs.getString('global_dob') ?? DateFormat('dd MMM yyyy').format(DateTime.now());
+        tob = prefs.getString('global_tob') ?? DateFormat('hh:mm a').format(DateTime.now());
+        pob = savedPob.isNotEmpty ? savedPob : 'New Delhi, Delhi, India';
+        latitude = prefs.getDouble('global_lat') ?? 28.6139;
+        longitude = prefs.getDouble('global_lon') ?? 77.2090;
         timezone = prefs.getDouble('global_tz') ?? 5.5;
         final dtStr = prefs.getString('global_dt');
         if (dtStr != null) {
