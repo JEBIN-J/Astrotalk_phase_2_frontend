@@ -245,7 +245,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final profile = GlobalBirthProfile();
     _selectedAyanamsa = profile.selectedAyanamsa;
     _customAyanamsa = profile.customAyanamsa;
-    if (profile.isProfileSet) {
+    final isStaticProfile = profile.dob.contains('1984') || profile.dob.contains('1990') || profile.dob.contains('1980') || profile.pob.toLowerCase().contains('hajipur');
+    if (profile.isProfileSet && !isStaticProfile) {
       _personName = profile.personName;
       _dob = profile.dob;
       _tob = profile.tob;
@@ -255,6 +256,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       _timezone = profile.timezone;
       _currentDateTime = profile.currentDateTime;
       _isProfileSet = true;
+    } else {
+      _personName = 'User';
+      _dob = DateFormat('dd MMM yyyy').format(now);
+      _tob = DateFormat('hh:mm a').format(now);
+      _currentDateTime = now;
+      _isProfileSet = false;
     }
     _fetchKundliData();
     // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
@@ -1041,17 +1048,26 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   void _showEditProfileDialog() {
+    final now = DateTime.now();
+    final bool isStaticOrStale = _dob.contains('1984') || _dob.contains('1990') || _dob.contains('1980') || _pob.toLowerCase().contains('hajipur');
+    final activeDob = isStaticOrStale ? DateFormat('dd MMM yyyy').format(now) : _dob;
+    final activeTob = isStaticOrStale ? DateFormat('hh:mm a').format(now) : _tob;
+    final activeDt = isStaticOrStale ? now : _currentDateTime;
+    final activePob = isStaticOrStale ? '' : _pob;
+    final activeLat = isStaticOrStale ? 0.0 : _latitude;
+    final activeLon = isStaticOrStale ? 0.0 : _longitude;
+
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => _EditBirthDetailsDialog(
         initialName: _personName,
-        initialDateTime: _isProfileSet ? _currentDateTime : DateTime.now(),
-        initialDob: _dob,
-        initialTob: _tob,
-        initialPob: _pob,
-        initialLat: _latitude,
-        initialLon: _longitude,
+        initialDateTime: activeDt,
+        initialDob: activeDob,
+        initialTob: activeTob,
+        initialPob: activePob,
+        initialLat: activeLat,
+        initialLon: activeLon,
         initialTz: _timezone,
         onSave: (name, birthDateTime, pob, lat, lon, tz) {
           setState(() {
@@ -11373,26 +11389,32 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: widget.initialName);
-    _pobCtrl = TextEditingController(text: widget.initialPob);
+    final now = DateTime.now();
+    final bool isStatic = widget.initialDob.contains('1984') ||
+                          widget.initialDob.contains('1990') ||
+                          widget.initialDob.contains('1980') ||
+                          widget.initialPob.toLowerCase().contains('hajipur') ||
+                          (widget.initialDateTime != null && (widget.initialDateTime!.year == 1984 || widget.initialDateTime!.year == 1990 || widget.initialDateTime!.year == 1980));
+
+    _nameCtrl = TextEditingController(text: widget.initialName.isNotEmpty ? widget.initialName : 'User');
+    _pobCtrl = TextEditingController(text: isStatic ? '' : widget.initialPob);
     _latCtrl = TextEditingController(
-      text: (widget.initialLat != 0.0) ? widget.initialLat.toString() : '',
+      text: (!isStatic && widget.initialLat != 0.0) ? widget.initialLat.toString() : '',
     );
     _lonCtrl = TextEditingController(
-      text: (widget.initialLon != 0.0) ? widget.initialLon.toString() : '',
+      text: (!isStatic && widget.initialLon != 0.0) ? widget.initialLon.toString() : '',
     );
     _tzCtrl = TextEditingController(
       text: (widget.initialTz != 0.0) ? widget.initialTz.toString() : '5.5',
     );
 
-    final now = DateTime.now();
-    if (widget.initialDateTime != null) {
+    if (!isStatic && widget.initialDateTime != null) {
       _selectedDate = widget.initialDateTime;
       _selectedTime = TimeOfDay(
         hour: widget.initialDateTime!.hour,
         minute: widget.initialDateTime!.minute,
       );
-    } else if (widget.initialDob.isNotEmpty && widget.initialTob.isNotEmpty) {
+    } else if (!isStatic && widget.initialDob.isNotEmpty && widget.initialTob.isNotEmpty) {
       _selectedDate = _parseDob(widget.initialDob);
       _selectedTime = _parseTob(widget.initialTob);
     } else {

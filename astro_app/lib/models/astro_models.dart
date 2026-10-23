@@ -184,8 +184,30 @@ class GlobalBirthProfile {
       if (hasProfile) {
         final savedName = prefs.getString('global_person_name') ?? '';
         final savedPob = prefs.getString('global_pob') ?? '';
+        final savedDob = prefs.getString('global_dob') ?? '';
+
+        // Purge any old static or hardcoded 1984/1990/Hajipur profile from persistence
+        if (savedDob.contains('1984') || savedDob.contains('1990') || savedDob.contains('1980') ||
+            savedPob.toLowerCase().contains('hajipur')) {
+          await prefs.remove('global_person_name');
+          await prefs.remove('global_dob');
+          await prefs.remove('global_tob');
+          await prefs.remove('global_pob');
+          await prefs.remove('global_lat');
+          await prefs.remove('global_lon');
+          await prefs.remove('global_tz');
+          await prefs.remove('global_dt');
+          await prefs.setBool('global_is_profile_set', false);
+          isProfileSet = false;
+          final now = DateTime.now();
+          currentDateTime = now;
+          dob = DateFormat('dd MMM yyyy').format(now);
+          tob = DateFormat('hh:mm a').format(now);
+          return;
+        }
+
         personName = savedName.isNotEmpty ? savedName : 'User';
-        dob = prefs.getString('global_dob') ?? DateFormat('dd MMM yyyy').format(DateTime.now());
+        dob = savedDob.isNotEmpty ? savedDob : DateFormat('dd MMM yyyy').format(DateTime.now());
         tob = prefs.getString('global_tob') ?? DateFormat('hh:mm a').format(DateTime.now());
         pob = savedPob.isNotEmpty ? savedPob : 'New Delhi, Delhi, India';
         latitude = prefs.getDouble('global_lat') ?? 28.6139;
