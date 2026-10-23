@@ -1805,11 +1805,6 @@ class _KpSystemViewState extends State<KpSystemView> {
           },
         ),
         SizedBox(height: 24.h),
-
-        // 5. RULING PLANETS
-        if (_kpData?['ruling_planets'] != null || _kpData?['chart_ruling_planets'] != null)
-          _buildRulingPlanetsSection(_kpData!['chart_ruling_planets'] ?? _kpData!['ruling_planets'], isDark),
-        SizedBox(height: 24.h),
       ],
     );
   }

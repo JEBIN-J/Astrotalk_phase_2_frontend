@@ -878,13 +878,22 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
                   ),
                 ),
               ),
-              Container(width: 1.w, height: 40.h, color: borderColor),
-              SizedBox(width: 16.w),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                child: Container(width: 1.w, height: 40.h, color: borderColor),
+              ),
               Expanded(
                 child: InkWell(
                   onTap: _showDateTimePicker,
                   borderRadius: BorderRadius.circular(8.r),
-                  child: _buildInfoItem('Date & Time (Tap to edit)', DateFormat('dd MMM yyyy\nHH:mm:ss').format(_currentTransitDate), Icons.calendar_month_rounded, isDark, textColor, mutedTextColor),
+                  child: _buildInfoItem(
+                    'Date & Time (Tap to edit)',
+                    DateFormat('dd MMM yyyy\nHH:mm:ss').format(_currentTransitDate),
+                    Icons.calendar_month_rounded,
+                    isDark,
+                    textColor,
+                    mutedTextColor,
+                  ),
                 ),
               ),
             ],
@@ -1296,12 +1305,16 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
           children: [
             Icon(icon, size: 14.sp, color: const Color(0xFF4338CA)),
             SizedBox(width: 6.w),
-            Text(
-              title,
-              style: GoogleFonts.outfit(
-                fontSize: 12.sp,
-                color: mutedTextColor,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 11.5.sp,
+                  color: mutedTextColor,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
