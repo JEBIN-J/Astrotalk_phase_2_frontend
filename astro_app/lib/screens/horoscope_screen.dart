@@ -245,8 +245,22 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final profile = GlobalBirthProfile();
     _selectedAyanamsa = profile.selectedAyanamsa;
     _customAyanamsa = profile.customAyanamsa;
+    final isKpSystem = widget.appBarTitle == 'KP System' || (widget.isSingleTabMode && widget.initialTabIndex == 2);
     final isStaticProfile = profile.dob.contains('1984') || profile.dob.contains('1990') || profile.dob.contains('1980') || profile.pob.toLowerCase().contains('hajipur');
-    if (profile.isProfileSet && !isStaticProfile) {
+
+    if (isKpSystem) {
+      // When user uses KP System, ALWAYS use the current time and date
+      final liveNow = DateTime.now();
+      _currentDateTime = liveNow;
+      _dob = DateFormat('dd MMM yyyy').format(liveNow);
+      _tob = DateFormat('hh:mm a').format(liveNow);
+      _personName = profile.personName.isNotEmpty ? profile.personName : 'User';
+      _pob = profile.pob.isNotEmpty ? profile.pob : 'Mumbai, Maharashtra, India';
+      _latitude = profile.latitude != 0.0 ? profile.latitude : 19.076;
+      _longitude = profile.longitude != 0.0 ? profile.longitude : 72.8777;
+      _timezone = profile.timezone != 0.0 ? profile.timezone : 5.5;
+      _isProfileSet = true;
+    } else if (profile.isProfileSet && !isStaticProfile) {
       _personName = profile.personName;
       _dob = profile.dob;
       _tob = profile.tob;
@@ -1049,10 +1063,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   void _showEditProfileDialog() {
     final now = DateTime.now();
+    final isKpSystem = widget.appBarTitle == 'KP System' || (widget.isSingleTabMode && widget.initialTabIndex == 2);
     final bool isStaticOrStale = _dob.contains('1984') || _dob.contains('1990') || _dob.contains('1980') || _pob.toLowerCase().contains('hajipur');
-    final activeDob = isStaticOrStale ? DateFormat('dd MMM yyyy').format(now) : _dob;
-    final activeTob = isStaticOrStale ? DateFormat('hh:mm a').format(now) : _tob;
-    final activeDt = isStaticOrStale ? now : _currentDateTime;
+    final activeDob = (isKpSystem || isStaticOrStale) ? DateFormat('dd MMM yyyy').format(now) : _dob;
+    final activeTob = (isKpSystem || isStaticOrStale) ? DateFormat('hh:mm a').format(now) : _tob;
+    final activeDt = (isKpSystem || isStaticOrStale) ? now : _currentDateTime;
     final activePob = isStaticOrStale ? '' : _pob;
     final activeLat = isStaticOrStale ? 0.0 : _latitude;
     final activeLon = isStaticOrStale ? 0.0 : _longitude;
@@ -1069,6 +1084,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         initialLat: activeLat,
         initialLon: activeLon,
         initialTz: _timezone,
+        isKpMode: isKpSystem,
         onSave: (name, birthDateTime, pob, lat, lon, tz) {
           setState(() {
             _personName = name;
@@ -11359,6 +11375,7 @@ class _EditBirthDetailsDialog extends StatefulWidget {
   final double initialLat;
   final double initialLon;
   final double initialTz;
+  final bool isKpMode;
   final Function(String name, DateTime birthDateTime, String pob, double lat, double lon, double tz) onSave;
 
   const _EditBirthDetailsDialog({
@@ -11370,6 +11387,7 @@ class _EditBirthDetailsDialog extends StatefulWidget {
     required this.initialLat,
     required this.initialLon,
     required this.initialTz,
+    this.isKpMode = false,
     required this.onSave,
   });
 
@@ -11408,7 +11426,11 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
       text: (widget.initialTz != 0.0) ? widget.initialTz.toString() : '5.5',
     );
 
-    if (!isStatic && widget.initialDateTime != null) {
+    if (widget.isKpMode) {
+      // In KP mode, always default to the exact live current date and time
+      _selectedDate = now;
+      _selectedTime = TimeOfDay(hour: now.hour, minute: now.minute);
+    } else if (!isStatic && widget.initialDateTime != null) {
       _selectedDate = widget.initialDateTime;
       _selectedTime = TimeOfDay(
         hour: widget.initialDateTime!.hour,
@@ -11588,6 +11610,51 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       ),
                     ),
                     SizedBox(height: 14.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Date & Time',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            final now = DateTime.now();
+                            setState(() {
+                              _selectedDate = now;
+                              _selectedTime = TimeOfDay(hour: now.hour, minute: now.minute);
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8.r),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4338CA).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time_filled_rounded, size: 13.sp, color: const Color(0xFF4338CA)),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'Use Current Time',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF4338CA),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
                     Row(
                       children: [
                         Expanded(
