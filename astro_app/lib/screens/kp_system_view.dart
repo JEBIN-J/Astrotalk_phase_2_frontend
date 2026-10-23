@@ -59,6 +59,54 @@ class _KpSystemViewState extends State<KpSystemView> {
     return '$d°$m\'${s.toStringAsFixed(2)}"';
   }
 
+  Map<String, String> _parseRulingPlanets(dynamic raw) {
+    final Map<String, String> result = {};
+    if (raw == null) return result;
+    if (raw is Map) {
+      raw.forEach((k, v) {
+        if (v != null) result[k.toString()] = v.toString();
+      });
+      return result;
+    }
+    if (raw is List) {
+      for (final item in raw) {
+        if (item is Map) {
+          final role = (item['role'] ?? '').toString().toLowerCase();
+          final planet = (item['planet'] ?? '').toString();
+          if (role.contains('hora')) {
+            result['hora_lord'] = planet;
+          } else if (role.contains('sub sub') || role.contains('ssl')) {
+            result['asc_sub_sub_lord'] = planet;
+            result['lagna_sub_sub_lord'] = planet;
+          } else if ((role.contains('asc') || role.contains('lagna')) && (role.contains('sub') || role.contains('sl'))) {
+            result['asc_sub_lord'] = planet;
+            result['lagna_sub_lord'] = planet;
+          } else if ((role.contains('asc') || role.contains('lagna')) && (role.contains('star') || role.contains('nakshatra') || role.contains('nl'))) {
+            result['asc_star_lord'] = planet;
+            result['lagna_nakshatra_lord'] = planet;
+          } else if ((role.contains('asc') || role.contains('lagna')) && (role.contains('sign') || role.contains('rashi') || role.contains('rl'))) {
+            result['asc_sign_lord'] = planet;
+            result['lagna_rashi_lord'] = planet;
+          } else if (role.contains('moon') && (role.contains('sub sub') || role.contains('ssl'))) {
+            result['moon_sub_sub_lord'] = planet;
+          } else if (role.contains('moon') && (role.contains('sub') || role.contains('sl'))) {
+            result['moon_sub_lord'] = planet;
+          } else if (role.contains('moon') && (role.contains('star') || role.contains('nakshatra') || role.contains('nl'))) {
+            result['moon_star_lord'] = planet;
+            result['moon_nakshatra_lord'] = planet;
+          } else if (role.contains('moon') && (role.contains('sign') || role.contains('rashi') || role.contains('rl'))) {
+            result['moon_sign_lord'] = planet;
+            result['moon_rashi_lord'] = planet;
+          } else if (role.contains('day')) {
+            result['day_lord'] = planet;
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+
   static const Map<String, String> _ayanamsaNames = {
     'LAHIRI': 'Lahiri (Chitrapaksha)',
     'BV_RAMAN': 'B.V. Raman',
@@ -705,7 +753,9 @@ class _KpSystemViewState extends State<KpSystemView> {
     final tabName = _cueCardsTabs[_cueCardsSubTabIndex];
     if (tabName == 'Parts of Body' || tabName == 'Rasi-Properties' || tabName == 'Diseases by Zodiac Sign') {
       final dataKey = tabName == 'Parts of Body' ? 'parts_of_body' : (tabName == 'Rasi-Properties' ? 'rasi_properties' : 'diseases_by_zodiac');
-      final dataMap = _cueCardsData?[dataKey] as Map<String, dynamic>? ?? {};
+      final dataMap = (_cueCardsData?[dataKey] is Map<String, dynamic>)
+          ? _cueCardsData![dataKey] as Map<String, dynamic>
+          : <String, dynamic>{};
 
       Widget cell(String rasi) {
         final content = dataMap[rasi.toUpperCase()]?.toString() ?? '';
@@ -1270,6 +1320,9 @@ class _KpSystemViewState extends State<KpSystemView> {
             _transitKpData = (newData['transit_chart'] != null && newData['transit_chart'] is Map<String, dynamic>)
                 ? Map<String, dynamic>.from(newData['transit_chart'])
                 : Map<String, dynamic>.from(newData);
+            if (newData['transit_natal_cusps_chart'] != null && newData['transit_natal_cusps_chart'] is Map<String, dynamic>) {
+              _transitKpData!['transit_natal_cusps_chart'] = Map<String, dynamic>.from(newData['transit_natal_cusps_chart']);
+            }
             if (_natalKpData == null || _natalKpData?['is_transit'] == true) {
               _fetchNatalKpData();
             }
@@ -1288,9 +1341,6 @@ class _KpSystemViewState extends State<KpSystemView> {
         if (mounted) {
           setState(() {
             _transitCuspsType = type;
-            if (_natalKpData == null || _natalKpData?['is_transit'] == true) {
-              _fetchNatalKpData();
-            }
           });
         }
       },
@@ -1318,39 +1368,103 @@ class _KpSystemViewState extends State<KpSystemView> {
     );
   }
 
+  Map<String, dynamic> _getTransitNatalCuspsChart(Map<String, dynamic>? transit, Map<String, dynamic>? natal) {
+    if (transit != null && transit['transit_natal_cusps_chart'] is Map) {
+      return Map<String, dynamic>.from(transit['transit_natal_cusps_chart'] as Map);
+    }
+    final tPlanets = (transit?['planets'] as List<dynamic>?) ?? [];
+    final nAsc = natal?['ascendant'] is Map<String, dynamic> ? natal!['ascendant'] : null;
+    final nAscIdx = (natal?['ascendant_sign_index'] as num?)?.toInt() ?? (nAsc?['sign_index'] as num?)?.toInt() ?? 1;
+    final nCusps = (natal?['bhava_cusps'] as List<dynamic>?) ?? [];
+
+    final remappedPlanets = tPlanets.map((p) {
+      if (p is! Map) return p;
+      final m = Map<String, dynamic>.from(p);
+      final nHouse = m['natal_house'] ?? m['house'];
+      m['house'] = nHouse;
+      return m;
+    }).toList();
+
+    return {
+      'is_transit': true,
+      'is_natal_cusps': true,
+      'ascendant': nAsc ?? {'sign_index': nAscIdx, 'sign_name': 'Lagna'},
+      'ascendant_sign_index': nAscIdx,
+      'ascendant_sign': natal?['ascendant_sign'] ?? nAsc?['sign_name'] ?? 'Lagna',
+      'ascendant_degree_formatted': natal?['ascendant_degree_formatted'] ?? nAsc?['degree_formatted'] ?? '',
+      'planets': remappedPlanets,
+      'bhava_cusps': nCusps,
+      'bhava_chalit': natal?['bhava_chalit'] ?? {'cusps': nCusps, 'planets': remappedPlanets},
+      'd1_chart': {
+        'ascendant_sign_index': nAscIdx,
+        'planets': remappedPlanets.map((p) => {
+          'planet': p['name'],
+          'name': p['name'],
+          'sign_index': p['sign_index'],
+          'house': p['natal_house'] ?? ((( (p['sign_index'] as num? ?? 1).toInt() - nAscIdx + 12) % 12) + 1),
+          'degree_formatted': p['degree_formatted'],
+          'is_retrograde': p['is_retrograde'],
+        }).toList(),
+      },
+      'ayanamsa_formatted': transit?['ayanamsa_formatted'] ?? natal?['ayanamsa_formatted'] ?? '',
+      'datetime': transit?['datetime'] ?? '',
+    };
+  }
+
   // =========================================================================
   // SECTION 1: KP CHART
   // =========================================================================
   Widget _buildKpChartSection(bool isDark, {Widget? stepIntervalWidget}) {
-    final planets = (_kpData?['planets'] as List<dynamic>?) ?? [];
-    final cusps = (_kpData?['bhava_cusps'] as List<dynamic>?) ?? [];
-    final ayanFormatted = _kpData?['ayanamsa_formatted']?.toString() ?? '';
+    final isTransitSection = _activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit';
+    final Map<String, dynamic>? activeData = isTransitSection
+        ? (_transitCuspsType == 'Use Transit Cusps'
+            ? (_transitKpData ?? _kpData?['transit_chart'] ?? _kpData)
+            : (_transitKpData?['transit_natal_cusps_chart'] ??
+                _kpData?['transit_natal_cusps_chart'] ??
+                _getTransitNatalCuspsChart(_transitKpData ?? _kpData?['transit_chart'], _natalKpData ?? _kpData)))
+        : _kpData;
 
-    final ascKp = _kpData?['ascendant'] as Map<String, dynamic>?;
+    final planets = isTransitSection
+        ? ((_transitKpData?['planets'] as List<dynamic>?) ?? (_kpData?['transit_chart']?['planets'] as List<dynamic>?) ?? (activeData?['planets'] as List<dynamic>?) ?? [])
+        : ((activeData?['planets'] as List<dynamic>?) ?? []);
+    final cusps = (activeData?['bhava_cusps'] as List<dynamic>?) ?? [];
+    final ayanFormatted = activeData?['ayanamsa_formatted']?.toString() ?? '';
+
+    final ascKp = activeData?['ascendant'] is Map<String, dynamic>
+        ? activeData!['ascendant'] as Map<String, dynamic>
+        : null;
     final ascSign = ascKp?['sign']?.toString() ??
-        _kpData?['ascendant_sign']?.toString() ??
+        activeData?['ascendant_sign']?.toString() ??
         (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sign']?.toString() : null) ??
         '-';
+
+    final parsedRp = _parseRulingPlanets(
+      isTransitSection
+          ? (activeData?['current_ruling_planets'] ?? activeData?['ruling_planets'])
+          : (activeData?['chart_ruling_planets'] ?? activeData?['ruling_planets']),
+    );
+
     final ascNl = ascKp?['nl']?.toString() ??
         ascKp?['nakshatra_lord']?.toString() ??
-        _kpData?['ruling_planets']?['lagna_nakshatra_lord']?.toString() ??
+        parsedRp['lagna_nakshatra_lord'] ??
+        parsedRp['asc_star_lord'] ??
         (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['nl']?.toString() : null) ??
         '-';
     final ascSl = ascKp?['sl']?.toString() ??
         ascKp?['sub_lord']?.toString() ??
-        _kpData?['ruling_planets']?['asc_sub_lord']?.toString() ??
-        _kpData?['ruling_planets']?['lagna_sub_lord']?.toString() ??
+        parsedRp['asc_sub_lord'] ??
+        parsedRp['lagna_sub_lord'] ??
         (cusps.isNotEmpty ? cusps.first['sl']?.toString() : null) ??
         (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['sl']?.toString() : null) ??
         '-';
     final ascSsl = ascKp?['ssl']?.toString() ??
         ascKp?['sub_sub_lord']?.toString() ??
+        parsedRp['asc_sub_sub_lord'] ??
         (cusps.isNotEmpty ? cusps.first['ssl']?.toString() : null) ??
         (planets.isNotEmpty && (planets.first['name'] == 'Ascendant' || planets.first['name'] == 'Lagna') ? planets.first['ssl']?.toString() : null) ??
         '-';
 
-    final rp = _kpData?['ruling_planets'] as Map<String, dynamic>? ?? {};
-    final horaLord = rp['hora_lord']?.toString() ?? '-';
+    final horaLord = parsedRp['hora_lord'] ?? '-';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1523,15 +1637,82 @@ class _KpSystemViewState extends State<KpSystemView> {
 
         // Interactive Chart Canvas
         if (_activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit')
-          NestedNorthIndianTransitChart(
-            natalData: _natalKpData ?? _kpData,
-            transitData: _transitKpData ?? _kpData?['transit_chart'] ?? _kpData,
-            isDark: isDark,
-            showDegrees: widget.showDegrees,
-            chartTypeKey: _activeChartType,
-            isRealTime: _isRealTimeTransit,
-            title: 'Transit Chart  ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${_transitLocationName.isNotEmpty ? _transitLocationName.toUpperCase() : (widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI')}]',
-          )
+          _transitCuspsType == 'Use Natal Cusps' && _activeChartStyle == KundliChartStyle.northIndian
+              ? NestedNorthIndianTransitChart(
+                  natalData: _natalKpData ?? _kpData,
+                  transitData: _transitKpData ?? _kpData?['transit_chart'] ?? _kpData,
+                  isDark: isDark,
+                  showDegrees: widget.showDegrees,
+                  chartTypeKey: _activeChartType,
+                  isRealTime: _isRealTimeTransit,
+                  useTransitCusps: false,
+                  title: 'Transit Chart (Natal Cusps)  ${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${_transitLocationName.isNotEmpty ? _transitLocationName.toUpperCase() : (widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI')}]',
+                )
+              : Container(
+                  padding: EdgeInsets.all(14.w),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: const Color(0xFF0284C7).withValues(alpha: 0.35),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.2 : 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _activeChartType == 'Bhava'
+                                      ? 'Transit KP Bhava Chalit Chart (Transit Cusps)'
+                                      : _activeChartType == 'D-9'
+                                      ? 'Transit Navamsa Chart (D9)'
+                                      : 'Transit Rashi Chart (D1) (Transit Cusps)',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5.sp,
+                                    color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+                                Text(
+                                  '${DateFormat('dd/MM/yyyy HH:mm:ss').format(_transitDate ?? DateTime.now())} [${_transitLocationName.isNotEmpty ? _transitLocationName.toUpperCase() : (widget.placeOfBirth.isNotEmpty ? widget.placeOfBirth.toUpperCase() : 'DELHI')}]',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11.sp,
+                                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      KundliInteractiveChart(
+                        chartStyle: _activeChartStyle,
+                        isDark: isDark,
+                        chartTypeKey: _activeChartType,
+                        showUpagrahas: widget.showUpagrahas,
+                        showDegrees: widget.showDegrees,
+                        showKpCusps: _activeChartType != 'D-9',
+                        kundliData: activeData,
+                      ),
+                    ],
+                  ),
+                )
         else
           Container(
             padding: EdgeInsets.all(14.w),
@@ -1571,7 +1752,7 @@ class _KpSystemViewState extends State<KpSystemView> {
                   showUpagrahas: widget.showUpagrahas,
                   showDegrees: widget.showDegrees,
                   showKpCusps: _activeChartType != 'D-9',
-                  kundliData: _kpData,
+                  kundliData: activeData ?? _kpData,
                 ),
               ],
             ),
@@ -1609,11 +1790,12 @@ class _KpSystemViewState extends State<KpSystemView> {
               return _buildBhavaTable(cusps, isDark);
             } else {
               List<dynamic> activePlanets = planets;
-              if (_activeChartType == 'D-9' &&
-                  _kpData?['divisional_charts']?['D-9']?['planets'] != null) {
-                activePlanets =
-                    _kpData!['divisional_charts']['D-9']['planets']
-                        as List<dynamic>;
+              if (_activeChartType == 'D-9') {
+                if (activeData?['divisional_charts']?['D-9']?['planets'] != null) {
+                  activePlanets = activeData!['divisional_charts']['D-9']['planets'] as List<dynamic>;
+                } else if (_kpData?['divisional_charts']?['D-9']?['planets'] != null) {
+                  activePlanets = _kpData!['divisional_charts']['D-9']['planets'] as List<dynamic>;
+                }
               }
               return _buildPlanetaryTable(activePlanets, isDark);
             }
@@ -1622,8 +1804,8 @@ class _KpSystemViewState extends State<KpSystemView> {
         SizedBox(height: 24.h),
 
         // 5. RULING PLANETS
-        if (_kpData?['ruling_planets'] != null)
-          _buildRulingPlanetsSection(_kpData!['ruling_planets'], isDark),
+        if (_kpData?['ruling_planets'] != null || _kpData?['chart_ruling_planets'] != null)
+          _buildRulingPlanetsSection(_kpData!['chart_ruling_planets'] ?? _kpData!['ruling_planets'], isDark),
         SizedBox(height: 24.h),
       ],
     );
@@ -1694,70 +1876,84 @@ class _KpSystemViewState extends State<KpSystemView> {
   // 5. RULING PLANETS
   // =========================================================================
   Widget _buildRulingPlanetsDedicatedView(bool isDark) {
-    final rp = _kpData?['ruling_planets'] as Map<String, dynamic>? ?? {};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildRulingPlanetsSection(rp, isDark, isDedicatedTab: true),
+        _buildRulingPlanetsSection(
+          _kpData?['chart_ruling_planets'] ?? _kpData?['ruling_planets'],
+          isDark,
+          isDedicatedTab: true,
+        ),
         SizedBox(height: 24.h),
       ],
     );
   }
 
   Widget _buildRulingPlanetsSection(
-    Map<String, dynamic> rp,
+    dynamic rp,
     bool isDark, {
     bool isDedicatedTab = false,
   }) {
-    final chartRp = (rp['chart'] as Map<String, dynamic>?) ?? rp;
-    final currRp = (rp['current'] as Map<String, dynamic>?) ??
-        (_kpData?['current_ruling_planets'] as Map<String, dynamic>?) ??
-        {};
+    final Map<String, dynamic> chartRp;
+    if (rp is Map<String, dynamic> && rp.containsKey('chart') && rp['chart'] is Map<String, dynamic>) {
+      chartRp = rp['chart'] as Map<String, dynamic>;
+    } else {
+      chartRp = _parseRulingPlanets(_kpData?['chart_ruling_planets'] ?? rp);
+    }
+
+    final Map<String, dynamic> currRp;
+    if (rp is Map<String, dynamic> && rp.containsKey('current') && rp['current'] is Map<String, dynamic>) {
+      currRp = rp['current'] as Map<String, dynamic>;
+    } else {
+      currRp = _parseRulingPlanets(_kpData?['current_ruling_planets']);
+    }
 
     final items = [
       {
         'label': 'Hora Lord',
-        'chart': chartRp['hora_lord']?.toString() ?? rp['hora_lord']?.toString() ?? '-',
+        'chart': chartRp['hora_lord']?.toString() ?? '-',
         'current': currRp['hora_lord']?.toString() ?? '-',
       },
       {
         'label': 'Asc Sign Lord',
-        'chart': chartRp['asc_sign_lord']?.toString() ?? rp['lagna_rashi_lord']?.toString() ?? '-',
+        'chart': chartRp['asc_sign_lord']?.toString() ?? chartRp['lagna_rashi_lord']?.toString() ?? '-',
         'current': currRp['asc_sign_lord']?.toString() ?? '-',
       },
       {
         'label': 'Asc Star Lord',
-        'chart': chartRp['asc_star_lord']?.toString() ?? rp['lagna_nakshatra_lord']?.toString() ?? '-',
+        'chart': chartRp['asc_star_lord']?.toString() ?? chartRp['lagna_nakshatra_lord']?.toString() ?? '-',
         'current': currRp['asc_star_lord']?.toString() ?? '-',
       },
       {
         'label': 'Asc Sub Lord',
-        'chart': chartRp['asc_sub_lord']?.toString() ?? rp['asc_sub_lord']?.toString() ?? rp['lagna_sub_lord']?.toString() ?? '-',
+        'chart': chartRp['asc_sub_lord']?.toString() ?? chartRp['lagna_sub_lord']?.toString() ?? '-',
         'current': currRp['asc_sub_lord']?.toString() ?? '-',
       },
       {
         'label': 'Moon Sign Lord',
-        'chart': chartRp['moon_sign_lord']?.toString() ?? rp['moon_rashi_lord']?.toString() ?? '-',
+        'chart': chartRp['moon_sign_lord']?.toString() ?? chartRp['moon_rashi_lord']?.toString() ?? '-',
         'current': currRp['moon_sign_lord']?.toString() ?? '-',
       },
       {
         'label': 'Moon Star Lord',
-        'chart': chartRp['moon_star_lord']?.toString() ?? rp['moon_nakshatra_lord']?.toString() ?? '-',
+        'chart': chartRp['moon_star_lord']?.toString() ?? chartRp['moon_nakshatra_lord']?.toString() ?? '-',
         'current': currRp['moon_star_lord']?.toString() ?? '-',
       },
       {
         'label': 'Moon Sub Lord',
-        'chart': chartRp['moon_sub_lord']?.toString() ?? rp['moon_sub_lord']?.toString() ?? '-',
+        'chart': chartRp['moon_sub_lord']?.toString() ?? '-',
         'current': currRp['moon_sub_lord']?.toString() ?? '-',
       },
       {
         'label': 'Day Lord',
-        'chart': chartRp['day_lord']?.toString() ?? rp['day_lord']?.toString() ?? '-',
+        'chart': chartRp['day_lord']?.toString() ?? '-',
         'current': currRp['day_lord']?.toString() ?? '-',
       },
     ];
 
-    final currentTimestamp = currRp['timestamp']?.toString() ?? '';
+    final currentTimestamp = currRp['timestamp']?.toString() ??
+        (rp is Map<String, dynamic> ? rp['timestamp']?.toString() : null) ??
+        '';
 
     return Container(
       decoration: BoxDecoration(
@@ -2017,8 +2213,13 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   // 4. PLANETARY TABLE
   Widget _buildPlanetaryTable(List<dynamic> planets, bool isDark) {
+    final isTransitSection = _activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit';
     String title = 'Planetary Coordinates & KP Lords';
-    if (_activeChartType == 'D-1') {
+    if (isTransitSection) {
+      title = _transitCuspsType == 'Use Transit Cusps'
+          ? 'Transit Planetary Positions (Transit Cusps)'
+          : 'Transit Planetary Positions (Natal Cusps)';
+    } else if (_activeChartType == 'D-1') {
       title = _kpData?['is_transit'] == true 
           ? 'Planetary Positions for Transit (D-1)' 
           : 'Planetary Positions for Rashi (D-1)';
@@ -2054,6 +2255,13 @@ class _KpSystemViewState extends State<KpSystemView> {
               horizontalMargin: 12.w,
               columns: [
                 DataColumn(label: Text('Planet', style: _headerStyle(isDark))),
+                if (isTransitSection)
+                  DataColumn(
+                    label: Text(
+                      _transitCuspsType == 'Use Transit Cusps' ? 'Transit House' : 'Natal House',
+                      style: _headerStyle(isDark),
+                    ),
+                  ),
                 DataColumn(label: Text('RL', style: _headerStyle(isDark))),
                 DataColumn(label: Text('NL', style: _headerStyle(isDark))),
                 DataColumn(label: Text('SL', style: _headerStyle(isDark))),
@@ -2074,6 +2282,11 @@ class _KpSystemViewState extends State<KpSystemView> {
                 final displayName = isLagna
                     ? 'Lagna'
                     : (p['table_display_name'] ?? p['name'] ?? '');
+                final houseVal = isTransitSection
+                    ? ((_transitCuspsType == 'Use Transit Cusps'
+                        ? (p['transit_house'] ?? p['house'])
+                        : (p['natal_house'] ?? p['house'])) ?? '-')
+                    : null;
                 return DataRow(
                   color: isLagna
                       ? WidgetStateProperty.all(
@@ -2084,6 +2297,13 @@ class _KpSystemViewState extends State<KpSystemView> {
                       : null,
                   cells: [
                     DataCell(Text(displayName, style: _cellBoldStyle(isDark))),
+                    if (isTransitSection)
+                      DataCell(
+                        Text(
+                          houseVal.toString(),
+                          style: _cellBoldStyle(isDark),
+                        ),
+                      ),
                     DataCell(Text(p['rl'] ?? '-', style: _cellStyle(isDark))),
                     DataCell(Text(p['nl'] ?? '-', style: _cellStyle(isDark))),
                     DataCell(
@@ -2127,11 +2347,18 @@ class _KpSystemViewState extends State<KpSystemView> {
 
   // 5. BHAVA TABLE
   Widget _buildBhavaTable(List<dynamic> cusps, bool isDark) {
+    final isTransitSection = _activeSectionIndex < subSections.length && subSections[_activeSectionIndex] == 'Planetary Transit';
+    final tableTitle = isTransitSection
+        ? (_transitCuspsType == 'Use Transit Cusps'
+            ? 'Transit Placidus (KP) Bhava Cusps'
+            : 'Natal Placidus (KP) Bhava Cusps')
+        : 'Placidus (KP) Bhava Details';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Placidus (KP) Bhava Details',
+          tableTitle,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
             fontSize: 15.sp,
@@ -2229,7 +2456,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   // SECTION 2: DASHA (Vimshottari Expandable Table)
   // =========================================================================
   Widget _buildDashaSection(bool isDark) {
-    final dasha = _kpData?['dashas'] as Map<String, dynamic>?;
+    final dasha = (_kpData?['dashas'] is Map<String, dynamic>)
+        ? _kpData!['dashas'] as Map<String, dynamic>
+        : null;
     final mahadashas = (dasha?['mahadashas'] as List<dynamic>?) ?? [];
     final birthNak = dasha?['birth_nakshatra']?.toString() ?? '';
     final birthLord = dasha?['birth_nakshatra_lord']?.toString() ?? '';
@@ -2519,7 +2748,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   }
 
   Widget _buildSignificatorsSection(bool isDark) {
-    final sigs = _kpData?['significators'] as Map<String, dynamic>?;
+    final sigs = (_kpData?['significators'] is Map<String, dynamic>)
+        ? _kpData!['significators'] as Map<String, dynamic>
+        : null;
     final planetSigs = (sigs?['planet_significators'] as List<dynamic>?) ?? [];
     final houseSigs = (sigs?['house_significators'] as List<dynamic>?) ?? [];
 
@@ -3766,7 +3997,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   // SECTION 6: 4-STEP KP
   // =========================================================================
   Widget _buildFourStepSection(bool isDark) {
-    final fourStep = _kpData?['four_step'] as Map<String, dynamic>?;
+    final fourStep = (_kpData?['four_step'] is Map<String, dynamic>)
+        ? _kpData!['four_step'] as Map<String, dynamic>
+        : null;
     final planets = (fourStep?['planets'] as List<dynamic>?) ?? [];
     final cusps = (fourStep?['cusps'] as List<dynamic>?) ?? [];
 
@@ -4132,7 +4365,9 @@ class _KpSystemViewState extends State<KpSystemView> {
   );
 
 Widget _buildVedicElementsSection(bool isDark) {
-    final divCharts = _kpData?['divisional_charts'] as Map<String, dynamic>? ?? {};
+    final divCharts = (_kpData?['divisional_charts'] is Map<String, dynamic>)
+        ? _kpData!['divisional_charts'] as Map<String, dynamic>
+        : <String, dynamic>{};
     if (divCharts.isEmpty) {
       return Center(
         child: Padding(
@@ -4262,7 +4497,9 @@ Widget _buildVedicElementsSection(bool isDark) {
             itemCount: activeKeys.length,
             itemBuilder: (context, index) {
               final key = activeKeys[index];
-              final chart = divCharts[key] as Map<String, dynamic>? ?? {};
+              final chart = (divCharts[key] is Map<String, dynamic>)
+                  ? divCharts[key] as Map<String, dynamic>
+                  : <String, dynamic>{};
               final name = chart['name']?.toString() ?? key;
               final title = '$name ($key)';
               
@@ -4396,7 +4633,9 @@ Widget _buildVedicElementsSection(bool isDark) {
                 );
               }).toList(),
               rows: sortedKeys.map((key) {
-                final chart = divCharts[key] as Map<String, dynamic>? ?? {};
+                final chart = (divCharts[key] is Map<String, dynamic>)
+                    ? divCharts[key] as Map<String, dynamic>
+                    : <String, dynamic>{};
                 final name = chart['name']?.toString() ?? key;
                 final title = '$name Chart($key)';
                 final ascIdx = chart['ascendant_sign_index'] as int? ?? 1;
@@ -4437,7 +4676,9 @@ Widget _buildVedicElementsSection(bool isDark) {
   }
 
   Widget _buildAshtakavargaTable(bool isDark) {
-    final ashtaka = _kpData?['ashtakavarga'] as Map<String, dynamic>?;
+    final ashtaka = (_kpData?['ashtakavarga'] is Map<String, dynamic>)
+        ? _kpData!['ashtakavarga'] as Map<String, dynamic>
+        : null;
     if (ashtaka == null) {
       return Center(
         child: Padding(
@@ -4453,7 +4694,9 @@ Widget _buildVedicElementsSection(bool isDark) {
     final signs = ['ARI', 'TAU', 'GEM', 'CAN', 'LEO', 'VIR', 'LIB', 'SCO', 'SAG', 'CAP', 'AQU', 'PIS'];
     final rows = ['ASC', 'SUN', 'MON', 'MAR', 'MER', 'JUP', 'VEN', 'SAT'];
 
-    final bavMatrix = ashtaka['bav_matrix'] as Map<String, dynamic>? ?? {};
+    final bavMatrix = (ashtaka['bav_matrix'] is Map<String, dynamic>)
+        ? ashtaka['bav_matrix'] as Map<String, dynamic>
+        : <String, dynamic>{};
     final savPoints = ashtaka['sav_points'] as List<dynamic>? ?? [];
 
     List<DataColumn> fixedColumns = [

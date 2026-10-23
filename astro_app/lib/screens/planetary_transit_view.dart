@@ -157,23 +157,23 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     }
 
     try {
-      final String formattedDate = DateFormat('yyyy-MM-dd').format(_currentTransitDate);
-      final String formattedTime = DateFormat('HH:mm:ss').format(_currentTransitDate);
-
-      final bool isTransitCusps = _cuspsType == 'Use Transit Cusps';
-      final String targetLocation = isTransitCusps ? _transitLocation : widget.originalPlaceOfBirth;
-      final double targetLat = isTransitCusps ? (_transitLat ?? widget.originalLatitude) : widget.originalLatitude;
-      final double targetLon = isTransitCusps ? (_transitLon ?? widget.originalLongitude) : widget.originalLongitude;
-      final double targetTz = isTransitCusps ? (_transitTz ?? widget.originalTimezone) : widget.originalTimezone;
+      final String formattedTransitDt = DateFormat('yyyy-MM-dd HH:mm:ss').format(_currentTransitDate);
+      final double targetLat = (_transitLat ?? widget.originalLatitude);
+      final double targetLon = (_transitLon ?? widget.originalLongitude);
+      final double targetTz = (_transitTz ?? widget.originalTimezone);
 
       final res = await AstroApiService.getKpSystemData(
-        name: 'Transit',
-        dateOfBirth: formattedDate,
-        timeOfBirth: formattedTime,
-        placeOfBirth: targetLocation,
-        latitude: targetLat,
-        longitude: targetLon,
-        timezone: targetTz,
+        name: 'User',
+        dateOfBirth: widget.originalDateOfBirth,
+        timeOfBirth: widget.originalTimeOfBirth,
+        placeOfBirth: widget.originalPlaceOfBirth,
+        latitude: widget.originalLatitude,
+        longitude: widget.originalLongitude,
+        timezone: widget.originalTimezone,
+        transitDatetime: formattedTransitDt,
+        transitLatitude: targetLat,
+        transitLongitude: targetLon,
+        transitTimezone: targetTz,
         ayanamsa: widget.selectedAyanamsa,
       );
 
@@ -476,6 +476,348 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
     );
   }
 
+  void _showDateTimePicker() {
+    DateTime selectedDate = _currentTransitDate;
+    int hour = _currentTransitDate.hour;
+    int minute = _currentTransitDate.minute;
+    int second = _currentTransitDate.second;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final isDark = widget.isDark;
+            final sheetBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+            final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
+            final mutedColor = isDark ? Colors.white60 : const Color(0xFF64748B);
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, MediaQuery.of(context).viewInsets.bottom + 24.h),
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      margin: EdgeInsets.only(bottom: 16.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.edit_calendar_rounded, color: const Color(0xFF4338CA), size: 22.sp),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Set Transit Date & Time',
+                            style: GoogleFonts.outfit(
+                              fontSize: 17.sp,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(ctx),
+                        color: mutedColor,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 14.h),
+
+                  // Date Picker Card
+                  Text(
+                    'Transit Date',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: mutedColor,
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(1900),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setModalState(() {
+                          selectedDate = picked;
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_month_rounded, color: const Color(0xFF4338CA), size: 20.sp),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              DateFormat('dd MMMM yyyy (EEEE)').format(selectedDate),
+                              style: GoogleFonts.outfit(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'Change',
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF4338CA),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // Time Pickers (HH : MM : SS)
+                  Text(
+                    'Transit Time (24-Hour: HH : MM : SS)',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: mutedColor,
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Row(
+                    children: [
+                      // Hour
+                      Expanded(
+                        child: _buildTimeDropdown(
+                          label: 'Hour',
+                          value: hour,
+                          max: 23,
+                          isDark: isDark,
+                          textColor: textColor,
+                          sheetBg: sheetBg,
+                          onChanged: (v) => setModalState(() => hour = v),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w),
+                        child: Text(':', style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: textColor)),
+                      ),
+                      // Minute
+                      Expanded(
+                        child: _buildTimeDropdown(
+                          label: 'Min',
+                          value: minute,
+                          max: 59,
+                          isDark: isDark,
+                          textColor: textColor,
+                          sheetBg: sheetBg,
+                          onChanged: (v) => setModalState(() => minute = v),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4.w),
+                        child: Text(':', style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.bold, color: textColor)),
+                      ),
+                      // Second
+                      Expanded(
+                        child: _buildTimeDropdown(
+                          label: 'Sec',
+                          value: second,
+                          max: 59,
+                          isDark: isDark,
+                          textColor: textColor,
+                          sheetBg: sheetBg,
+                          onChanged: (v) => setModalState(() => second = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 14.h),
+
+                  // Quick presets
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 6.h,
+                    children: [
+                      _buildPresetChip('Now', () {
+                        final now = DateTime.now();
+                        setModalState(() {
+                          selectedDate = now;
+                          hour = now.hour;
+                          minute = now.minute;
+                          second = now.second;
+                        });
+                      }, isDark),
+                      _buildPresetChip('23:14:48 (Horosoft Ref)', () {
+                        setModalState(() {
+                          hour = 23;
+                          minute = 14;
+                          second = 48;
+                        });
+                      }, isDark),
+                      _buildPresetChip('12:00:00 (Noon)', () {
+                        setModalState(() {
+                          hour = 12;
+                          minute = 0;
+                          second = 0;
+                        });
+                      }, isDark),
+                      _buildPresetChip('00:00:00 (Midnight)', () {
+                        setModalState(() {
+                          hour = 0;
+                          minute = 0;
+                          second = 0;
+                        });
+                      }, isDark),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // Apply Button
+                  ElevatedButton(
+                    onPressed: () {
+                      final newDt = DateTime(
+                        selectedDate.year,
+                        selectedDate.month,
+                        selectedDate.day,
+                        hour,
+                        minute,
+                        second,
+                      );
+                      setState(() {
+                        _currentTransitDate = newDt;
+                        _isSwapped = true;
+                      });
+                      widget.onTransitDateChanged?.call(_currentTransitDate);
+                      Navigator.pop(ctx);
+                      _fetchTransitData();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4338CA),
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      elevation: 3,
+                    ),
+                    child: Text(
+                      'Apply & Calculate Transit',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTimeDropdown({
+    required String label,
+    required int value,
+    required int max,
+    required bool isDark,
+    required Color textColor,
+    required Color sheetBg,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(label, style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey)),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: value.clamp(0, max),
+              isExpanded: true,
+              dropdownColor: sheetBg,
+              items: List.generate(max + 1, (i) => DropdownMenuItem(
+                value: i,
+                child: Center(
+                  child: Text(
+                    i.toString().padLeft(2, '0'),
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+              )),
+              onChanged: (val) {
+                if (val != null) onChanged(val);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(String text, VoidCallback onTap, bool isDark) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          borderRadius: BorderRadius.circular(14.r),
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.outfit(
+            fontSize: 11.5.sp,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : const Color(0xFF334155),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
@@ -561,7 +903,11 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
               Container(width: 1.w, height: 40.h, color: borderColor),
               SizedBox(width: 16.w),
               Expanded(
-                child: _buildInfoItem('Date & Time', DateFormat('dd MMM yyyy\nHH:mm:ss').format(_currentTransitDate), Icons.calendar_month_rounded, isDark, textColor, mutedTextColor),
+                child: InkWell(
+                  onTap: _showDateTimePicker,
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: _buildInfoItem('Date & Time (Tap to edit)', DateFormat('dd MMM yyyy\nHH:mm:ss').format(_currentTransitDate), Icons.calendar_month_rounded, isDark, textColor, mutedTextColor),
+                ),
               ),
             ],
           ),
@@ -779,6 +1125,74 @@ class _KpPlanetaryTransitSectionState extends State<KpPlanetaryTransitSection> w
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Transit Date & Time Display + Quick Tap to Edit
+          InkWell(
+            onTap: _showDateTimePicker,
+            borderRadius: BorderRadius.circular(10.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              margin: EdgeInsets.only(bottom: 12.h),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFEEF2FF),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(
+                  color: const Color(0xFF4338CA).withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_month_rounded, size: 18.sp, color: const Color(0xFF4338CA)),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Transit Date & Time (Tap to edit):',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10.5.sp,
+                            fontWeight: FontWeight.w500,
+                            color: mutedTextColor,
+                          ),
+                        ),
+                        Text(
+                          DateFormat('dd/MM/yyyy   HH:mm:ss').format(_currentTransitDate),
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.5.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4338CA),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit_calendar_rounded, size: 12.sp, color: Colors.white),
+                        SizedBox(width: 4.w),
+                        Text(
+                          'Set Time',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Row(
             children: [
               Icon(Icons.timer_outlined, size: 16.sp, color: mutedTextColor),

@@ -124,20 +124,20 @@ class GlobalBirthProfile {
   factory GlobalBirthProfile() => _instance;
   GlobalBirthProfile._internal();
 
-  String personName = 'Om Nath';
-  String dob = '22/01/1984';
-  String tob = '02:39:13';
-  String pob = 'Hajipur';
-  double latitude = 25.41;
-  double longitude = 85.13;
+  String personName = 'User';
+  String dob = '15 Aug 1990';
+  String tob = '08:30 AM';
+  String pob = 'New Delhi, Delhi, India';
+  double latitude = 28.6139;
+  double longitude = 77.2090;
   double timezone = 5.5;
-  DateTime currentDateTime = DateTime(1984, 1, 22, 2, 39, 13);
-  bool isProfileSet = true;
+  DateTime currentDateTime = DateTime(1990, 8, 15, 8, 30);
+  bool isProfileSet = false;
 
   String selectedAyanamsa = 'LAHIRI';
   double? customAyanamsa;
 
-  void updateProfile({
+  Future<void> updateProfile({
     required String name,
     required String dateOfBirth,
     required String timeOfBirth,
@@ -146,7 +146,7 @@ class GlobalBirthProfile {
     required double lon,
     required double tz,
     required DateTime dateTime,
-  }) {
+  }) async {
     personName = name;
     dob = dateOfBirth;
     tob = timeOfBirth;
@@ -156,6 +156,61 @@ class GlobalBirthProfile {
     timezone = tz;
     currentDateTime = dateTime;
     isProfileSet = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('global_person_name', name);
+      await prefs.setString('global_dob', dateOfBirth);
+      await prefs.setString('global_tob', timeOfBirth);
+      await prefs.setString('global_pob', placeOfBirth);
+      await prefs.setDouble('global_lat', lat);
+      await prefs.setDouble('global_lon', lon);
+      await prefs.setDouble('global_tz', tz);
+      await prefs.setString('global_dt', dateTime.toIso8601String());
+      await prefs.setBool('global_is_profile_set', true);
+    } catch (_) {}
+  }
+
+  Future<void> loadSavedProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasProfile = prefs.getBool('global_is_profile_set') ?? false;
+      if (hasProfile) {
+        final savedName = prefs.getString('global_person_name') ?? '';
+        final savedPob = prefs.getString('global_pob') ?? '';
+        // If the stored profile is the static placeholder, purge it cleanly
+        if (savedName == 'Om Nath' || savedPob == 'Hajipur') {
+          await prefs.remove('global_person_name');
+          await prefs.remove('global_dob');
+          await prefs.remove('global_tob');
+          await prefs.remove('global_pob');
+          await prefs.remove('global_lat');
+          await prefs.remove('global_lon');
+          await prefs.remove('global_tz');
+          await prefs.remove('global_dt');
+          await prefs.setBool('global_is_profile_set', false);
+          isProfileSet = false;
+          personName = '';
+          dob = '';
+          tob = '';
+          pob = '';
+          latitude = 0.0;
+          longitude = 0.0;
+          return;
+        }
+        personName = savedName;
+        dob = prefs.getString('global_dob') ?? '';
+        tob = prefs.getString('global_tob') ?? '';
+        pob = savedPob;
+        latitude = prefs.getDouble('global_lat') ?? 0.0;
+        longitude = prefs.getDouble('global_lon') ?? 0.0;
+        timezone = prefs.getDouble('global_tz') ?? 5.5;
+        final dtStr = prefs.getString('global_dt');
+        if (dtStr != null) {
+          currentDateTime = DateTime.tryParse(dtStr) ?? DateTime.now();
+        }
+        isProfileSet = true;
+      }
+    } catch (_) {}
   }
 
   Future<void> updateAyanamsa(String ayanamsa, [double? custom]) async {

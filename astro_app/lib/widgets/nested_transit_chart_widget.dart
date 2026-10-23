@@ -1,8 +1,6 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/astro_models.dart';
 
 class NestedNorthIndianTransitChart extends StatelessWidget {
   final Map<String, dynamic>? natalData;
@@ -13,6 +11,7 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
   final String? subtitle;
   final String chartTypeKey;
   final bool isRealTime;
+  final bool useTransitCusps;
 
   const NestedNorthIndianTransitChart({
     super.key,
@@ -24,6 +23,7 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
     this.subtitle,
     this.chartTypeKey = 'D-1',
     this.isRealTime = false,
+    this.useTransitCusps = true,
   });
 
   @override
@@ -65,11 +65,12 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
                   child: Text(
                     title,
                     style: GoogleFonts.outfit(
-                      fontSize: 12.sp,
+                      fontSize: 11.5.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       letterSpacing: 0.2,
                     ),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -152,6 +153,7 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
                       showDegrees: showDegrees,
                       chartTypeKey: chartTypeKey,
                       chartTitle: title,
+                      useTransitCusps: useTransitCusps,
                     ),
                   ),
                 ),
@@ -209,7 +211,9 @@ class NestedNorthIndianTransitChart extends StatelessWidget {
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      'Outer: Transit Planets',
+                      useTransitCusps
+                          ? 'Outer: Transit Chart (Transit Cusps)'
+                          : 'Outer: Transit Planets (Natal Cusps)',
                       style: GoogleFonts.outfit(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.bold,
@@ -234,6 +238,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
   final bool showDegrees;
   final String chartTypeKey;
   final String chartTitle;
+  final bool useTransitCusps;
 
   _NestedNorthIndianTransitPainter({
     required this.natalData,
@@ -242,35 +247,8 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     required this.showDegrees,
     this.chartTypeKey = 'D-1',
     this.chartTitle = '',
+    this.useTransitCusps = true,
   });
-
-  static double _getJulianDay(DateTime dt) {
-    final utc = dt.toUtc();
-    int y = utc.year;
-    int m = utc.month;
-    final d = utc.day + (utc.hour + utc.minute / 60.0 + utc.second / 3600.0) / 24.0;
-    if (m <= 2) {
-      y -= 1;
-      m += 12;
-    }
-    final a = (y / 100).floor();
-    final b = 2 - a + (a / 4).floor();
-    return (365.25 * (y + 4716)).floor() + (30.6001 * (m + 1)).floor() + d + b - 1524.5;
-  }
-
-  static double _calculateNodeNutation(double jd) {
-    final t = (jd - 2451545.0) / 36525.0;
-    final dRad = ((297.85036 + 445267.111480 * t - 0.0019142 * t * t) % 360.0) * math.pi / 180.0;
-    final mRad = ((357.52772 + 35999.050340 * t - 0.0001603 * t * t) % 360.0) * math.pi / 180.0;
-    final mlRad = ((134.96298 + 477198.867398 * t + 0.0086972 * t * t) % 360.0) * math.pi / 180.0;
-    final fRad = ((93.27191 + 483202.017538 * t - 0.0036825 * t * t) % 360.0) * math.pi / 180.0;
-
-    return -1.4979 * math.sin(2 * (dRad - fRad))
-        - 0.1500 * math.sin(mRad)
-        - 0.1226 * math.sin(2 * dRad)
-        + 0.1176 * math.sin(2 * fRad)
-        - 0.0801 * math.sin(2 * (dRad - mlRad));
-  }
 
   static const List<String> signNames = [
     'Aries', 'Taurus', 'Gemini', 'Cancer',
@@ -279,7 +257,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
   ];
 
   int _getAscSignIdx(Map<String, dynamic>? data) {
-    if (data == null) return 8; // Scorpio fallback
+    if (data == null) return 1; // Aries fallback
 
     // If Navamsa (D-9), get Navamsa ascendant
     if (chartTypeKey == 'D-9') {
@@ -344,7 +322,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
         }
       }
     }
-    return 8;
+    return 1;
   }
 
   void _extractHousePlacements(
@@ -372,6 +350,12 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
           if (pName.isEmpty) continue;
           final lower = pName.toLowerCase();
           if (lower.contains('fortuna') || lower.contains('for ') || lower == 'for') continue;
+          if (isTransit) {
+            if (lower.contains('uranus') || lower.contains('harshal') ||
+                lower.contains('neptune') || lower.contains('pluto')) {
+              continue;
+            }
+          }
 
           int signIdx = (p['navamsha_sign_index'] ?? p['sign_index'] as num?)?.toInt() ?? 0;
           if (signIdx < 1 || signIdx > 12) {
@@ -422,6 +406,14 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
         for (final p in pList) {
           final pName = (p['planet'] ?? p['name'] ?? '').toString().trim();
           if (pName.isEmpty) continue;
+          final lower = pName.toLowerCase();
+          if (lower.contains('fortuna') || lower.contains('for ') || lower == 'for') continue;
+          if (isTransit) {
+            if (lower.contains('uranus') || lower.contains('harshal') ||
+                lower.contains('neptune') || lower.contains('pluto')) {
+              continue;
+            }
+          }
           final bhavaHouse = ((p['bhava_house'] ?? p['house']) as num?)?.toInt() ?? 1;
           final isRetro = p['is_retrograde'] == true;
           final degFormatted = (p['degree_formatted'] ?? p['degree'] ?? '').toString().trim();
@@ -450,6 +442,12 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
 
         final lower = pName.toLowerCase();
         if (lower.contains('fortuna') || lower.contains('for ') || lower == 'for') continue;
+        if (isTransit) {
+          if (lower.contains('uranus') || lower.contains('harshal') ||
+              lower.contains('neptune') || lower.contains('pluto')) {
+            continue;
+          }
+        }
 
         int signIdx = (p['sign_index'] as num?)?.toInt() ?? 0;
         if (signIdx < 1 || signIdx > 12) {
@@ -474,56 +472,21 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
 
         String degLabel = '';
         if (showDegrees) {
-          final isNode = label.startsWith('Ra') || label.startsWith('Ke');
-          if (isNode && (degFormatted.contains('19°') || degFormatted.contains('03°') || degFormatted.contains('3°') || degFormatted.contains('19:') || degFormatted.contains('03:') || degFormatted.contains('3:'))) {
-            DateTime? refDate;
-            if (isTransit) {
-              final match = RegExp(r"(\d{2})/(\d{2})/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})").firstMatch(chartTitle);
-              if (match != null) {
-                refDate = DateTime(
-                  int.parse(match.group(3)!),
-                  int.parse(match.group(2)!),
-                  int.parse(match.group(1)!),
-                  int.parse(match.group(4)!),
-                  int.parse(match.group(5)!),
-                  int.parse(match.group(6)!),
-                );
-              }
-            } else {
-              refDate = GlobalBirthProfile().currentDateTime;
-            }
-            if (refDate != null) {
-              final jd = _getJulianDay(refDate);
-              final corr = _calculateNodeNutation(jd);
-              final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
-              if (match != null) {
-                final d = int.parse(match.group(1)!);
-                final m = int.parse(match.group(2)!);
-                final meanDeg = d + m / 60.0;
-                final trueDeg = (meanDeg + corr) % 30.0;
-                final td = trueDeg.floor();
-                final tm = ((trueDeg - td) * 60).round();
-                degLabel = '$td°${tm.toString().padLeft(2, '0')}\'';
-              }
-            }
-          }
-          if (degLabel.isEmpty) {
-            final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
-            if (match != null) {
-              degLabel = '${match.group(1)}°${match.group(2)}\'';
-            } else if (degFormatted.isNotEmpty && double.tryParse(degFormatted) != null) {
-              degLabel = degFormatted;
-            } else if (degDouble != null) {
-              final degInSign = degDouble % 30.0;
-              final d = degInSign.floor();
-              final m = ((degInSign - d) * 60).round();
-              degLabel = '$d°$m\'';
-            }
+          final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
+          if (match != null) {
+            degLabel = '${match.group(1)}°${match.group(2)}\'';
+          } else if (degFormatted.isNotEmpty && double.tryParse(degFormatted) != null) {
+            degLabel = degFormatted;
+          } else if (degDouble != null) {
+            final degInSign = degDouble % 30.0;
+            final d = degInSign.floor();
+            final m = ((degInSign - d) * 60).round();
+            degLabel = '$d°$m\'';
           }
         }
 
         final houseNum = (chartTypeKey == 'Bhava')
-            ? ((isTransit ? (p['natal_house'] ?? p['house']) : p['house']) as num? ?? 1).toInt()
+            ? ((isTransit ? (useTransitCusps ? (p['transit_house'] ?? p['house']) : (p['natal_house'] ?? p['house'])) : p['house']) as num? ?? 1).toInt()
             : (((signIdx - natalAscSignIdx + 12) % 12) + 1);
 
         targetMap.putIfAbsent(houseNum, () => []).add(
@@ -565,18 +528,33 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
         );
       }
     } else {
-      final transitAscSign = _getAscSignIdx(data);
-      final transitAscHouse = ((transitAscSign - natalAscSignIdx + 12) % 12) + 1;
-      final hasAsc = (targetMap[transitAscHouse] ?? []).any((e) => e.displayLabel.startsWith('Asc'));
-      if (!hasAsc) {
-        targetMap.putIfAbsent(transitAscHouse, () => []).add(
-          _PlanetEntry(
-            rawName: 'Transit Ascendant',
-            displayLabel: 'Asc',
-            degLabel: ascDegLabel,
-            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-          ),
-        );
+      if (useTransitCusps) {
+        final hasAsc = (targetMap[1] ?? []).any((e) => e.displayLabel.startsWith('Asc'));
+        if (!hasAsc) {
+          targetMap.putIfAbsent(1, () => []).insert(
+            0,
+            _PlanetEntry(
+              rawName: 'Transit Ascendant',
+              displayLabel: 'Asc',
+              degLabel: ascDegLabel,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+          );
+        }
+      } else {
+        final transitAscSign = _getAscSignIdx(data);
+        final transitAscHouse = ((transitAscSign - natalAscSignIdx + 12) % 12) + 1;
+        final hasAsc = (targetMap[transitAscHouse] ?? []).any((e) => e.displayLabel.startsWith('Asc'));
+        if (!hasAsc) {
+          targetMap.putIfAbsent(transitAscHouse, () => []).add(
+            _PlanetEntry(
+              rawName: 'Transit Ascendant',
+              displayLabel: 'Asc',
+              degLabel: ascDegLabel,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+          );
+        }
       }
     }
   }
@@ -623,11 +601,14 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     final h = size.height;
 
     final natalAscSignIdx = _getAscSignIdx(natalData);
+    final transitAscSignIdx = _getAscSignIdx(transitData);
+    final outerAscSignIdx = useTransitCusps ? transitAscSignIdx : natalAscSignIdx;
+
     final Map<int, List<_PlanetEntry>> innerPlanets = {};
     final Map<int, List<_PlanetEntry>> outerPlanets = {};
 
     _extractHousePlacements(innerPlanets, natalData, natalAscSignIdx, isTransit: false);
-    _extractHousePlacements(outerPlanets, transitData, natalAscSignIdx, isTransit: true);
+    _extractHousePlacements(outerPlanets, transitData, outerAscSignIdx, isTransit: true);
 
     final lineColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
     final linePaint = Paint()
@@ -758,93 +739,95 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     final double cxTr = inLeft + inW * 0.75;
     final double cyTr = inTop + inH * 0.25;
 
-    // ── Outer Sign Number positions (Matching reference Horosoft Image 1) ────
+    // ── Outer Sign Number positions (Matching Horosoft Reference Image 1) ────
     final outerSignPositions = [
       Offset(w * 0.50, 11.0),                                               // H1  : top wall center
-      Offset(inLeft - 3.0, inTop - 10.0),                                   // H2  : inner top-left corner (above)
-      Offset(inLeft - 11.0, inTop + 3.0),                                   // H3  : inner top-left corner (left)
+      Offset(inLeft + 6.0, inTop - 8.0),                                    // H2  : top-left corner (horizontal edge, facing H2)
+      Offset(inLeft - 10.0, inTop + 6.0),                                   // H3  : top-left corner (vertical edge, facing H3)
       Offset(11.0, h * 0.50),                                               // H4  : left wall center
-      Offset(inLeft - 11.0, inBottom - 3.0),                                // H5  : inner bottom-left corner (left)
-      Offset(inLeft - 3.0, inBottom + 10.0),                                // H6  : inner bottom-left corner (below)
+      Offset(inLeft - 10.0, inBottom - 6.0),                                // H5  : bottom-left corner (vertical edge, facing H5)
+      Offset(inLeft + 6.0, inBottom + 8.0),                                 // H6  : bottom-left corner (horizontal edge, facing H6)
       Offset(w * 0.50, h - 11.0),                                           // H7  : bottom wall center
-      Offset(inRight + 3.0, inBottom + 10.0),                               // H8  : inner bottom-right corner (below)
-      Offset(inRight + 11.0, inBottom - 3.0),                               // H9  : inner bottom-right corner (right)
+      Offset(inRight - 6.0, inBottom + 8.0),                                // H8  : bottom-right corner (horizontal edge, facing H8)
+      Offset(inRight + 10.0, inBottom - 6.0),                               // H9  : bottom-right corner (vertical edge, facing H9)
       Offset(w - 11.0, h * 0.50),                                           // H10 : right wall center
-      Offset(inRight + 11.0, inTop + 3.0),                                  // H11 : inner top-right corner (right)
-      Offset(inRight + 3.0, inTop - 10.0),                                  // H12 : inner top-right corner (above)
+      Offset(inRight + 10.0, inTop + 6.0),                                  // H11 : top-right corner (vertical edge, facing H11)
+      Offset(inRight - 6.0, inTop - 8.0),                                   // H12 : top-right corner (horizontal edge, facing H12)
     ];
 
-    // ── Inner Sign Number positions (Matching reference Horosoft Image 1) ────
+    // ── Inner Sign Number positions (Matching Horosoft Reference Image 1) ────
     final innerSignPositions = [
-      Offset(cx, cy - inH * 0.08),                                          // H1  : center junction (above)
-      Offset(cxTl + inW * 0.02, cyTl - inH * 0.06),                         // H2  : top-left diagonal (above)
-      Offset(cxTl - inW * 0.06, cyTl + inH * 0.02),                         // H3  : top-left diagonal (below)
-      Offset(cx - inW * 0.08, cy),                                          // H4  : center junction (left)
-      Offset(cxBl - inW * 0.06, cyBl - inH * 0.02),                         // H5  : bottom-left diagonal (above)
-      Offset(cxBl + inW * 0.02, cyBl + inH * 0.06),                         // H6  : bottom-left diagonal (below)
-      Offset(cx, cy + inH * 0.08),                                          // H7  : center junction (below)
-      Offset(cxBr - inW * 0.02, cyBr + inH * 0.06),                         // H8  : bottom-right diagonal (below)
-      Offset(cxBr + inW * 0.06, cyBr - inH * 0.02),                         // H9  : bottom-right diagonal (above)
-      Offset(cx + inW * 0.08, cy),                                          // H10 : center junction (right)
-      Offset(cxTr + inW * 0.06, cyTr + inH * 0.02),                         // H11 : top-right diagonal (below)
-      Offset(cxTr - inW * 0.02, cyTr - inH * 0.06),                         // H12 : top-right diagonal (above)
+      Offset(cx, cy - 10.0),                                                // H1  : center junction (above cross)
+      Offset(cxTl + 6.0, cyTl - 8.0),                                       // H2  : top-left junction (horizontal edge, facing H2)
+      Offset(cxTl - 10.0, cyTl + 6.0),                                      // H3  : top-left junction (vertical edge, facing H3)
+      Offset(cx - 12.0, cy),                                                // H4  : center junction (left of cross)
+      Offset(cxBl - 10.0, cyBl - 6.0),                                      // H5  : bottom-left junction (vertical edge, facing H5)
+      Offset(cxBl + 6.0, cyBl + 8.0),                                       // H6  : bottom-left junction (horizontal edge, facing H6)
+      Offset(cx, cy + 10.0),                                                // H7  : center junction (below cross)
+      Offset(cxBr - 6.0, cyBr + 8.0),                                       // H8  : bottom-right junction (horizontal edge, facing H8)
+      Offset(cxBr + 10.0, cyBr - 6.0),                                      // H9  : bottom-right junction (vertical edge, facing H9)
+      Offset(cx + 12.0, cy),                                                // H10 : center junction (right of cross)
+      Offset(cxTr + 10.0, cyTr + 6.0),                                      // H11 : top-right junction (vertical edge, facing H11)
+      Offset(cxTr - 6.0, cyTr - 8.0),                                       // H12 : top-right junction (horizontal edge, facing H12)
     ];
 
     // ── Outer Transit Planet Centers ─────────────────────────────────────────
     final outerPlanetCenters = [
-      Offset(w * 0.50, inTop * 0.52),                                       // H1 top
-      Offset(inLeft + (w * 0.5 - inLeft) * 0.35, inTop * 0.42),             // H2 top-left
-      Offset(inLeft * 0.45, inTop + (h * 0.5 - inTop) * 0.45),              // H3 left-top
-      Offset(inLeft * 0.46, h * 0.50),                                      // H4 left
-      Offset(inLeft * 0.42, inBottom + (h - inBottom) * 0.55),              // H5 left-bottom
-      Offset(inLeft + (w * 0.5 - inLeft) * 0.35, h - inTop * 0.42),         // H6 bottom-left
-      Offset(w * 0.50, h - inTop * 0.50),                                   // H7 bottom
-      Offset(w - inLeft * 0.45, h - inTop * 0.32),                          // H8 bottom-right
-      Offset(w - inLeft * 0.38, inBottom + (h - inBottom) * 0.55),          // H9 right-bottom
-      Offset(w - inLeft * 0.45, h * 0.50),                                  // H10 right
-      Offset(w - inLeft * 0.38, inTop + (h * 0.5 - inTop) * 0.42),          // H11 right-top
-      Offset(w - inLeft * 0.65, inTop * 0.38),                              // H12 top-right
+      Offset(w * 0.50, inTop * 0.55),                                       // H1  : Top Kendra wall center
+      Offset(inLeft * 0.60, inTop * 0.36),                                  // H2  : Top-left upper triangle
+      Offset(inLeft * 0.38, inTop + (h * 0.5 - inTop) * 0.40),              // H3  : Left-top lower triangle
+      Offset(inLeft * 0.58, h * 0.50),                                      // H4  : Left Kendra wall center (gap from 11)
+      Offset(inLeft * 0.38, inBottom + (h - inBottom) * 0.60),              // H5  : Left-bottom upper triangle
+      Offset(inLeft * 0.60, h - inTop * 0.36),                              // H6  : Bottom-left lower triangle
+      Offset(w * 0.50, h - inTop * 0.55),                                   // H7  : Bottom Kendra wall center
+      Offset(w - inLeft * 0.60, h - inTop * 0.36),                          // H8  : Bottom-right lower triangle (Asc in Gemini!)
+      Offset(w - inLeft * 0.38, inBottom + (h - inBottom) * 0.60),          // H9  : Right-bottom upper triangle (Mar, Jup in Cancer!)
+      Offset(w - inLeft * 0.58, h * 0.50),                                  // H10 : Right Kendra wall center (gap from 5)
+      Offset(w - inLeft * 0.38, inTop + (h * 0.5 - inTop) * 0.40),          // H11 : Right-top lower triangle (Sun, Mon in Virgo!)
+      Offset(w - inLeft * 0.60, inTop * 0.36),                              // H12 : Top-right upper triangle (Mer, Ve in Libra!)
     ];
 
     // ── Inner Natal Planet Centers ───────────────────────────────────────────
     final innerPlanetCenters = [
       Offset(cx, inTop + inH * 0.22),                                       // H1 top kendra
-      Offset(inLeft + inW * 0.30, inTop + inH * 0.13),                      // H2 top-left
-      Offset(inLeft + inW * 0.13, inTop + inH * 0.30),                      // H3 left-top
-      Offset(inLeft + inW * 0.18, cy),                                      // H4 left kendra
-      Offset(inLeft + inW * 0.13, inTop + inH * 0.70),                      // H5 left-bottom
-      Offset(inLeft + inW * 0.30, inTop + inH * 0.87),                      // H6 bottom-left
+      Offset(inLeft + inW * 0.26, inTop + inH * 0.14),                      // H2 top-left
+      Offset(inLeft + inW * 0.14, inTop + inH * 0.26),                      // H3 left-top
+      Offset(inLeft + inW * 0.22, cy),                                      // H4 left kendra
+      Offset(inLeft + inW * 0.14, inBottom - inH * 0.26),                   // H5 left-bottom
+      Offset(inLeft + inW * 0.26, inBottom - inH * 0.14),                   // H6 bottom-left
       Offset(cx, inBottom - inH * 0.22),                                    // H7 bottom kendra
-      Offset(inRight - inW * 0.30, inTop + inH * 0.87),                     // H8 bottom-right
-      Offset(inRight - inW * 0.13, inTop + inH * 0.70),                     // H9 right-bottom
-      Offset(inRight - inW * 0.18, cy),                                     // H10 right kendra
-      Offset(inRight - inW * 0.13, inTop + inH * 0.30),                     // H11 right-top
-      Offset(inRight - inW * 0.30, inTop + inH * 0.13),                     // H12 top-right
+      Offset(inRight - inW * 0.26, inBottom - inH * 0.14),                  // H8 bottom-right
+      Offset(inRight - inW * 0.14, inBottom - inH * 0.26),                  // H9 right-bottom
+      Offset(inRight - inW * 0.22, cy),                                     // H10 right kendra
+      Offset(inRight - inW * 0.14, inTop + inH * 0.26),                     // H11 right-top
+      Offset(inRight - inW * 0.26, inTop + inH * 0.14),                     // H12 top-right
     ];
 
     for (int hIdx = 1; hIdx <= 12; hIdx++) {
-      // Zodiac sign (1=Aries … 12=Pisces) occupying house hIdx.
-      // Derived purely from backend natalAscSignIdx — never hardcoded.
-      final signNumber = ((natalAscSignIdx + hIdx - 2) % 12) + 1;
+      // Outer Zodiac sign: based on outerAscSignIdx (transit cusps if enabled, else natal)
+      final outerSignNumber = ((outerAscSignIdx + hIdx - 2) % 12) + 1;
+      
+      // Inner Zodiac sign: always natal cusps
+      final innerSignNumber = ((natalAscSignIdx + hIdx - 2) % 12) + 1;
 
       // OUTER SIGN NUMBER (at frame edge / corner)
       _drawText(
         canvas: canvas,
-        text: '$signNumber',
+        text: '$outerSignNumber',
         center: outerSignPositions[hIdx - 1],
         fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF334155),
+        fontWeight: FontWeight.w800,
+        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
       );
 
       // INNER SIGN NUMBER (at inner-box edge / corner)
       _drawText(
         canvas: canvas,
-        text: '$signNumber',
+        text: '$innerSignNumber',
         center: innerSignPositions[hIdx - 1],
         fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B),
+        fontWeight: FontWeight.w800,
+        color: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
       );
 
       // OUTER TRANSIT PLANETS
@@ -855,6 +838,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
           center: outerPlanetCenters[hIdx - 1],
           planets: outPlanets,
           baseFontSize: 11.0,
+          isWide: (hIdx == 1 || hIdx == 2 || hIdx == 6 || hIdx == 7 || hIdx == 8 || hIdx == 12),
         );
       }
 
@@ -866,6 +850,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
           center: innerPlanetCenters[hIdx - 1],
           planets: inPlanets,
           baseFontSize: 10.5,
+          isWide: (hIdx == 1 || hIdx == 2 || hIdx == 6 || hIdx == 7 || hIdx == 8 || hIdx == 12),
         );
       }
     }
@@ -876,49 +861,102 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     required Offset center,
     required List<_PlanetEntry> planets,
     required double baseFontSize,
+    bool isWide = false,
   }) {
     if (planets.isEmpty) return;
 
+    final bool useTwoPerRow = planets.length >= 3 && isWide;
+
     double fontSize = baseFontSize;
-    if (planets.length > 2) fontSize = baseFontSize * 0.90;
-    if (planets.length > 4) fontSize = baseFontSize * 0.80;
+    if (planets.length > 2) fontSize = baseFontSize * 0.88;
+    if (planets.length > 4) fontSize = baseFontSize * 0.78;
 
-    final double lineHeight = fontSize * 1.25;
-    final double totalHeight = planets.length * lineHeight;
-    double startY = center.dy - (totalHeight / 2) + (lineHeight / 2);
+    final double lineHeight = fontSize * 1.20;
 
-    for (final p in planets) {
-      final span = TextSpan(
-        children: [
-          TextSpan(
+    if (!useTwoPerRow) {
+      final double totalHeight = planets.length * lineHeight;
+      double startY = center.dy - (totalHeight / 2) + (lineHeight / 2);
+
+      for (final p in planets) {
+        final tp = TextPainter(
+          text: _buildPlanetSpan(p, fontSize),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        )..layout();
+
+        tp.paint(canvas, Offset(center.dx - (tp.width / 2), startY - (tp.height / 2)));
+        startY += lineHeight;
+      }
+    } else {
+      final rows = <List<_PlanetEntry>>[];
+      for (int i = 0; i < planets.length; i += 2) {
+        rows.add(planets.sublist(i, (i + 2 > planets.length) ? planets.length : i + 2));
+      }
+
+      final double totalHeight = rows.length * lineHeight;
+      double startY = center.dy - (totalHeight / 2) + (lineHeight / 2);
+
+      for (final row in rows) {
+        final children = <InlineSpan>[];
+        for (int i = 0; i < row.length; i++) {
+          if (i > 0) {
+            children.add(const TextSpan(text: '  '));
+          }
+          final p = row[i];
+          children.add(TextSpan(
             text: p.displayLabel,
             style: GoogleFonts.outfit(
               fontSize: fontSize,
               fontWeight: FontWeight.w800,
               color: p.color,
             ),
-          ),
-          if (p.degLabel.isNotEmpty)
-            TextSpan(
+          ));
+          if (p.degLabel.isNotEmpty) {
+            children.add(TextSpan(
               text: ' ${p.degLabel}',
               style: GoogleFonts.outfit(
                 fontSize: fontSize * 0.86,
                 fontWeight: FontWeight.w600,
                 color: p.color.withValues(alpha: 0.95),
               ),
-            ),
-        ],
-      );
+            ));
+          }
+        }
 
-      final tp = TextPainter(
-        text: span,
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-      )..layout();
+        final tp = TextPainter(
+          text: TextSpan(children: children),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        )..layout();
 
-      tp.paint(canvas, Offset(center.dx - (tp.width / 2), startY - (tp.height / 2)));
-      startY += lineHeight;
+        tp.paint(canvas, Offset(center.dx - (tp.width / 2), startY - (tp.height / 2)));
+        startY += lineHeight;
+      }
     }
+  }
+
+  TextSpan _buildPlanetSpan(_PlanetEntry p, double fontSize) {
+    return TextSpan(
+      children: [
+        TextSpan(
+          text: p.displayLabel,
+          style: GoogleFonts.outfit(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w800,
+            color: p.color,
+          ),
+        ),
+        if (p.degLabel.isNotEmpty)
+          TextSpan(
+            text: ' ${p.degLabel}',
+            style: GoogleFonts.outfit(
+              fontSize: fontSize * 0.86,
+              fontWeight: FontWeight.w600,
+              color: p.color.withValues(alpha: 0.95),
+            ),
+          ),
+      ],
+    );
   }
 
   void _drawText({
@@ -951,7 +989,8 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
         oldDelegate.transitData != transitData ||
         oldDelegate.isDark != isDark ||
         oldDelegate.showDegrees != showDegrees ||
-        oldDelegate.chartTypeKey != chartTypeKey;
+        oldDelegate.chartTypeKey != chartTypeKey ||
+        oldDelegate.useTransitCusps != useTransitCusps;
   }
 }
 

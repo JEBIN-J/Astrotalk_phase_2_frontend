@@ -90,15 +90,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   late TabController _tabController;
   late TabController _bottomSubTabController;
 
-  String _personName = '';
-  String _dob = '';
-  String _tob = '';
-  String _pob = '';
+  String _personName = 'User';
+  String _dob = '15 Aug 1990';
+  String _tob = '08:30 AM';
+  String _pob = 'New Delhi, Delhi, India';
 
-  DateTime _currentDateTime = DateTime.now();
-  double _latitude = 0.0;
-  double _longitude = 0.0;
-  double _timezone = 0.0;
+  DateTime _currentDateTime = DateTime(1990, 8, 15, 8, 30);
+  double _latitude = 28.6139;
+  double _longitude = 77.2090;
+  double _timezone = 5.5;
   
   bool _isProfileSet = false;
 
@@ -1047,7 +1047,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       barrierDismissible: _isProfileSet, // Prevent dismiss if no profile set
       builder: (ctx) => _EditBirthDetailsDialog(
         initialName: _personName,
-        initialDateTime: _currentDateTime,
+        initialDateTime: _isProfileSet ? _currentDateTime : DateTime.now(),
         initialDob: _dob,
         initialTob: _tob,
         initialPob: _pob,
@@ -11376,23 +11376,33 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initialName);
     _pobCtrl = TextEditingController(text: widget.initialPob);
-    _latCtrl = TextEditingController(text: widget.initialLat.toString());
-    _lonCtrl = TextEditingController(text: widget.initialLon.toString());
-    _tzCtrl = TextEditingController(text: widget.initialTz.toString());
+    _latCtrl = TextEditingController(
+      text: (widget.initialLat != 0.0) ? widget.initialLat.toString() : '',
+    );
+    _lonCtrl = TextEditingController(
+      text: (widget.initialLon != 0.0) ? widget.initialLon.toString() : '',
+    );
+    _tzCtrl = TextEditingController(
+      text: (widget.initialTz != 0.0) ? widget.initialTz.toString() : '5.5',
+    );
 
+    final now = DateTime.now();
     if (widget.initialDateTime != null) {
       _selectedDate = widget.initialDateTime;
       _selectedTime = TimeOfDay(
         hour: widget.initialDateTime!.hour,
         minute: widget.initialDateTime!.minute,
       );
-    } else {
+    } else if (widget.initialDob.isNotEmpty && widget.initialTob.isNotEmpty) {
       _selectedDate = _parseDob(widget.initialDob);
       _selectedTime = _parseTob(widget.initialTob);
+    } else {
+      _selectedDate = now;
+      _selectedTime = TimeOfDay(hour: now.hour, minute: now.minute);
     }
 
-    _selectedDate ??= DateTime(1996, 12, 13);
-    _selectedTime ??= const TimeOfDay(hour: 9, minute: 30);
+    _selectedDate ??= now;
+    _selectedTime ??= TimeOfDay(hour: now.hour, minute: now.minute);
   }
 
   DateTime? _parseDob(String raw) {
@@ -11551,6 +11561,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       controller: _nameCtrl,
                       decoration: InputDecoration(
                         labelText: 'Full Name',
+                        hintText: 'Enter Full Name',
                         prefixIcon: const Icon(Icons.person_rounded, color: Color(0xFF4338CA)),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                       ),
@@ -11686,6 +11697,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                             keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                             decoration: InputDecoration(
                               labelText: 'Latitude',
+                              hintText: 'e.g. 28.6139',
                               prefixIcon: const Icon(Icons.explore_rounded, color: Color(0xFF059669)),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                             ),
@@ -11698,6 +11710,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                             keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                             decoration: InputDecoration(
                               labelText: 'Longitude',
+                              hintText: 'e.g. 77.2090',
                               prefixIcon: const Icon(Icons.explore_rounded, color: Color(0xFF059669)),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                             ),
@@ -11711,6 +11724,7 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
                       decoration: InputDecoration(
                         labelText: 'Time Zone Offset (e.g. 5.5 for IST)',
+                        hintText: 'e.g. 5.5',
                         prefixIcon: const Icon(Icons.schedule_rounded, color: Color(0xFFD97706)),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r)),
                       ),
