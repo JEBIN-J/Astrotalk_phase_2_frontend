@@ -186,9 +186,8 @@ class GlobalBirthProfile {
         final savedPob = prefs.getString('global_pob') ?? '';
         final savedDob = prefs.getString('global_dob') ?? '';
 
-        // Purge any old static or hardcoded 1984/1990/Hajipur profile from persistence
-        if (savedDob.contains('1984') || savedDob.contains('1990') || savedDob.contains('1980') ||
-            savedPob.toLowerCase().contains('hajipur')) {
+        // Purge any old legacy hardcoded Hajipur placeholder from persistence
+        if (savedPob.toLowerCase().contains('hajipur')) {
           await prefs.remove('global_person_name');
           await prefs.remove('global_dob');
           await prefs.remove('global_tob');

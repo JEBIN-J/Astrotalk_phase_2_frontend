@@ -243,24 +243,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
     // Initialize from GlobalBirthProfile
     final profile = GlobalBirthProfile();
-    _selectedAyanamsa = profile.selectedAyanamsa;
-    _customAyanamsa = profile.customAyanamsa;
     final isKpSystem = widget.appBarTitle == 'KP System' || (widget.isSingleTabMode && widget.initialTabIndex == 2);
-    final isStaticProfile = profile.dob.contains('1984') || profile.dob.contains('1990') || profile.dob.contains('1980') || profile.pob.toLowerCase().contains('hajipur');
+    _selectedAyanamsa = isKpSystem ? 'KP_NEW' : profile.selectedAyanamsa;
+    _customAyanamsa = profile.customAyanamsa;
+    final isStaleHajipur = profile.pob.toLowerCase().contains('hajipur');
 
-    if (isKpSystem) {
-      // When user uses KP System, ALWAYS use the current time and date
-      final liveNow = DateTime.now();
-      _currentDateTime = liveNow;
-      _dob = DateFormat('dd MMM yyyy').format(liveNow);
-      _tob = DateFormat('hh:mm a').format(liveNow);
-      _personName = profile.personName.isNotEmpty ? profile.personName : 'User';
-      _pob = profile.pob.isNotEmpty ? profile.pob : 'Mumbai, Maharashtra, India';
-      _latitude = profile.latitude != 0.0 ? profile.latitude : 19.076;
-      _longitude = profile.longitude != 0.0 ? profile.longitude : 72.8777;
-      _timezone = profile.timezone != 0.0 ? profile.timezone : 5.5;
-      _isProfileSet = true;
-    } else if (profile.isProfileSet && !isStaticProfile) {
+    if (profile.isProfileSet && !isStaleHajipur) {
+      // User has already entered and saved their birth profile - use it!
       _personName = profile.personName;
       _dob = profile.dob;
       _tob = profile.tob;
@@ -271,11 +260,25 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       _currentDateTime = profile.currentDateTime;
       _isProfileSet = true;
     } else {
-      _personName = 'User';
-      _dob = DateFormat('dd MMM yyyy').format(now);
-      _tob = DateFormat('hh:mm a').format(now);
-      _currentDateTime = now;
+      // New user opening for the first time - default to current date & time and prompt for input
+      final liveNow = DateTime.now();
+      _currentDateTime = liveNow;
+      _dob = DateFormat('dd MMM yyyy').format(liveNow);
+      _tob = DateFormat('hh:mm a').format(liveNow);
+      _personName = (profile.personName.isNotEmpty && !isStaleHajipur) ? profile.personName : 'User';
+      _pob = (profile.pob.isNotEmpty && !isStaleHajipur) ? profile.pob : 'New Delhi, Delhi, India';
+      _latitude = (!isStaleHajipur && profile.latitude != 0.0) ? profile.latitude : 28.6139;
+      _longitude = (!isStaleHajipur && profile.longitude != 0.0) ? profile.longitude : 77.2090;
+      _timezone = profile.timezone != 0.0 ? profile.timezone : 5.5;
       _isProfileSet = false;
+
+      if (isKpSystem) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isProfileSet) {
+            _showEditProfileDialog();
+          }
+        });
+      }
     }
     _fetchKundliData();
     // Auto-fetch fresh Dasha when the Dasha tab (index 1) becomes active
@@ -283,6 +286,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       if (_tabController.index >= 0 && _tabController.index < _activeTabIndices.length) {
         if (_activeTabIndices[_tabController.index] == 1 && !_dashaInitialFetchDone && !_isLoadingDasha) {
           _fetchDynamicDasha(_selectedDashaType);
+        }
+        if (_activeTabIndices[_tabController.index] == 2 && !_isProfileSet) {
+          _showEditProfileDialog();
         }
       }
     });
@@ -1063,14 +1069,13 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
   void _showEditProfileDialog() {
     final now = DateTime.now();
-    final isKpSystem = widget.appBarTitle == 'KP System' || (widget.isSingleTabMode && widget.initialTabIndex == 2);
-    final bool isStaticOrStale = _dob.contains('1984') || _dob.contains('1990') || _dob.contains('1980') || _pob.toLowerCase().contains('hajipur');
-    final activeDob = (isKpSystem || isStaticOrStale) ? DateFormat('dd MMM yyyy').format(now) : _dob;
-    final activeTob = (isKpSystem || isStaticOrStale) ? DateFormat('hh:mm a').format(now) : _tob;
-    final activeDt = (isKpSystem || isStaticOrStale) ? now : _currentDateTime;
-    final activePob = isStaticOrStale ? '' : _pob;
-    final activeLat = isStaticOrStale ? 0.0 : _latitude;
-    final activeLon = isStaticOrStale ? 0.0 : _longitude;
+    final bool isStaleHajipur = _pob.toLowerCase().contains('hajipur');
+    final activeDob = (!_isProfileSet || isStaleHajipur) ? DateFormat('dd MMM yyyy').format(now) : _dob;
+    final activeTob = (!_isProfileSet || isStaleHajipur) ? DateFormat('hh:mm a').format(now) : _tob;
+    final activeDt = (!_isProfileSet || isStaleHajipur) ? now : _currentDateTime;
+    final activePob = isStaleHajipur ? '' : _pob;
+    final activeLat = isStaleHajipur ? 0.0 : _latitude;
+    final activeLon = isStaleHajipur ? 0.0 : _longitude;
 
     showDialog(
       context: context,
@@ -1084,7 +1089,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
         initialLat: activeLat,
         initialLon: activeLon,
         initialTz: _timezone,
-        isKpMode: isKpSystem,
+        isKpMode: false,
+        isProfileAlreadySet: _isProfileSet && !isStaleHajipur,
         onSave: (name, birthDateTime, pob, lat, lon, tz) {
           setState(() {
             _personName = name;
@@ -11376,6 +11382,7 @@ class _EditBirthDetailsDialog extends StatefulWidget {
   final double initialLon;
   final double initialTz;
   final bool isKpMode;
+  final bool isProfileAlreadySet;
   final Function(String name, DateTime birthDateTime, String pob, double lat, double lon, double tz) onSave;
 
   const _EditBirthDetailsDialog({
@@ -11388,6 +11395,7 @@ class _EditBirthDetailsDialog extends StatefulWidget {
     required this.initialLon,
     required this.initialTz,
     this.isKpMode = false,
+    this.isProfileAlreadySet = false,
     required this.onSave,
   });
 
@@ -11408,35 +11416,27 @@ class _EditBirthDetailsDialogState extends State<_EditBirthDetailsDialog> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    final bool isStatic = widget.initialDob.contains('1984') ||
-                          widget.initialDob.contains('1990') ||
-                          widget.initialDob.contains('1980') ||
-                          widget.initialPob.toLowerCase().contains('hajipur') ||
-                          (widget.initialDateTime != null && (widget.initialDateTime!.year == 1984 || widget.initialDateTime!.year == 1990 || widget.initialDateTime!.year == 1980));
+    final bool isStatic = widget.initialPob.toLowerCase().contains('hajipur');
 
     _nameCtrl = TextEditingController(text: widget.initialName.isNotEmpty ? widget.initialName : 'User');
-    _pobCtrl = TextEditingController(text: isStatic ? '' : widget.initialPob);
+    _pobCtrl = TextEditingController(text: isStatic ? '' : (widget.initialPob.isNotEmpty ? widget.initialPob : 'New Delhi, Delhi, India'));
     _latCtrl = TextEditingController(
-      text: (!isStatic && widget.initialLat != 0.0) ? widget.initialLat.toString() : '',
+      text: (!isStatic && widget.initialLat != 0.0) ? widget.initialLat.toString() : '28.6139',
     );
     _lonCtrl = TextEditingController(
-      text: (!isStatic && widget.initialLon != 0.0) ? widget.initialLon.toString() : '',
+      text: (!isStatic && widget.initialLon != 0.0) ? widget.initialLon.toString() : '77.2090',
     );
     _tzCtrl = TextEditingController(
       text: (widget.initialTz != 0.0) ? widget.initialTz.toString() : '5.5',
     );
 
-    if (widget.isKpMode) {
-      // In KP mode, always default to the exact live current date and time
-      _selectedDate = now;
-      _selectedTime = TimeOfDay(hour: now.hour, minute: now.minute);
-    } else if (!isStatic && widget.initialDateTime != null) {
+    if (widget.isProfileAlreadySet && !isStatic && widget.initialDateTime != null) {
       _selectedDate = widget.initialDateTime;
       _selectedTime = TimeOfDay(
         hour: widget.initialDateTime!.hour,
         minute: widget.initialDateTime!.minute,
       );
-    } else if (!isStatic && widget.initialDob.isNotEmpty && widget.initialTob.isNotEmpty) {
+    } else if (widget.isProfileAlreadySet && !isStatic && widget.initialDob.isNotEmpty && widget.initialTob.isNotEmpty) {
       _selectedDate = _parseDob(widget.initialDob);
       _selectedTime = _parseTob(widget.initialTob);
     } else {

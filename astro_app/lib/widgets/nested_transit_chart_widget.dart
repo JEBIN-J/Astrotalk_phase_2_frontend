@@ -325,6 +325,44 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
     return 1;
   }
 
+  String _formatDegString(String degFormatted, double? degDouble) {
+    if (!showDegrees) return '';
+    final s = degFormatted.trim();
+    if (s.isNotEmpty) {
+      final cleaned = s
+          .replaceAll('°', ':')
+          .replaceAll("'", ':')
+          .replaceAll('"', '')
+          .replaceAll(' ', '');
+      final parts = cleaned.split(':');
+      if (parts.length >= 2) {
+        int d = int.tryParse(parts[0].trim()) ?? 0;
+        int m = int.tryParse(parts[1].trim()) ?? 0;
+        int sec = parts.length > 2 ? (int.tryParse(parts[2].trim()) ?? 0) : 0;
+        if (sec >= 30) m += 1;
+        if (m >= 60) {
+          m -= 60;
+          d += 1;
+        }
+        return '${d.toString().padLeft(2, '0')}°${m.toString().padLeft(2, '0')}\'';
+      }
+    }
+    if (degDouble != null) {
+      final degInSign = degDouble % 30.0;
+      int d = degInSign.floor();
+      double minDouble = (degInSign - d) * 60;
+      int m = minDouble.floor();
+      int sec = ((minDouble - m) * 60).round();
+      if (sec >= 30) m += 1;
+      if (m >= 60) {
+        m -= 60;
+        d += 1;
+      }
+      return '${d.toString().padLeft(2, '0')}°${m.toString().padLeft(2, '0')}\'';
+    }
+    return '';
+  }
+
   void _extractHousePlacements(
     Map<int, List<_PlanetEntry>> targetMap,
     Map<String, dynamic>? data,
@@ -371,19 +409,12 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
 
           final isRetro = p['is_retrograde'] == true;
           final degFormatted = (p['degree_formatted'] ?? p['degree'] ?? '').toString().trim();
+          final degDouble = (p['norm_degree'] ?? p['degree'] ?? p['longitude'] as num?)?.toDouble();
 
           String label = _formatCode(pName);
           if (isRetro && label != 'Asc') label += '(R)';
 
-          String degLabel = '';
-          if (showDegrees && degFormatted.isNotEmpty) {
-            final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
-            if (match != null) {
-              degLabel = '${match.group(1)}°${match.group(2)}\'';
-            } else {
-              degLabel = degFormatted;
-            }
-          }
+          final degLabel = _formatDegString(degFormatted, degDouble);
 
           final houseNum = ((signIdx - natalAscSignIdx + 12) % 12) + 1;
           targetMap.putIfAbsent(houseNum, () => []).add(
@@ -417,6 +448,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
           final bhavaHouse = ((p['bhava_house'] ?? p['house']) as num?)?.toInt() ?? 1;
           final isRetro = p['is_retrograde'] == true;
           final degFormatted = (p['degree_formatted'] ?? p['degree'] ?? '').toString().trim();
+          final degDouble = (p['norm_degree'] ?? p['degree'] ?? p['longitude'] as num?)?.toDouble();
 
           String label = _formatCode(pName);
           if (isRetro && label != 'Asc') label += '(R)';
@@ -425,7 +457,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
             _PlanetEntry(
               rawName: pName,
               displayLabel: label,
-              degLabel: showDegrees ? degFormatted : '',
+              degLabel: _formatDegString(degFormatted, degDouble),
               color: _getPlanetColor(pName, isDark),
             ),
           );
@@ -470,20 +502,7 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
           label += '(R)';
         }
 
-        String degLabel = '';
-        if (showDegrees) {
-          final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(degFormatted);
-          if (match != null) {
-            degLabel = '${match.group(1)}°${match.group(2)}\'';
-          } else if (degFormatted.isNotEmpty && double.tryParse(degFormatted) != null) {
-            degLabel = degFormatted;
-          } else if (degDouble != null) {
-            final degInSign = degDouble % 30.0;
-            final d = degInSign.floor();
-            final m = ((degInSign - d) * 60).round();
-            degLabel = '$d°$m\'';
-          }
-        }
+        final degLabel = _formatDegString(degFormatted, degDouble);
 
         final houseNum = (chartTypeKey == 'Bhava')
             ? ((isTransit ? (useTransitCusps ? (p['transit_house'] ?? p['house']) : (p['natal_house'] ?? p['house'])) : p['house']) as num? ?? 1).toInt()
@@ -504,15 +523,9 @@ class _NestedNorthIndianTransitPainter extends CustomPainter {
         data['ascendant_degree_formatted']?.toString() ??
         data['ascendant_degree']?.toString() ??
         '';
-    String ascDegLabel = '';
-    if (showDegrees && ascDeg.isNotEmpty) {
-      final match = RegExp(r"(\d+)[°:]\s*(\d+)").firstMatch(ascDeg);
-      if (match != null) {
-        ascDegLabel = '${match.group(1)}°${match.group(2)}\'';
-      } else if (double.tryParse(ascDeg) != null) {
-        ascDegLabel = ascDeg;
-      }
-    }
+    final ascDegDouble = (data['ascendant'] is Map ? data['ascendant']['degree'] : null) as num? ??
+        (data['ascendant_degree'] as num?);
+    final ascDegLabel = _formatDegString(ascDeg, ascDegDouble?.toDouble());
 
     if (!isTransit) {
       final hasAsc = (targetMap[1] ?? []).any((e) => e.displayLabel.startsWith('Asc'));

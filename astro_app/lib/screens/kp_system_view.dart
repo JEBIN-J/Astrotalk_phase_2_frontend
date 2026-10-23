@@ -280,8 +280,10 @@ class _KpSystemViewState extends State<KpSystemView> {
     final globalAyan = GlobalBirthProfile().selectedAyanamsa;
     if (widget.initialAyanamsa != null && widget.initialAyanamsa!.isNotEmpty) {
       _selectedAyanamsa = widget.initialAyanamsa!;
-    } else if (globalAyan.isNotEmpty) {
+    } else if (globalAyan.isNotEmpty && globalAyan != 'LAHIRI') {
       _selectedAyanamsa = globalAyan;
+    } else {
+      _selectedAyanamsa = 'KP_NEW';
     }
     _activeSectionIndex = widget.initialSectionIndex;
     _activeChartStyle = widget.chartStyle;
