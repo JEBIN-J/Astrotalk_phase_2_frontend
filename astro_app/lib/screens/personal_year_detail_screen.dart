@@ -33,6 +33,13 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
   late String _currentName;
   late String _currentSystem;
   late int _selectedYear;
+  final ScrollController _yearScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _yearScrollController.dispose();
+    super.dispose();
+  }
 
   bool get isDark => mounted ? (Theme.of(context).brightness == Brightness.dark) : false;
   Color get scaffoldBg => isDark ? NumerologyTheme.darkScaffoldBg : const Color(0xFFF0FDF4);
@@ -384,15 +391,33 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
   }
 
   Widget _buildYearSelector() {
+    int birthYear = DateTime.now().year;
+    if (_currentDob.isNotEmpty) {
+      final parts = _currentDob.split('-');
+      if (parts.isNotEmpty) {
+        birthYear = int.tryParse(parts[0]) ?? birthYear;
+      }
+    }
     final currentServerYear = DateTime.now().year;
+    final startYear = birthYear <= currentServerYear ? birthYear : currentServerYear;
+    final endYear = currentServerYear + 10;
     final years = [
-      currentServerYear - 2,
-      currentServerYear - 1,
-      currentServerYear,
-      currentServerYear + 1,
-      currentServerYear + 2,
-      currentServerYear + 3,
+      for (int y = startYear; y <= endYear; y++) y,
     ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_yearScrollController.hasClients) {
+        final index = years.indexOf(_selectedYear);
+        if (index > 0) {
+          final targetOffset = (index * 68.w) - 100.w;
+          _yearScrollController.animateTo(
+            targetOffset.clamp(0.0, _yearScrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      }
+    });
 
     return Container(
       width: double.infinity,
@@ -426,6 +451,30 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                 ),
               ),
               const Spacer(),
+              if (_selectedYear != startYear)
+                Padding(
+                  padding: EdgeInsets.only(right: 6.w),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4.r),
+                    onTap: () => _onYearChanged(startYear),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(4.r),
+                        border: Border.all(color: cardBorder),
+                      ),
+                      child: Text(
+                        'BIRTH ($startYear)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 8.5.sp,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (_selectedYear == currentServerYear)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
@@ -441,11 +490,32 @@ class _PersonalYearDetailScreenState extends State<PersonalYearDetailScreen> {
                       color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
                     ),
                   ),
+                )
+              else
+                InkWell(
+                  borderRadius: BorderRadius.circular(4.r),
+                  onTap: () => _onYearChanged(currentServerYear),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      'NOW ($currentServerYear)',
+                      style: GoogleFonts.outfit(
+                        fontSize: 8.5.sp,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF047857),
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),
           SizedBox(height: 8.h),
           SingleChildScrollView(
+            controller: _yearScrollController,
             scrollDirection: Axis.horizontal,
             child: Row(
               children: years.map((y) {
