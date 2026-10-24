@@ -18,14 +18,14 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.242.54.136:5000/api/v1';
+      return 'http://192.168.29.77:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.242.54.136:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
       }
     } catch (_) {}  
-    return 'http://10.242.54.136:5000/api/v1';
+    return 'http://192.168.29.77:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -1530,6 +1530,7 @@ class AstroApiService {
     required String question,
     required String questionDate,
     required String questionTime,
+    String? placeOfBirth,
     double? latitude,
     double? longitude,
     double? timezone,
@@ -1543,6 +1544,7 @@ class AstroApiService {
       'date': questionDate,
       'time': questionTime,
     };
+    if (placeOfBirth != null) bodyMap['place_of_birth'] = placeOfBirth;
     if (latitude != null) bodyMap['latitude'] = latitude;
     if (longitude != null) bodyMap['longitude'] = longitude;
     if (timezone != null) bodyMap['timezone'] = timezone;

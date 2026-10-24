@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../services/astro_api_service.dart';
 import '../services/astrologer_location_service.dart';
 import '../theme/numerology_theme.dart';
+import 'horary_kp_view.dart';
 
 class HoraryScreen extends StatefulWidget {
   const HoraryScreen({super.key});
@@ -21,6 +22,7 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
   List<dynamic> _questions = [];
   int _resultTabIndex = 0; // 0: Planets, 1: House Cusps
   bool _isCurrentLocation = true;
+  bool _showFormWithResults = false;
 
   // Form Fields matching Horary specifications
   final TextEditingController _nameCtrl = TextEditingController();
@@ -204,6 +206,7 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
         question: questionText,
         questionDate: _dateCtrl.text.trim(),
         questionTime: _timeCtrl.text.trim(),
+        placeOfBirth: _locationName,
         latitude: double.tryParse(_latCtrl.text) ?? 28.6139,
         longitude: double.tryParse(_lonCtrl.text) ?? 77.2090,
         timezone: double.tryParse(_tzCtrl.text) ?? 5.5,
@@ -214,6 +217,7 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
       if (mounted) {
         setState(() {
           _horaryData = data['data'];
+          _showFormWithResults = false;
         });
       }
     } catch (e) {
@@ -844,6 +848,40 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
     );
   }
 
+  void _openEditQuery() {
+    if (_horaryData != null) {
+      if (_horaryData!['horary_number'] != null) {
+        _kpNumberCtrl.text = _horaryData!['horary_number'].toString();
+      }
+      if (_horaryData!['horary_mode'] != null) {
+        final mode = _horaryData!['horary_mode'].toString();
+        if (mode.isNotEmpty) _horaryMode = mode;
+      }
+      final q = _horaryData!['question']?.toString() ?? '';
+      if (q.isNotEmpty && q != 'Horary Chart Query' && !q.startsWith('Horary Reading for')) {
+        _questionCtrl.text = q;
+      }
+      if (_horaryData!['person_name'] != null && _horaryData!['person_name'].toString().isNotEmpty) {
+        _nameCtrl.text = _horaryData!['person_name'].toString();
+      }
+      if (_horaryData!['place_of_birth'] != null && _horaryData!['place_of_birth'].toString().isNotEmpty) {
+        _locationName = _horaryData!['place_of_birth'].toString();
+      }
+      if (_horaryData!['date_of_birth'] != null) {
+        _dateCtrl.text = _horaryData!['date_of_birth'].toString();
+      }
+      if (_horaryData!['time_of_birth'] != null) {
+        _timeCtrl.text = _horaryData!['time_of_birth'].toString();
+      }
+      if (_horaryData!['ayanamsa_name'] != null) {
+        _selectedAyanamsa = _horaryData!['ayanamsa_name'].toString();
+      }
+    }
+    setState(() {
+      _showFormWithResults = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -854,7 +892,13 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
         leading: Center(
           child: InkWell(
             borderRadius: BorderRadius.circular(20.r),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (_showFormWithResults && _horaryData != null) {
+                setState(() => _showFormWithResults = false);
+              } else {
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               width: 38.w,
               height: 38.w,
@@ -896,17 +940,27 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- MAIN HORARY FORM CARD ---
-            _buildHoraryFormCard(),
-            SizedBox(height: 20.h),
+            // --- MAIN HORARY FORM CARD OR KP HORARY RESULTS SECTION ---
+            if (_horaryData == null || _showFormWithResults) ...[
+              _buildHoraryFormCard(),
+              SizedBox(height: 20.h),
 
-            // --- ACTION BUTTONS (CREATE / CANCEL) ---
-            _buildActionButtons(),
-            SizedBox(height: 16.h),
+              // --- ACTION BUTTONS (CREATE / CANCEL) ---
+              _buildActionButtons(),
+              SizedBox(height: 16.h),
+            ] else if (_horaryData != null) ...[
+              HoraryKpView(
+                horaryData: _horaryData!,
+                isDark: isDark,
+                onEditQuery: _openEditQuery,
+                onRefresh: _fetchHorary,
+              ),
+            ],
 
             if (_errorMsg.isNotEmpty)
               Container(
                 padding: EdgeInsets.all(14.w),
+                margin: EdgeInsets.only(top: 10.h),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(12.r),
@@ -925,12 +979,6 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   ],
                 ),
               ),
-
-            // --- RESULTS SECTION ---
-            if (_horaryData != null) ...[
-              SizedBox(height: 8.h),
-              _buildResultsDashboard(),
-            ],
             SizedBox(height: 24.h),
           ],
         ),
@@ -1649,9 +1697,10 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
   // =========================================================================
 
   Widget _buildActionButtons() {
+    final isEditing = _horaryData != null;
     return Row(
       children: [
-        // CREATE / CALCULATE
+        // CREATE / UPDATE
         Expanded(
           flex: 3,
           child: Container(
@@ -1687,10 +1736,10 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 19.sp),
+                        Icon(isEditing ? Icons.sync_rounded : Icons.auto_awesome_rounded, color: Colors.white, size: 19.sp),
                         SizedBox(width: 8.w),
                         Text(
-                          'Create',
+                          isEditing ? 'Update Chart' : 'Create',
                           style: GoogleFonts.outfit(fontSize: 16.sp, fontWeight: FontWeight.w700, color: Colors.white),
                         ),
                       ],
@@ -1708,12 +1757,18 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
             child: OutlinedButton(
               onPressed: () {
                 setState(() {
-                  _nameCtrl.clear();
-                  _questionCtrl.clear();
-                  _kpNumberCtrl.clear();
-                  _horaryMode = 'range_249';
-                  _horaryData = null;
-                  _errorMsg = '';
+                  if (isEditing) {
+                    _showFormWithResults = false;
+                    _errorMsg = '';
+                  } else {
+                    _nameCtrl.clear();
+                    _questionCtrl.clear();
+                    _kpNumberCtrl.clear();
+                    _horaryMode = 'range_249';
+                    _horaryData = null;
+                    _showFormWithResults = false;
+                    _errorMsg = '';
+                  }
                 });
               },
               style: OutlinedButton.styleFrom(
@@ -1731,10 +1786,6 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
       ],
     );
   }
-
-  // =========================================================================
-  // RESULTS DASHBOARD
-  // =========================================================================
 
   Widget _buildResultsDashboard() {
     final asc = (_horaryData!['ascendant'] as num?)?.toDouble() ?? 0.0;
