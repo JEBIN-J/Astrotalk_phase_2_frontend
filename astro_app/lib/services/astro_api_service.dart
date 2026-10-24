@@ -22,7 +22,8 @@ class AstroApiService {
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://192.168.29.77:5000/api/v1'; // Connects to local Flask backend from Android Emulator or USB Reverse Port
+        // 10.0.2.2 is default for Android emulator to host loopback; 192.168.29.77 for physical devices
+        return 'http://10.0.2.2:5000/api/v1';
       }
     } catch (_) {}  
     return 'http://192.168.29.77:5000/api/v1';
@@ -751,21 +752,217 @@ class AstroApiService {
       if (name != null && name.isNotEmpty) 'name': name,
     };
 
-    try {
-      final uri = Uri.parse('$baseUrl/numerology/personal-year').replace(queryParameters: queryParams);
-      final res = await http.get(uri, headers: _headers).timeout(_timeout);
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body) as Map<String, dynamic>;
-        if (data['status'] == 'success') {
-          return data;
+    final candidateBases = [
+      baseUrl,
+      if (Platform.isAndroid && !baseUrl.contains('10.0.2.2')) 'http://10.0.2.2:5000/api/v1',
+      if (Platform.isAndroid && !baseUrl.contains('192.168.29.77')) 'http://192.168.29.77:5000/api/v1',
+      if (Platform.isAndroid && !baseUrl.contains('127.0.0.1')) 'http://127.0.0.1:5000/api/v1',
+    ];
+
+    for (final base in candidateBases) {
+      try {
+        final uri = Uri.parse('$base/numerology/personal-year').replace(queryParameters: queryParams);
+        final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body) as Map<String, dynamic>;
+          if (data['status'] == 'success') {
+            _customBaseUrl = base;
+            return data;
+          }
         }
+      } catch (e) {
+        debugPrint('PersonalYear request failed for $base: $e');
       }
-    } catch (e) {
-      debugPrint('PersonalYear request failed for $baseUrl: $e');
     }
 
-    throw Exception('Failed to connect to backend server for Personal Year calculation.');
+    // Fallback: If network is offline, perform deterministic local calculation
+    return _generateLocalPersonalYearReport(
+      dateOfBirth: dateOfBirth,
+      year: year,
+      name: name ?? 'Seeker',
+      system: system,
+    );
   }
+
+
+  static Map<String, dynamic> _generateLocalPersonalYearReport({
+    required String dateOfBirth,
+    int? year,
+    String? name,
+    String system = 'pythagorean',
+  }) {
+    final targetYear = year ?? DateTime.now().year;
+    final parts = dateOfBirth.split('-');
+    int m = parts.length > 1 ? int.tryParse(parts[1]) ?? 5 : 5;
+    int d = parts.length > 2 ? int.tryParse(parts[2]) ?? 4 : 4;
+
+    int reduce(int n) {
+      while (n > 9) {
+        n = n.toString().split('').map(int.parse).reduce((a, b) => a + b);
+      }
+      return n;
+    }
+
+    final redM = reduce(m);
+    final redD = reduce(d);
+    final redY = reduce(targetYear);
+    final combined = redM + redD + redY;
+    final py = reduce(combined);
+
+    final content = _personalYearLocalContent[py] ?? _personalYearLocalContent[1]!;
+
+    return {
+      "status": "success",
+      "calculation_status": "completed",
+      "user_name": name ?? "Seeker",
+      "personal_year_number": py,
+      "target_year": targetYear,
+      "current_calendar_year": DateTime.now().year,
+      "number_title": content['title'] ?? 'Personal Year $py',
+      "core_theme": content['core_theme'] ?? '',
+      "date_of_birth_used": dateOfBirth,
+      "calculation_system": system,
+      "method_version": "1.0.0",
+      "content_version": "1.0.0",
+      "calculation_trace": {
+        "date_of_birth": dateOfBirth,
+        "target_year": targetYear,
+        "birth_month": m,
+        "birth_day": d,
+        "month_reduced": redM,
+        "month_reduction_step": "Month $m -> $redM",
+        "day_reduced": redD,
+        "day_reduction_step": "Day $d -> $redD",
+        "year_reduced": redY,
+        "year_reduction_step": "Year $targetYear -> $redY",
+        "sum_formula": "$redM (month) + $redD (day) + $redY (year) = $combined",
+        "final_reduction_steps": ["$combined -> $py"],
+        "personal_year_result": py
+      },
+      "interpretation": {
+        "overview": content['overview'] ?? '',
+        "opportunities": content['opportunities'] ?? '',
+        "challenges": content['challenges'] ?? '',
+        "career_and_work": content['career_and_work'] ?? '',
+        "relationships": content['relationships'] ?? '',
+        "personal_growth": content['personal_growth'] ?? '',
+        "practical_guidance": content['practical_guidance'] ?? '',
+        "reflection_questions": content['reflection_questions'] ?? ''
+      },
+      "timestamp": DateTime.now().toIso8601String()
+    };
+  }
+
+  static final Map<int, Map<String, dynamic>> _personalYearLocalContent = {
+    1: {
+      'title': 'The Year of New Beginnings & Personal Initiative',
+      'core_theme': 'Fresh starts, pioneering seeds, bold independence, and planting the nine-year harvest.',
+      'overview': 'Personal Year 1 initiates a brand-new nine-year cycle of personal experience. Following the completions and releases of Year 9, this is a fertile springtime in your vibrational calendar. You are invited to take conscious initiative, cultivate clear self-reliance, and lay the initial foundations for ventures that will mature across the coming decade. Decisions taken now cast a long, supportive shadow over future progress.',
+      'opportunities': '["Launching innovative personal projects or new career directions", "Cultivating decisive independence and renewed self-confidence", "Exploring uncharted interests with courage and curiosity", "Taking calculated, well-planned risks backed by personal clarity"]',
+      'challenges': '["Impatience with slower-paced external circumstances or delays", "Excessive stubbornness or reluctance to accept helpful counsel", "Feelings of temporary isolation as you chart an independent path"]',
+      'career_and_work': 'Year 1 is traditionally optimal for career pivots, launching enterprises, seeking greater leadership responsibility, or establishing an individual voice in your field. Favor proactive initiative over passive conformity.',
+      'relationships': 'Relationships often reset or require clear personal boundaries in Year 1. Establish who you are within your bonds. Foster partners who respect your individual growth, avoiding codependency while remaining open to genuine affection.',
+      'personal_growth': 'Focus on developing self-trust, personal agency, and decisive action. Overcome past self-doubt by establishing small, daily self-promises and honoring them consistently.',
+      'practical_guidance': 'Formulate a concrete one-year and five-year roadmap. Prune distractions that do not align with your pioneering goals. Start the workout, venture, or learning curriculum you have postponed.',
+      'reflection_questions': '["What new life chapter am I ready to author with courage and self-reliance?", "Where have I been waiting for external permission instead of taking initiative?", "What seeds planted today will nourish my growth over the next nine years?"]',
+    },
+    2: {
+      'title': 'The Year of Cooperation, Patience & Receptivity',
+      'core_theme': 'Harmonious partnerships, delicate nurturing, diplomatic tact, and patient cultivation.',
+      'overview': 'Personal Year 2 follows the high-octane thrust of Year 1 by shifting the rhythm toward receptive nurturing and relational harmony. The seeds planted last year are germinating beneath the soil; they require patience, consistent care, and supportive alliances rather than aggressive pushing. Sensitivity, intuition, and diplomacy are your greatest compasses this year.',
+      'opportunities': '["Building deep, lasting collaborative partnerships and alliances", "Honing intuitive perception, emotional intelligence, and tact", "Resolving lingering disputes through mediated understanding", "Refining details and quietly strengthening foundational work"]',
+      'challenges': '["Hypersensitivity to criticism or perceived emotional distance", "Indecisiveness caused by second-guessing intuitive insights", "Frustration when external momentum moves slower than personal desire"]',
+      'career_and_work': 'In professional spheres, teamwork, negotiation, and background consolidation triumph over solitary force. Cultivate key alliances, listen actively in meetings, and excel in mediation, joint ventures, or collaborative projects.',
+      'relationships': 'Relationships take center stage in Year 2. It is an auspicious cycle for deepening romantic commitment, mending fractured friendships, and learning the delicate art of compassionate listening and compromise.',
+      'personal_growth': 'Practice emotional regulation, patient endurance, and meditative presence. Learn to discern between healthy empathy and absorbing the emotional distress of others.',
+      'practical_guidance': 'Prioritize active listening exercises. Avoid rushing negotiations; allow situations to unfold organically. Keep detailed records and polish project nuances.',
+      'reflection_questions': '["How can I cooperate more effectively with trusted partners while honoring my truth?", "Where is patience and gentle persistence needed rather than aggressive force?", "What intuitive nudges have I been dismissing that deserve my quiet attention?"]',
+    },
+    3: {
+      'title': 'The Year of Creative Self-Expression & Joyous Expansion',
+      'core_theme': 'Artistic inspiration, social connection, optimism, and dynamic communication.',
+      'overview': 'Personal Year 3 bursts with vibrant social energy, communicative flair, and creative expansion. The tender sprouts nurtured during Year 2 now emerge into the sunlight with colorful vitality. This is a celebratory cycle encouraging you to share your voice, write, speak, connect, and enjoy the rich aesthetic pleasures of life without unnecessary self-criticism.',
+      'opportunities': '["Expressing natural creative talents through writing, art, or speaking", "Expanding your social circle and building warm community bonds", "Infusing humor, enthusiasm, and optimism into daily routines", "Presenting ideas publicly and inspiring collective morale"]',
+      'challenges': '["Scattering energy across too many frivolous or half-finished ideas", "Superficial engagement that evades deeper emotional responsibilities", "Susceptibility to gossip, mood volatility, or dramatic overreaction"]',
+      'career_and_work': 'Communication, marketing, creative design, storytelling, and public relations thrive in Year 3. Your charismatic presence and persuasive articulation open doors that dry logic cannot.',
+      'relationships': 'Social life flourishes with invitations, shared celebrations, and romantic sparkle. Express your feelings transparently, enjoy playful lightheartedness, and cultivate friendships that celebrate your authenticity.',
+      'personal_growth': 'Channel inner vulnerability into constructive creative expression. Overcome self-censorship and embrace spontaneous joy as a legitimate spiritual discipline.',
+      'practical_guidance': 'Commit to finishing at least one primary creative project. Maintain financial and calendar discipline so social festivities do not derail your primary objectives.',
+      'reflection_questions': '["How can I share my authentic voice and creative vision with greater boldness?", "Where am I spreading my focus too thin instead of mastering my primary passion?", "What activities genuinely ignite my joy and uplift the people around me?"]',
+    },
+    4: {
+      'title': 'The Year of Practical Foundation, Discipline & Structure',
+      'core_theme': 'Hard work, systematic order, physical grounding, and enduring security.',
+      'overview': 'Personal Year 4 returns your focus to constructive discipline, practical realism, and rock-solid organization. After the festive exuberance of Year 3, this is the time to build strong structural scaffolding around your life. Focus on physical health, financial management, domestic stability, and methodical perseverance that will anchor your future for years to come.',
+      'opportunities': '["Establishing enduring organizational systems and operational routines", "Strengthening physical health, fitness, and nutritional discipline", "Consolidating finances, budgeting prudently, and managing debt", "Mastering complex technical skills through persistent study"]',
+      'challenges': '["Rigid stubbornness or resistance to necessary adaptive shifts", "Feeling overwhelmed by heavy obligations or bureaucratic routines", "Workaholism leading to physical exhaustion and social withdrawal"]',
+      'career_and_work': 'Year 4 rewards consistent, reliable output, meticulous craftsmanship, and systematic project management. Build standard operating procedures, honor deadlines, and establish a reputation for unshakeable dependability.',
+      'relationships': 'Reliability and practical support are the primary love languages of Year 4. Show up consistently for loved ones through deeds rather than mere promises. Address domestic logistics, home repairs, and shared practical goals.',
+      'personal_growth': 'Embrace discipline as the ultimate tool of personal liberation. Build structured daily rituals that automate good habits and eliminate decision fatigue.',
+      'practical_guidance': 'Audit your personal finances, organize legal documents, schedule preventive medical checkups, and implement an uncluttered workspace routine.',
+      'reflection_questions': '["What vital structural foundation in my life requires dedicated attention and order?", "How can I maintain disciplined focus without becoming rigid or joyless?", "What practical habits can I cement today that will safeguard my long-term peace?"]',
+    },
+    5: {
+      'title': 'The Year of Dynamic Change, Freedom & Exploration',
+      'core_theme': 'Pivotal shifts, adventurous curiosity, versatility, and breaking restrictive molds.',
+      'overview': 'Personal Year 5 is the energetic midpoint of the nine-year cycle, introducing sudden shifts, unexpected opportunities, and a powerful craving for personal liberty. If Year 4 was about anchoring the foundation, Year 5 is about throwing open the windows to catch fresh winds of change. Adaptability, travel, versatility, and broad-minded exploration are your allies.',
+      'opportunities': '["Welcoming transformative changes in lifestyle, residence, or mindset", "Embracing travel, cultural exchange, and diverse experiences", "Pivoting out of obsolete habits, stagnant jobs, or limiting roles", "Expanding networking reach across multifaceted industries and groups"]',
+      'challenges': '["Restless impulsivity and abandoning commitments prematurely", "Sensory overindulgence, addictive escapes, or reckless risk-taking", "Difficulty maintaining focus amidst constant sensory stimulation"]',
+      'career_and_work': 'Be flexible and prepared to pivot. Year 5 favors sales, public campaigns, progressive modernization, remote work, and roles that demand rapid adaptation. Stagnant routines will feel suffocating—seek progressive growth.',
+      'relationships': 'Expect dynamic shifts. You will crave personal space and stimulating companionship. Honest communication about autonomy prevents friction; keep interactions fresh, playful, and adventurous.',
+      'personal_growth': 'Cultivate internal freedom that is not dependent on external chaos. Learn to navigate uncertainty with grounded poise rather than anxious reactivity.',
+      'practical_guidance': 'Say yes to constructive adventures and travel. Set clear boundaries around alcohol, spending, and digital consumption to protect your energy while welcoming change.',
+      'reflection_questions': '["What obsolete pattern or restrictive comfort zone am I ready to outgrow?", "How can I welcome dynamic change while honoring my core commitments?", "Where does true freedom lie within my present day-to-day choices?"]',
+    },
+    6: {
+      'title': 'The Year of Home, Responsibility, Harmony & Service',
+      'core_theme': 'Domestic care, healing relationships, community duty, and unconditional service.',
+      'overview': 'Personal Year 6 centers on the sacred sphere of family, home, community responsibility, and emotional healing. Following the unpredictable gusts of Year 5, this cycle brings you home to nurture what you love. You may be called upon to offer guidance, assume family duties, beautify your domestic space, and cultivate deep emotional warmth.',
+      'opportunities': '["Harmonizing family relationships and resolving domestic frictions", "Beautifying the home, renovating living spaces, or establishing roots", "Serving your community, mentoring others, and practicing hospitality", "Deepening marital or partnership commitments with tender affection"]',
+      'challenges': '["Martyrdom or overextending personal energy to fix other people\'s lives", "Perfectionist demands on family members and close partners", "Neglecting self-care while attending to everyone else\'s obligations"]',
+      'career_and_work': 'Careers in healthcare, teaching, counseling, human resources, creative craftsmanship, and community leadership thrive in Year 6. Focus on customer care, team harmony, and ethical stewardship.',
+      'relationships': 'Year 6 is prime territory for weddings, family reconciliations, home purchases, and welcoming children or pets. Cultivate heartfelt empathy, compassionate listening, and forgiving acceptance.',
+      'personal_growth': 'Learn the vital distinction between loving support and unhelpful codependency. Realize that caring for your own vessel is the foundation of serving others.',
+      'practical_guidance': 'Declutter and beautify your living environment. Schedule family dinners. Set compassionate but firm boundaries when others expect you to solve their problems.',
+      'reflection_questions': '["How can I nurture my home and loved ones with warm, non-controlling care?", "Where am I sacrificing my own wellbeing under the guise of duty or martyrdom?", "What domestic or relational amends are waiting to be healed with loving kindness?"]',
+    },
+    7: {
+      'title': 'The Year of Inward Reflection, Spiritual Study & Rest',
+      'core_theme': 'Introspection, deeper wisdom, spiritual renewal, and analytical mastery.',
+      'overview': 'Personal Year 7 invites you to step back from the bustling marketplace and retreat into the sanctuary of the mind and soul. This is a sabbatical year in your energetic calendar—not for aggressive outer conquest, but for quiet inquiry, technical study, philosophical renewal, and profound self-discovery. Solitude is a trusted teacher this year.',
+      'opportunities': '["Deepening meditation, contemplative practices, or philosophical study", "Conducting thorough research, technical analysis, or writing treatises", "Spending restorative time in natural surroundings for mental clarity", "Re-evaluating life motives, psychological patterns, and core values"]',
+      'challenges': '["Cynical detachment, emotional aloofness, or defensive reclusiveness", "Over-analyzing situations into paralysis and persistent worry", "Frustration when purely materialistic ventures meet unexpected pauses"]',
+      'career_and_work': 'Focus on refining expertise, auditing internal systems, doing deep research, and acquiring specialized credentials rather than aggressive corporate expansion. Quality of thought outshines sheer volume of work.',
+      'relationships': 'Partners must understand your heightened need for quiet space and reflection. Superficial socializing drains you; prioritize soul-level conversations and respect each other\'s inner worlds.',
+      'personal_growth': 'Confront the core questions: Who am I beneath my roles and achievements? Develop intellectual humility and trust in life\'s subtle rhythms.',
+      'practical_guidance': 'Plan a silent retreat or regular nature walks. Minimize social media scrolling. Read seminal philosophical or technical works that expand your consciousness.',
+      'reflection_questions': '["What profound truths about myself am I discovering in moments of quiet solitude?", "Where can I replace anxious intellectual overthinking with deeper trust?", "What spiritual, technical, or philosophical mastery calls for my dedicated study?"]',
+    },
+    8: {
+      'title': 'The Year of Manifestation, Executive Power & Material Harvest',
+      'core_theme': 'Leadership, financial empowerment, karmic balance, and tangible accomplishment.',
+      'overview': 'Personal Year 8 catapults you into the arena of executive empowerment, material manifestation, and tangible accomplishment. Having gained inner wisdom during Year 7, you are now equipped to wield outer authority with ethical integrity. This is the power year of the nine-year cycle—demanding courage, strategic vision, fair governance, and ambitious goal pursuit.',
+      'opportunities': '["Achieving significant professional milestones, promotions, or recognition", "Scaling business ventures, managing substantial assets, and generating wealth", "Exercising decisive leadership and empowering collaborative teams", "Balancing ambitious material drives with conscious ethical integrity"]',
+      'challenges': '["Ruthless materialism, arrogance, or abusing personal leverage", "Fear of financial insecurity leading to avarice or obsessive control", "Neglecting emotional and physical health in pursuit of career targets"]',
+      'career_and_work': 'Step fully into leadership, negotiate compensation, pitch major clients, and execute strategic plans. Year 8 honors professionalism, high standards, and decisive executive competence.',
+      'relationships': 'Ensure material ambitions do not crowd out intimate partnerships. Be generous with family resources and share triumphs openly. Mutual respect and shared vision cement romantic bonds.',
+      'personal_growth': 'Understand that true power is the capacity to elevate others, not dominate them. Learn the spiritual stewardship of wealth and authority.',
+      'practical_guidance': 'Review your investment portfolio and financial benchmarks. Dress and present yourself with executive confidence. Make decisive business choices without vacillation.',
+      'reflection_questions': '["How can I wield my leadership authority and financial resources with integrity?", "Where do I need to step up and claim the professional respect I have earned?", "What legacy of tangible accomplishment am I constructing this year?"]',
+    },
+    9: {
+      'title': 'The Year of Completion, Forgiveness, Release & Humanitarian Grace',
+      'core_theme': 'Culmination, graceful letting go, broad humanitarian awareness, and preparing for rebirth.',
+      'overview': 'Personal Year 9 marks the grand culmination of your nine-year vibrational journey. Everything begun in Year 1 reaches its harvest, audit, and natural completion. This is a cycle of compassionate closure, forgiveness, and universal humanitarian love. Gently release possessions, relationships, and habits that have completed their chapter so you can enter the next cycle unencumbered.',
+      'opportunities': '["Bringing long-term projects to a satisfying, celebrated completion", "Practicing deep, unconditional forgiveness and releasing past grievances", "Engaging in philanthropic service and uplifting underprivileged communities", "Decluttering your physical, mental, and digital life in readiness for renewal"]',
+      'challenges': '["Clinging desperately to obsolete arrangements out of nostalgia or fear", "Emotional sentimentality, regret, or feeling depleted by unresolved drama", "Starting major new decade-long ventures prematurely before clearing the decks"]',
+      'career_and_work': 'Wrap up pending contracts, publish finished work, and gracefully phase out obsolete lines of business. Celebrate your team\'s collective accomplishments and prepare strategic blueprints for the upcoming cycle.',
+      'relationships': 'Year 9 tests relational bonds. Some relationships gracefully conclude their karmic purpose; others deepen through profound mutual forgiveness and mature grace. Let go with love where needed.',
+      'personal_growth': 'Cultivate the liberating art of non-attachment. Realize that every ending is the fertile soil from which Year 1 will soon sprout anew.',
+      'practical_guidance': 'Conduct a comprehensive home and wardrobe purge for charity. Write forgiveness letters (send them or burn them in ritual). Settle outstanding debts and emotional accounts.',
+      'reflection_questions': '["What chapter of my life has completed its purpose and deserves a graceful release?", "Whom do I need to forgive\\u2014including myself\\u2014to step forward without baggage?", "How can I dedicate my accumulated wisdom to serving the wider human family?"]',
+    },
+  };
 
   // =========================================================================
   // 4.8 NAME ANALYSIS
