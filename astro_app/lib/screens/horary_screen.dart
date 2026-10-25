@@ -999,39 +999,39 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
         : 'GMT${tzVal.toStringAsFixed(2)}';
 
     return Container(
-      padding: EdgeInsets.all(18.w),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(22.r),
+        borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. HEADER ROW
+          // 1. HEADER ROW (Compact)
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(7.w),
+                padding: EdgeInsets.all(6.w),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.explore_rounded, color: Colors.white, size: 18.sp),
+                child: Icon(Icons.explore_rounded, color: Colors.white, size: 16.sp),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 8.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Horary Chart Setup',
-                      style: GoogleFonts.outfit(fontSize: 16.5.sp, fontWeight: FontWeight.w800, color: textPrimary),
+                      style: GoogleFonts.outfit(fontSize: 15.sp, fontWeight: FontWeight.w800, color: textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       'KP Prashna Astrology Parameters',
-                      style: GoogleFonts.inter(fontSize: 11.5.sp, color: textMuted),
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: textMuted),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -1039,7 +1039,7 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
           // 2. NAME & GENDER ROW
           Row(
@@ -1051,31 +1051,31 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Name', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-                    SizedBox(height: 6.h),
+                    Text('Name', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+                    SizedBox(height: 4.h),
                     SizedBox(
-                      height: 48.h,
+                      height: 42.h,
                       child: TextField(
                         controller: _nameCtrl,
-                        style: GoogleFonts.outfit(color: textPrimary, fontSize: 13.5.sp, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.outfit(color: textPrimary, fontSize: 13.sp, fontWeight: FontWeight.w600),
                         decoration: InputDecoration(
                           isDense: true,
                           hintText: 'Querent Name',
-                          hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 12.5.sp),
-                          prefixIcon: Icon(Icons.person_outline_rounded, color: primaryIndigo, size: 19.sp),
+                          hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 12.sp),
+                          prefixIcon: Icon(Icons.person_outline_rounded, color: primaryIndigo, size: 17.sp),
                           filled: true,
                           fillColor: surfaceCard,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 8.w),
 
               // Gender Selector Pills
               Expanded(
@@ -1083,14 +1083,14 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Gender', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-                    SizedBox(height: 6.h),
+                    Text('Gender', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+                    SizedBox(height: 4.h),
                     Container(
-                      height: 48.h,
+                      height: 42.h,
                       padding: EdgeInsets.all(3.w),
                       decoration: BoxDecoration(
                         color: surfaceCard,
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(color: cardBorder),
                       ),
                       child: Row(
@@ -1098,17 +1098,17 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                           Expanded(
                             child: InkWell(
                               onTap: () => setState(() => _selectedGender = 'Male'),
-                              borderRadius: BorderRadius.circular(10.r),
+                              borderRadius: BorderRadius.circular(8.r),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: _selectedGender == 'Male' ? primaryIndigo : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10.r),
+                                  borderRadius: BorderRadius.circular(8.r),
                                 ),
                                 child: Center(
                                   child: Text(
                                     'Male',
                                     style: GoogleFonts.outfit(
-                                      fontSize: 12.5.sp,
+                                      fontSize: 11.5.sp,
                                       fontWeight: FontWeight.w700,
                                       color: _selectedGender == 'Male' ? Colors.white : textMuted,
                                     ),
@@ -1120,17 +1120,17 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                           Expanded(
                             child: InkWell(
                               onTap: () => setState(() => _selectedGender = 'Female'),
-                              borderRadius: BorderRadius.circular(10.r),
+                              borderRadius: BorderRadius.circular(8.r),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: _selectedGender == 'Female' ? primaryIndigo : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10.r),
+                                  borderRadius: BorderRadius.circular(8.r),
                                 ),
                                 child: Center(
                                   child: Text(
                                     'Female',
                                     style: GoogleFonts.outfit(
-                                      fontSize: 12.5.sp,
+                                      fontSize: 11.5.sp,
                                       fontWeight: FontWeight.w700,
                                       color: _selectedGender == 'Female' ? Colors.white : textMuted,
                                     ),
@@ -1147,16 +1147,16 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
           // 3. HORARY MODE SEGMENTED CONTROL
-          Text('Select Horary Mode', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-          SizedBox(height: 6.h),
+          Text('Select Horary Mode', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+          SizedBox(height: 4.h),
           Container(
-            padding: EdgeInsets.all(4.w),
+            padding: EdgeInsets.all(3.w),
             decoration: BoxDecoration(
               color: surfaceCard,
-              borderRadius: BorderRadius.circular(14.r),
+              borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: cardBorder),
             ),
             child: Row(
@@ -1179,9 +1179,9 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
               ],
             ),
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
-          // 4. NUMBER SEED SECTION (When not Current Time)
+          // 4. NUMBER SEED SECTION (Compact Unified Input & Quick Action Row)
           if (_horaryMode != 'current_time') ...[
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1192,104 +1192,97 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                     Flexible(
                       child: Text(
                         'Horary Seed Number',
-                        style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
+                        style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    SizedBox(width: 8.w),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: primaryIndigo.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6.r),
+                        color: primaryIndigo.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5.r),
                       ),
                       child: Text(
                         _horaryMode == 'range_2193' ? 'Valid: 1 to 2193' : 'Valid: 1 to 249',
-                        style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
+                        style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 6.h),
-                // Full-width seed input field with generous space
-                SizedBox(
-                  height: 48.h,
-                  child: TextField(
-                    controller: _kpNumberCtrl,
-                    keyboardType: TextInputType.number,
-                    style: GoogleFonts.outfit(color: textPrimary, fontSize: 15.sp, fontWeight: FontWeight.w700),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: _horaryMode == 'range_2193' ? 'Enter seed number (1 to 2193)' : 'Enter seed number (1 to 249)',
-                      hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 13.sp),
-                      prefixIcon: Icon(Icons.tag_rounded, color: primaryIndigo, size: 20.sp),
-                      filled: true,
-                      fillColor: surfaceCard,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                // Quick Action Buttons (Random & Browse) neatly arranged side-by-side
+                SizedBox(height: 4.h),
+                // Sleek Unified Row: Seed Input + Random Button + Browse Button
                 Row(
                   children: [
                     Expanded(
-                      child: InkWell(
-                        onTap: _generateRandomNumber,
-                        borderRadius: BorderRadius.circular(10.r),
-                        child: Container(
-                          height: 38.h,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: primaryIndigo.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.casino_rounded, color: primaryIndigo, size: 15.sp),
-                              SizedBox(width: 5.w),
-                              Flexible(
-                                child: Text(
-                                  'Random Seed',
-                                  style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                      flex: 5,
+                      child: SizedBox(
+                        height: 42.h,
+                        child: TextField(
+                          controller: _kpNumberCtrl,
+                          keyboardType: TextInputType.number,
+                          style: GoogleFonts.outfit(color: textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w700),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: _horaryMode == 'range_2193' ? 'Seed (1 to 2193)' : 'Seed (1 to 249)',
+                            hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 12.sp),
+                            prefixIcon: Icon(Icons.tag_rounded, color: primaryIndigo, size: 18.sp),
+                            filled: true,
+                            fillColor: surfaceCard,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: InkWell(
-                        onTap: _showKpNumberPicker,
-                        borderRadius: BorderRadius.circular(10.r),
-                        child: Container(
-                          height: 38.h,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(color: primaryIndigo.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.format_list_numbered_rounded, color: primaryIndigo, size: 15.sp),
-                              SizedBox(width: 5.w),
-                              Flexible(
-                                child: Text(
-                                  'Browse Seeds',
-                                  style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                    SizedBox(width: 6.w),
+                    InkWell(
+                      onTap: _generateRandomNumber,
+                      borderRadius: BorderRadius.circular(10.r),
+                      child: Container(
+                        height: 42.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(color: primaryIndigo.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.casino_rounded, color: primaryIndigo, size: 15.sp),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Random',
+                              style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    InkWell(
+                      onTap: _showKpNumberPicker,
+                      borderRadius: BorderRadius.circular(10.r),
+                      child: Container(
+                        height: 42.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(10.r),
+                          border: Border.all(color: primaryIndigo.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.format_list_numbered_rounded, color: primaryIndigo, size: 15.sp),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Browse',
+                              style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1299,27 +1292,27 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
             ),
           ] else ...[
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
               decoration: BoxDecoration(
                 color: surfaceCard,
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(10.r),
                 border: Border.all(color: cardBorder),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.bolt_rounded, color: const Color(0xFFF59E0B), size: 20.sp),
-                  SizedBox(width: 8.w),
+                  Icon(Icons.bolt_rounded, color: const Color(0xFFF59E0B), size: 18.sp),
+                  SizedBox(width: 6.w),
                   Expanded(
                     child: Text(
-                      'Direct Mode: Chart Ascendant is derived from exact query timestamp.',
-                      style: GoogleFonts.inter(fontSize: 12.sp, color: textMuted),
+                      'Direct Mode: Ascendant is derived from exact query timestamp.',
+                      style: GoogleFonts.inter(fontSize: 11.sp, color: textMuted),
                     ),
                   ),
                 ],
               ),
             ),
           ],
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
           // 5. DATE & TIME (SIDE-BY-SIDE EQUAL COLUMNS)
           Row(
@@ -1329,27 +1322,28 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Query Date', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-                    SizedBox(height: 6.h),
+                    Text('Query Date', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+                    SizedBox(height: 4.h),
                     InkWell(
                       onTap: _pickDate,
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(10.r),
                       child: Container(
-                        height: 48.h,
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        height: 42.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
                         decoration: BoxDecoration(
                           color: surfaceCard,
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(10.r),
                           border: Border.all(color: cardBorder),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_month_rounded, color: primaryIndigo, size: 19.sp),
-                            SizedBox(width: 8.w),
+                            Icon(Icons.calendar_month_rounded, color: primaryIndigo, size: 17.sp),
+                            SizedBox(width: 6.w),
                             Expanded(
                               child: Text(
                                 _dateCtrl.text,
-                                style: GoogleFonts.firaCode(fontSize: 13.sp, fontWeight: FontWeight.w600, color: textPrimary),
+                                style: GoogleFonts.firaCode(fontSize: 12.sp, fontWeight: FontWeight.w600, color: textPrimary),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -1359,34 +1353,35 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   ],
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 8.w),
 
               // Time Card
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Query Time', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-                    SizedBox(height: 6.h),
+                    Text('Query Time', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+                    SizedBox(height: 4.h),
                     InkWell(
                       onTap: _pickTime,
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(10.r),
                       child: Container(
-                        height: 48.h,
-                        padding: EdgeInsets.symmetric(horizontal: 12.w),
+                        height: 42.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
                         decoration: BoxDecoration(
                           color: surfaceCard,
-                          borderRadius: BorderRadius.circular(12.r),
+                          borderRadius: BorderRadius.circular(10.r),
                           border: Border.all(color: cardBorder),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.access_time_rounded, color: primaryIndigo, size: 19.sp),
-                            SizedBox(width: 8.w),
+                            Icon(Icons.access_time_rounded, color: primaryIndigo, size: 17.sp),
+                            SizedBox(width: 6.w),
                             Expanded(
                               child: Text(
                                 _timeCtrl.text,
-                                style: GoogleFonts.firaCode(fontSize: 13.sp, fontWeight: FontWeight.w600, color: textPrimary),
+                                style: GoogleFonts.firaCode(fontSize: 12.sp, fontWeight: FontWeight.w600, color: textPrimary),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -1398,35 +1393,35 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
-          // 6. LOCATION CARD (CURRENT LOCATION DEFAULT + CHANGE)
+          // 6. LOCATION COMPACT CARD
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Location', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+                  Text('Location', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
-                      color: (_isCurrentLocation ? const Color(0xFF10B981) : primaryIndigo).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6.r),
+                      color: (_isCurrentLocation ? const Color(0xFF10B981) : primaryIndigo).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(5.r),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           _isCurrentLocation ? Icons.my_location_rounded : Icons.place_rounded,
-                          size: 11.sp,
+                          size: 10.sp,
                           color: _isCurrentLocation ? const Color(0xFF10B981) : primaryIndigo,
                         ),
-                        SizedBox(width: 4.w),
+                        SizedBox(width: 3.w),
                         Text(
                           _isCurrentLocation ? 'Current Location' : 'Custom Location',
                           style: GoogleFonts.outfit(
-                            fontSize: 10.5.sp,
+                            fontSize: 10.sp,
                             fontWeight: FontWeight.w700,
                             color: _isCurrentLocation ? const Color(0xFF10B981) : primaryIndigo,
                           ),
@@ -1436,119 +1431,79 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   ),
                 ],
               ),
-              SizedBox(height: 6.h),
+              SizedBox(height: 4.h),
               Container(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                 decoration: BoxDecoration(
                   color: surfaceCard,
-                  borderRadius: BorderRadius.circular(14.r),
+                  borderRadius: BorderRadius.circular(10.r),
                   border: Border.all(color: cardBorder),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(7.w),
-                          decoration: BoxDecoration(
-                            color: primaryIndigo.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _isCurrentLocation ? Icons.my_location_rounded : Icons.location_on_rounded,
-                            color: primaryIndigo,
-                            size: 17.sp,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: Text(
+                    Container(
+                      padding: EdgeInsets.all(5.w),
+                      decoration: BoxDecoration(
+                        color: primaryIndigo.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isCurrentLocation ? Icons.my_location_rounded : Icons.location_on_rounded,
+                        color: primaryIndigo,
+                        size: 15.sp,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
                             _locationName,
-                            style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w700, color: textPrimary),
+                            style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        InkWell(
-                          onTap: _showLocationPicker,
-                          borderRadius: BorderRadius.circular(8.r),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : Colors.white,
-                              borderRadius: BorderRadius.circular(8.r),
-                              border: Border.all(color: cardBorder),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.edit_location_alt_rounded, color: primaryIndigo, size: 14.sp),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  'Change',
-                                  style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
-                                ),
-                              ],
-                            ),
+                          SizedBox(height: 1.h),
+                          Text(
+                            '${_formatDMS(latVal, true)}, ${_formatDMS(lonVal, false)} • $tzStr',
+                            style: GoogleFonts.firaCode(fontSize: 9.5.sp, color: textMuted),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 8.h),
-                    // Clearly arranged coordinate badges with no truncation
-                    Wrap(
-                      spacing: 6.w,
-                      runSpacing: 4.h,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: cardBorder.withValues(alpha: 0.7)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('Lat: ', style: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w600, color: textMuted)),
-                              Text(_formatDMS(latVal, true), style: GoogleFonts.firaCode(fontSize: 10.sp, fontWeight: FontWeight.w600, color: textPrimary)),
-                            ],
-                          ),
+                    SizedBox(width: 6.w),
+                    InkWell(
+                      onTap: _showLocationPicker,
+                      borderRadius: BorderRadius.circular(6.r),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(color: cardBorder),
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: cardBorder.withValues(alpha: 0.7)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('Lon: ', style: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w600, color: textMuted)),
-                              Text(_formatDMS(lonVal, false), style: GoogleFonts.firaCode(fontSize: 10.sp, fontWeight: FontWeight.w600, color: textPrimary)),
-                            ],
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.edit_location_alt_rounded, color: primaryIndigo, size: 12.sp),
+                            SizedBox(width: 3.w),
+                            Text(
+                              'Change',
+                              style: GoogleFonts.outfit(fontSize: 10.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
+                            ),
+                          ],
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : Colors.white.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: cardBorder.withValues(alpha: 0.7)),
-                          ),
-                          child: Text(tzStr, style: GoogleFonts.firaCode(fontSize: 10.sp, fontWeight: FontWeight.w600, color: primaryIndigo)),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
-          // 7. SPECIFIC QUESTION (WITH BROWSE & QUICK PILLS)
+          // 7. SPECIFIC QUESTION (WITH BROWSE)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1558,7 +1513,7 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   Flexible(
                     child: Text(
                       'Question (Optional / Specific Query)',
-                      style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
+                      style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -1570,11 +1525,11 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.list_alt_rounded, color: primaryIndigo, size: 14.sp),
+                          Icon(Icons.list_alt_rounded, color: primaryIndigo, size: 13.sp),
                           SizedBox(width: 3.w),
                           Text(
                             'Browse',
-                            style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
+                            style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w700, color: primaryIndigo),
                           ),
                         ],
                       ),
@@ -1582,60 +1537,61 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
                   ),
                 ],
               ),
-              SizedBox(height: 6.h),
-              // Full-width question input field so hint and user queries never get cramped
+              SizedBox(height: 4.h),
               SizedBox(
-                height: 48.h,
+                height: 42.h,
                 child: TextField(
                   controller: _questionCtrl,
-                  style: GoogleFonts.outfit(color: textPrimary, fontSize: 13.5.sp, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(color: textPrimary, fontSize: 13.sp, fontWeight: FontWeight.w600),
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: 'e.g. Will I get the job I applied for?',
-                    hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 12.5.sp),
-                    prefixIcon: Icon(Icons.help_outline_rounded, color: primaryIndigo, size: 19.sp),
+                    hintText: 'e.g. When will I get married?',
+                    hintStyle: GoogleFonts.outfit(color: textMuted, fontSize: 12.sp),
+                    prefixIcon: Icon(Icons.help_outline_rounded, color: primaryIndigo, size: 17.sp),
                     filled: true,
                     fillColor: surfaceCard,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 12.h),
 
           // 8. AYANAMSA SYSTEM
-          Text('Ayanamsa System', style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
-          SizedBox(height: 6.h),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedAyanamsa,
-            isExpanded: true,
-            dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            style: GoogleFonts.outfit(color: textPrimary, fontSize: 13.5.sp, fontWeight: FontWeight.w600),
-            decoration: InputDecoration(
-              isDense: true,
-              prefixIcon: Icon(Icons.auto_fix_high_rounded, color: primaryIndigo, size: 19.sp),
-              filled: true,
-              fillColor: surfaceCard,
-              contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: cardBorder)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
+          Text('Ayanamsa System', style: GoogleFonts.outfit(fontSize: 11.5.sp, fontWeight: FontWeight.w700, color: textPrimary)),
+          SizedBox(height: 4.h),
+          SizedBox(
+            height: 42.h,
+            child: DropdownButtonFormField<String>(
+              initialValue: _selectedAyanamsa,
+              isExpanded: true,
+              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: GoogleFonts.outfit(color: textPrimary, fontSize: 12.5.sp, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: Icon(Icons.auto_fix_high_rounded, color: primaryIndigo, size: 17.sp),
+                filled: true,
+                fillColor: surfaceCard,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: BorderSide(color: cardBorder)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r), borderSide: const BorderSide(color: primaryIndigo, width: 1.5)),
+              ),
+              items: _ayanamsaLabels.entries
+                  .map((e) => DropdownMenuItem(
+                        value: e.key,
+                        child: Text(e.value, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedAyanamsa = val);
+              },
             ),
-            items: _ayanamsaLabels.entries
-                .map((e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value, overflow: TextOverflow.ellipsis),
-                    ))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedAyanamsa = val);
-            },
           ),
-
         ],
       ),
     );
@@ -1658,12 +1614,12 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
             }
           });
         },
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(8.r),
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 9.h, horizontal: 4.w),
+          padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 2.w),
           decoration: BoxDecoration(
             color: isSelected ? primaryIndigo : Colors.transparent,
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(8.r),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1671,16 +1627,16 @@ class _HoraryScreenState extends State<HoraryScreen> with SingleTickerProviderSt
               Text(
                 title,
                 style: GoogleFonts.outfit(
-                  fontSize: 12.sp,
+                  fontSize: 11.5.sp,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected ? Colors.white : textPrimary,
                 ),
               ),
-              SizedBox(height: 2.h),
+              SizedBox(height: 1.h),
               Text(
                 subtitle,
                 style: GoogleFonts.inter(
-                  fontSize: 10.sp,
+                  fontSize: 9.5.sp,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected ? Colors.white.withValues(alpha: 0.9) : textMuted,
                 ),

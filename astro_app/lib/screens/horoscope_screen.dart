@@ -361,9 +361,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   }
 
   Future<void> _fetchKundliData() async {
-    if (_kundliData == null) {
-      setState(() => _isLoadingKundli = true);
-    }
+    setState(() {
+      if (_kundliData == null) _isLoadingKundli = true;
+      _isScrubbingBnn = true;
+    });
     // Fetch live ayanamsa degree values from backend based on the current birth date/time
     final degrees = await AstroApiService.getAyanamsaDegrees(
       dateOfBirth: _dobFormattedForApi,
@@ -447,6 +448,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           if (futures[3].isNotEmpty) _jaiminiData = futures[3];
           if (futures[4].isNotEmpty) _kotaChakraData = futures[4];
           _isLoadingKundli = false;
+          _isScrubbingBnn = false;
           // Reset dasha so it re-fetches fresh data for the new birth details
           _dynamicDashaTimeline = null;
           _dynamicRunningDasha = null;
@@ -471,7 +473,10 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoadingKundli = false);
+        setState(() {
+          _isLoadingKundli = false;
+          _isScrubbingBnn = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ API Error: ${e.toString()}'),
@@ -823,9 +828,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           onChanged: (val) {
                             if (val != null) {
                               setModalState(() => _selectedAyanamsa = val);
-                              setState(() => _selectedAyanamsa = val);
+                              setState(() {
+                                _selectedAyanamsa = val;
+                                _bnnSelectedPeriod = null;
+                                _bnnExpandedMajorStep = null;
+                                _bnnExpandedMinorStep = null;
+                                _isScrubbingBnn = true;
+                              });
                               GlobalBirthProfile().updateAyanamsa(val, _customAyanamsa);
                               if (val != 'CUSTOM') {
+                                if (widget.isSingleTabMode && widget.initialTabIndex == 4) {
+                                  _fetchBnnDataOnly();
+                                }
                                 _fetchKundliData();
                               }
                             }
@@ -850,7 +864,18 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                             GlobalBirthProfile().updateAyanamsa(_selectedAyanamsa, parsed);
                           }
                         },
-                        onSubmitted: (_) => _fetchKundliData(),
+                        onSubmitted: (_) {
+                          setState(() {
+                            _bnnSelectedPeriod = null;
+                            _bnnExpandedMajorStep = null;
+                            _bnnExpandedMinorStep = null;
+                            _isScrubbingBnn = true;
+                          });
+                          if (widget.isSingleTabMode && widget.initialTabIndex == 4) {
+                            _fetchBnnDataOnly();
+                          }
+                          _fetchKundliData();
+                        },
                       ),
                     ],
                     if (!isKpSystemFocused) ...[
@@ -4952,18 +4977,12 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final minorMap = (jupProgression['minor_progression'] as Map<String, dynamic>?) ?? {};
     final microMap = (jupProgression['micro_progression'] as Map<String, dynamic>?) ?? {};
 
-    final majorSign = majorMap['sign']?.toString() ?? jupProgression['current_progressed_sign']?.toString() ?? 'Libra';
+    final majorSign = majorMap['sign']?.toString() ??
+        jupProgression['current_progressed_sign_name']?.toString() ??
+        jupProgression['current_progressed_sign']?.toString() ??
+        '';
     final minorSign = minorMap['sign']?.toString() ?? majorSign;
-    String microSign = microMap['sign']?.toString() ?? '';
-    if (microSign.isEmpty) {
-      final int minSignIdx = minorMap['sign_index'] as int? ?? (signNames.contains(minorSign) ? signNames.indexOf(minorSign) + 1 : 1);
-      final double age = (ageVal is num) ? ageVal.toDouble() : 0.0;
-      final double minStart = (minorMap['age_start'] as num?)?.toDouble() ?? 0.0;
-      final double elapsed = (age - minStart).clamp(0.0, 1.0);
-      final int step = ((elapsed / (1.0 / 12.0)).floor()).clamp(0, 11);
-      final int micSignIdx = ((minSignIdx + step - 1) % 12) + 1;
-      microSign = signNames[(micSignIdx - 1) % 12];
-    }
+    final microSign = microMap['sign']?.toString() ?? minorSign;
 
     String formatPeriodSubtitle(Map<String, dynamic>? period) {
       if (period == null) return '';
@@ -4986,61 +5005,64 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return ageStr;
     }
     
-    // Map planets for the interactive chart, ensuring they have 'name' and 'sign_index'.
+    // Map planets for the interactive chart directly from backend calculations.
     // Dynamically respects the active progression level (_bnnProgressionLevel: 0=Major, 1=Minor, 2=Micro)
     // or a custom inspected period selected from the timeline tree.
-    final chartPlanets = bnnPlanets.map((p) {
-      int sIndex = p['sign_index'] ?? 1;
-
-      Map<String, dynamic>? prog;
-      if (p['planet'] == 'Jupiter') {
-        prog = jupProgression;
-      } else if (p['planet'] == 'Saturn') {
-        prog = saturnProgression;
-      } else if (p['planet'] == 'Rahu') {
-        prog = rahuProgression;
-      } else if (p['planet'] == 'Ketu') {
-        prog = ketuProgression;
-      }
-
-      if (prog != null) {
-        if (_bnnProgressionLevel == 0) {
-          final maj = prog['major_progression'] as Map<String, dynamic>?;
-          sIndex = maj?['sign_index'] ?? prog['current_progressed_sign_index'] ?? sIndex;
-        } else if (_bnnProgressionLevel == 1) {
-          final min = prog['minor_progression'] as Map<String, dynamic>?;
-          sIndex = min?['sign_index'] ?? prog['current_progressed_sign_index'] ?? sIndex;
-        } else if (_bnnProgressionLevel == 2) {
-          final mic = prog['micro_progression'] as Map<String, dynamic>?;
-          sIndex = mic?['sign_index'] ?? (prog['minor_progression'] as Map<String, dynamic>?)?['sign_index'] ?? sIndex;
-        }
-      }
+    final chartPlanets = currentProgressedPlanets.map((p) {
+      int sIndex = (p['sign_index'] as num?)?.toInt() ?? 1;
 
       // If user tapped a specific period from the timeline tree to inspect it
       if (_bnnSelectedPeriod != null) {
         final selSign = _bnnSelectedPeriod!['sign_index'] as int?;
         if (selSign != null) {
-          if (p['planet'] == _bnnSelectedPlanet || (_bnnSelectedPlanet.isEmpty && p['planet'] == 'Jupiter')) {
+          final pName = (p['planet'] ?? p['name'])?.toString() ?? '';
+          if (pName == _bnnSelectedPlanet || (_bnnSelectedPlanet.isEmpty && pName == 'Jupiter')) {
             sIndex = selSign;
           }
         }
       }
 
       return {
-        'name': p['planet'],
+        'name': (p['planet'] ?? p['name'])?.toString() ?? '',
+        'planet': (p['planet'] ?? p['name'])?.toString() ?? '',
         'sign_index': sIndex,
-        'degree_dms': p['degree'],
-        'is_retrograde': p['retrograde'],
+        'degree_dms': (p['degree'] ?? p['degree_dms'])?.toString() ?? '',
+        'is_retrograde': p['retrograde'] == true || p['is_retrograde'] == true,
       };
     }).toList();
-    
-    if (_kundliData != null) {
-      final kPlanets = _kundliData!['planets'] as List<dynamic>? ?? [];
-      final ascendant = kPlanets.firstWhere((p) => p['name'] == 'Ascendant' || p['name'] == 'Lagna', orElse: () => null);
-      if (ascendant != null) chartPlanets.add(ascendant);
-    }
 
-    final Map<String, dynamic> chartData = {'planets': chartPlanets};
+    // Ascendant calculated dynamically from backend with active Ayanamsa
+    final bnnOverview = _bnnData!['overview'] as Map<String, dynamic>? ?? {};
+    final int ascSignIdx = (bnnOverview['ascendant_sign_index'] as num?)?.toInt() ??
+        (_kundliData != null
+            ? (((_kundliData!['planets'] as List<dynamic>?)
+                    ?.firstWhere((p) => p['name'] == 'Ascendant' || p['name'] == 'Lagna', orElse: () => null)?['sign_index'] as num?)?.toInt() ?? 1)
+            : 1);
+    final String ascDms = bnnOverview['ascendant_dms']?.toString() ??
+        bnnOverview['ascendant_degree']?.toString() ??
+        (_kundliData != null
+            ? ((_kundliData!['planets'] as List<dynamic>?)
+                    ?.firstWhere((p) => p['name'] == 'Ascendant' || p['name'] == 'Lagna', orElse: () => null)?['degree_dms']?.toString() ?? '')
+            : '');
+    final String ascSignName = bnnOverview['ascendant_sign']?.toString() ??
+        (ascSignIdx >= 1 && ascSignIdx <= 12 ? signNames[ascSignIdx - 1] : 'Aries');
+
+    // Add Ascendant to chartPlanets for chart painter
+    chartPlanets.add({
+      'name': 'Ascendant',
+      'planet': 'Ascendant',
+      'sign_index': ascSignIdx,
+      'degree_dms': ascDms,
+      'is_retrograde': false,
+    });
+
+    final Map<String, dynamic> chartData = {
+      'planets': chartPlanets,
+      'ascendant_sign_index': ascSignIdx,
+      'ascendant_sign': ascSignName,
+      'ascendant_degree_formatted': ascDms,
+      'ascendant_degree': ascDms,
+    };
 
     Widget buildCardTitle(String title, IconData icon, Color color) {
       return Padding(
