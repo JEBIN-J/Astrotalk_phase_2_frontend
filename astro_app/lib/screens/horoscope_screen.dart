@@ -126,6 +126,11 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   int _bnnTargetYear = DateTime.now().year;
   bool _isScrubbingBnn = false;
   int _bnnSubTabIndex = 0;
+  int _bnnProgressionLevel = 0; // 0: Major, 1: Minor, 2: Micro
+  Map<String, dynamic>? _bnnSelectedPeriod;
+  String _bnnSelectedPlanet = 'Jupiter';
+  int? _bnnExpandedMajorStep;
+  int? _bnnExpandedMinorStep;
 
   bool _isLoadingKundli = false;
   Map<String, dynamic>? _kundliData;
@@ -4913,6 +4918,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final natalPlanets = (_bnnData!['natal_planets'] as List<dynamic>?) ?? bnnPlanets;
     final relationships = _bnnData!['relationships'] as List<dynamic>? ?? [];
     final trineGroups = _bnnData!['trine_groups'] as List<dynamic>? ?? [];
+    final charts = (_bnnData!['charts'] as Map<String, dynamic>?) ?? {};
+    final relationshipsByLevel = (_bnnData!['relationships_by_level'] as Map<String, dynamic>?) ?? {};
+    final trineGroupsByLevel = (_bnnData!['trine_groups_by_level'] as Map<String, dynamic>?) ?? {};
+
+    final currentLevelKey = _bnnProgressionLevel == 0 ? 'major' : (_bnnProgressionLevel == 1 ? 'minor' : 'micro');
+    final activeLevelTitle = _bnnProgressionLevel == 0 ? 'Major Progression' : (_bnnProgressionLevel == 1 ? 'Minor Progression' : 'Micro Progression');
+    final currentProgressedPlanets = (charts[currentLevelKey] as List<dynamic>?) ?? bnnPlanets;
+    final activeRelationships = (relationshipsByLevel[currentLevelKey] as List<dynamic>?) ?? relationships;
+    final activeTrineGroups = (trineGroupsByLevel[currentLevelKey] as List<dynamic>?) ?? trineGroups;
     final events = _bnnData!['events'] as List<dynamic>? ?? [];
     final progressions = _bnnData!['progressions'] as Map<String, dynamic>? ?? {};
     final jupProgression = progressions['jupiter'] as Map<String, dynamic>? ?? {};
@@ -4920,21 +4934,98 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
     final rahuProgression = progressions['rahu'] as Map<String, dynamic>? ?? {};
     final ketuProgression = progressions['ketu'] as Map<String, dynamic>? ?? {};
     final ageVal = overview['age'] ?? overview['current_age'];
+
+    if (jupProgression['micro_progression'] == null && !_isScrubbingBnn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isScrubbingBnn) {
+          _fetchBnnDataOnly();
+        }
+      });
+    }
+
+    const signNames = [
+      'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+      'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+    ];
+
+    final majorMap = (jupProgression['major_progression'] as Map<String, dynamic>?) ?? {};
+    final minorMap = (jupProgression['minor_progression'] as Map<String, dynamic>?) ?? {};
+    final microMap = (jupProgression['micro_progression'] as Map<String, dynamic>?) ?? {};
+
+    final majorSign = majorMap['sign']?.toString() ?? jupProgression['current_progressed_sign']?.toString() ?? 'Libra';
+    final minorSign = minorMap['sign']?.toString() ?? majorSign;
+    String microSign = microMap['sign']?.toString() ?? '';
+    if (microSign.isEmpty) {
+      final int minSignIdx = minorMap['sign_index'] as int? ?? (signNames.contains(minorSign) ? signNames.indexOf(minorSign) + 1 : 1);
+      final double age = (ageVal is num) ? ageVal.toDouble() : 0.0;
+      final double minStart = (minorMap['age_start'] as num?)?.toDouble() ?? 0.0;
+      final double elapsed = (age - minStart).clamp(0.0, 1.0);
+      final int step = ((elapsed / (1.0 / 12.0)).floor()).clamp(0, 11);
+      final int micSignIdx = ((minSignIdx + step - 1) % 12) + 1;
+      microSign = signNames[(micSignIdx - 1) % 12];
+    }
+
+    String formatPeriodSubtitle(Map<String, dynamic>? period) {
+      if (period == null) return '';
+      final start = period['age_start']?.toString() ?? '';
+      final end = period['age_end']?.toString() ?? '';
+      final sDate = period['start_date']?.toString();
+      final eDate = period['end_date']?.toString();
+      final hasDates = sDate != null && sDate.isNotEmpty && eDate != null && eDate.isNotEmpty;
+
+      String ageStr = '';
+      if (start.isNotEmpty && end.isNotEmpty) {
+        ageStr = 'Age ${start}y - ${end}y';
+      } else if (start.isNotEmpty) {
+        ageStr = 'Age ${start}y';
+      }
+
+      if (hasDates) {
+        return ageStr.isNotEmpty ? '$ageStr  •  $sDate to $eDate' : '$sDate to $eDate';
+      }
+      return ageStr;
+    }
     
     // Map planets for the interactive chart, ensuring they have 'name' and 'sign_index'.
-    // We also pull the Ascendant from _kundliData so the chart can orient itself correctly.
+    // Dynamically respects the active progression level (_bnnProgressionLevel: 0=Major, 1=Minor, 2=Micro)
+    // or a custom inspected period selected from the timeline tree.
     final chartPlanets = bnnPlanets.map((p) {
-      // If it's Jupiter, Saturn, Rahu, or Ketu, override its sign_index with its progressed position!
       int sIndex = p['sign_index'] ?? 1;
-      if (p['planet'] == 'Jupiter' && jupProgression['current_progressed_sign_index'] != null) {
-        sIndex = jupProgression['current_progressed_sign_index'];
-      } else if (p['planet'] == 'Saturn' && saturnProgression['current_progressed_sign_index'] != null) {
-        sIndex = saturnProgression['current_progressed_sign_index'];
-      } else if (p['planet'] == 'Rahu' && rahuProgression['current_progressed_sign_index'] != null) {
-        sIndex = rahuProgression['current_progressed_sign_index'];
-      } else if (p['planet'] == 'Ketu' && ketuProgression['current_progressed_sign_index'] != null) {
-        sIndex = ketuProgression['current_progressed_sign_index'];
+
+      Map<String, dynamic>? prog;
+      if (p['planet'] == 'Jupiter') {
+        prog = jupProgression;
+      } else if (p['planet'] == 'Saturn') {
+        prog = saturnProgression;
+      } else if (p['planet'] == 'Rahu') {
+        prog = rahuProgression;
+      } else if (p['planet'] == 'Ketu') {
+        prog = ketuProgression;
       }
+
+      if (prog != null) {
+        if (_bnnProgressionLevel == 0) {
+          final maj = prog['major_progression'] as Map<String, dynamic>?;
+          sIndex = maj?['sign_index'] ?? prog['current_progressed_sign_index'] ?? sIndex;
+        } else if (_bnnProgressionLevel == 1) {
+          final min = prog['minor_progression'] as Map<String, dynamic>?;
+          sIndex = min?['sign_index'] ?? prog['current_progressed_sign_index'] ?? sIndex;
+        } else if (_bnnProgressionLevel == 2) {
+          final mic = prog['micro_progression'] as Map<String, dynamic>?;
+          sIndex = mic?['sign_index'] ?? (prog['minor_progression'] as Map<String, dynamic>?)?['sign_index'] ?? sIndex;
+        }
+      }
+
+      // If user tapped a specific period from the timeline tree to inspect it
+      if (_bnnSelectedPeriod != null) {
+        final selSign = _bnnSelectedPeriod!['sign_index'] as int?;
+        if (selSign != null) {
+          if (p['planet'] == _bnnSelectedPlanet || (_bnnSelectedPlanet.isEmpty && p['planet'] == 'Jupiter')) {
+            sIndex = selSign;
+          }
+        }
+      }
+
       return {
         'name': p['planet'],
         'sign_index': sIndex,
@@ -4955,12 +5046,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       return Padding(
         padding: EdgeInsets.only(bottom: 12.h),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: 20.sp),
             SizedBox(width: 8.w),
-            Text(
-              title,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16.sp, color: isDark ? Colors.white : color),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp, color: isDark ? Colors.white : color),
+              ),
             ),
           ],
         ),
@@ -5015,6 +5111,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
       final major = data['major_progression'] as Map<String, dynamic>? ?? {};
       final minor = data['minor_progression'] as Map<String, dynamic>? ?? {};
       final minorPeriods = minor['active_periods'] as List<dynamic>? ?? [];
+      final micro = data['micro_progression'] as Map<String, dynamic>? ?? {};
+      final microPeriods = micro['active_periods'] as List<dynamic>? ?? [];
       final timeline = data['timeline'] as List<dynamic>? ?? [];
 
       final elapsedMajor = (data['elapsed_progression_years'] as num?)?.toDouble() ?? 0.0;
@@ -5176,68 +5274,118 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
             Divider(height: 1, color: isDark ? Colors.white12 : Colors.grey.shade200),
 
-            // Natal & Major Progression Section
+            // Natal & Progression Status Section (Dynamic per active progression level)
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   buildDataRow('Natal Position', '${data['natal_sign']} ${data['natal_degree']}'),
-                  buildDataRow(
-                    'Major Progressed Sign',
-                    '${data['current_progressed_sign_name']} (Sign ${data['current_progressed_sign_index']})',
-                    valueColor: color,
-                  ),
-                  if (major['age_start'] != null && major['age_end'] != null)
+                  if (_bnnProgressionLevel == 0) ...[
                     buildDataRow(
-                      'Major Period Age',
-                      '${major['age_start']}y - ${major['age_end']}y (${major['duration']} yrs)',
+                      'Major Progressed Sign',
+                      '${data['current_progressed_sign_name']} (Sign ${data['current_progressed_sign_index']})',
+                      valueColor: color,
                     ),
-                  buildDataRow(
-                    'Major Elapsed / Remaining',
-                    '${data['elapsed_progression_years']}y elapsed / ${data['remaining_progression_years']}y remaining',
-                  ),
-                  if (major['rule_detail'] != null)
-                    Padding(
-                      padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(8.w),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                        ),
-                        child: Text(
-                          'Formula: ${major['rule_detail']}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.sp,
-                            fontStyle: FontStyle.italic,
-                            color: isDark ? Colors.white70 : Colors.black87,
+                    if (major['age_start'] != null && major['age_end'] != null)
+                      buildDataRow(
+                        'Major Period Age',
+                        '${major['age_start']}y - ${major['age_end']}y (${major['duration']} yrs)',
+                      ),
+                    buildDataRow(
+                      'Major Elapsed / Remaining',
+                      '${data['elapsed_progression_years']}y elapsed / ${data['remaining_progression_years']}y remaining',
+                    ),
+                    if (major['rule_detail'] != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: 4.h, bottom: 8.h),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                          ),
+                          child: Text(
+                            'Formula: ${major['rule_detail']}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.sp,
+                              fontStyle: FontStyle.italic,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
                           ),
                         ),
                       ),
+                    SizedBox(height: 4.h),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: progressFraction,
+                        minHeight: 6.h,
+                        backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
                     ),
-
-                  // Major Progress Bar
-                  SizedBox(height: 4.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      value: progressFraction,
-                      minHeight: 6.h,
-                      backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    SizedBox(height: 4.h),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${(progressFraction * 100).toStringAsFixed(1)}% of major cycle completed',
+                        style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '${(progressFraction * 100).toStringAsFixed(1)}% of major cycle completed',
-                      style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.grey),
+                  ] else if (_bnnProgressionLevel == 1) ...[
+                    buildDataRow(
+                      'Active Minor Progressed Sign',
+                      '${minor['sign'] ?? data['current_progressed_sign_name']} (Sign ${minor['sign_index'] ?? data['current_progressed_sign_index']})',
+                      valueColor: color,
                     ),
-                  ),
+                    if (minor['age_start'] != null && minor['age_end'] != null)
+                      buildDataRow(
+                        'Minor Period Age',
+                        '${minor['age_start']}y - ${minor['age_end']}y (${minor['duration'] ?? 1.0} yrs)',
+                      ),
+                    if (minor['start_date'] != null && minor['end_date'] != null)
+                      buildDataRow(
+                        'Minor Active Dates',
+                        '${minor['start_date']} to ${minor['end_date']}',
+                      ),
+                    if (minor['elapsed_years'] != null && minor['remaining_years'] != null)
+                      buildDataRow(
+                        'Minor Elapsed / Remaining',
+                        '${minor['elapsed_years']}y elapsed / ${minor['remaining_years']}y remaining',
+                      ),
+                    buildDataRow(
+                      'Parent Major Cycle Sign',
+                      '${data['current_progressed_sign_name']} (Sign ${data['current_progressed_sign_index']})',
+                    ),
+                  ] else ...[
+                    buildDataRow(
+                      'Active Micro Progressed Sign',
+                      '${micro['sign'] ?? minor['sign'] ?? data['current_progressed_sign_name']} (Sign ${micro['sign_index'] ?? minor['sign_index'] ?? data['current_progressed_sign_index']})',
+                      valueColor: color,
+                    ),
+                    if (micro['age_start'] != null && micro['age_end'] != null)
+                      buildDataRow(
+                        'Micro Period Age',
+                        '${micro['age_start']}y - ${micro['age_end']}y (${micro['duration'] ?? 0.08} yrs)',
+                      ),
+                    if (micro['start_date'] != null && micro['end_date'] != null)
+                      buildDataRow(
+                        'Micro Active Dates',
+                        '${micro['start_date']} to ${micro['end_date']}',
+                      ),
+                    if (micro['elapsed_days'] != null && micro['remaining_days'] != null)
+                      buildDataRow(
+                        'Micro Elapsed / Remaining',
+                        '${micro['elapsed_days']}d elapsed / ${micro['remaining_days']}d remaining',
+                      ),
+                    buildDataRow(
+                      'Parent Minor Sign',
+                      '${minor['sign'] ?? ''} (Sign ${minor['sign_index'] ?? ''})',
+                    ),
+                  ],
 
                   // Minor Progression Box
                   if (minor.isNotEmpty) ...[
@@ -5316,7 +5464,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                           if (minorPeriods.isNotEmpty) ...[
                             SizedBox(height: 10.h),
                             Text(
-                              'Cycle Sub-Periods:',
+                              'Cycle Sub-Periods (Minor):',
                               style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.grey),
                             ),
                             SizedBox(height: 6.h),
@@ -5352,6 +5500,141 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                                         SizedBox(height: 2.h),
                                         Text(
                                           '${p['age_start']} - ${p['age_end']}y',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 9.sp,
+                                            color: isCurrent ? Colors.white.withValues(alpha: 0.9) : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Micro Progression Box (Sub-Sub-Period)
+                  if (micro.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: color.withValues(alpha: 0.25)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Micro Progression (Sub-Sub-Period)',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                    color: color,
+                                  ),
+                                ),
+                              ),
+                              if (micro['rate_per_sign'] != null)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    '${micro['rate_per_sign']}',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 9.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 4.h,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                'Current Micro Sign: ${micro['sign']} (${micro['sign_index']})',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.sp,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              if (micro['elapsed_days'] != null && micro['remaining_days'] != null)
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    '${micro['elapsed_days']}d / ${micro['remaining_days']}d rem.',
+                                    style: GoogleFonts.outfit(fontSize: 10.sp, color: Colors.green, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          if (micro['start_date'] != null && micro['end_date'] != null) ...[
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Date: ${micro['start_date']} to ${micro['end_date']}',
+                              style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white60 : Colors.black54),
+                            ),
+                          ],
+                          if (microPeriods.isNotEmpty) ...[
+                            SizedBox(height: 10.h),
+                            Text(
+                              'Sub-Sub-Periods (Micro):',
+                              style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
+                            SizedBox(height: 6.h),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: microPeriods.map((p) {
+                                  final isCurrent = p['is_current'] == true;
+                                  return Container(
+                                    margin: EdgeInsets.only(right: 6.w),
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                                    decoration: BoxDecoration(
+                                      color: isCurrent
+                                          ? color
+                                          : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      border: Border.all(
+                                        color: isCurrent ? color : (isDark ? Colors.white24 : Colors.black12),
+                                        width: isCurrent ? 1.5 : 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          p['sign_name'].toString(),
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: isCurrent ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.h),
+                                        Text(
+                                          '${p['start_date'] ?? ''}',
                                           style: GoogleFonts.outfit(
                                             fontSize: 9.sp,
                                             color: isCurrent ? Colors.white.withValues(alpha: 0.9) : Colors.grey,
@@ -5451,6 +5734,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
 
     final bnnSubTabs = [
       'Progressive Chart',
+      'Progression Timeline',
       'Jupiter (Jeeva)',
       'Saturn (Karma)',
       'Rahu & Ketu',
@@ -5532,6 +5816,272 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
         ),
 
+        // 3-Level Progression Hierarchy Selector (Major / Minor / Micro)
+        Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _bnnProgressionLevel = 0;
+                    _bnnSelectedPeriod = null;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: _bnnProgressionLevel == 0 ? const Color(0xFF4338CA) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Major Progression',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontWeight: _bnnProgressionLevel == 0 ? FontWeight.bold : FontWeight.w600,
+                            fontSize: 10.5.sp,
+                            color: _bnnProgressionLevel == 0 ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                          ),
+                        ),
+                        Text(
+                          '12y / 30y',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9.sp,
+                            color: _bnnProgressionLevel == 0 ? Colors.white.withValues(alpha: 0.8) : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _bnnProgressionLevel = 1;
+                    _bnnSelectedPeriod = null;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: _bnnProgressionLevel == 1 ? const Color(0xFF4338CA) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Minor Progression',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontWeight: _bnnProgressionLevel == 1 ? FontWeight.bold : FontWeight.w600,
+                            fontSize: 10.5.sp,
+                            color: _bnnProgressionLevel == 1 ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                          ),
+                        ),
+                        Text(
+                          '1.0y / 2.5y',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9.sp,
+                            color: _bnnProgressionLevel == 1 ? Colors.white.withValues(alpha: 0.8) : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 4.w),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _bnnProgressionLevel = 2;
+                    _bnnSelectedPeriod = null;
+                  }),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: _bnnProgressionLevel == 2 ? const Color(0xFF4338CA) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Micro Progression',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontWeight: _bnnProgressionLevel == 2 ? FontWeight.bold : FontWeight.w600,
+                            fontSize: 10.5.sp,
+                            color: _bnnProgressionLevel == 2 ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                          ),
+                        ),
+                        Text(
+                          '1.0m / 2.5m',
+                          style: GoogleFonts.outfit(
+                            fontSize: 9.sp,
+                            color: _bnnProgressionLevel == 2 ? Colors.white.withValues(alpha: 0.8) : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Active Hierarchy Path & Status Banner
+        Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
+            borderRadius: BorderRadius.circular(14.r),
+            border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6.w,
+                runSpacing: 4.h,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _bnnProgressionLevel = 0;
+                      _bnnSelectedPeriod = null;
+                    }),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: _bnnProgressionLevel == 0 && _bnnSelectedPeriod == null ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF0F172A) : Colors.white),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: _bnnProgressionLevel == 0 ? const Color(0xFF4338CA) : Colors.grey.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Major: $majorSign',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5.sp,
+                          fontWeight: _bnnProgressionLevel == 0 ? FontWeight.bold : FontWeight.w500,
+                          color: _bnnProgressionLevel == 0 && _bnnSelectedPeriod == null ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _bnnProgressionLevel = 1;
+                      _bnnSelectedPeriod = null;
+                    }),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: _bnnProgressionLevel == 1 && _bnnSelectedPeriod == null ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF0F172A) : Colors.white),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: _bnnProgressionLevel == 1 ? const Color(0xFF4338CA) : Colors.grey.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Minor: $minorSign',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5.sp,
+                          fontWeight: _bnnProgressionLevel == 1 ? FontWeight.bold : FontWeight.w500,
+                          color: _bnnProgressionLevel == 1 && _bnnSelectedPeriod == null ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, size: 14.sp, color: Colors.grey),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _bnnProgressionLevel = 2;
+                      _bnnSelectedPeriod = null;
+                    }),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: _bnnProgressionLevel == 2 && _bnnSelectedPeriod == null ? const Color(0xFF4338CA) : (isDark ? const Color(0xFF0F172A) : Colors.white),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: _bnnProgressionLevel == 2 ? const Color(0xFF4338CA) : Colors.grey.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Micro: $microSign',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5.sp,
+                          fontWeight: _bnnProgressionLevel == 2 ? FontWeight.bold : FontWeight.w500,
+                          color: _bnnProgressionLevel == 2 && _bnnSelectedPeriod == null ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _bnnSelectedPeriod != null
+                              ? 'CUSTOM VIEW: ${_bnnSelectedPeriod!['sign_name']} (${_bnnSelectedPeriod!['level']?.toString().toUpperCase()})'
+                              : (_bnnProgressionLevel == 0 ? 'ACTIVE: MAJOR PROGRESSION' : (_bnnProgressionLevel == 1 ? 'ACTIVE: MINOR PROGRESSION' : 'ACTIVE: MICRO PROGRESSION')),
+                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA)),
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          _bnnSelectedPeriod != null
+                              ? formatPeriodSubtitle(_bnnSelectedPeriod)
+                              : (_bnnProgressionLevel == 0
+                                  ? (majorMap.isNotEmpty ? formatPeriodSubtitle(majorMap) : 'Age ${overview['age'] ?? ''}y')
+                                  : (_bnnProgressionLevel == 1
+                                      ? (minorMap.isNotEmpty ? formatPeriodSubtitle(minorMap) : formatPeriodSubtitle(majorMap))
+                                      : (microMap.isNotEmpty ? formatPeriodSubtitle(microMap) : formatPeriodSubtitle(minorMap)))),
+                          style: GoogleFonts.outfit(fontSize: 10.sp, color: isDark ? Colors.white60 : Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_bnnSelectedPeriod != null)
+                    GestureDetector(
+                      onTap: () => setState(() => _bnnSelectedPeriod = null),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4338CA),
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          'Reset',
+                          style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
         // Sub-tabs navigation bar (Image 2 format)
         Container(
           height: 46.h,
@@ -5585,7 +6135,17 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             ),
             child: Column(
               children: [
-                buildCardTitle('Progressive Chart (BNN)', Icons.grid_on_rounded, const Color(0xFF4338CA)),
+                buildCardTitle(
+                  _bnnSelectedPeriod != null
+                      ? 'Progressive Chart (BNN) — ${_bnnSelectedPeriod!['sign_name']} (${_bnnSelectedPeriod!['level']?.toString().toUpperCase()})'
+                      : (_bnnProgressionLevel == 0
+                          ? 'Progressive Chart (BNN) — Major (12y)'
+                          : (_bnnProgressionLevel == 1
+                              ? 'Progressive Chart (BNN) — Minor (1y)'
+                              : 'Progressive Chart (BNN) — Micro (1m)')),
+                  Icons.grid_on_rounded,
+                  const Color(0xFF4338CA),
+                ),
                 KundliInteractiveChart(
                   chartStyle: _currentChartStyle,
                   isDark: isDark,
@@ -5599,10 +6159,161 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
           ),
           SizedBox(height: 16.h),
 
-          // Natal Planetary Positions
+          // Progressive Planetary Positions for the Active Level (Major, Minor, Micro)
+          Container(
+            margin: EdgeInsets.only(bottom: 16.h),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 8.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Progressive Positions ($activeLevelTitle)',
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.5.sp,
+                            color: const Color(0xFF4338CA),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          _bnnProgressionLevel == 0 ? '12y / 30y Cycle' : (_bnnProgressionLevel == 1 ? 'Annual 1.0y' : 'Monthly 1.0m'),
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10.sp,
+                            color: const Color(0xFF4338CA),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Text(
+                    'Planetary positions calculated dynamically from backend for the active level.',
+                    style: GoogleFonts.outfit(fontSize: 10.5.sp, color: isDark ? Colors.white60 : Colors.black54),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    border: Border(
+                      top: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                      bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black12),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 3, child: Text('Planet', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp))),
+                      Expanded(flex: 3, child: Text('Progressed Sign', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp))),
+                      Expanded(flex: 3, child: Text('Degree', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp))),
+                      Expanded(flex: 2, child: Text('Status', textAlign: TextAlign.right, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp))),
+                    ],
+                  ),
+                ),
+                ...currentProgressedPlanets.map((p) {
+                  final isProg = p['progression_level'] != null;
+                  return Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: isProg ? const Color(0xFF4338CA).withValues(alpha: 0.04) : Colors.transparent,
+                      border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Row(
+                            children: [
+                              Text(
+                                p['planet'].toString(),
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12.sp,
+                                  color: isProg ? const Color(0xFF4338CA) : (p['retrograde'] == true ? Colors.red : null),
+                                ),
+                              ),
+                              if (isProg) ...[
+                                SizedBox(width: 4.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(3.r),
+                                  ),
+                                  child: Text('Prog', style: GoogleFonts.outfit(fontSize: 8.sp, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            p['sign'].toString(),
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              fontWeight: isProg ? FontWeight.bold : FontWeight.normal,
+                              color: isProg ? const Color(0xFF4338CA) : null,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            p['degree']?.toString() ?? '',
+                            style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.blue),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            p['retrograde'] == true ? '(R)' : 'Direct',
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5.sp,
+                              color: p['retrograde'] == true ? Colors.red : (isDark ? Colors.white70 : Colors.black54),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // Natal Planetary Positions (Birth Reference)
           ExpansionTile(
-            initiallyExpanded: true,
-            title: Text('Natal Planetary Positions', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+            initiallyExpanded: false,
+            title: Text('Natal Planetary Positions (Birth Reference)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
             collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             children: natalPlanets.map((p) {
@@ -5621,6 +6332,505 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             }).toList(),
           ),
         ] else if (activeSubTabIndex == 1) ...[
+          // Progression Timeline Hierarchy (Table Format)
+          Builder(
+            builder: (context) {
+              final planetKey = _bnnSelectedPlanet.toLowerCase().trim();
+              final Map<String, dynamic> currentProg = (progressions[planetKey] as Map<String, dynamic>?) ?? jupProgression;
+              final List<dynamic> timelineData = (currentProg['timeline'] as List<dynamic>?) ?? [];
+              final String currentPlanetName = _bnnSelectedPlanet.isNotEmpty ? _bnnSelectedPlanet : 'Jupiter';
+
+              return Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.3)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildCardTitle('Progression Timeline Table', Icons.table_chart_rounded, const Color(0xFF4338CA)),
+                    Text(
+                      '3-level progression table (Major › Minor › Micro). Tap any row or action to inspect its progressive chart.',
+                      style: GoogleFonts.outfit(fontSize: 11.sp, color: isDark ? Colors.white60 : Colors.black54),
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // Planet Filter Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          {'name': 'Jupiter', 'label': 'Jupiter (12y)', 'color': const Color(0xFFD97706)},
+                          {'name': 'Saturn', 'label': 'Saturn (30y)', 'color': const Color(0xFF2563EB)},
+                          {'name': 'Rahu', 'label': 'Rahu (18y)', 'color': const Color(0xFF7C3AED)},
+                        ].map((p) {
+                          final isSelected = currentPlanetName.toLowerCase() == p['name']!.toString().toLowerCase();
+                          final pColor = p['color'] as Color;
+                          return GestureDetector(
+                            onTap: () => setState(() {
+                              _bnnSelectedPlanet = p['name']!.toString();
+                              _bnnSelectedPeriod = null;
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: EdgeInsets.only(right: 8.w),
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                              decoration: BoxDecoration(
+                                color: isSelected ? pColor : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: isSelected ? pColor : (isDark ? Colors.white12 : Colors.black12)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.circle, size: 8.sp, color: isSelected ? Colors.white : pColor),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    p['label']!.toString(),
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11.5.sp,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                      color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    SizedBox(height: 14.h),
+
+                    // Beautiful Responsive Full-Width Master Table
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          // Master Table Header Row
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF3730A3), Color(0xFF4338CA)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 32.w,
+                                  child: Text('#', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: Colors.white)),
+                                ),
+                                Expanded(
+                                  flex: 6,
+                                  child: Text('Sign & Age', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: Colors.white)),
+                                ),
+                                Expanded(
+                                  flex: 4,
+                                  child: Text('Calendar Dates', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: Colors.white)),
+                                ),
+                                SizedBox(
+                                  width: 84.w,
+                                  child: Text('Action', textAlign: TextAlign.right, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11.sp, color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Table Body Rows (Major Cycles)
+                          ...timelineData.asMap().entries.map((entry) {
+                            final roundIndex = entry.key;
+                            final round = entry.value;
+                            final isMajActive = round['is_current'] == true;
+                            final minors = (round['minor_periods'] as List<dynamic>?) ?? [];
+                            final isMajExpanded = _bnnExpandedMajorStep == round['progression_number'];
+
+                            return Column(
+                              children: [
+                                // Major Cycle Row
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _bnnExpandedMajorStep = isMajExpanded ? null : round['progression_number'];
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 9.h),
+                                    decoration: BoxDecoration(
+                                      color: isMajActive
+                                          ? const Color(0xFF4338CA).withValues(alpha: 0.08)
+                                          : (roundIndex.isEven
+                                              ? (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC))
+                                              : (isDark ? const Color(0xFF1E293B) : Colors.white)),
+                                      border: Border(
+                                        left: BorderSide(
+                                          color: isMajActive ? const Color(0xFF4338CA) : Colors.transparent,
+                                          width: 3.5.w,
+                                        ),
+                                        bottom: BorderSide(
+                                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                                        ),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Cycle Number & Status
+                                        SizedBox(
+                                          width: 32.w,
+                                          child: Container(
+                                            width: 22.w,
+                                            height: 22.w,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: isMajActive ? const Color(0xFF4338CA) : (isDark ? Colors.white12 : Colors.grey.shade300),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              '${round['progression_number']}',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 10.sp,
+                                                fontWeight: FontWeight.bold,
+                                                color: isMajActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        // Progressed Sign & Age
+                                        Expanded(
+                                          flex: 6,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Wrap(
+                                                crossAxisAlignment: WrapCrossAlignment.center,
+                                                spacing: 4.w,
+                                                runSpacing: 2.h,
+                                                children: [
+                                                  Text(
+                                                    '${round['sign_name']}',
+                                                    style: GoogleFonts.outfit(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 12.sp,
+                                                      color: isMajActive ? const Color(0xFF4338CA) : (isDark ? Colors.white : Colors.black87),
+                                                    ),
+                                                  ),
+                                                  if (isMajActive)
+                                                    Container(
+                                                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                                        borderRadius: BorderRadius.circular(4.r),
+                                                      ),
+                                                      child: Text('Live', style: GoogleFonts.outfit(fontSize: 8.sp, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                                    ),
+                                                ],
+                                              ),
+                                              Text(
+                                                '${round['age_start']}y - ${round['age_end']}y (${round['duration']}y)',
+                                                style: GoogleFonts.outfit(fontSize: 9.5.sp, color: Colors.grey),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Dates
+                                        Expanded(
+                                          flex: 4,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '${round['start_date'] ?? ''}',
+                                                style: GoogleFonts.outfit(fontSize: 10.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              Text(
+                                                '→ ${round['end_date'] ?? ''}',
+                                                style: GoogleFonts.outfit(fontSize: 9.5.sp, color: Colors.grey),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Actions: Chart + Accordion
+                                        SizedBox(
+                                          width: 84.w,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    _bnnSelectedPeriod = round;
+                                                    _bnnSelectedPlanet = currentPlanetName;
+                                                    _bnnSubTabIndex = 0;
+                                                  });
+                                                },
+                                                borderRadius: BorderRadius.circular(5.r),
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                                                    borderRadius: BorderRadius.circular(5.r),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.grid_on_rounded, size: 10.sp, color: const Color(0xFF4338CA)),
+                                                      SizedBox(width: 2.w),
+                                                      Text('Chart', style: GoogleFonts.outfit(fontSize: 9.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 4.w),
+                                              InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    _bnnExpandedMajorStep = isMajExpanded ? null : round['progression_number'];
+                                                  });
+                                                },
+                                                borderRadius: BorderRadius.circular(5.r),
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 3.h),
+                                                  decoration: BoxDecoration(
+                                                    color: isMajExpanded ? const Color(0xFF4338CA) : Colors.transparent,
+                                                    borderRadius: BorderRadius.circular(5.r),
+                                                    border: Border.all(color: isMajExpanded ? const Color(0xFF4338CA) : Colors.grey.withValues(alpha: 0.4)),
+                                                  ),
+                                                  child: Icon(
+                                                    isMajExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                                    size: 15.sp,
+                                                    color: isMajExpanded ? Colors.white : Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                // Sub-Table for 12 Minor Progression Periods
+                                if (isMajExpanded && minors.isNotEmpty)
+                                  Container(
+                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                                    child: Column(
+                                      children: [
+                                        // Sub-Table Header
+                                        Container(
+                                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                                          margin: EdgeInsets.only(bottom: 4.h),
+                                          decoration: BoxDecoration(
+                                            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                                            borderRadius: BorderRadius.circular(6.r),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              SizedBox(width: 24.w, child: Text('#', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10.sp))),
+                                              Expanded(flex: 6, child: Text('Minor Sign & Age', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10.sp))),
+                                              Expanded(flex: 4, child: Text('Minor Dates', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10.sp))),
+                                              SizedBox(width: 80.w, child: Text('Action', textAlign: TextAlign.right, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10.sp))),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // 12 Minor Rows
+                                        ...minors.map((minItem) {
+                                          final isMinActive = minItem['is_current'] == true;
+                                          final micros = (minItem['micro_periods'] as List<dynamic>?) ?? [];
+                                          final isMinExpanded = _bnnExpandedMinorStep == minItem['step'] && isMajExpanded;
+
+                                          return Column(
+                                            children: [
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+                                                decoration: BoxDecoration(
+                                                  color: isMinActive
+                                                      ? const Color(0xFF4338CA).withValues(alpha: 0.08)
+                                                      : (isDark ? const Color(0xFF131D36) : Colors.white),
+                                                  border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 24.w,
+                                                      child: Text('${minItem['step']}.', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10.sp)),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 6,
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Wrap(
+                                                            crossAxisAlignment: WrapCrossAlignment.center,
+                                                            spacing: 3.w,
+                                                            runSpacing: 2.h,
+                                                            children: [
+                                                              Text(
+                                                                '${minItem['sign_name']}',
+                                                                style: GoogleFonts.outfit(
+                                                                  fontWeight: isMinActive ? FontWeight.bold : FontWeight.w600,
+                                                                  fontSize: 10.5.sp,
+                                                                  color: isMinActive ? const Color(0xFF4338CA) : null,
+                                                                ),
+                                                              ),
+                                                              if (isMinActive)
+                                                                Container(
+                                                                  padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
+                                                                  decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(3.r)),
+                                                                  child: Text('Live', style: GoogleFonts.outfit(fontSize: 7.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF10B981))),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                          Text('${minItem['age_start']}y - ${minItem['age_end']}y', style: GoogleFonts.outfit(fontSize: 9.sp, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      flex: 4,
+                                                      child: Text(
+                                                        '${minItem['start_date'] ?? ''}\n→ ${minItem['end_date'] ?? ''}',
+                                                        style: GoogleFonts.outfit(fontSize: 9.sp, color: isDark ? Colors.white70 : Colors.black87),
+                                                        maxLines: 2,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                      width: 80.w,
+                                                      child: Row(
+                                                        mainAxisAlignment: MainAxisAlignment.end,
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          InkWell(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                _bnnSelectedPeriod = minItem;
+                                                                _bnnSelectedPlanet = currentPlanetName;
+                                                                _bnnSubTabIndex = 0;
+                                                              });
+                                                            },
+                                                            borderRadius: BorderRadius.circular(4.r),
+                                                            child: Container(
+                                                              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.5.h),
+                                                              decoration: BoxDecoration(color: const Color(0xFF4338CA).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4.r)),
+                                                              child: Text('Chart', style: GoogleFonts.outfit(fontSize: 8.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 3.w),
+                                                          InkWell(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                _bnnExpandedMinorStep = isMinExpanded ? null : minItem['step'];
+                                                              });
+                                                            },
+                                                            borderRadius: BorderRadius.circular(4.r),
+                                                            child: Container(
+                                                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.5.h),
+                                                              decoration: BoxDecoration(
+                                                                color: isMinExpanded ? const Color(0xFF4338CA) : Colors.transparent,
+                                                                borderRadius: BorderRadius.circular(4.r),
+                                                                border: Border.all(color: isMinExpanded ? const Color(0xFF4338CA) : Colors.grey.withValues(alpha: 0.4)),
+                                                              ),
+                                                              child: Icon(
+                                                                isMinExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                                                size: 13.sp,
+                                                                color: isMinExpanded ? Colors.white : Colors.grey,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              // 12 Micro Sub-division Grid / Chips
+                                              if (isMinExpanded && micros.isNotEmpty)
+                                                Container(
+                                                  padding: EdgeInsets.all(8.w),
+                                                  color: isDark ? const Color(0xFF0A0F1D) : const Color(0xFFE0E7FF).withValues(alpha: 0.4),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text('12 Micro Periods (1.0m / step):', style: GoogleFonts.outfit(fontSize: 9.5.sp, fontWeight: FontWeight.bold, color: const Color(0xFF4338CA))),
+                                                      SizedBox(height: 6.h),
+                                                      Wrap(
+                                                        spacing: 5.w,
+                                                        runSpacing: 5.h,
+                                                        children: micros.map((mic) {
+                                                          final isMicActive = mic['is_current'] == true;
+                                                          return GestureDetector(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                _bnnSelectedPeriod = mic;
+                                                                _bnnSelectedPlanet = currentPlanetName;
+                                                                _bnnSubTabIndex = 0;
+                                                              });
+                                                            },
+                                                            child: Container(
+                                                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                                                              decoration: BoxDecoration(
+                                                                color: isMicActive ? const Color(0xFF10B981) : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                                                                borderRadius: BorderRadius.circular(4.r),
+                                                                border: Border.all(color: isMicActive ? Colors.transparent : Colors.grey.withValues(alpha: 0.3)),
+                                                              ),
+                                                              child: Text(
+                                                                '${mic['step']}. ${mic['sign_name']} (${mic['start_date'] ?? ''})',
+                                                                style: GoogleFonts.outfit(
+                                                                  fontSize: 8.5.sp,
+                                                                  fontWeight: isMicActive ? FontWeight.bold : FontWeight.w500,
+                                                                  color: isMicActive ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          );
+                                        }).toList(),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ] else if (activeSubTabIndex == 2) ...[
           // Jupiter Progression (Jeeva)
           buildProgressionCard(
             title: 'Jupiter Progression (Jeeva)',
@@ -5629,7 +6839,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             color: const Color(0xFFD97706),
             data: jupProgression,
           ),
-        ] else if (activeSubTabIndex == 2) ...[
+        ] else if (activeSubTabIndex == 3) ...[
           // Saturn Progression (Karma)
           buildProgressionCard(
             title: 'Saturn Progression (Karma)',
@@ -5638,7 +6848,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             color: const Color(0xFF2563EB),
             data: saturnProgression,
           ),
-        ] else if (activeSubTabIndex == 3) ...[
+        ] else if (activeSubTabIndex == 4) ...[
           // Rahu Progression (Destiny & Desires)
           buildProgressionCard(
             title: 'Rahu Progression (Destiny & Desires)',
@@ -5656,7 +6866,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             color: const Color(0xFF0D9488),
             data: ketuProgression,
           ),
-        ] else if (activeSubTabIndex == 4) ...[
+        ] else if (activeSubTabIndex == 5) ...[
           // Trine Groups
           Container(
             padding: EdgeInsets.all(16.w),
@@ -5668,8 +6878,8 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildCardTitle('Directional Trine Groups', Icons.explore, const Color(0xFF059669)),
-                ...trineGroups.map((g) {
+                buildCardTitle('Directional Trine Groups ($activeLevelTitle)', Icons.explore, const Color(0xFF059669)),
+                ...activeTrineGroups.map((g) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: 12.h),
                     child: Column(
@@ -5678,7 +6888,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                         Text(g['group'].toString(), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: const Color(0xFF059669))),
                         Text(g['signs'].toString(), style: GoogleFonts.outfit(fontSize: 11.sp, color: Colors.grey)),
                         SizedBox(height: 4.h),
-                        Text((g['planets'] as List).isEmpty ? 'Empty' : (g['planets'] as List).join(', '), style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                        Text(((g['planets'] as List?) ?? []).isEmpty ? 'Empty' : ((g['planets'] as List?) ?? []).join(', '), style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
                       ],
                     ),
                   );
@@ -5686,15 +6896,15 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               ],
             ),
           ),
-        ] else if (activeSubTabIndex == 5) ...[
+        ] else if (activeSubTabIndex == 6) ...[
           // Relationship Matrix
           ExpansionTile(
             initiallyExpanded: true,
-            title: Text('BNN Relationship Matrix', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
+            title: Text('BNN Relationship Matrix ($activeLevelTitle)', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15.sp)),
             collapsedBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            children: relationships.map((r) {
-              final strength = r['strength_percentage'] as int;
+            children: activeRelationships.map((r) {
+              final strength = (r['strength_percentage'] as num?)?.toInt() ?? 0;
               Color strengthColor = strength >= 75 ? Colors.green : (strength >= 50 ? Colors.orange : Colors.grey);
               return Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -5721,7 +6931,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               );
             }).toList(),
           ),
-        ] else if (activeSubTabIndex == 6) ...[
+        ] else if (activeSubTabIndex == 7) ...[
           // Event Activation
           Container(
             padding: EdgeInsets.all(16.w),
@@ -5736,7 +6946,9 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    buildCardTitle('Event Activation (Dynamic)', Icons.event_available, const Color(0xFFE11D48)),
+                    Expanded(
+                      child: buildCardTitle('Event Activation (Dynamic)', Icons.event_available, const Color(0xFFE11D48)),
+                    ),
                     InkWell(
                       onTap: () => setState(() => _isBnnEventTableViewMode = !_isBnnEventTableViewMode),
                       borderRadius: BorderRadius.circular(8.r),
@@ -5987,6 +7199,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
   void _changeBnnTargetYear(int delta) {
     setState(() {
       _bnnTargetYear += delta;
+      _bnnSelectedPeriod = null;
     });
     _fetchBnnDataOnly();
   }
@@ -7118,7 +8331,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ),
               );
             }),
-        ] else if (activeSubTabIndex == 1) ...[
+        ] else if (activeSubTabIndex == 2) ...[
           if (!_isJaiminiCardView)
             buildCustomTable(
               headers: ['Pada', 'Pada Sign', 'House Lord', 'Exception'],
@@ -7167,7 +8380,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 );
               }).toList(),
             ),
-        ] else if (activeSubTabIndex == 2) ...[
+        ] else if (activeSubTabIndex == 3) ...[
           if (!_isJaiminiCardView)
             buildCustomTable(
               headers: ['Sign', 'Aspects Signs', 'Planets in Sign'],
@@ -7215,7 +8428,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 },
               ),
             ),
-        ] else if (activeSubTabIndex == 3) ...[
+        ] else if (activeSubTabIndex == 4) ...[
           if (!_isJaiminiCardView)
             buildCustomTable(
               headers: ['Argala Type', 'Causing Planets', 'Obstructing (Virodh)', 'Status'],
@@ -7267,7 +8480,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 ),
               );
             }),
-        ] else if (activeSubTabIndex == 4) ...[
+        ] else if (activeSubTabIndex == 5) ...[
           Builder(
             builder: (context) {
               final bool hasMd = _jaiminiSelectedMahadasha != null;
@@ -7568,7 +8781,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
               );
             },
           ),
-        ] else if (activeSubTabIndex == 5) ...[
+        ] else if (activeSubTabIndex == 6) ...[
           if (!_isJaiminiCardView)
             buildCustomTable(
               headers: ['Lagna Name', 'Sign', 'Degree'],
@@ -7608,7 +8821,7 @@ class _HoroscopeScreenState extends State<HoroscopeScreen>
                 );
               }).toList(),
             ),
-        ] else if (activeSubTabIndex == 6) ...[
+        ] else if (activeSubTabIndex == 7) ...[
           if (!_isJaiminiCardView)
             buildCustomTable(
               headers: ['House', 'Sign', 'Planets', 'Rashi Drishti'],
