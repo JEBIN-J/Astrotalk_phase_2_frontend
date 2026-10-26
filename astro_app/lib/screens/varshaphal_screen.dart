@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 
 import '../models/astro_models.dart';
 import '../services/astro_api_service.dart';
@@ -61,7 +63,6 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
   final List<String> _tabTitles = [
     'Overview',
     'Varsh Kundli',
-    'Planets',
     'Varshesha & Muntha',
     'Strengths',
     'Mudda Dasha',
@@ -366,7 +367,6 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
                       children: [
                         _buildOverviewTab(),
                         _buildVarshKundliTab(),
-                        _buildPlanetaryPositionsTab(),
                         _buildVarsheshaAndMunthaTab(),
                         _buildStrengthsTab(),
                         _buildMuddaDashaTab(),
@@ -461,6 +461,178 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // TABLE STYLING HELPERS
+  // ---------------------------------------------------------------------------
+
+  Widget _buildTableCard({required Widget child, required bool isDark}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: isDark ? const Color(0xFF312E81) : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: child,
+      ),
+    );
+  }
+
+  WidgetStateProperty<Color> _tableHeaderColor(bool isDark) {
+    return WidgetStateProperty.all(
+      isDark ? const Color(0xFF1E1B4B) : const Color(0xFF312E81),
+    );
+  }
+
+  TextStyle _tableHeaderStyle(bool isDark) {
+    return GoogleFonts.outfit(
+      fontSize: 12.sp,
+      fontWeight: FontWeight.w700,
+      color: isDark ? const Color(0xFFFFD54F) : Colors.white,
+      letterSpacing: 0.2,
+    );
+  }
+
+  WidgetStateProperty<Color?> _tableRowColor(int index, bool isDark, {bool isSelected = false}) {
+    if (isSelected) {
+      return WidgetStateProperty.all(
+        const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.25 : 0.15),
+      );
+    }
+    return WidgetStateProperty.all(
+      index.isEven
+          ? (isDark ? Colors.transparent : Colors.white)
+          : (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF8FAFC)),
+    );
+  }
+
+  Widget _buildPlanetCell(String name, {bool isRetro = false, bool isCombust = false, bool isDark = false}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          name,
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
+            fontSize: 12.5.sp,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        if (isRetro) ...[
+          SizedBox(width: 4.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4.r),
+              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+            ),
+            child: Text('R', style: TextStyle(color: const Color(0xFFEF4444), fontSize: 9.sp, fontWeight: FontWeight.w800)),
+          ),
+        ],
+        if (isCombust) ...[
+          SizedBox(width: 4.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4.r),
+              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+            ),
+            child: Text('C', style: TextStyle(color: const Color(0xFFD97706), fontSize: 9.sp, fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHousePill(dynamic house, bool isDark) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.5.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFF4338CA).withValues(alpha: isDark ? 0.25 : 0.10),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: const Color(0xFF4338CA).withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        'H$house',
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.w700,
+          fontSize: 11.sp,
+          color: isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4338CA),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDignityPill(String dignity, bool isDark) {
+    Color color = const Color(0xFF64748B);
+    final d = dignity.toLowerCase();
+    if (d.contains('own') || d.contains('swakshetra') || d.contains('exalt') || d.contains('uchcha') || d.contains('moola')) {
+      color = const Color(0xFF10B981);
+    } else if (d.contains('debilit') || d.contains('neecha') || d.contains('enemy') || d.contains('shatru')) {
+      color = const Color(0xFFEF4444);
+    } else if (d.contains('friend') || d.contains('mitra')) {
+      color = const Color(0xFF0EA5E9);
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        dignity,
+        style: TextStyle(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusPill(String status, bool isDark) {
+    Color color = const Color(0xFF10B981);
+    if (status == 'Retrograde') {
+      color = const Color(0xFFEF4444);
+    } else if (status == 'Combust') {
+      color = const Color(0xFFF59E0B);
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6.r),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 10.5.sp,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
     );
   }
@@ -1079,6 +1251,11 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
   Widget _buildVarshKundliTab() {
     final isDark = widget.isDark;
     final annualChart = _varshaphalData?['annual_chart'] as Map<String, dynamic>? ?? {};
+    final annualPlanets = (_varshaphalData?['annual_chart']?['planets'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final natalPlanets = (_varshaphalData?['natal_chart']?['planets'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final natalMap = {for (var p in natalPlanets) p['planet']: p};
 
     return ListView(
       padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 85.h),
@@ -1199,6 +1376,174 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
             ],
           ),
         ),
+        SizedBox(height: 22.h),
+
+        // Planetary Positions Header
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(7.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(Icons.public_rounded, color: const Color(0xFF4338CA), size: 18.sp),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              'Annual Planetary Positions (Solar Return)',
+              style: GoogleFonts.outfit(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10.h),
+
+        // Annual Planets Table
+        _buildTableCard(
+          isDark: isDark,
+          child: DataTable(
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
+            headingRowHeight: 44.h,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            dividerThickness: 0.8,
+            horizontalMargin: 16.w,
+            columnSpacing: 22.w,
+            dataTextStyle: GoogleFonts.inter(
+              fontSize: 12.sp,
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+            ),
+            columns: const [
+              DataColumn(label: Text('Planet')),
+              DataColumn(label: Text('Sign')),
+              DataColumn(label: Text('Degree DMS')),
+              DataColumn(label: Text('House')),
+              DataColumn(label: Text('Nakshatra & Pada')),
+              DataColumn(label: Text('Dignity')),
+              DataColumn(label: Text('Status')),
+            ],
+            rows: annualPlanets.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final p = entry.value;
+              final isRetro = p['is_retrograde'] == true;
+              final isCombust = p['is_combust'] == true;
+              final status = isRetro ? 'Retrograde' : (isCombust ? 'Combust' : 'Direct');
+
+              return DataRow(
+                color: _tableRowColor(idx, isDark),
+                cells: [
+                  DataCell(_buildPlanetCell(
+                    p['planet']?.toString() ?? '',
+                    isRetro: isRetro,
+                    isCombust: isCombust,
+                    isDark: isDark,
+                  )),
+                  DataCell(Text(
+                    p['sign_name']?.toString() ?? '',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12.sp),
+                  )),
+                  DataCell(Text(
+                    p['degree_formatted']?.toString() ?? '',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11.5.sp,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  )),
+                  DataCell(_buildHousePill(p['house'], isDark)),
+                  DataCell(Text('${p['nakshatra']} - ${p['pada']}')),
+                  DataCell(_buildDignityPill(p['dignity']?.toString() ?? 'Neutral', isDark)),
+                  DataCell(_buildStatusPill(status, isDark)),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(height: 22.h),
+
+        // Natal vs Annual Comparison Header
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(7.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(Icons.compare_arrows_rounded, color: const Color(0xFF10B981), size: 18.sp),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              'Natal vs Annual Comparison',
+              style: GoogleFonts.outfit(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10.h),
+
+        // Natal vs Annual Comparison Table
+        _buildTableCard(
+          isDark: isDark,
+          child: DataTable(
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
+            headingRowHeight: 44.h,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            dividerThickness: 0.8,
+            horizontalMargin: 16.w,
+            columnSpacing: 22.w,
+            dataTextStyle: GoogleFonts.inter(
+              fontSize: 12.sp,
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+            ),
+            columns: const [
+              DataColumn(label: Text('Planet')),
+              DataColumn(label: Text('Natal Sign')),
+              DataColumn(label: Text('Natal Deg')),
+              DataColumn(label: Text('Annual Sign')),
+              DataColumn(label: Text('Annual Deg')),
+              DataColumn(label: Text('Annual House')),
+            ],
+            rows: annualPlanets.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final ap = entry.value;
+              final np = natalMap[ap['planet']] ?? {};
+              return DataRow(
+                color: _tableRowColor(idx, isDark),
+                cells: [
+                  DataCell(Text(
+                    ap['planet']?.toString() ?? '',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12.5.sp),
+                  )),
+                  DataCell(Text(np['sign_name']?.toString() ?? '-')),
+                  DataCell(Text(
+                    np['degree_formatted']?.toString() ?? '-',
+                    style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
+                  )),
+                  DataCell(Text(
+                    ap['sign_name']?.toString() ?? '-',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: const Color(0xFF4338CA)),
+                  )),
+                  DataCell(Text(
+                    ap['degree_formatted']?.toString() ?? '-',
+                    style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
+                  )),
+                  DataCell(_buildHousePill(ap['house'], isDark)),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }
@@ -1217,152 +1562,6 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
             fontSize: 13.sp,
             fontWeight: FontWeight.w700,
             color: isDark ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // TAB 3: PLANETARY POSITIONS
-  // ---------------------------------------------------------------------------
-
-  Widget _buildPlanetaryPositionsTab() {
-    final isDark = widget.isDark;
-    final annualPlanets = (_varshaphalData?['annual_chart']?['planets'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-    final natalPlanets = (_varshaphalData?['natal_chart']?['planets'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
-
-    final natalMap = {for (var p in natalPlanets) p['planet']: p};
-
-    return ListView(
-      padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 85.h),
-      physics: const BouncingScrollPhysics(),
-      children: [
-        Text(
-          'Annual Chart Planetary Positions (Solar Return)',
-          style: GoogleFonts.outfit(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
-        SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
-            ),
-            dataTextStyle: GoogleFonts.inter(
-              fontSize: 11.5.sp,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
-            ),
-            columns: const [
-              DataColumn(label: Text('Planet')),
-              DataColumn(label: Text('Sign')),
-              DataColumn(label: Text('Degree DMS')),
-              DataColumn(label: Text('House')),
-              DataColumn(label: Text('Nakshatra & Pada')),
-              DataColumn(label: Text('Dignity')),
-              DataColumn(label: Text('Status')),
-            ],
-            rows: annualPlanets.map((p) {
-              final isRetro = p['is_retrograde'] == true;
-              final isCombust = p['is_combust'] == true;
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          p['planet']?.toString() ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        if (isRetro)
-                          Padding(
-                            padding: EdgeInsets.only(left: 3.w),
-                            child: Text('(R)', style: TextStyle(color: Colors.red[300], fontSize: 10.sp)),
-                          ),
-                        if (isCombust)
-                          Padding(
-                            padding: EdgeInsets.only(left: 3.w),
-                            child: Text('(C)', style: TextStyle(color: Colors.orange[300], fontSize: 10.sp)),
-                          ),
-                      ],
-                    ),
-                  ),
-                  DataCell(Text(p['sign_name']?.toString() ?? '')),
-                  DataCell(Text(p['degree_formatted']?.toString() ?? '')),
-                  DataCell(Text('H${p['house']}')),
-                  DataCell(Text('${p['nakshatra']} - ${p['pada']}')),
-                  DataCell(Text(p['dignity']?.toString() ?? 'Neutral')),
-                  DataCell(
-                    Text(
-                      isRetro ? 'Retrograde' : (isCombust ? 'Combust' : 'Direct'),
-                      style: TextStyle(
-                        color: isRetro ? Colors.redAccent : (isCombust ? Colors.amber : Colors.green),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-        SizedBox(height: 24.h),
-
-        Text(
-          'Natal vs Annual Comparison',
-          style: GoogleFonts.outfit(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
-        SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF1F5F9),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-            ),
-            columns: const [
-              DataColumn(label: Text('Planet')),
-              DataColumn(label: Text('Natal Sign')),
-              DataColumn(label: Text('Natal Deg')),
-              DataColumn(label: Text('Annual Sign')),
-              DataColumn(label: Text('Annual Deg')),
-              DataColumn(label: Text('Annual House')),
-            ],
-            rows: annualPlanets.map((ap) {
-              final np = natalMap[ap['planet']] ?? {};
-              return DataRow(
-                cells: [
-                  DataCell(Text(ap['planet']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w700))),
-                  DataCell(Text(np['sign_name']?.toString() ?? '-')),
-                  DataCell(Text(np['degree_formatted']?.toString() ?? '-')),
-                  DataCell(Text(ap['sign_name']?.toString() ?? '-')),
-                  DataCell(Text(ap['degree_formatted']?.toString() ?? '-')),
-                  DataCell(Text('H${ap['house']}')),
-                ],
-              );
-            }).toList(),
           ),
         ),
       ],
@@ -1440,17 +1639,20 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           ),
         ),
         SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        _buildTableCard(
+          isDark: isDark,
           child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
+            headingRowHeight: 44.h,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            dividerThickness: 0.8,
+            horizontalMargin: 16.w,
+            columnSpacing: 22.w,
+            dataTextStyle: GoogleFonts.inter(
               fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
             ),
             columns: const [
               DataColumn(label: Text('Lordship Role')),
@@ -1460,30 +1662,80 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
               DataColumn(label: Text('Tajika Aspect')),
               DataColumn(label: Text('Eligibility')),
             ],
-            rows: candidates.map((c) {
+            rows: candidates.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final c = entry.value;
               final isWinner = c['planet'] == varsheshaData['varshesha'];
+              final aspects = c['aspects_lagna'] == true;
+
               return DataRow(
                 selected: isWinner,
+                color: _tableRowColor(idx, isDark, isSelected: isWinner),
                 cells: [
-                  DataCell(Text(c['role']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w600))),
-                  DataCell(Text(c['planet']?.toString() ?? '')),
-                  DataCell(Text('${c['strength']}')),
-                  DataCell(Text('H${c['house']}')),
+                  DataCell(Text(
+                    c['role']?.toString() ?? '',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12.sp),
+                  )),
+                  DataCell(Text(
+                    c['planet']?.toString() ?? '',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12.5.sp),
+                  )),
+                  DataCell(Container(
+                    padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: isDark ? 0.2 : 0.12),
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: Text(
+                      '${c['strength']}',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFD97706),
+                        fontSize: 11.5.sp,
+                      ),
+                    ),
+                  )),
+                  DataCell(_buildHousePill(c['house'], isDark)),
                   DataCell(
-                    Text(
-                      c['aspects_lagna'] == true ? 'Aspects Lagna' : 'No Aspect',
-                      style: TextStyle(
-                        color: c['aspects_lagna'] == true ? Colors.green : Colors.redAccent,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.5.h),
+                      decoration: BoxDecoration(
+                        color: (aspects ? Colors.green : Colors.red).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        aspects ? 'Aspects Lagna' : 'No Aspect',
+                        style: TextStyle(
+                          color: aspects ? Colors.green[700] : Colors.red[600],
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10.5.sp,
+                        ),
                       ),
                     ),
                   ),
                   DataCell(
-                    Text(
-                      isWinner ? 'Selected Varshesha' : (c['aspects_lagna'] == true ? 'Eligible' : 'Ineligible'),
-                      style: TextStyle(
-                        fontWeight: isWinner ? FontWeight.w800 : FontWeight.normal,
-                        color: isWinner ? Colors.amber : (c['aspects_lagna'] == true ? Colors.blue : Colors.grey),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: isWinner
+                            ? const Color(0xFFF59E0B).withValues(alpha: 0.18)
+                            : (aspects ? const Color(0xFF4338CA).withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(
+                          color: isWinner
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Text(
+                        isWinner ? 'Selected Varshesha' : (aspects ? 'Eligible' : 'Ineligible'),
+                        style: TextStyle(
+                          fontWeight: isWinner ? FontWeight.w800 : FontWeight.w600,
+                          color: isWinner
+                              ? const Color(0xFFD97706)
+                              : (aspects ? const Color(0xFF4338CA) : Colors.grey[600]),
+                          fontSize: 11.sp,
+                        ),
                       ),
                     ),
                   ),
@@ -1587,18 +1839,15 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           ),
         ),
         SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        _buildTableCard(
+          isDark: isDark,
           child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
-            ),
+            horizontalMargin: 16.w,
+            columnSpacing: 20.w,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
             columns: const [
               DataColumn(label: Text('Planet')),
               DataColumn(label: Text('Graha Bala')),
@@ -1608,20 +1857,44 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
               DataColumn(label: Text('Navamsha Bala')),
               DataColumn(label: Text('Total Vishwa Bala')),
             ],
-            rows: panchavargeeya.entries.map((e) {
+            rows: panchavargeeya.entries.toList().asMap().entries.map((entry) {
+              final i = entry.key;
+              final e = entry.value;
               final b = e.value as Map<String, dynamic>;
               return DataRow(
+                color: _tableRowColor(i, isDark),
                 cells: [
-                  DataCell(Text(e.key, style: const TextStyle(fontWeight: FontWeight.w700))),
-                  DataCell(Text('${b['graha_bala']}')),
-                  DataCell(Text('${b['uchcha_bala']}')),
-                  DataCell(Text('${b['hudda_bala']}')),
-                  DataCell(Text('${b['drekkana_bala']}')),
-                  DataCell(Text('${b['navamsha_bala']}')),
                   DataCell(
                     Text(
-                      '${b['total_vishwa_bala']}',
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFF59E0B)),
+                      e.key,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  DataCell(Text('${b['graha_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['uchcha_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['hudda_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['drekkana_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['navamsha_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                      ),
+                      child: Text(
+                        '${b['total_vishwa_bala']}',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5.sp,
+                          color: const Color(0xFFD97706),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -1640,18 +1913,15 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           ),
         ),
         SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        _buildTableCard(
+          isDark: isDark,
           child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF1F5F9),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-            ),
+            horizontalMargin: 16.w,
+            columnSpacing: 18.w,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
             columns: const [
               DataColumn(label: Text('Planet')),
               DataColumn(label: Text('1st Bala (Sthana)')),
@@ -1661,23 +1931,61 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
               DataColumn(label: Text('Total (0-20)')),
               DataColumn(label: Text('Rating')),
             ],
-            rows: harsha.entries.map((e) {
+            rows: harsha.entries.toList().asMap().entries.map((entry) {
+              final i = entry.key;
+              final e = entry.value;
               final b = e.value as Map<String, dynamic>;
               final rating = b['rating']?.toString() ?? 'Medium';
+
+              Color ratingColor = const Color(0xFFF59E0B);
+              if (rating.toLowerCase().contains('strong')) {
+                ratingColor = const Color(0xFF10B981);
+              } else if (rating.toLowerCase().contains('weak')) {
+                ratingColor = const Color(0xFFEF4444);
+              }
+
               return DataRow(
+                color: _tableRowColor(i, isDark),
                 cells: [
-                  DataCell(Text(e.key, style: const TextStyle(fontWeight: FontWeight.w700))),
-                  DataCell(Text('${b['first_bala']}')),
-                  DataCell(Text('${b['second_bala']}')),
-                  DataCell(Text('${b['third_bala']}')),
-                  DataCell(Text('${b['fourth_bala']}')),
-                  DataCell(Text('${b['total']}', style: const TextStyle(fontWeight: FontWeight.w800))),
                   DataCell(
                     Text(
-                      rating,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: rating == 'Strong' ? Colors.green : (rating == 'Medium' ? Colors.amber : Colors.red),
+                      e.key,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  DataCell(Text('${b['first_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['second_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['third_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(Text('${b['fourth_bala']}', style: GoogleFonts.outfit(fontSize: 12.5.sp))),
+                  DataCell(
+                    Text(
+                      '${b['total']}',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: ratingColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: ratingColor.withValues(alpha: 0.35)),
+                      ),
+                      child: Text(
+                        rating,
+                        style: GoogleFonts.outfit(
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w700,
+                          color: ratingColor,
+                        ),
                       ),
                     ),
                   ),
@@ -2038,85 +2346,77 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
         ),
         SizedBox(height: 10.h),
 
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(
-              color: isDark ? const Color(0xFF312E81) : const Color(0xFFE2E8F0),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
+        _buildTableCard(
+          isDark: isDark,
+          child: DataTable(
+            horizontalMargin: 16.w,
+            columnSpacing: 18.w,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
+            columns: [
+              const DataColumn(label: Text('Graha')),
+              ...planets.map((p) => DataColumn(label: Text(p))),
             ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(
-                isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-              ),
-              headingTextStyle: GoogleFonts.outfit(
-                fontSize: 11.5.sp,
-                fontWeight: FontWeight.w700,
-                color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
-              ),
-              columns: [
-                const DataColumn(label: Text('Graha')),
-                ...planets.map((p) => DataColumn(label: Text(p))),
-              ],
-              rows: planets.map((p1) {
-                final rowMap = matrix[p1] as Map<String, dynamic>? ?? {};
-                return DataRow(
-                  cells: [
-                    DataCell(Text(p1, style: const TextStyle(fontWeight: FontWeight.bold))),
-                    ...planets.map((p2) {
-                      final cell = rowMap[p2] as Map<String, dynamic>? ?? {};
-                      String val = cell[_maitriMode]?.toString() ?? '-';
-                      Color color = Colors.grey;
+            rows: planets.asMap().entries.map((entry) {
+              final i = entry.key;
+              final p1 = entry.value;
+              final rowMap = matrix[p1] as Map<String, dynamic>? ?? {};
+              return DataRow(
+                color: _tableRowColor(i, isDark),
+                cells: [
+                  DataCell(
+                    Text(
+                      p1,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  ...planets.map((p2) {
+                    final cell = rowMap[p2] as Map<String, dynamic>? ?? {};
+                    String val = cell[_maitriMode]?.toString() ?? '-';
+                    Color color = Colors.grey;
 
-                      if (val == 'Adhi Mitra') {
-                        color = Colors.green[600]!;
-                      } else if (val == 'Friend' || val == 'Mitra') {
-                        color = Colors.teal[600]!;
-                      } else if (val == 'Neutral' || val == 'Sama') {
-                        color = Colors.blueGrey;
-                      } else if (val == 'Enemy' || val == 'Shatru') {
-                        color = Colors.orange[700]!;
-                      } else if (val == 'Adhi Shatru') {
-                        color = Colors.red[600]!;
-                      } else if (val == 'Self') {
-                        color = const Color(0xFF4338CA);
-                      }
+                    if (val == 'Adhi Mitra') {
+                      color = Colors.green[600]!;
+                    } else if (val == 'Friend' || val == 'Mitra') {
+                      color = Colors.teal[600]!;
+                    } else if (val == 'Neutral' || val == 'Sama') {
+                      color = Colors.blueGrey;
+                    } else if (val == 'Enemy' || val == 'Shatru') {
+                      color = Colors.orange[700]!;
+                    } else if (val == 'Adhi Shatru') {
+                      color = Colors.red[600]!;
+                    } else if (val == 'Self') {
+                      color = const Color(0xFF4338CA);
+                    }
 
-                      return DataCell(
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(6.r),
-                            border: Border.all(color: color.withValues(alpha: 0.25)),
-                          ),
-                          child: Text(
-                            val,
-                            style: TextStyle(
-                              fontSize: 10.5.sp,
-                              fontWeight: FontWeight.w700,
-                              color: color,
-                            ),
+                    return DataCell(
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(color: color.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(
+                          val,
+                          style: TextStyle(
+                            fontSize: 10.5.sp,
+                            fontWeight: FontWeight.w700,
+                            color: color,
                           ),
                         ),
-                      );
-                    }),
-                  ],
-                );
-              }).toList(),
-            ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ],
@@ -2174,18 +2474,15 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           ),
         ),
         SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        _buildTableCard(
+          isDark: isDark,
           child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
-            ),
+            horizontalMargin: 16.w,
+            columnSpacing: 18.w,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
             columns: const [
               DataColumn(label: Text('Saham')),
               DataColumn(label: Text('Significance')),
@@ -2194,15 +2491,61 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
               DataColumn(label: Text('House')),
               DataColumn(label: Text('Saham Lord')),
             ],
-            rows: sahams.map((s) {
+            rows: sahams.asMap().entries.map((entry) {
+              final i = entry.key;
+              final s = entry.value;
               return DataRow(
+                color: _tableRowColor(i, isDark),
                 cells: [
-                  DataCell(Text(s['name']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w700))),
-                  DataCell(Text(s['significance']?.toString() ?? '')),
-                  DataCell(Text(s['sign_name']?.toString() ?? '')),
-                  DataCell(Text(s['degree_formatted']?.toString() ?? '')),
-                  DataCell(Text('H${s['house']}')),
-                  DataCell(Text(s['saham_lord']?.toString() ?? '')),
+                  DataCell(
+                    Text(
+                      s['name']?.toString() ?? '',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      s['significance']?.toString() ?? '',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.sp,
+                        color: isDark ? Colors.white70 : const Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      s['sign_name']?.toString() ?? '',
+                      style: GoogleFonts.outfit(fontSize: 12.5.sp, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      s['degree_formatted']?.toString() ?? '',
+                      style: GoogleFonts.outfit(fontSize: 12.sp),
+                    ),
+                  ),
+                  DataCell(_buildHousePill(s['house'], isDark)),
+                  DataCell(
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        s['saham_lord']?.toString() ?? '',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11.5.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF4338CA),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               );
             }).toList(),
@@ -2395,28 +2738,69 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           ),
         ),
         SizedBox(height: 10.h),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+        _buildTableCard(
+          isDark: isDark,
           child: DataTable(
-            headingRowColor: WidgetStateProperty.all(
-              isDark ? const Color(0xFF140770) : const Color(0xFFEEF2FF),
-            ),
-            headingTextStyle: GoogleFonts.outfit(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
-            ),
+            horizontalMargin: 16.w,
+            columnSpacing: 24.w,
+            dataRowMinHeight: 46.h,
+            dataRowMaxHeight: 52.h,
+            headingRowColor: _tableHeaderColor(isDark),
+            headingTextStyle: _tableHeaderStyle(isDark),
             columns: const [
               DataColumn(label: Text('Body / Graha')),
               DataColumn(label: Text('Vedhas Received From')),
             ],
-            rows: vedhasTable.entries.map((e) {
+            rows: vedhasTable.entries.toList().asMap().entries.map((entry) {
+              final i = entry.key;
+              final e = entry.value;
               final list = (e.value as List<dynamic>? ?? []).cast<String>();
               return DataRow(
+                color: _tableRowColor(i, isDark),
                 cells: [
-                  DataCell(Text(e.key, style: const TextStyle(fontWeight: FontWeight.w700))),
-                  DataCell(Text(list.isEmpty ? 'None' : list.join(', '))),
+                  DataCell(
+                    Text(
+                      e.key,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    list.isEmpty
+                        ? Text(
+                            'None',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.sp,
+                              color: isDark ? Colors.white54 : Colors.grey[500],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        : Wrap(
+                            spacing: 6.w,
+                            runSpacing: 4.h,
+                            children: list.map((p) {
+                              return Container(
+                                padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  p,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 11.sp,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFEF4444),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
                 ],
               );
             }).toList(),
@@ -2521,7 +2905,7 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // CONFIGURATION & EDIT MODAL
+  // CONFIGURATION & EDIT MODAL WITH LOCATION AUTOCOMPLETE
   // ---------------------------------------------------------------------------
 
   void _showEditConfigDialog() {
@@ -2565,65 +2949,139 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
                       ),
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      'Varshaphal Settings & Details',
-                      style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Icon(Icons.tune_rounded, color: const Color(0xFF4338CA), size: 20.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Varshaphal Settings & Details',
+                          style: GoogleFonts.outfit(fontSize: 18.sp, fontWeight: FontWeight.w700),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 14.h),
                     _buildTextField('Full Name', nameCtrl),
                     SizedBox(height: 10.h),
                     Row(
                       children: [
-                        Expanded(child: _buildTextField('Date of Birth (YYYY-MM-DD)', dobCtrl)),
+                        Expanded(
+                          child: _buildDateTimeField(
+                            label: 'Date of Birth (YYYY-MM-DD)',
+                            ctrl: dobCtrl,
+                            icon: Icons.calendar_today_rounded,
+                            onTapIcon: () async {
+                              final current = DateTime.tryParse(dobCtrl.text.trim()) ?? DateTime.now();
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: current,
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (picked != null) {
+                                dobCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
+                                setModalState(() {});
+                              }
+                            },
+                          ),
+                        ),
                         SizedBox(width: 10.w),
-                        Expanded(child: _buildTextField('Time (HH:MM:SS)', tobCtrl)),
+                        Expanded(
+                          child: _buildDateTimeField(
+                            label: 'Time (HH:MM:SS)',
+                            ctrl: tobCtrl,
+                            icon: Icons.access_time_rounded,
+                            onTapIcon: () async {
+                              final parts = tobCtrl.text.split(':');
+                              final initHour = parts.isNotEmpty ? (int.tryParse(parts[0]) ?? 12) : 12;
+                              final initMinute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay(hour: initHour, minute: initMinute),
+                              );
+                              if (picked != null) {
+                                tobCtrl.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00';
+                                setModalState(() {});
+                              }
+                            },
+                          ),
+                        ),
                       ],
                     ),
+                    SizedBox(height: 12.h),
+
+                    // Birthplace with Auto-Search & Auto-Fill Coordinates
+                    _buildPlaceAutocompleteField(
+                      label: 'Birthplace',
+                      placeCtrl: pobCtrl,
+                      latCtrl: latCtrl,
+                      lonCtrl: lonCtrl,
+                      tzCtrl: tzCtrl,
+                      modalCtx: ctx,
+                      onLocationUpdated: () => setModalState(() {}),
+                    ),
                     SizedBox(height: 10.h),
-                    _buildTextField('Birthplace', pobCtrl),
-                    SizedBox(height: 10.h),
+
+                    // Coordinates & Timezone Auto-filled
                     Row(
                       children: [
-                        Expanded(child: _buildTextField('Latitude', latCtrl)),
+                        Expanded(child: _buildTextField('Latitude', latCtrl, isNumber: true)),
                         SizedBox(width: 10.w),
-                        Expanded(child: _buildTextField('Longitude', lonCtrl)),
+                        Expanded(child: _buildTextField('Longitude', lonCtrl, isNumber: true)),
                         SizedBox(width: 10.w),
-                        Expanded(child: _buildTextField('Timezone', tzCtrl)),
+                        Expanded(child: _buildTextField('Timezone', tzCtrl, isNumber: true)),
                       ],
                     ),
-                    SizedBox(height: 14.h),
-                    _buildTextField('Target Varshaphal Year', yearCtrl),
-                    SizedBox(height: 14.h),
+                    SizedBox(height: 12.h),
+                    _buildTextField('Target Varshaphal Year', yearCtrl, isNumber: true),
+                    SizedBox(height: 12.h),
 
                     // Return Location option
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        'Use Birthplace for Solar Return',
-                        style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: widget.isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: widget.isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+                        ),
                       ),
-                      subtitle: Text(
-                        'When off, allows specifying return coordinates',
-                        style: GoogleFonts.inter(fontSize: 11.5.sp),
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Use Birthplace for Solar Return',
+                          style: GoogleFonts.outfit(fontSize: 13.5.sp, fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          'When off, allows specifying return coordinates',
+                          style: GoogleFonts.inter(fontSize: 11.sp, color: Colors.grey),
+                        ),
+                        value: useBirthplace,
+                        activeTrackColor: const Color(0xFFF59E0B),
+                        onChanged: (val) {
+                          setModalState(() => useBirthplace = val);
+                        },
                       ),
-                      value: useBirthplace,
-                      activeTrackColor: const Color(0xFFF59E0B),
-                      onChanged: (val) {
-                        setModalState(() => useBirthplace = val);
-                      },
                     ),
                     if (!useBirthplace) ...[
-                      _buildTextField('Return Location Name', retPlaceCtrl),
+                      SizedBox(height: 10.h),
+                      _buildPlaceAutocompleteField(
+                        label: 'Return Location Name',
+                        placeCtrl: retPlaceCtrl,
+                        latCtrl: retLatCtrl,
+                        lonCtrl: retLonCtrl,
+                        modalCtx: ctx,
+                        onLocationUpdated: () => setModalState(() {}),
+                      ),
                       SizedBox(height: 10.h),
                       Row(
                         children: [
-                          Expanded(child: _buildTextField('Return Latitude', retLatCtrl)),
+                          Expanded(child: _buildTextField('Return Latitude', retLatCtrl, isNumber: true)),
                           SizedBox(width: 10.w),
-                          Expanded(child: _buildTextField('Return Longitude', retLonCtrl)),
+                          Expanded(child: _buildTextField('Return Longitude', retLonCtrl, isNumber: true)),
                         ],
                       ),
                     ],
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 18.h),
 
                     // Submit button
                     SizedBox(
@@ -2668,10 +3126,181 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController ctrl) {
+  Widget _buildPlaceAutocompleteField({
+    required String label,
+    required TextEditingController placeCtrl,
+    required TextEditingController latCtrl,
+    required TextEditingController lonCtrl,
+    TextEditingController? tzCtrl,
+    required BuildContext modalCtx,
+    required VoidCallback onLocationUpdated,
+  }) {
+    final isDark = widget.isDark;
+
+    return Autocomplete<Map<String, String>>(
+      initialValue: TextEditingValue(text: placeCtrl.text),
+      displayStringForOption: (option) => option['city'] ?? '',
+      optionsBuilder: (TextEditingValue textEditingValue) async {
+        final query = textEditingValue.text.trim();
+        if (query.isEmpty) return const Iterable<Map<String, String>>.empty();
+        try {
+          return await AstroApiService.getPlaces(query: query);
+        } catch (_) {
+          return const Iterable<Map<String, String>>.empty();
+        }
+      },
+      onSelected: (Map<String, String> selection) {
+        placeCtrl.text = selection['city'] ?? '';
+        latCtrl.text = selection['lat_val'] ?? latCtrl.text;
+        lonCtrl.text = selection['lon_val'] ?? lonCtrl.text;
+        if (tzCtrl != null && selection['tz_val'] != null) {
+          tzCtrl.text = selection['tz_val']!;
+        }
+        onLocationUpdated();
+      },
+      fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+        if (controller.text.isEmpty && placeCtrl.text.isNotEmpty) {
+          controller.text = placeCtrl.text;
+        }
+        controller.addListener(() {
+          placeCtrl.text = controller.text;
+        });
+
+        return TextField(
+          controller: controller,
+          focusNode: focusNode,
+          style: GoogleFonts.inter(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54),
+            hintText: 'Type city name to auto-fill coordinates...',
+            hintStyle: GoogleFonts.inter(fontSize: 11.5.sp, color: isDark ? Colors.white38 : Colors.black38),
+            prefixIcon: const Icon(Icons.location_on_rounded, color: Color(0xFF4338CA), size: 20),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.search_rounded, color: Color(0xFF4338CA)),
+              tooltip: 'Browse / Search City',
+              onPressed: () {
+                showModalBottomSheet(
+                  context: modalCtx,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (sheetCtx) => _VarshaphalLocationSelectorSheet(
+                    isDark: widget.isDark,
+                    onSelect: (city) {
+                      controller.text = city['city'] ?? '';
+                      placeCtrl.text = city['city'] ?? '';
+                      latCtrl.text = city['lat_val'] ?? latCtrl.text;
+                      lonCtrl.text = city['lon_val'] ?? lonCtrl.text;
+                      if (tzCtrl != null && city['tz_val'] != null) {
+                        tzCtrl.text = city['tz_val']!;
+                      }
+                      onLocationUpdated();
+                    },
+                  ),
+                );
+              },
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.r),
+              borderSide: BorderSide(color: isDark ? const Color(0xFF140770) : const Color(0xFFCBD5E1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.r),
+              borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
+            ),
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(14.r),
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            shadowColor: Colors.black.withValues(alpha: 0.35),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 220.h, maxWidth: MediaQuery.of(context).size.width - 40.w),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.symmetric(vertical: 4.h),
+                itemCount: options.length,
+                separatorBuilder: (_, __) => Divider(
+                  height: 1,
+                  color: isDark ? Colors.white12 : Colors.grey.shade200,
+                ),
+                itemBuilder: (context, index) {
+                  final option = options.elementAt(index);
+                  return ListTile(
+                    dense: true,
+                    leading: Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.location_on_rounded, color: Color(0xFF4338CA), size: 16),
+                    ),
+                    title: Text(
+                      option['city'] ?? '',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${option['coords']} • ${option['tz']}',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5.sp,
+                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                      ),
+                    ),
+                    onTap: () => onSelected(option),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDateTimeField({
+    required String label,
+    required TextEditingController ctrl,
+    required IconData icon,
+    required VoidCallback onTapIcon,
+  }) {
     final isDark = widget.isDark;
     return TextField(
       controller: ctrl,
+      style: GoogleFonts.inter(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.outfit(fontSize: 12.sp, color: isDark ? Colors.white60 : Colors.black54),
+        contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+        suffixIcon: IconButton(
+          icon: Icon(icon, size: 18.sp, color: const Color(0xFF4338CA)),
+          onPressed: onTapIcon,
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.r)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.r),
+          borderSide: BorderSide(color: isDark ? const Color(0xFF140770) : const Color(0xFFCBD5E1)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController ctrl, {bool isNumber = false}) {
+    final isDark = widget.isDark;
+    return TextField(
+      controller: ctrl,
+      keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true, signed: true) : TextInputType.text,
       style: GoogleFonts.inter(fontSize: 13.sp, color: isDark ? Colors.white : Colors.black87),
       decoration: InputDecoration(
         labelText: label,
@@ -2682,6 +3311,180 @@ class _VarshaphalScreenState extends State<VarshaphalScreen>
           borderRadius: BorderRadius.circular(10.r),
           borderSide: BorderSide(color: isDark ? const Color(0xFF140770) : const Color(0xFFCBD5E1)),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LOCATION SELECTOR BOTTOM SHEET (MATCHING HOROSCOPE SCREEN)
+// ---------------------------------------------------------------------------
+
+class _VarshaphalLocationSelectorSheet extends StatefulWidget {
+  final bool isDark;
+  final ValueChanged<Map<String, String>> onSelect;
+
+  const _VarshaphalLocationSelectorSheet({
+    required this.isDark,
+    required this.onSelect,
+  });
+
+  @override
+  State<_VarshaphalLocationSelectorSheet> createState() => _VarshaphalLocationSelectorSheetState();
+}
+
+class _VarshaphalLocationSelectorSheetState extends State<_VarshaphalLocationSelectorSheet> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  bool _isSearching = false;
+  List<Map<String, String>> _searchResults = [];
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlaces('');
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchPlaces(String query) async {
+    setState(() => _isSearching = true);
+    try {
+      final results = await AstroApiService.getPlaces(query: query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSearching = false);
+      }
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _fetchPlaces(query);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'Select Location',
+            style: GoogleFonts.outfit(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          TextField(
+            controller: _searchCtrl,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            decoration: InputDecoration(
+              hintText: 'Search city (e.g. Kanyakumari, Chennai, Delhi)...',
+              hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF4338CA)),
+              suffixIcon: _searchCtrl.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        _fetchPlaces('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.08),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14.r), borderSide: BorderSide.none),
+              contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            ),
+            onChanged: _onSearchChanged,
+          ),
+          SizedBox(height: 14.h),
+          Expanded(
+            child: _isSearching
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF4338CA)))
+                : _searchResults.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.location_off_rounded, size: 36.sp, color: Colors.grey),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'No matching locations found',
+                              style: GoogleFonts.outfit(fontSize: 14.sp, color: isDark ? Colors.white60 : Colors.black54),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: _searchResults.length,
+                        separatorBuilder: (_, __) => Divider(
+                          height: 1,
+                          color: isDark ? Colors.white10 : Colors.grey.shade100,
+                        ),
+                        itemBuilder: (context, index) {
+                          final city = _searchResults[index];
+                          return ListTile(
+                            leading: Container(
+                              padding: EdgeInsets.all(8.w),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4338CA).withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.location_on_rounded, color: Color(0xFF4338CA), size: 18),
+                            ),
+                            title: Text(
+                              city['city'] ?? 'Unknown',
+                              style: GoogleFonts.outfit(fontSize: 14.sp, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                            ),
+                            subtitle: Text(
+                              '${city['coords']} • ${city['tz']}',
+                              style: GoogleFonts.inter(fontSize: 11.5.sp, color: isDark ? Colors.white54 : Colors.black54),
+                            ),
+                            onTap: () {
+                              widget.onSelect(city);
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
