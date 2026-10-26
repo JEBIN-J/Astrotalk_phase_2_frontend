@@ -19,15 +19,15 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://192.168.29.77:5000/api/v1';
+      return 'http://10.242.54.136:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
         // 10.0.2.2 is default for Android emulator to host loopback; 192.168.29.77 for physical devices
-        return 'http://192.168.29.77:5000/api/v1';
+        return 'http://10.242.54.136:5000/api/v1';
       }
     } catch (_) {}  
-    return 'http://192.168.29.77:5000/api/v1';
+    return 'http://10.242.54.136:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -1591,6 +1591,99 @@ class AstroApiService {
     }
   }
 
+  /// Calculates personalized Daily Insight strictly based on user registered birth details
+  /// (Janma Rashi, Nakshatra, Dasha) and real-time ephemeris Gochara (transits).
+  static Future<Map<String, dynamic>> getUserDailyInsight({
+    String? name,
+    String? dateOfBirth,
+    String? timeOfBirth,
+    String? placeOfBirth,
+    double? latitude,
+    double? longitude,
+    double? timezone,
+    String? ayanamsa,
+  }) async {
+    final Map<String, dynamic> bodyMap = {
+      'name': name ?? 'User',
+      'date_of_birth': dateOfBirth != null ? normalizeDate(dateOfBirth) : '1998-12-13',
+      'time_of_birth': timeOfBirth != null ? normalizeTime(timeOfBirth) : '09:30:00',
+      'place_of_birth': placeOfBirth ?? 'New Delhi, India',
+      'latitude': latitude ?? 28.6139,
+      'longitude': longitude ?? 77.2090,
+      'timezone': timezone ?? 5.5,
+    };
+    if (ayanamsa != null && ayanamsa.isNotEmpty) {
+      bodyMap['ayanamsa'] = ayanamsa;
+    }
+
+    try {
+      final uri = Uri.parse('$baseUrl/horoscope/user-daily-insight');
+      final res = await http.post(uri, headers: _headers, body: jsonEncode(bodyMap)).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final json = jsonDecode(res.body);
+        if (json is Map<String, dynamic> && json['status'] == 'success') {
+          return json['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('getUserDailyInsight endpoint exception: $e. Falling back to multi-step calculation...');
+    }
+
+    // Resilient fallback using live calculation endpoints:
+    final kundli = await getKundli(
+      name: bodyMap['name'],
+      dateOfBirth: bodyMap['date_of_birth'],
+      timeOfBirth: bodyMap['time_of_birth'],
+      placeOfBirth: bodyMap['place_of_birth'],
+      latitude: bodyMap['latitude'],
+      longitude: bodyMap['longitude'],
+      timezone: bodyMap['timezone'],
+      ayanamsa: ayanamsa,
+    );
+
+    final moonSign = kundli['moon_sign_rashi']?.toString() ?? kundli['moon_sign']?.toString() ?? 'Virgo';
+    final moonSanskrit = kundli['moon_sign_sanskrit']?.toString() ?? '';
+    final nakshatra = kundli['nakshatra']?.toString() ?? '';
+    final runningDasha = kundli['current_running_dasha'] as Map<String, dynamic>? ?? {};
+    final mahadasha = runningDasha['mahadasha']?.toString() ?? '';
+    final antardasha = runningDasha['antardasha']?.toString() ?? '';
+    final dashaStr = (mahadasha.isNotEmpty && antardasha.isNotEmpty) ? '$mahadasha - $antardasha' : '';
+
+    final daily = await getDailyHoroscope(moonSign);
+    final predictions = daily['predictions'] as Map<String, dynamic>? ?? {};
+    final luckyValues = daily['lucky_values'] as Map<String, dynamic>? ?? {};
+    final basic = daily['basic'] as Map<String, dynamic>? ?? {};
+
+    final overall = predictions['overall']?.toString() ?? '';
+    final career = predictions['career']?.toString() ?? '';
+    String insightText = overall;
+    if (overall.isNotEmpty && career.isNotEmpty && !overall.toLowerCase().contains(career.toLowerCase())) {
+      insightText = '$overall In career, ${career.toLowerCase()}';
+    }
+
+    return {
+      'user_name': bodyMap['name'],
+      'moon_sign': moonSign,
+      'moon_sign_sanskrit': moonSanskrit,
+      'nakshatra': nakshatra,
+      'current_dasha': dashaStr,
+      'mahadasha': mahadasha,
+      'antardasha': antardasha,
+      'rashi_lord': basic['rashi_lord']?.toString() ?? '',
+      'element': basic['element']?.toString() ?? '',
+      'insight_text': insightText,
+      'overall_prediction': overall,
+      'career_prediction': career,
+      'finance_prediction': predictions['finance']?.toString() ?? '',
+      'love_prediction': predictions['love']?.toString() ?? '',
+      'lucky_color': luckyValues['lucky_color']?.toString() ?? 'Indigo',
+      'lucky_number': luckyValues['lucky_number'] ?? 7,
+      'lucky_direction': luckyValues['lucky_direction']?.toString() ?? 'North',
+      'best_time': luckyValues['best_time']?.toString() ?? '10:00 AM - 11:30 AM',
+      'calculation_date': daily['astronomical_values']?['date']?.toString() ?? '',
+    };
+  }
+
   static Future<Map<String, dynamic>> getCueCards() async {
     final uri = Uri.parse('$baseUrl/horoscope/cue_cards');
     try {
@@ -2259,7 +2352,28 @@ class AstroApiService {
       ).timeout(_timeout);
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       if (res.statusCode == 200 && data['status'] == 'success') {
-        return data['data'] as Map<String, dynamic>;
+        final result = data['data'] as Map<String, dynamic>;
+        if (result['charts'] == null || (result['charts'] is Map && result['charts']['boy'] == null)) {
+          try {
+            final boyKundli = await getKundli(
+              name: boy['name'] ?? 'Groom',
+              dateOfBirth: boy['date_of_birth'] ?? '',
+              timeOfBirth: boy['time_of_birth'] ?? '12:00:00',
+              placeOfBirth: boy['place_of_birth'] ?? 'Default',
+            );
+            final girlKundli = await getKundli(
+              name: girl['name'] ?? 'Bride',
+              dateOfBirth: girl['date_of_birth'] ?? '',
+              timeOfBirth: girl['time_of_birth'] ?? '12:00:00',
+              placeOfBirth: girl['place_of_birth'] ?? 'Default',
+            );
+            result['charts'] = {
+              'boy': boyKundli,
+              'girl': girlKundli,
+            };
+          } catch (_) {}
+        }
+        return result;
       } else {
         throw Exception(data['message'] ?? 'Failed to calculate match making');
       }

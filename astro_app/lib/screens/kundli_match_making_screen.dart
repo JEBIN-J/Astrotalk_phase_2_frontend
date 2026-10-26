@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../models/astro_models.dart';
 import '../services/astro_api_service.dart';
+import '../widgets/kundli_chart_painter.dart';
 
 class KundliMatchMakingScreen extends StatefulWidget {
   final String? initialBoyName;
@@ -71,6 +73,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   Map<String, dynamic>? _matchResult;
   bool _isSaved = false;
 
+  KundliChartStyle _matchChartStyle = KundliChartStyle.northIndian;
+  String _matchChartTypeKey = 'D-1';
+  int _chartViewMode = 0; // 0 = Both, 1 = Groom only, 2 = Bride only
+
   late TabController _resultTabController;
 
   bool get isDark => Theme.of(context).brightness == Brightness.dark;
@@ -93,7 +99,10 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   @override
   void initState() {
     super.initState();
-    _resultTabController = TabController(length: 4, vsync: this);
+    _resultTabController = TabController(length: 5, vsync: this);
+    _resultTabController.addListener(() {
+      if (mounted) setState(() {});
+    });
 
     if (widget.initialBoyName != null && widget.initialBoyName!.isNotEmpty) {
       _boyNameController.text = widget.initialBoyName!;
@@ -944,27 +953,82 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
 
   Widget _buildResultsTabBar() {
     final bool dark = isDark;
+    final tabs = [
+      {'title': 'Matching Charts', 'icon': Icons.grid_view_rounded},
+      {'title': 'Ashta Koota (36)', 'icon': Icons.stars_rounded},
+      {'title': 'Porutham (10)', 'icon': Icons.favorite_rounded},
+      {'title': 'Manglik Dosha', 'icon': Icons.shield_rounded},
+      {'title': 'Birth Profiles', 'icon': Icons.badge_outlined},
+    ];
+
     return Container(
+      height: 46.h,
       decoration: BoxDecoration(
         color: _cardBg(dark),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: _borderCol(dark)),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: dark ? const Color(0xFF334155) : roseBorder.withValues(alpha: 0.7),
+          width: 1.w,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : const Color(0xFFBE123C).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
+      padding: EdgeInsets.all(4.r),
       child: TabBar(
         controller: _resultTabController,
         isScrollable: true,
-        labelColor: _accentRose(dark),
-        unselectedLabelColor: mutedText,
-        indicatorColor: _accentRose(dark),
-        indicatorWeight: 3,
-        labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13.sp),
-        unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.normal, fontSize: 13.sp),
-        tabs: const [
-          Tab(text: 'Ashta Koota (36)'),
-          Tab(text: 'Porutham (10)'),
-          Tab(text: 'Manglik Dosha'),
-          Tab(text: 'Birth Profiles'),
-        ],
+        tabAlignment: TabAlignment.start,
+        physics: const BouncingScrollPhysics(),
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicator: BoxDecoration(
+          gradient: LinearGradient(
+            colors: dark
+                ? [const Color(0xFFE11D48), const Color(0xFFBE123C)]
+                : [const Color(0xFFBE123C), const Color(0xFF9F1239)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: (dark ? const Color(0xFFE11D48) : primaryRose).withValues(alpha: 0.35),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        labelColor: Colors.white,
+        unselectedLabelColor: dark ? const Color(0xFF94A3B8) : mutedText,
+        labelStyle: GoogleFonts.outfit(
+          fontWeight: FontWeight.w700,
+          fontSize: 12.5.sp,
+          letterSpacing: 0.1,
+        ),
+        unselectedLabelStyle: GoogleFonts.outfit(
+          fontWeight: FontWeight.w600,
+          fontSize: 12.5.sp,
+        ),
+        labelPadding: EdgeInsets.symmetric(horizontal: 12.w),
+        tabs: tabs.map((tab) {
+          return Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(tab['icon'] as IconData, size: 15.sp),
+                SizedBox(width: 6.w),
+                Text(tab['title'] as String),
+              ],
+            ),
+          );
+        }).toList(),
         onTap: (_) => setState(() {}),
       ),
     );
@@ -973,15 +1037,786 @@ class _KundliMatchMakingScreenState extends State<KundliMatchMakingScreen>
   Widget _buildActiveTabContent() {
     switch (_resultTabController.index) {
       case 0:
-        return _buildAshtaKootaView();
+        return _buildMatchingChartsView();
       case 1:
-        return _buildPoruthamView();
+        return _buildAshtaKootaView();
       case 2:
-        return _buildManglikView();
+        return _buildPoruthamView();
       case 3:
+        return _buildManglikView();
+      case 4:
       default:
         return _buildProfilesView();
     }
+  }
+
+  // -------------------------------------------------------------
+  // TAB 0: MATCHING CHARTS (GROOM & BRIDE KUNDLI)
+  // -------------------------------------------------------------
+  Widget _buildMatchingChartsView() {
+    final bool dark = isDark;
+    final res = _matchResult!;
+    final charts = (res['charts'] as Map<String, dynamic>?) ?? {};
+    Map<String, dynamic>? boyChart = (charts['boy'] is Map ? (charts['boy']['data'] ?? charts['boy']) : null) as Map<String, dynamic>?;
+    Map<String, dynamic>? girlChart = (charts['girl'] is Map ? (charts['girl']['data'] ?? charts['girl']) : null) as Map<String, dynamic>?;
+    boyChart ??= (res['boy_chart'] is Map ? (res['boy_chart']['data'] ?? res['boy_chart']) : null) as Map<String, dynamic>?;
+    girlChart ??= (res['girl_chart'] is Map ? (res['girl_chart']['data'] ?? res['girl_chart']) : null) as Map<String, dynamic>?;
+
+    final boyName = res['boy_name'] ?? 'Groom';
+    final girlName = res['girl_name'] ?? 'Bride';
+    final boyProfile = (res['profiles']?['boy'] as Map<String, dynamic>?) ?? {};
+    final girlProfile = (res['profiles']?['girl'] as Map<String, dynamic>?) ?? {};
+
+    final bLagna = boyProfile['ascendant'] ?? boyChart?['ascendant_sign'] ?? _findSignFromChart(boyChart, 'ascendant');
+    final bMoon = boyProfile['moon_sign'] ?? _findSignFromChart(boyChart, 'moon');
+    final bNakshatra = boyProfile['nakshatra'] ?? _findNakshatraFromChart(boyChart, 'moon');
+    final bPada = boyProfile['nakshatra_pada'] ?? _findPadaFromChart(boyChart, 'moon');
+
+    final gLagna = girlProfile['ascendant'] ?? girlChart?['ascendant_sign'] ?? _findSignFromChart(girlChart, 'ascendant');
+    final gMoon = girlProfile['moon_sign'] ?? _findSignFromChart(girlChart, 'moon');
+    final gNakshatra = girlProfile['nakshatra'] ?? _findNakshatraFromChart(girlChart, 'moon');
+    final gPada = girlProfile['nakshatra_pada'] ?? _findPadaFromChart(girlChart, 'moon');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Controls: Style & Division selectors
+        Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: _cardBg(dark),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: _borderCol(dark)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  // Chart Style Dropdown
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
+                      decoration: BoxDecoration(
+                        color: _subCardBg(dark),
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: _borderCol(dark)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<KundliChartStyle>(
+                          value: _matchChartStyle,
+                          isExpanded: true,
+                          dropdownColor: _cardBg(dark),
+                          icon: Icon(Icons.arrow_drop_down_rounded, color: _accentRose(dark)),
+                          items: const [
+                            DropdownMenuItem(
+                              value: KundliChartStyle.northIndian,
+                              child: Text('North Indian'),
+                            ),
+                            DropdownMenuItem(
+                              value: KundliChartStyle.southIndian,
+                              child: Text('South Indian'),
+                            ),
+                            DropdownMenuItem(
+                              value: KundliChartStyle.eastIndian,
+                              child: Text('East Indian'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _matchChartStyle = val);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  // Chart Division Dropdown
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
+                      decoration: BoxDecoration(
+                        color: _subCardBg(dark),
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(color: _borderCol(dark)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _matchChartTypeKey,
+                          isExpanded: true,
+                          dropdownColor: _cardBg(dark),
+                          icon: Icon(Icons.arrow_drop_down_rounded, color: _accentRose(dark)),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'D-1',
+                              child: Text('D-1: Rashi / Lagna'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'D-9',
+                              child: Text('D-9: Navamsha (Spouse)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'D-7',
+                              child: Text('D-7: Saptamsha (Children)'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Bhava',
+                              child: Text('Bhava Chalit'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _matchChartTypeKey = val);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              // View mode selector
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildChartViewChoiceChip(0, 'Both (Side-by-Side)', dark),
+                    SizedBox(width: 8.w),
+                    _buildChartViewChoiceChip(1, '$boyName (Groom)', dark),
+                    SizedBox(width: 8.w),
+                    _buildChartViewChoiceChip(2, '$girlName (Bride)', dark),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 14.h),
+
+        // Interactive Kundli Charts Display
+        if (_chartViewMode == 0 || _chartViewMode == 1) ...[
+          _buildSingleKundliCard(
+            title: '$boyName\'s Kundli',
+            subtitle: 'Groom • Lagna: $bLagna | Moon: $bMoon',
+            nakshatra: 'Nakshatra: $bNakshatra (Pada $bPada)',
+            roleColor: const Color(0xFF3B82F6),
+            roleIcon: Icons.male_rounded,
+            chartData: boyChart,
+            dark: dark,
+          ),
+          SizedBox(height: 14.h),
+        ],
+
+        if (_chartViewMode == 0 || _chartViewMode == 2) ...[
+          _buildSingleKundliCard(
+            title: '$girlName\'s Kundli',
+            subtitle: 'Bride • Lagna: $gLagna | Moon: $gMoon',
+            nakshatra: 'Nakshatra: $gNakshatra (Pada $gPada)',
+            roleColor: const Color(0xFFEC4899),
+            roleIcon: Icons.female_rounded,
+            chartData: girlChart,
+            dark: dark,
+          ),
+          SizedBox(height: 16.h),
+        ],
+
+        // Planetary Comparison Matrix
+        _buildPlanetaryComparisonCard(boyChart, girlChart, boyProfile, girlProfile, boyName, girlName, dark),
+        SizedBox(height: 16.h),
+
+        // Astrological Compatibility Pillars
+        _buildAstrologicalPillarsCard(boyProfile, girlProfile, boyChart, girlChart, dark),
+        SizedBox(height: 16.h),
+      ],
+    );
+  }
+
+  Widget _buildChartViewChoiceChip(int index, String label, bool dark) {
+    final isSelected = _chartViewMode == index;
+    return ChoiceChip(
+      showCheckmark: false,
+      selected: isSelected,
+      label: Text(
+        label,
+        style: GoogleFonts.outfit(
+          fontSize: 12.sp,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: isSelected ? Colors.white : _bodyText(dark),
+        ),
+      ),
+      selectedColor: _primaryRed(dark),
+      backgroundColor: _subCardBg(dark),
+      side: BorderSide(color: isSelected ? _primaryRed(dark) : _borderCol(dark)),
+      onSelected: (val) {
+        if (val) setState(() => _chartViewMode = index);
+      },
+    );
+  }
+
+  Widget _buildSingleKundliCard({
+    required String title,
+    required String subtitle,
+    required String nakshatra,
+    required Color roleColor,
+    required IconData roleIcon,
+    required Map<String, dynamic>? chartData,
+    required bool dark,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _cardBg(dark),
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: _borderCol(dark)),
+        boxShadow: [
+          BoxShadow(
+            color: roleColor.withValues(alpha: dark ? 0.2 : 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: roleColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(roleIcon, color: roleColor, size: 20.sp),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: _bodyText(dark),
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12.sp,
+                        color: mutedText,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      nakshatra,
+                      style: GoogleFonts.inter(
+                        fontSize: 11.sp,
+                        color: _accentRose(dark),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 14.h),
+          if (chartData == null)
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.h),
+                child: Text('Chart calculation data loading...', style: GoogleFonts.outfit(color: mutedText)),
+              ),
+            )
+          else
+            Center(
+              child: Container(
+                constraints: BoxConstraints(maxWidth: 360.w, maxHeight: 360.w),
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: dark ? const Color(0xFF0F172A) : const Color(0xFFFFF5F7),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: _borderCol(dark)),
+                ),
+                child: KundliInteractiveChart(
+                  chartStyle: _matchChartStyle,
+                  isDark: dark,
+                  chartTypeKey: _matchChartTypeKey,
+                  kundliData: chartData,
+                  showDegrees: true,
+                  showUpagrahas: false,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _findSignFromChart(Map<String, dynamic>? chart, String planetName) {
+    if (chart == null) return '-';
+    if (planetName.toLowerCase() == 'ascendant' && chart['ascendant_sign'] != null) {
+      return chart['ascendant_sign'].toString();
+    }
+    final planets = (chart['planets'] as List<dynamic>? ?? []).whereType<Map>();
+    for (final p in planets) {
+      final simple = p['planet_name_simple']?.toString().toLowerCase() ?? '';
+      final name = (p['name'] ?? p['display_name'])?.toString().toLowerCase() ?? '';
+      if (simple == planetName.toLowerCase() || name.contains(planetName.toLowerCase())) {
+        return p['sign']?.toString() ?? '-';
+      }
+    }
+    return '-';
+  }
+
+  String _findNakshatraFromChart(Map<String, dynamic>? chart, String planetName) {
+    if (chart == null) return '-';
+    final planets = (chart['planets'] as List<dynamic>? ?? []).whereType<Map>();
+    for (final p in planets) {
+      final simple = p['planet_name_simple']?.toString().toLowerCase() ?? '';
+      final name = (p['name'] ?? p['display_name'])?.toString().toLowerCase() ?? '';
+      if (simple == planetName.toLowerCase() || name.contains(planetName.toLowerCase())) {
+        return p['nakshatra']?.toString() ?? '-';
+      }
+    }
+    return '-';
+  }
+
+  String _findPadaFromChart(Map<String, dynamic>? chart, String planetName) {
+    if (chart == null) return '-';
+    final planets = (chart['planets'] as List<dynamic>? ?? []).whereType<Map>();
+    for (final p in planets) {
+      final simple = p['planet_name_simple']?.toString().toLowerCase() ?? '';
+      final name = (p['name'] ?? p['display_name'])?.toString().toLowerCase() ?? '';
+      if (simple == planetName.toLowerCase() || name.contains(planetName.toLowerCase())) {
+        return p['pada']?.toString() ?? '-';
+      }
+    }
+    return '-';
+  }
+
+  Color _getPlanetColor(String pName) {
+    switch (pName.toLowerCase()) {
+      case 'ascendant': return const Color(0xFF8B5CF6);
+      case 'sun': return const Color(0xFFF59E0B);
+      case 'moon': return const Color(0xFF3B82F6);
+      case 'mars': return const Color(0xFFEF4444);
+      case 'mercury': return const Color(0xFF10B981);
+      case 'jupiter': return const Color(0xFFEAB308);
+      case 'venus': return const Color(0xFFEC4899);
+      case 'saturn': return const Color(0xFF6366F1);
+      case 'rahu': return const Color(0xFF64748B);
+      case 'ketu': return const Color(0xFF78716C);
+      default: return Colors.blueGrey;
+    }
+  }
+
+  Widget _buildPlanetaryComparisonCard(
+    Map<String, dynamic>? boyChart,
+    Map<String, dynamic>? girlChart,
+    Map<String, dynamic> boyProfile,
+    Map<String, dynamic> girlProfile,
+    String boyName,
+    String girlName,
+    bool dark,
+  ) {
+    final boyPlanets = (boyChart?['planets'] as List<dynamic>? ?? [])
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+    final girlPlanets = (girlChart?['planets'] as List<dynamic>? ?? [])
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+
+    Map<String, dynamic> findPlanet(List<Map<String, dynamic>> planets, String target) {
+      final t = target.toLowerCase().trim();
+      for (final p in planets) {
+        final simple = p['planet_name_simple']?.toString().toLowerCase().trim();
+        if (simple != null && (simple == t || simple.startsWith(t))) {
+          return p;
+        }
+        final name = (p['name'] ?? p['display_name'] ?? p['planet'])?.toString().toLowerCase().trim() ?? '';
+        if (name.startsWith(t) || name.contains(t)) {
+          return p;
+        }
+      }
+      return {};
+    }
+
+    const signNames = [
+      'aries', 'taurus', 'gemini', 'cancer',
+      'leo', 'virgo', 'libra', 'scorpio',
+      'sagittarius', 'capricorn', 'aquarius', 'pisces'
+    ];
+
+    int getSignIndex(Map<String, dynamic> p, [String? fallbackSign]) {
+      if (p['sign_index'] != null && (p['sign_index'] as num) > 0) {
+        return (p['sign_index'] as num).toInt();
+      }
+      final s = (p['sign'] ?? p['sign_name'] ?? fallbackSign ?? '').toString().toLowerCase().trim();
+      for (int i = 0; i < signNames.length; i++) {
+        if (s.contains(signNames[i])) return i + 1;
+      }
+      return 0;
+    }
+
+    final planetOrder = ['Ascendant', 'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _cardBg(dark),
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: _borderCol(dark)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.compare_arrows_rounded, color: _primaryRed(dark), size: 20.sp),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  'Planetary Alignment Comparison',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14.5.sp,
+                    fontWeight: FontWeight.w700,
+                    color: _bodyText(dark),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(
+                dark ? const Color(0xFF3B0A1A) : softRose,
+              ),
+              headingTextStyle: GoogleFonts.outfit(
+                fontWeight: FontWeight.w700,
+                fontSize: 12.sp,
+                color: dark ? Colors.white : _deepRed(dark),
+              ),
+              horizontalMargin: 12.w,
+              columnSpacing: 18.w,
+              columns: [
+                const DataColumn(label: Text('Graha')),
+                DataColumn(label: Text('$boyName (Groom)')),
+                DataColumn(label: Text('$girlName (Bride)')),
+                const DataColumn(label: Text('Mutual Aspect / Relation')),
+              ],
+              rows: planetOrder.map((pName) {
+                var bp = findPlanet(boyPlanets, pName);
+                var gp = findPlanet(girlPlanets, pName);
+
+                // Fallback to profile for known core Grahas if chart planet list was empty
+                if (bp.isEmpty) {
+                  if (pName == 'Ascendant' && boyProfile['ascendant'] != null) {
+                    bp = {'sign': boyProfile['ascendant'], 'house': 1};
+                  } else if (pName == 'Moon' && boyProfile['moon_sign'] != null) {
+                    bp = {'sign': boyProfile['moon_sign']};
+                  } else if (pName == 'Mars' && boyProfile['mars_sign'] != null) {
+                    bp = {'sign': boyProfile['mars_sign']};
+                  }
+                }
+
+                if (gp.isEmpty) {
+                  if (pName == 'Ascendant' && girlProfile['ascendant'] != null) {
+                    gp = {'sign': girlProfile['ascendant'], 'house': 1};
+                  } else if (pName == 'Moon' && girlProfile['moon_sign'] != null) {
+                    gp = {'sign': girlProfile['moon_sign']};
+                  } else if (pName == 'Mars' && girlProfile['mars_sign'] != null) {
+                    gp = {'sign': girlProfile['mars_sign']};
+                  }
+                }
+
+                final bSign = bp['sign']?.toString() ?? bp['sign_name']?.toString() ?? '-';
+                final bHouse = bp['house'] != null ? 'H${bp['house']}' : '';
+                final bDegree = bp['degree_formatted']?.toString() ?? '';
+
+                final gSign = gp['sign']?.toString() ?? gp['sign_name']?.toString() ?? '-';
+                final gHouse = gp['house'] != null ? 'H${gp['house']}' : '';
+                final gDegree = gp['degree_formatted']?.toString() ?? '';
+
+                final bSignIdx = getSignIndex(bp, bSign != '-' ? bSign : null);
+                final gSignIdx = getSignIndex(gp, gSign != '-' ? gSign : null);
+
+                String relLabel = '-';
+                Color relColor = Colors.grey;
+
+                if (bSignIdx > 0 && gSignIdx > 0) {
+                  final diff = ((gSignIdx - bSignIdx + 12) % 12) + 1;
+                  if (diff == 1) {
+                    relLabel = 'Conjunction (1/1)';
+                    relColor = successGreen;
+                  } else if (diff == 7) {
+                    relLabel = 'Mutual Aspect (1/7)';
+                    relColor = successGreen;
+                  } else if (diff == 5 || diff == 9) {
+                    relLabel = 'Trine Harmony ($diff/${14 - diff})';
+                    relColor = const Color(0xFF0EA5E9);
+                  } else if (diff == 3 || diff == 11) {
+                    relLabel = 'Friendly ($diff/${14 - diff})';
+                    relColor = const Color(0xFF8B5CF6);
+                  } else if (diff == 4 || diff == 10) {
+                    relLabel = 'Kendra ($diff/${14 - diff})';
+                    relColor = warningOrange;
+                  } else if (diff == 6 || diff == 8) {
+                    relLabel = 'Shadashtaka (6/8)';
+                    relColor = Colors.redAccent;
+                  } else if (diff == 2 || diff == 12) {
+                    relLabel = 'Dvi-Dvadasha (2/12)';
+                    relColor = Colors.amber[800]!;
+                  }
+                }
+
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8.w,
+                            height: 8.w,
+                            margin: EdgeInsets.only(right: 6.w),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _getPlanetColor(pName),
+                            ),
+                          ),
+                          Text(
+                            pName,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5.sp,
+                              color: _bodyText(dark),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DataCell(
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            bHouse.isNotEmpty ? '$bSign ($bHouse)' : bSign,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: _bodyText(dark),
+                            ),
+                          ),
+                          if (bDegree.isNotEmpty)
+                            Text(
+                              bDegree,
+                              style: GoogleFonts.inter(
+                                fontSize: 10.sp,
+                                color: mutedText,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    DataCell(
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            gHouse.isNotEmpty ? '$gSign ($gHouse)' : gSign,
+                            style: GoogleFonts.outfit(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: _bodyText(dark),
+                            ),
+                          ),
+                          if (gDegree.isNotEmpty)
+                            Text(
+                              gDegree,
+                              style: GoogleFonts.inter(
+                                fontSize: 10.sp,
+                                color: mutedText,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    DataCell(
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: relColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6.r),
+                          border: Border.all(color: relColor.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          relLabel,
+                          style: GoogleFonts.outfit(fontSize: 11.sp, fontWeight: FontWeight.w700, color: relColor),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAstrologicalPillarsCard(
+    Map<String, dynamic> boyProfile,
+    Map<String, dynamic> girlProfile,
+    Map<String, dynamic>? boyChart,
+    Map<String, dynamic>? girlChart,
+    bool dark,
+  ) {
+    final bPlanets = (boyChart?['planets'] as List<dynamic>? ?? []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+    final gPlanets = (girlChart?['planets'] as List<dynamic>? ?? []).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+
+    String findSign(Map<String, dynamic> profile, List<Map<String, dynamic>> planets, String key, String planetName) {
+      if (profile[key] != null && profile[key].toString().isNotEmpty && profile[key].toString() != '-') {
+        return profile[key].toString();
+      }
+      for (final p in planets) {
+        final simple = p['planet_name_simple']?.toString().toLowerCase() ?? '';
+        final name = (p['name'] ?? p['display_name'])?.toString().toLowerCase() ?? '';
+        if (simple == planetName.toLowerCase() || name.contains(planetName.toLowerCase())) {
+          return p['sign']?.toString() ?? '-';
+        }
+      }
+      return '-';
+    }
+
+    final bLagna = findSign(boyProfile, bPlanets, 'ascendant', 'ascendant');
+    final gLagna = findSign(girlProfile, gPlanets, 'ascendant', 'ascendant');
+    final bMoon = findSign(boyProfile, bPlanets, 'moon_sign', 'moon');
+    final gMoon = findSign(girlProfile, gPlanets, 'moon_sign', 'moon');
+    final bMars = findSign(boyProfile, bPlanets, 'mars_sign', 'mars');
+    final gMars = findSign(girlProfile, gPlanets, 'mars_sign', 'mars');
+
+    const signNames = [
+      'aries', 'taurus', 'gemini', 'cancer',
+      'leo', 'virgo', 'libra', 'scorpio',
+      'sagittarius', 'capricorn', 'aquarius', 'pisces'
+    ];
+    int getSignNum(String sign) {
+      final s = sign.toLowerCase().trim();
+      for (int i = 0; i < signNames.length; i++) {
+        if (s.contains(signNames[i])) return i + 1;
+      }
+      return 0;
+    }
+
+    String getHarmonyDesc(int s1, int s2) {
+      if (s1 <= 0 || s2 <= 0) return 'Computed from birth charts.';
+      final diff = ((s2 - s1 + 12) % 12) + 1;
+      if (diff == 1) return 'Conjunction (1/1) • Shared energetic frequency & outlook.';
+      if (diff == 7) return 'Mutual Polarity (1/7) • Complementary polarity, highly magnetic.';
+      if (diff == 5 || diff == 9) return 'Trine Harmony ($diff/${14 - diff}) • Auspicious elemental flow of dharma.';
+      if (diff == 3 || diff == 11) return 'Friendly Upachaya ($diff/${14 - diff}) • Mutual growth and shared interests.';
+      if (diff == 4 || diff == 10) return 'Kendra ($diff/${14 - diff}) • Dynamic action and productive collaboration.';
+      if (diff == 6 || diff == 8) return 'Shadashtaka ($diff/${14 - diff}) • Transformative axis, mutual patience recommended.';
+      if (diff == 2 || diff == 12) return 'Dvi-Dvadasha ($diff/${14 - diff}) • Balanced allocation of shared energies.';
+      return 'Computed planetary alignment.';
+    }
+
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: _cardBg(dark),
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(color: _borderCol(dark)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.shield_rounded, color: _primaryRed(dark), size: 20.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Vedic Marriage Compatibility Pillars',
+                style: GoogleFonts.outfit(
+                  fontSize: 14.5.sp,
+                  fontWeight: FontWeight.w700,
+                  color: _bodyText(dark),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _buildPillarTile(
+            title: 'Lagna Sambandha (Ascendant Temperaments)',
+            desc: 'Groom Lagna: $bLagna  •  Bride Lagna: $gLagna\n${getHarmonyDesc(getSignNum(bLagna), getSignNum(gLagna))}',
+            color: const Color(0xFF3B82F6),
+            dark: dark,
+          ),
+          SizedBox(height: 8.h),
+          _buildPillarTile(
+            title: 'Chandra Sambandha (Mental & Emotional Sync)',
+            desc: 'Groom Moon: $bMoon  •  Bride Moon: $gMoon\n${getHarmonyDesc(getSignNum(bMoon), getSignNum(gMoon))}',
+            color: const Color(0xFF10B981),
+            dark: dark,
+          ),
+          SizedBox(height: 8.h),
+          _buildPillarTile(
+            title: 'Kuja / Manglik Factor (Physical & Vital Drive)',
+            desc: 'Groom Mars: $bMars  •  Bride Mars: $gMars\n${getHarmonyDesc(getSignNum(bMars), getSignNum(gMars))}',
+            color: const Color(0xFFF59E0B),
+            dark: dark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPillarTile({
+    required String title,
+    required String desc,
+    required Color color,
+    required bool dark,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: dark ? 0.12 : 0.06),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.outfit(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            desc,
+            style: GoogleFonts.inter(
+              fontSize: 11.5.sp,
+              color: dark ? Colors.white70 : const Color(0xFF334155),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // -------------------------------------------------------------

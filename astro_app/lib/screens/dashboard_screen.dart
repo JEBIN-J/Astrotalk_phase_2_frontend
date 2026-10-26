@@ -39,6 +39,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   late AnimationController _mandalaController;
   Map<String, dynamic>? _livePanchang;
   List<dynamic>? _liveTransits;
+  Map<String, dynamic>? _userDailyInsight;
+  bool _isLoadingInsight = true;
 
   @override
   void initState() {
@@ -51,8 +53,40 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   Future<void> _loadLiveDashboardData() async {
-    final muhurat = await AstroApiService.getMuhurat();
-    final notifications = await AstroApiService.getNotifications();
+    final muhuratFuture = AstroApiService.getMuhurat();
+    final notificationsFuture = AstroApiService.getNotifications();
+
+    // 1. Load registered user birth profile from persistent store
+    await GlobalBirthProfile().loadSavedProfile();
+    final profile = GlobalBirthProfile();
+
+    // 2. Fetch ephemeris-calculated user daily insight from backend
+    try {
+      final insight = await AstroApiService.getUserDailyInsight(
+        name: profile.personName,
+        dateOfBirth: profile.dob,
+        timeOfBirth: profile.tob,
+        placeOfBirth: profile.pob,
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        timezone: profile.timezone,
+        ayanamsa: profile.selectedAyanamsa,
+      );
+      if (mounted) {
+        setState(() {
+          _userDailyInsight = insight;
+          _isLoadingInsight = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user daily insight: $e');
+      if (mounted) {
+        setState(() => _isLoadingInsight = false);
+      }
+    }
+
+    final muhurat = await muhuratFuture;
+    final notifications = await notificationsFuture;
     if (mounted) {
       setState(() {
         _livePanchang = muhurat;
@@ -857,82 +891,165 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
+  Color _getColorFromName(String? colorName) {
+    if (colorName == null) return const Color(0xFF6366F1);
+    final c = colorName.toLowerCase().trim();
+    if (c.contains('red')) return const Color(0xFFEF4444);
+    if (c.contains('orange')) return const Color(0xFFF97316);
+    if (c.contains('yellow') || c.contains('gold')) return const Color(0xFFEAB308);
+    if (c.contains('green')) return const Color(0xFF10B981);
+    if (c.contains('blue')) return const Color(0xFF3B82F6);
+    if (c.contains('indigo') || c.contains('purple')) return const Color(0xFF6366F1);
+    if (c.contains('pink') || c.contains('rose')) return const Color(0xFFEC4899);
+    if (c.contains('white')) return const Color(0xFF94A3B8);
+    return const Color(0xFF6366F1);
+  }
+
   // --- Daily Horoscope Banner ---
   Widget _buildDailyHoroscopeBanner(BuildContext context, bool isDark) {
     if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
+
+    final insight = _userDailyInsight;
+    final moonSign = insight?['moon_sign']?.toString() ?? '';
+    final moonSanskrit = insight?['moon_sign_sanskrit']?.toString() ?? '';
+    final nakshatra = insight?['nakshatra']?.toString() ?? '';
+    final insightText = insight?['insight_text']?.toString() ??
+        (_isLoadingInsight
+            ? "Calculating personalized planetary transit insights from your registered birth chart..."
+            : "Planetary positions highlight steady growth and balance today.");
+    final luckyColor = insight?['lucky_color']?.toString() ?? 'Indigo';
+    final luckyNumber = insight?['lucky_number']?.toString() ?? '7';
+    final bestTime = insight?['best_time']?.toString();
+    final dasha = insight?['current_dasha']?.toString();
     
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 14.h),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark 
-                ? [const Color(0xFF312E81), const Color(0xFF1E1B4B)]
-                : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: isDark ? const Color(0xFF4338CA) : const Color(0xFFC7D2FE),
-            width: 1.w,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF4338CA).withValues(alpha: 0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+      child: GestureDetector(
+        onTap: () {
+          final item = AstroItem.items.firstWhere(
+            (it) => it.id == 'daily_horoscope',
+            orElse: () => AstroItem.items.first,
+          );
+          _openItem(item);
+        },
+        child: Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark 
+                  ? [const Color(0xFF312E81), const Color(0xFF1E1B4B)]
+                  : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: RotationTransition(
-                turns: const AlwaysStoppedAnimation(45 / 360),
-                child: Icon(Icons.wb_sunny_rounded, size: 100, color: (isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)).withValues(alpha: 0.15)),
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
+              color: isDark ? const Color(0xFF4338CA) : const Color(0xFFC7D2FE),
+              width: 1.w,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF4338CA).withValues(alpha: 0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.auto_awesome_rounded, color: const Color(0xFFF59E0B), size: 18),
-                    SizedBox(width: 8.w),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: RotationTransition(
+                  turns: const AlwaysStoppedAnimation(45 / 360),
+                  child: Icon(
+                    Icons.wb_sunny_rounded,
+                    size: 100,
+                    color: (isDark ? const Color(0xFF818CF8) : const Color(0xFF4F46E5)).withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: const Color(0xFFF59E0B), size: 18),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Your Daily Insight',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (moonSign.isNotEmpty)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                          decoration: BoxDecoration(
+                            color: (isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA)).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: (isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA)).withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Text(
+                            moonSanskrit.isNotEmpty ? '$moonSign ($moonSanskrit)' : moonSign,
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5.sp,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF4338CA),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (nakshatra.isNotEmpty) ...[
+                    SizedBox(height: 3.h),
                     Text(
-                      'Your Daily Insight',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.sp,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      'Moon Nakshatra: $nakshatra',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5.sp,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white54 : const Color(0xFF64748B),
                       ),
                     ),
                   ],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  "Jupiter's alignment brings a wave of positive energy to your career today. Embrace new opportunities and stay confident.",
-                  style: GoogleFonts.outfit(
-                    fontSize: 13.sp,
-                    height: 1.4,
-                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                  SizedBox(height: 8.h),
+                  Text(
+                    insightText,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13.sp,
+                      height: 1.45,
+                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    ),
                   ),
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  children: [
-                    _buildMiniBadge('Lucky Color: Indigo', const Color(0xFF6366F1)),
-                    SizedBox(width: 8.w),
-                    _buildMiniBadge('Lucky No: 7', const Color(0xFF10B981)),
-                  ],
-                )
-              ],
-            ),
-          ],
+                  SizedBox(height: 12.h),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _buildMiniBadge('Lucky Color: $luckyColor', _getColorFromName(luckyColor)),
+                        SizedBox(width: 8.w),
+                        _buildMiniBadge('Lucky No: $luckyNumber', const Color(0xFF10B981)),
+                        if (bestTime != null && bestTime.isNotEmpty) ...[
+                          SizedBox(width: 8.w),
+                          _buildMiniBadge('Best Time: $bestTime', const Color(0xFFF59E0B)),
+                        ],
+                        if (dasha != null && dasha.isNotEmpty) ...[
+                          SizedBox(width: 8.w),
+                          _buildMiniBadge('Dasha: $dasha', const Color(0xFF8B5CF6)),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
