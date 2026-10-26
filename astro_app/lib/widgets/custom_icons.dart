@@ -87,6 +87,9 @@ class _VedicIconPainter extends CustomPainter {
       case 'ayanamsa':
         _drawAyanamsaGeometry(canvas, size, paint, fillPaint);
         break;
+      case 'varshaphal':
+        _drawVarshaphalSolarReturn(canvas, size, paint, fillPaint);
+        break;
       case 'widget':
         _drawWidgetGrid(canvas, size, paint, fillPaint);
         break;
@@ -437,6 +440,33 @@ class _VedicIconPainter extends CustomPainter {
     final coinRect = Rect.fromCenter(center: Offset(w * 0.28, h * 0.72), width: w * 0.24, height: h * 0.24);
     canvas.drawOval(coinRect, fillPaint);
     canvas.drawOval(coinRect, paint);
+  }
+
+  void _drawVarshaphalSolarReturn(Canvas canvas, Size size, Paint paint, Paint fillPaint) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width * 0.36;
+
+    // Central Radiant Sun / Solar Return Ring
+    canvas.drawCircle(Offset(cx, cy), r * 0.45, fillPaint);
+    canvas.drawCircle(Offset(cx, cy), r * 0.45, paint);
+
+    // 12 Annual Solar Rays (Representing the 12 signs/houses of the solar return cycle)
+    for (int i = 0; i < 12; i++) {
+      final angle = (i * math.pi / 6);
+      final isMajorRay = i % 3 == 0;
+      final startR = r * 0.55;
+      final endR = isMajorRay ? r * 0.98 : r * 0.78;
+      final x1 = cx + startR * math.cos(angle);
+      final y1 = cy + startR * math.sin(angle);
+      final x2 = cx + endR * math.cos(angle);
+      final y2 = cy + endR * math.sin(angle);
+      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), paint);
+    }
+
+    // Inner sacred center bindu
+    final centerPaint = Paint()..color = paint.color..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, cy), size.width * 0.05, centerPaint);
   }
 
   @override

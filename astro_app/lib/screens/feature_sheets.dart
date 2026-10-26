@@ -10,6 +10,7 @@ import 'daily_horoscope_screen.dart';
 import 'tarot_animation_screen.dart';
 import 'numerology_dashboard_screen.dart';
 import 'kundli_match_making_screen.dart';
+import 'varshaphal_screen.dart';
 import '../theme/app_theme.dart';
 
 class AstroFeatureDialogs {
@@ -27,6 +28,12 @@ class AstroFeatureDialogs {
     switch (item.id) {
       case 'horoscope':
         targetScreen = HoroscopeScreen(initialChartStyle: defaultChartStyle, initialTabIndex: 0);
+        break;
+      case 'varshaphal':
+        targetScreen = VarshaphalScreen(
+          isDark: isDark,
+          currentPalette: currentPalette,
+        );
         break;
       case 'match_making':
         targetScreen = const KundliMatchMakingScreen();

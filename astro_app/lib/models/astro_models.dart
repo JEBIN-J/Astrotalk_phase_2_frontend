@@ -137,6 +137,9 @@ class GlobalBirthProfile {
   String selectedAyanamsa = 'LAHIRI';
   double? customAyanamsa;
 
+  String get dobFormattedForApi => DateFormat('yyyy-MM-dd').format(currentDateTime);
+  String get tobFormattedForApi => DateFormat('HH:mm:ss').format(currentDateTime);
+
   GlobalBirthProfile._internal() {
     final now = DateTime.now();
     currentDateTime = now;

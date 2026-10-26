@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 /// Centralized Master API Service for AstroTalk Vedic & AI Platform.
 /// 
@@ -18,15 +19,15 @@ class AstroApiService {
 
   static String get defaultBaseUrl {
     if (kIsWeb) {
-      return 'http://10.242.54.136:5000/api/v1';
+      return 'http://192.168.29.77:5000/api/v1';
     }
     try {
       if (Platform.isAndroid) {
         // 10.0.2.2 is default for Android emulator to host loopback; 192.168.29.77 for physical devices
-        return 'http://10.242.54.136:5000/api/v1';
+        return 'http://192.168.29.77:5000/api/v1';
       }
     } catch (_) {}  
-    return 'http://10.242.54.136:5000/api/v1';
+    return 'http://192.168.29.77:5000/api/v1';
   }
 
   static String get baseUrl {
@@ -53,6 +54,90 @@ class AstroApiService {
   }
 
   static const Duration _timeout = Duration(seconds: 30); // Increased for hosted backend (cold start + ngrok overhead)
+
+  /// Normalizes any date string (ISO, "26 Oct 2026", "26/10/2026", "26-10-2026", etc.)
+  /// into the strict backend format "YYYY-MM-DD".
+  static String normalizeDate(String input, {DateTime? fallback}) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      return DateFormat('yyyy-MM-dd').format(fallback ?? DateTime.now());
+    }
+    // Check if already yyyy-MM-dd
+    final regYmd = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (regYmd.hasMatch(trimmed)) {
+      return trimmed;
+    }
+    // Try ISO parse
+    final isoParsed = DateTime.tryParse(trimmed);
+    if (isoParsed != null) {
+      return DateFormat('yyyy-MM-dd').format(isoParsed);
+    }
+    final formats = [
+      'dd MMM yyyy',
+      'dd MMMM yyyy',
+      'dd-MMM-yyyy',
+      'dd-MMMM-yyyy',
+      'dd/MM/yyyy',
+      'dd-MM-yyyy',
+      'MM/dd/yyyy',
+      'yyyy/MM/dd',
+      'd MMM yyyy',
+      'd MMMM yyyy',
+      'd-MMM-yyyy',
+      'd/M/yyyy',
+      'd-M-yyyy',
+    ];
+    for (final fmt in formats) {
+      try {
+        final parsed = DateFormat(fmt).parseLoose(trimmed);
+        return DateFormat('yyyy-MM-dd').format(parsed);
+      } catch (_) {}
+    }
+    if (fallback != null) {
+      return DateFormat('yyyy-MM-dd').format(fallback);
+    }
+    return trimmed;
+  }
+
+  /// Normalizes any time string ("14:30", "02:30 PM", "2:30 PM", "14:30:00", etc.)
+  /// into the strict 24-hour backend format "HH:mm:ss".
+  static String normalizeTime(String input, {DateTime? fallback}) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      return DateFormat('HH:mm:ss').format(fallback ?? DateTime.now());
+    }
+    // Check if already HH:mm:ss
+    final regHms = RegExp(r'^\d{2}:\d{2}:\d{2}$');
+    if (regHms.hasMatch(trimmed)) {
+      return trimmed;
+    }
+    // Check if 24-hr format like H:mm or HH:mm
+    final regHm = RegExp(r'^\d{1,2}:\d{2}$');
+    if (regHm.hasMatch(trimmed)) {
+      final parts = trimmed.split(':');
+      final h = parts[0].padLeft(2, '0');
+      final m = parts[1].padLeft(2, '0');
+      return '$h:$m:00';
+    }
+    final formats = [
+      'hh:mm:ss a',
+      'hh:mm a',
+      'h:mm:ss a',
+      'h:mm a',
+      'HH:mm:ss',
+      'HH:mm',
+    ];
+    for (final fmt in formats) {
+      try {
+        final parsed = DateFormat(fmt).parseLoose(trimmed);
+        return DateFormat('HH:mm:ss').format(parsed);
+      } catch (_) {}
+    }
+    if (fallback != null) {
+      return DateFormat('HH:mm:ss').format(fallback);
+    }
+    return trimmed;
+  }
 
   // =========================================================================
   // 1. HEALTH & CONNECTIVITY CHECK
@@ -215,6 +300,72 @@ class AstroApiService {
       }
     } catch (e) {
       debugPrint('API Error getKundli: $e');
+      rethrow;
+    }
+  }
+
+  // =========================================================================
+  // 4.5. VARSHAPHAL / ANNUAL HOROSCOPE (SOLAR RETURN)
+  // =========================================================================
+
+  static Future<Map<String, dynamic>> getVarshaphal({
+    String name = 'Om Nath',
+    String dateOfBirth = '1984-01-22',
+    String timeOfBirth = '02:39:13',
+    String placeOfBirth = 'HAJIPUR (BIHAR)',
+    double latitude = 25.6833,
+    double longitude = 85.2167,
+    double timezone = 5.5,
+    int targetYear = 2026,
+    String? returnPlace,
+    double? returnLatitude,
+    double? returnLongitude,
+    double? returnTimezone,
+    String ayanamsa = 'LAHIRI',
+    double? customAyanamsa,
+    String houseSystem = 'Sripathi',
+  }) async {
+    final uri = Uri.parse('$baseUrl/varshaphal/calculate');
+    final normDob = normalizeDate(dateOfBirth);
+    final normTob = normalizeTime(timeOfBirth);
+    final Map<String, dynamic> bodyMap = {
+      'name': name,
+      'date_of_birth': normDob,
+      'time_of_birth': normTob,
+      'place_of_birth': placeOfBirth,
+      'latitude': latitude,
+      'longitude': longitude,
+      'timezone': timezone,
+      'target_year': targetYear,
+      'ayanamsa': ayanamsa,
+      'house_system': houseSystem,
+    };
+    if (returnPlace != null) bodyMap['return_place'] = returnPlace;
+    if (returnLatitude != null) bodyMap['return_latitude'] = returnLatitude;
+    if (returnLongitude != null) bodyMap['return_longitude'] = returnLongitude;
+    if (returnTimezone != null) bodyMap['return_timezone'] = returnTimezone;
+    if (customAyanamsa != null) bodyMap['custom_ayanamsa'] = customAyanamsa;
+
+    try {
+      final res = await http
+          .post(uri, headers: _headers, body: jsonEncode(bodyMap))
+          .timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        String msg = 'Failed to load Varshaphal: ${res.statusCode}';
+        try {
+          final errJson = jsonDecode(res.body);
+          if (errJson is Map && errJson['message'] != null) {
+            msg = errJson['message'].toString();
+          } else if (errJson is Map && errJson['detail'] != null) {
+            msg = errJson['detail'].toString();
+          }
+        } catch (_) {}
+        throw Exception(msg);
+      }
+    } catch (e) {
+      debugPrint('API Error getVarshaphal: $e');
       rethrow;
     }
   }

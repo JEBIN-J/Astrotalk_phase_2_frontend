@@ -89,6 +89,16 @@ class AstroItem {
       secondaryColor: Color(0xFFA78BFA),
     ),
     const AstroItem(
+      id: 'varshaphal',
+      title: 'Varshaphal',
+      subtitle: 'Annual Horoscope & Solar Return',
+      iconKey: 'varshaphal',
+      category: AstroCategory.vedicKundli,
+      primaryColor: Color(0xFFD97706),
+      secondaryColor: Color(0xFFFBBF24),
+      badge: 'New',
+    ),
+    const AstroItem(
       id: 'lal_kitab',
       title: 'Lal Kitab',
       subtitle: 'Remedies & Debts',
